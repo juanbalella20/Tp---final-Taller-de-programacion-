@@ -1,0 +1,23 @@
+#ifndef SERVER_SRC_SERVER_APP_H_
+#define SERVER_SRC_SERVER_APP_H_
+
+
+#include "../common/queue.h"
+#include "acceptor.h"
+#include "clientRegistryMonitor.h"
+#include "gameloop.h"
+
+class ServerApp {
+    private:
+    Queue<ClientCmd> receiving_queue;
+    ClientRegistryMonitor client_registry_monitor;
+    Acceptor acceptor;
+    GameLoop game_loop;
+
+    public:
+    explicit ServerApp(const char* service);
+    ~ServerApp();
+    void run();
+};
+
+#endif  // SERVER_SRC_SERVER_APP_H_
