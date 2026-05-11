@@ -20,6 +20,8 @@ public:
     void take_object(Item item);
 
     void drop_object(Item item);
+
+    void use_object(Item item);
 };
 
 #endif
