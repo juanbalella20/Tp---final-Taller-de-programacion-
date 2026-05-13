@@ -23,11 +23,25 @@ void Player::drop_item(Item item) {
 }
 
 void Player::equip_item(Item item) {
-    player_inventory.equip_item(item);
+    if ( /*no tiene ningun item equipado*/ ) {
+        player_inventory.unequip_item(item);
+        equipped_item = item;
+    } else {
+        player_inventory.equip_item(equipped_item);
+        player_inventory.unequip_item(item);
+        equipped_item = item;
+    }
 }
 
 void Player::unequip_item(Item item) {
-    player_inventory.unequip_item(item);
+    if ( /*no tiene ningun item equipado*/ ) {
+        return;
+    }
+
+    if (equipped_item == item) {
+        player_inventory.equip_item(item);
+        equipped_item = NULL;
+    }
 }
 
 void Player::use_object(Item item) {

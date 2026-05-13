@@ -16,6 +16,7 @@ private:
     int mana;
     int id_clan;
     PlayerStatus status;
+    Item equipped_item;
 
     PlayerRace player_race;
     PlayerClass player_class;
