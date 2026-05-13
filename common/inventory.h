@@ -9,9 +9,13 @@ private:
     std::vector<Item> items;
 
 public:
-    void equip(Item item);
+    void add_item(Item item);
 
-    void unequip(Item item);
+    void drop_item(Item item);
+
+    void equip_item(Item item);
+
+    void unequip_item(Item item);
 };
 
 
