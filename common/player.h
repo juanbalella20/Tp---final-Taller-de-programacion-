@@ -5,6 +5,8 @@
 #include "player_class.h"
 #include "inventory.h"
 
+enum class PlayerStatus { ALIVE, DEAD };
+
 class Player {
 
 private:
@@ -13,6 +15,7 @@ private:
     int experience;
     int mana;
     int id_clan;
+    PlayerStatus status;
 
     PlayerRace player_race;
     PlayerClass player_class;
@@ -21,11 +24,21 @@ private:
 public:
     Player(PlayerRace player_race, PlayerClass player_class);
 
-    void take_object(Item item);
+    void add_item(Item item);
 
-    void drop_object(Item item);
+    void drop_item(Item item);
+
+    void equip_item(Item item);
+
+    void unequip_item(Item item);
 
     void use_object(Item item);
+
+    void revive();
+
+    void heal();
+
+    int get_gold();
 };
 
 #endif
