@@ -5,11 +5,14 @@
 #include "player_class.h"
 #include "inventory.h"
 
+#include <string>
+
 enum class PlayerStatus { ALIVE, DEAD };
 
 class Player {
 
 private:
+    std::string name;
     int gold;
     int lives;
     int experience;
@@ -27,8 +30,10 @@ private:
 
     int calculate_max_mana();
 
+    void level_up();
+
 public:
-    Player(PlayerRace player_race, PlayerClass player_class);
+    Player(const std::string name, PlayerRace player_race, PlayerClass player_class);
 
     void add_item(Item item);
 

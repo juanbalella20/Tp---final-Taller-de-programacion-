@@ -1,6 +1,9 @@
 #include "player.h"
 
-Player::Player(PlayerRace player_race, PlayerClass player_class): 
+#include <cmath>
+
+Player::Player(const std::string name, PlayerRace player_race, PlayerClass player_class):
+    name(name),
     status(PlayerStatus::ALIVE),
     player_race(player_race), 
     player_class(player_class), 
@@ -19,6 +22,13 @@ int Player::calculate_max_life() {
 
 int Player::calculate_max_mana() {
     // ManaMax = Inteligencia * FClaseMana * FRazaMana * Nivel
+}
+
+void Player::level_up() {
+    int limit = 1000 * std::pow(level, 1.8);
+    if (experience >= limit) {
+        level += 1;
+    }
 }
 
 void Player::add_item(Item item) {
