@@ -43,6 +43,10 @@ public:
 
     void heal();
 
+    void restore_lives(); // to-do
+
+    void restore_maná(); // to-do
+
     int get_gold();
 };
 
