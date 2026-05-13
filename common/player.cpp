@@ -40,7 +40,7 @@ void Player::unequip_item(Item item) {
 
     if (equipped_item == item) {
         player_inventory.equip_item(item);
-        equipped_item = NULL;
+        equipped_item = /* sin item equipado */;
     }
 }
 
