@@ -10,6 +10,7 @@ Player::Player(PlayerRace player_race, PlayerClass player_class):
     gold = 0;
     experience = 0;
     mana = calculate_max_mana();
+    level = 0;
 }
 
 int Player::calculate_max_life() {
@@ -63,6 +64,10 @@ void Player::revive() {
 void Player::heal() {
     // Vida = FRazaRecuperacion * segundos
     // Mana = FClaseMeditacion * Inteligencia * segundos
+}
+
+void Player::add_gold(const int extra_gold) {
+    gold += extra_gold;
 }
 
 int Player::get_gold() {

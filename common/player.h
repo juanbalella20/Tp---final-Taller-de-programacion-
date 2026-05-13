@@ -15,6 +15,7 @@ private:
     int experience;
     int mana;
     int id_clan;
+    int level;
     PlayerStatus status;
     Item equipped_item;
 
@@ -46,6 +47,8 @@ public:
     void restore_lives(); // to-do
 
     void restore_maná(); // to-do
+
+    void add_gold(const int extra_gold);
 
     int get_gold();
 };
