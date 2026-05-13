@@ -22,6 +22,10 @@ private:
     PlayerClass player_class;
     Inventory player_inventory;
 
+    int calculate_max_life();
+
+    int calculate_max_mana();
+
 public:
     Player(PlayerRace player_race, PlayerClass player_class);
 

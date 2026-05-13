@@ -1,18 +1,24 @@
 #include "player.h"
 
-
 Player::Player(PlayerRace player_race, PlayerClass player_class): 
     status(PlayerStatus::ALIVE),
     player_race(player_race), 
     player_class(player_class), 
     player_inventory() {
 
-    lives = MAX_LIVES;
+    lives = calculate_max_life();
     gold = 0;
     experience = 0;
-    mana = MAX_MANA;
+    mana = calculate_max_mana();
 }
 
+int Player::calculate_max_life() {
+    // VidaMax = Constitución * FClaseVida * FRazaVida * Nivel
+}
+
+int Player::calculate_max_mana() {
+    // ManaMax = Inteligencia * FClaseMana * FRazaMana * Nivel
+}
 
 void Player::add_item(Item item) {
     player_inventory.add_item(item);
@@ -49,14 +55,14 @@ void Player::use_object(Item item) {
 }
 
 void Player::revive() {
-    lives = MAX_LIVES;
+    // Vida = FRazaRecuperacion * segundos
     status = PlayerStatus::ALIVE;
     experience = 0;
 }
 
 void Player::heal() {
-    lives = MAX_LIVES;
-    mana = MAX_MANA;
+    // Vida = FRazaRecuperacion * segundos
+    // Mana = FClaseMeditacion * Inteligencia * segundos
 }
 
 int Player::get_gold() {
