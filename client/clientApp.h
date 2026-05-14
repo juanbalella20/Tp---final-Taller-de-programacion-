@@ -3,6 +3,7 @@
 #include <string>
 #include "clientProtocol.h"
 #include "../common/clientCmd.h"
+#include "parser.h"
 
 
 class ClientApp {
@@ -14,8 +15,8 @@ class ClientApp {
    std::string class_;
    //ClientPrinter printer_;
    //ClientReader reader_;
-   //Parser parser_;
    void initialize_connection(ClientProtocol& protocol);
+   void game_loop(ClientProtocol& protocol);
 
  public:
     ClientApp(const std::string& host,

@@ -1,5 +1,5 @@
 #include "clientApp.h"
-
+#include "parser.h"
 #include <iostream>
 #include <stdexcept>
 #include <utility>
@@ -23,9 +23,23 @@ void ClientApp::initialize_connection(ClientProtocol& protocol) {
 }
 
 
+void ClientApp::game_loop(ClientProtocol& protocol) {
+    std::string input;
+    while (std::getline(std::cin, input)) {
+        if (input == "q")
+            break;
+        try {
+            ClientCmd cmd = Parser::parse(input);
+            protocol.send_command(cmd);
+        } catch (const std::invalid_argument& e) {
+            std::cout << e.what() << "\n";
+        }
+    }
+}
+
 void ClientApp::run() {
     Socket skt(host_.c_str(), port_.c_str());
     ClientProtocol protocol(std::move(skt));
     initialize_connection(protocol);
-    
+    game_loop(protocol);
 }

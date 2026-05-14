@@ -15,8 +15,7 @@ class ServerProtocol {
     Socket socket;
     //ServerSerializer serializer;
     //ServerDeserializer deserializer;
-    std::vector<uint8_t> recv_register_payload();
-    std::vector<uint8_t> recv_defeat_payload();
+  
 
  public:
     explicit ServerProtocol(Socket&& socket);
