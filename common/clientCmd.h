@@ -16,11 +16,13 @@ class ClientCmd {
     std::string target_name;
     std::string race;
     std::string klass;
+    std::string item_id;
 
  public:
     ClientCmd();
 
-
+    //set id
+    //get id
     void set_message_type(MessageType type);
     MessageType get_message_type() const;
 

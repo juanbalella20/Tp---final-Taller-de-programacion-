@@ -28,7 +28,7 @@ void ClientCmd::set_target_name(const std::string& name) { this->target_name = n
 const std::string& ClientCmd::get_target_name() const { return this->target_name; }
 
 void ClientCmd::set_race(Race race_value) { this->race = race_value; }
-Race ClientCmd::get_race() const { return this->race; }
+std::string ClientCmd::get_race() const { return this->race; }
 
 void ClientCmd::set_class(Class class_value) { this->klass = class_value; }
-Class ClientCmd::get_class() const { return this->klass; }
+std::string ClientCmd::get_class() const { return this->klass; }
