@@ -55,6 +55,8 @@ public:
 
     void add_gold(const int extra_gold);
 
+    bool give_gold(const int amount);
+
     int get_gold();
 
     std::string get_name();

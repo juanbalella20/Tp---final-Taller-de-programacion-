@@ -82,6 +82,15 @@ void Player::add_gold(const int extra_gold) {
     gold += extra_gold;
 }
 
+bool Player::give_gold(const int amount) {
+    if (gold >= amount) {
+        gold -= amount;
+        return true;
+    }
+
+    return false;
+}
+
 int Player::get_gold() {
     return gold;
 }
