@@ -9,6 +9,8 @@ private:
     std::vector<Item> items;
 
 public:
+    Inventory();
+    
     void add_item(Item item);
 
     void drop_item(Item item);
