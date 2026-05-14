@@ -51,7 +51,7 @@ public:
 
     void restore_lives(); // to-do
 
-    void restore_maná(); // to-do
+    void restore_mana(); // to-do
 
     void add_gold(const int extra_gold);
 
