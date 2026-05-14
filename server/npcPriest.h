@@ -13,11 +13,11 @@ class NPCpriest : public NPCfriendly {
         // adds or delete an item from the store
         void update_store();
         // revives player
-        void revive(int player_tag);
+        void revive(Player player);
         // heals player
-        void heal(int player_tag);
+        void heal(Player player);
         // sells item to player
-        Item sell_item(int item_id, int player_tag, int gold, int cantidad);
+        void sell_item(Item item, Player player, int cantidad);
 
     public:
         // an npc_id is generated and a name
@@ -27,7 +27,7 @@ class NPCpriest : public NPCfriendly {
          * - heals player
          * - sells item to player
          */
-        void interact(int player_tag, Command cmd) override;
+        void interact(Player player, Command cmd) override;
 
 };
 
