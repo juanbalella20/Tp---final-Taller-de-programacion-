@@ -86,3 +86,6 @@ int Player::get_gold() {
     return gold;
 }
 
+std::string Player::get_name() {
+    return name;
+}
