@@ -18,10 +18,12 @@ Player::Player(const std::string name, PlayerRace player_race, PlayerClass playe
 
 int Player::calculate_max_life() {
     // VidaMax = Constitución * FClaseVida * FRazaVida * Nivel
+    return player_race.life_strength() * player_class.life_strength() * level;
 }
 
 int Player::calculate_max_mana() {
     // ManaMax = Inteligencia * FClaseMana * FRazaMana * Nivel
+    return player_race.mana_strength() * player_class.mana_strength() * level;
 }
 
 void Player::level_up() {
