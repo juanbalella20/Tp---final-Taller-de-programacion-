@@ -5,6 +5,7 @@
 Player::Player(const std::string name, PlayerRace player_race, PlayerClass player_class):
     name(name),
     status(PlayerStatus::ALIVE),
+    equipped_item(nullptr),
     player_race(player_race), 
     player_class(player_class), 
     player_inventory() {
