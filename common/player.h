@@ -46,7 +46,7 @@ public:
 
     void use_object(Item item);
 
-    int attack();
+    int damage_attack();
 
     void recv_attack(int damage);
 

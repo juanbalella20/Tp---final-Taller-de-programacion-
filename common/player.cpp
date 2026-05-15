@@ -67,6 +67,18 @@ void Player::use_object(Item item) {
     item.use_item();
 }
 
+int Player::damage_attack() {
+    // Daño = Fuerza * rand(DañoArmaMin, DañoArmaMax)
+}
+
+void Player::recv_attack(int damage) {
+    // Esquivar si rand(0, 1) ^ Agilidad < 0.001
+
+    // Defensa = rand(ArmaduraMin, ArmaduraMax) + rand(EscudoMin, EscudoMax) + rand(CascoMin, CascoMax)
+
+    // lives -= (damage - defense)
+}
+
 void Player::revive() {
     lives = max_life();
     mana = max_mana();
