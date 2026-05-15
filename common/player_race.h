@@ -12,7 +12,15 @@ private:
     float mana_factor;
 
 public:
-    PlayerRace() {};
+    PlayerRace() {}
+
+    void set_human();
+
+    void set_elf();
+
+    void set_dwarf();
+
+    void set_gnome();
 
     int race_constitution();
 

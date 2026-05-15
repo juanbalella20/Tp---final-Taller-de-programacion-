@@ -14,6 +14,14 @@ private:
 public:
     PlayerClass() {}
     
+    void set_wizard();
+
+    void set_cleric();
+
+    void set_paladin();
+
+    void set_warrior();
+
     int class_constitution();
 
     int class_inteligence();
