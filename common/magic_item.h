@@ -25,7 +25,7 @@ private:
 public:
     explicit MagicItem(MagicItemType type);
 
-    void cast_spell(int spell_id, Player& target);
+    void cast_spell(int spell_id);
     void use_item(Player& player) override;
 
     MagicItemType getType() const;
