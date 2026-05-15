@@ -11,6 +11,8 @@ class Serializer {
     using Handler = std::function<std::vector<uint8_t>(const ClientCmd&)>;
     std::unordered_map<uint8_t, Handler> handlers;
 
+    void write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len);
+
     std::vector<uint8_t> serialize_register(const ClientCmd& cmd);
     std::vector<uint8_t> serialize_move(const ClientCmd& cmd);
     std::vector<uint8_t> serialize_attack(const ClientCmd& cmd);

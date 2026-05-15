@@ -13,15 +13,14 @@ class ServerDeserializer {
     using Handler = std::function<void(const std::vector<uint8_t>&, ClientCmd&)>;
     std::unordered_map<uint8_t, Handler> handlers;
 
+    void read_item_id(const std::vector<uint8_t>& payload, ClientCmd& cmd);
+    void read_entity_and_name(const std::vector<uint8_t>& payload, ClientCmd& cmd);
+
     void deserialize_register(const std::vector<uint8_t>& payload, ClientCmd& cmd);
     void deserialize_move(const std::vector<uint8_t>& payload, ClientCmd& cmd);
     void deserialize_attack(const std::vector<uint8_t>& payload, ClientCmd& cmd);
-    void deserialize_buy(const std::vector<uint8_t>& payload, ClientCmd& cmd);
-    void deserialize_sell(const std::vector<uint8_t>& payload, ClientCmd& cmd);
-    void deserialize_equip(const std::vector<uint8_t>& payload, ClientCmd& cmd);
     void deserialize_meditate(const std::vector<uint8_t>& payload, ClientCmd& cmd);
     void deserialize_resurrect(const std::vector<uint8_t>& payload, ClientCmd& cmd);
-    void deserialize_msg_select(const std::vector<uint8_t>& payload, ClientCmd& cmd);
 
  public:
     ServerDeserializer();

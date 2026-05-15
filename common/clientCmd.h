@@ -47,6 +47,9 @@ class ClientCmd {
 
     void set_direction(Direction dir);
     Direction get_direction() const;
+
+    void set_item_id(const std::string& item_id);
+    const std::string& get_item_id() const;
 };
 
 #endif  // COMMON_CLIENT_CMD_H_

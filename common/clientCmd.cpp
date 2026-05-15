@@ -36,3 +36,6 @@ const std::string& ClientCmd::get_class() const { return this->klass; }
 
 void ClientCmd::set_direction(Direction dir) { this->direction = dir; }
 Direction ClientCmd::get_direction() const { return this->direction; }
+
+void ClientCmd::set_item_id(const std::string& item_id) { this->item_id = item_id; }
+const std::string& ClientCmd::get_item_id() const { return this->item_id; }
