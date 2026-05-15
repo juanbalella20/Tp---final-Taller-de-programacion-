@@ -14,17 +14,11 @@ void NPCpriest::update_store(Item item) {
 }
 
 void NPCpriest::revive(Player player) { 
-    /* no hace falta esto: 
-    Event event;
-    event.type = REVIVE;
-    event.player_id = player_tag;
-    queue_event.push(event);
-    */
     player.revive();
 }
 
 void NPCpriest::heal(Player player) {
-    player.heal();
+    player.heal(int HP_HEAL, int MANA_HEAL);
 }
 
 void NPCpriest::sell_item(Item item, Player player, int cantidad) {
