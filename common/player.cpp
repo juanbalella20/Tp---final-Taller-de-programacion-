@@ -68,14 +68,31 @@ void Player::use_object(Item item) {
 }
 
 void Player::revive() {
-    // Vida = FRazaRecuperacion * segundos
+    lives = max_life();
+    mana = max_mana();
     status = PlayerStatus::ALIVE;
     experience = 0;
 }
 
-void Player::heal() {
-    // Vida = FRazaRecuperacion * segundos
-    // Mana = FClaseMeditacion * Inteligencia * segundos
+void Player::heal_life(const int healthy_life) {
+    if (lives + healthy_life < max_life()) {
+        lives += healthy_life;
+    } else {
+        lives = max_life();
+    }
+}
+
+void Player::heal_mana(const int healthy_mana) {
+    if (mana + healthy_mana < max_mana()) {
+        mana += healthy_mana;
+    } else {
+        mana = max_mana();
+    }
+}
+
+void Player::heal(const int healthy_life, const int healthy_mana) {
+    heal_life(healthy_life);
+    heal_mana(healthy_mana);
 }
 
 void Player::add_gold(const int extra_gold) {

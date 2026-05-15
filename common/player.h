@@ -47,11 +47,11 @@ public:
 
     void revive();
 
-    void heal();
+    void heal_life(const int healthy_life);
 
-    void restore_lives(); // to-do
+    void heal_mana(const int healthy_mana);
 
-    void restore_mana(); // to-do
+    void heal(const int healthy_life, const int healthy_mana);
 
     void add_gold(const int extra_gold);
 
