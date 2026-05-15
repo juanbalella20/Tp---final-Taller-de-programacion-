@@ -8,13 +8,19 @@ private:
     int agility;
     int strength;
     int endurance;
+    float life_factor;
+    float mana_factor;
 
 public:
-    PlayerRace();
+    PlayerRace() {};
 
-    int life_strength();
+    int race_constitution();
 
-    int mana_strength();
+    int race_inteligence();
+
+    int race_life_factor();
+
+    int race_mana_factor();
 
 };
 
