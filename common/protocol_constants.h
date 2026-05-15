@@ -15,9 +15,9 @@ enum MessageType : uint8_t {
     MSG_REGISTER     = 0x01,  // Crear personaje nuevo ---> hecho
     MSG_LOGIN        = 0x02,  // Conectarse con personaje existente
     MSG_MOVE         = 0x03,  // Mover personaje ---> hecho
-    MSG_ATTACK       = 0x04,  // Atacar jugador o NPC
+    MSG_ATTACK       = 0x04,  // Atacar jugador o NPC --> hecho
     MSG_TAKE        = 0x05,  // Recoger item del suelo
-    MSG_THROW        = 0x06,  // Tirar item del inventario
+    MSG_THROW        = 0x06,  // Tirar item del inventario 
     MSG_EQUIP        = 0x07,  // Equipar item del inventario
     MSG_MEDITATE      = 0x08,  // Entrar/salir estado meditacion
     MSG_RESURRECT    = 0x09,  // Resucitar (fantasma)

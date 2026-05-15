@@ -14,6 +14,12 @@ class Serializer {
     std::vector<uint8_t> serialize_register(const ClientCmd& cmd);
     std::vector<uint8_t> serialize_move(const ClientCmd& cmd);
     std::vector<uint8_t> serialize_attack(const ClientCmd& cmd);
+    std::vector<uint8_t> serialize_buy(const ClientCmd& cmd);
+    std::vector<uint8_t> serialize_sell(const ClientCmd& cmd);
+    std::vector<uint8_t> serialize_equip(const ClientCmd& cmd);
+    std::vector<uint8_t> serialize_meditate(const ClientCmd& cmd);
+    std::vector<uint8_t> serialize_resurrect(const ClientCmd& cmd);
+    std::vector<uint8_t> serialize_msg_select(const ClientCmd& cmd);
 
  public:
     Serializer();

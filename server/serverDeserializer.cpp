@@ -11,6 +11,18 @@ ServerDeserializer::ServerDeserializer() {
     handlers[MSG_ATTACK] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_attack(payload, cmd);
     };
+    handlers[MSG_BUY] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_buy(payload, cmd);
+    };
+    handlers[MSG_SELL] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_sell(payload, cmd);
+    };
+    handlers[MSG_EQUIP] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_equip(payload, cmd);
+    };
+    handlers[MSG_SELECT] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_msg_select(payload, cmd);
+    };
 }
 
 
@@ -36,11 +48,19 @@ void ServerDeserializer::deserialize_attack(const std::vector<uint8_t>& payload,
                             payload.begin() +  LEN_ENTITY + LEN_NAME_SIZE_FIELD + target_len);
     cmd.set_target_name(target_name);
 }
-
+void ServerDeserializer::deserialize_msg_select(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+    cmd.set_target_type(static_cast<EntityType>(payload[0]));
+    uint8_t target_len = payload[1];
+    std::string target_name(payload.begin() + LEN_ENTITY + LEN_NAME_SIZE_FIELD,
+                            payload.begin() +  LEN_ENTITY + LEN_NAME_SIZE_FIELD + target_len);
+    cmd.set_target_name(target_name);
+}
 void ServerDeserializer::deserialize_cmd(uint8_t type, const std::vector<uint8_t>& payload, ClientCmd& cmd) {
     cmd.set_message_type(static_cast<MessageType>(type));
     auto it = handlers.find(type);
     if (it != handlers.end()) {
         it->second(payload, cmd);
     }
+
+
 }
