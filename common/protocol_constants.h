@@ -2,6 +2,8 @@
 #define PROTOCOL_CONSTANTS_H
 
 #include <cstdint>
+#include <string>
+#include <unordered_map>
 
 enum MessageType : uint8_t {
     MSG_REGISTER     = 0x01,  // Crear personaje nuevo
@@ -57,6 +59,20 @@ enum Class : uint8_t {
     CLERIC  = 0x01,  
     PALADIN = 0x02, 
     WARRIOR = 0x03,  
+};
+
+const std::unordered_map<std::string, Race> RACE_MAP = {
+    {"human",  RACE_HUMAN},
+    {"elf",    RACE_ELF},
+    {"dwarf",  RACE_DWARF},
+    {"gnome",  RACE_GNOME},
+};
+
+const std::unordered_map<std::string, Class> CLASS_MAP = {
+    {"mage",    MAGE},
+    {"cleric",  CLERIC},
+    {"paladin", PALADIN},
+    {"warrior", WARRIOR},
 };
 
 #endif  // PROTOCOL_CONSTANTS_H
