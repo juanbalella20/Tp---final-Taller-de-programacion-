@@ -15,6 +15,7 @@ class ServerDeserializer {
 
     void read_item_id(const std::vector<uint8_t>& payload, ClientCmd& cmd);
     void read_entity_and_name(const std::vector<uint8_t>& payload, ClientCmd& cmd);
+    void read_gold(const std::vector<uint8_t>& payload, ClientCmd& cmd);
 
     void deserialize_register(const std::vector<uint8_t>& payload, ClientCmd& cmd);
     void deserialize_move(const std::vector<uint8_t>& payload, ClientCmd& cmd);

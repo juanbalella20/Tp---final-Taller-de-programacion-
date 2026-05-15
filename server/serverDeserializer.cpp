@@ -1,5 +1,7 @@
 #include "serverDeserializer.h"
 #include "../common/protocol_constants.h"
+#include <arpa/inet.h>
+#include <cstring>
 
 ServerDeserializer::ServerDeserializer() {
     handlers[MSG_REGISTER] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
@@ -18,8 +20,10 @@ ServerDeserializer::ServerDeserializer() {
     handlers[MSG_SELL]    = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
     handlers[MSG_EQUIP]   = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
     handlers[MSG_THROW]   = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
-    handlers[MSG_DEPOSIT] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
-    handlers[MSG_RETIRE]  = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
+    handlers[MSG_DEPOSIT]  = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
+    handlers[MSG_RETIRE]   = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
+    handlers[MSG_DEP_GOLD] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_gold(payload, cmd); };
+    handlers[MSG_RET_GOLD] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_gold(payload, cmd); };
 }
 
 void ServerDeserializer::deserialize_register(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
@@ -54,6 +58,12 @@ void ServerDeserializer::deserialize_attack(const std::vector<uint8_t>& payload,
     read_entity_and_name(payload, cmd);
 }
 
+
+void ServerDeserializer::read_gold(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+    uint32_t amount_be;
+    memcpy(&amount_be, payload.data(), sizeof(uint32_t));
+    cmd.set_gold(ntohl(amount_be));
+}
 
 void ServerDeserializer::deserialize_cmd(uint8_t type, const std::vector<uint8_t>& payload, ClientCmd& cmd) {
     cmd.set_message_type(static_cast<MessageType>(type));
