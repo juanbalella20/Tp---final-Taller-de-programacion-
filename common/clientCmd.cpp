@@ -7,8 +7,9 @@ ClientCmd::ClientCmd():
         player_name(),
         target_type(ENTITY_PLAYER),
         target_name(),
-        race(RACE_HUMAN),
-        klass(MAGE) {}
+        race("human"),
+        klass("mage"),
+        direction(DIR_NORTH) {}
 
 
 
@@ -27,8 +28,11 @@ EntityType ClientCmd::get_target_type() const { return this->target_type; }
 void ClientCmd::set_target_name(const std::string& name) { this->target_name = name; }
 const std::string& ClientCmd::get_target_name() const { return this->target_name; }
 
-void ClientCmd::set_race(Race race_value) { this->race = race_value; }
-std::string ClientCmd::get_race() const { return this->race; }
+void ClientCmd::set_race(const std::string& race_value) { this->race = race_value; }
+const std::string& ClientCmd::get_race() const { return this->race; }
 
-void ClientCmd::set_class(Class class_value) { this->klass = class_value; }
-std::string ClientCmd::get_class() const { return this->klass; }
+void ClientCmd::set_class(const std::string& class_value) { this->klass = class_value; }
+const std::string& ClientCmd::get_class() const { return this->klass; }
+
+void ClientCmd::set_direction(Direction dir) { this->direction = dir; }
+Direction ClientCmd::get_direction() const { return this->direction; }

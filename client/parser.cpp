@@ -18,6 +18,18 @@ ClientCmd Parser::parse(const std::string& input) {
         cmd.set_player_name(name);
         cmd.set_race(race);
         cmd.set_class(klass);
+    } else if (command == "w") {
+        cmd.set_message_type(MSG_MOVE);
+        cmd.set_direction(DIR_NORTH);
+    } else if (command == "s") {
+        cmd.set_message_type(MSG_MOVE);
+        cmd.set_direction(DIR_SOUTH);
+    } else if (command == "a") {
+        cmd.set_message_type(MSG_MOVE);
+        cmd.set_direction(DIR_WEST);
+    } else if (command == "d") {
+        cmd.set_message_type(MSG_MOVE);
+        cmd.set_direction(DIR_EAST);
     } else {
         throw std::invalid_argument("Comando desconocido: " + command);
     }

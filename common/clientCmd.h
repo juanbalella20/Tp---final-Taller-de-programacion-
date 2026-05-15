@@ -17,6 +17,7 @@ class ClientCmd {
     std::string race;
     std::string klass;
     std::string item_id;
+    Direction direction;
 
  public:
     ClientCmd();
@@ -43,6 +44,9 @@ class ClientCmd {
 
     void set_class(const std::string& class_value);
     const std::string& get_class() const;
+
+    void set_direction(Direction dir);
+    Direction get_direction() const;
 };
 
 #endif  // COMMON_CLIENT_CMD_H_

@@ -31,13 +31,29 @@ std::vector<uint8_t> Serializer::serialize_register(const ClientCmd& cmd) {
     return buf;
 }
 
+std::vector<uint8_t> Serializer::serialize_move(const ClientCmd& cmd) {
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + 1);
+
+    buf.push_back(MSG_MOVE);
+    uint16_t largo_be = htons(1);
+    uint8_t largo_bytes[sizeof(uint16_t)];
+    std::memcpy(largo_bytes, &largo_be, sizeof(uint16_t));
+    buf.insert(buf.end(), largo_bytes, largo_bytes + sizeof(uint16_t));
+
+    buf.push_back(static_cast<uint8_t>(cmd.get_direction()));
+    return buf;
+}
+
 std::vector<uint8_t> Serializer::serialize_cmd(const ClientCmd& cmd) {
     switch (cmd.get_message_type()) {
         case MSG_REGISTER:
             return serialize_register(cmd);
 
-        case MSG_LOGIN:
         case MSG_MOVE:
+            return serialize_move(cmd);
+
+        case MSG_LOGIN:
         case MSG_ATTACK:
         case MSG_TAKE:
         case MSG_THROW:
