@@ -6,6 +6,7 @@
 #include "inventory.h"
 
 #include <string>
+#include <memory>
 
 enum class PlayerStatus { ALIVE, DEAD };
 
@@ -20,7 +21,7 @@ private:
     int id_clan;
     int level;
     PlayerStatus status;
-    Item equipped_item;
+    std::shared_ptr<Item> equipped_item;
 
     PlayerRace player_race;
     PlayerClass player_class;

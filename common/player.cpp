@@ -42,7 +42,7 @@ void Player::drop_item(Item item) {
 }
 
 void Player::equip_item(Item item) {
-    if ( /*no tiene ningun item equipado*/ ) {
+    if (equipped_item == nullptr) {
         player_inventory.unequip_item(item);
         equipped_item = item;
     } else {
@@ -53,13 +53,13 @@ void Player::equip_item(Item item) {
 }
 
 void Player::unequip_item(Item item) {
-    if ( /*no tiene ningun item equipado*/ ) {
+    if (equipped_item == nullptr) {
         return;
     }
 
     if (equipped_item == item) {
         player_inventory.equip_item(item);
-        equipped_item = /* sin item equipado */;
+        equipped_item = nullptr;
     }
 }
 
