@@ -30,6 +30,13 @@ ClientCmd Parser::parse(const std::string& input) {
     } else if (command == "d") {
         cmd.set_message_type(MSG_MOVE);
         cmd.set_direction(DIR_EAST);
+    } else if (command == "attack") {
+        std::string entity_type, target_name;
+        if (!(ss >> entity_type >> target_name))
+            throw std::invalid_argument("Uso: attack <player|npc> <nombre>");
+        cmd.set_message_type(MSG_ATTACK);
+        cmd.set_target_type(entity_type == "npc" ? ENTITY_NPC : ENTITY_PLAYER);
+        cmd.set_target_name(target_name);
     } else {
         throw std::invalid_argument("Comando desconocido: " + command);
     }

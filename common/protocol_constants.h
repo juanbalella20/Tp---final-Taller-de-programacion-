@@ -9,11 +9,12 @@ const uint16_t LEN_HEADER = 3;  // 1 byte para tipo de mensaje + 2 bytes para la
 const uint16_t LEN_NAME_SIZE_FIELD = 1;  // 1 byte para largo del nombre
 const uint16_t LEN_RACE = 1;  // 1 byte para la raza
 const uint16_t LEN_CLASS = 1;  // 1 byte para la clase
+const uint16_t LEN_ENTITY = 1;  // 1 byte para el tipo de entidad (player/npc)
 
 enum MessageType : uint8_t {
-    MSG_REGISTER     = 0x01,  // Crear personaje nuevo
+    MSG_REGISTER     = 0x01,  // Crear personaje nuevo ---> hecho
     MSG_LOGIN        = 0x02,  // Conectarse con personaje existente
-    MSG_MOVE         = 0x03,  // Mover personaje
+    MSG_MOVE         = 0x03,  // Mover personaje ---> hecho
     MSG_ATTACK       = 0x04,  // Atacar jugador o NPC
     MSG_TAKE        = 0x05,  // Recoger item del suelo
     MSG_THROW        = 0x06,  // Tirar item del inventario

@@ -1,10 +1,23 @@
 #include "serverDeserializer.h"
 #include "../common/protocol_constants.h"
 
+ServerDeserializer::ServerDeserializer() {
+    handlers[MSG_REGISTER] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_register(payload, cmd);
+    };
+    handlers[MSG_MOVE] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_move(payload, cmd);
+    };
+    handlers[MSG_ATTACK] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_attack(payload, cmd);
+    };
+}
+
+
 void ServerDeserializer::deserialize_register(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
     uint8_t name_len = payload[0];
     std::string name(payload.begin() + LEN_NAME_SIZE_FIELD,
-                     payload.begin() + LEN_NAME_SIZE_FIELD + name_len); //aca deseraliza todo el nombre
+                     payload.begin() + LEN_NAME_SIZE_FIELD + name_len);//aca deseraliza todo el nombre
                      // arranca en playlod[1) donde saltea largo nombre,hasta el byte deonde termina el nombre]
     cmd.set_player_name(name);
     cmd.set_race(RACE_MAP_INV.at(payload[LEN_NAME_SIZE_FIELD + name_len]));
@@ -15,46 +28,19 @@ void ServerDeserializer::deserialize_move(const std::vector<uint8_t>& payload, C
     cmd.set_direction(static_cast<Direction>(payload[0]));
 }
 
+// payload = tipoEntidad(1) + largoNombre(1) + nombre(N)
+void ServerDeserializer::deserialize_attack(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+    cmd.set_target_type(static_cast<EntityType>(payload[0]));
+    uint8_t target_len = payload[1];
+    std::string target_name(payload.begin() + LEN_ENTITY + LEN_NAME_SIZE_FIELD,
+                            payload.begin() +  LEN_ENTITY + LEN_NAME_SIZE_FIELD + target_len);
+    cmd.set_target_name(target_name);
+}
+
 void ServerDeserializer::deserialize_cmd(uint8_t type, const std::vector<uint8_t>& payload, ClientCmd& cmd) {
     cmd.set_message_type(static_cast<MessageType>(type));
-
-    switch (static_cast<MessageType>(type)) {
-        case MSG_REGISTER:
-            deserialize_register(payload, cmd);
-            break;
-
-        case MSG_MOVE:
-            deserialize_move(payload, cmd);
-            break;
-
-        case MSG_LOGIN:
-        case MSG_ATTACK:
-        case MSG_TAKE:
-        case MSG_THROW:
-        case MSG_EQUIP:
-        case MSG_MEDITATE:
-        case MSG_RESURRECT:
-        case MSG_CURE:
-        case MSG_LIST:
-        case MSG_BUY:
-        case MSG_SELL:
-        case MSG_DEPOSIT:
-        case MSG_RETIRE:
-        case MSG_DEP_GOLD:
-        case MSG_RET_GOLD:
-        case MSG_PRIVATE:
-        case MSG_SELECT:
-        case MSG_FOUND_CLAN:
-        case MSG_JOIN_CLAN:
-        case MSG_REV_CLAN:
-        case MSG_CLAN_ACEP:
-        case MSG_CLAN_RECH:
-        case MSG_CLAN_BAN:
-        case MSG_CLAN_KICK:
-        case MSG_LEFT_CLAN:
-            break;
-
-        default:
-            break;
+    auto it = handlers.find(type);
+    if (it != handlers.end()) {
+        it->second(payload, cmd);
     }
 }
