@@ -2,6 +2,7 @@
 #define MAGIC_ITEM_H
 
 #include "item.h"
+#include "spell.h"
 
 enum class MagicItemType {
     ASH_STAFF,     
@@ -19,6 +20,7 @@ private:
     int damage_max;
     int mana_cost;
     bool ranged;
+    Spell spell;
 
 public:
     explicit MagicItem(MagicItemType type);
@@ -26,11 +28,11 @@ public:
     void cast_spell(int spell_id, Player& target);
     void use_item(Player& player) override;
 
-    MagicItemType getType()      const;
-    int getDamageMin()           const;
-    int getDamageMax()           const;
-    int getManaCost()            const;
-    bool isRanged()              const;
+    MagicItemType getType() const;
+    int getDamageMin() const;
+    int getDamageMax() const;
+    int getManaCost() const;
+    bool isRanged() const;
 };
 
 #endif

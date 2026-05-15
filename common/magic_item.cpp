@@ -5,9 +5,8 @@ MagicItem::MagicItem(MagicItemType type)
     : Item(0, "", 0), type(type)
     , damage_min(0), damage_max(0), mana_cost(0), ranged(true) {}
 
-void MagicItem::cast_spell(int spell_id, Player& target) {
-    // despacha el hechizo según spell_id
-    // consume mana del player que lanza
+void MagicItem::cast_spell(int target_id) {
+    spell.cast(target_id);
 }
 
 void MagicItem::use_item(Player& player) {
