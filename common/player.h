@@ -45,6 +45,10 @@ public:
 
     void use_object(Item item);
 
+    int attack();
+
+    void recv_attack(int damage);
+
     void revive();
 
     void heal_life(const int healthy_life);
