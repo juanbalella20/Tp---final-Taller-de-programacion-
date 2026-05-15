@@ -1,21 +1,26 @@
 #include "serializer.h"
 #include "../common/protocol_constants.h"
 #include <arpa/inet.h>
+#include <cstring>
 
+//          HEADER                                          PAYLOAD
+//(1 TIPO BYTE + 2 BYTES LARGO PAYLOAD )+(1 BYTE LARGO NOMBRE + N BYTES NOMBRE + 1 BYTE RAZA + 1 BYTE CLASE)
 std::vector<uint8_t> Serializer::serialize_register(const ClientCmd& cmd) {
     const std::string& name = cmd.get_player_name();
     uint8_t name_len = static_cast<uint8_t>(name.size());
     // payload = largoNombre(1) + nombre(N) + raza(1) + clase(1)
-    uint16_t payload_len = 1 + name_len + 1 + 1;
+    uint16_t payload_len = LEN_NAME_SIZE_FIELD + name_len + LEN_RACE + LEN_CLASS;
 
     std::vector<uint8_t> buf;
-    buf.reserve(3 + payload_len);
+    buf.reserve(LEN_HEADER + payload_len); //reservamos 3, por el header (1 byte tipo + 2 bytes largo) y 
+    //el payload que calculamos arriba
 
     // header
     buf.push_back(MSG_REGISTER);
-    uint16_t largo_be = htons(payload_len);
-    buf.push_back((largo_be >> 8) & 0xFF);
-    buf.push_back(largo_be & 0xFF);
+    uint16_t largo_be = htons(payload_len); // convierte el largo a big-endian (network order)
+    uint8_t largo_bytes[sizeof(uint16_t)];
+    std::memcpy(largo_bytes, &largo_be, sizeof(uint16_t)); // copia los 2 bytes ya ordenados para enviarlos
+    buf.insert(buf.end(), largo_bytes, largo_bytes + sizeof(uint16_t)); // agrega esos 2 bytes al header
 
     // payload
     buf.push_back(name_len);

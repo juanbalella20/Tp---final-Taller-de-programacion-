@@ -5,6 +5,11 @@
 #include <string>
 #include <unordered_map>
 
+const uint16_t LEN_HEADER = 3;  // 1 byte para tipo de mensaje + 2 bytes para largo del payload
+const uint16_t LEN_NAME_SIZE_FIELD = 1;  // 1 byte para largo del nombre
+const uint16_t LEN_RACE = 1;  // 1 byte para la raza
+const uint16_t LEN_CLASS = 1;  // 1 byte para la clase
+
 enum MessageType : uint8_t {
     MSG_REGISTER     = 0x01,  // Crear personaje nuevo
     MSG_LOGIN        = 0x02,  // Conectarse con personaje existente
