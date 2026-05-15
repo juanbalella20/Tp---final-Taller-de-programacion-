@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include "item.h"
+
 class Inventory {
 
 private:

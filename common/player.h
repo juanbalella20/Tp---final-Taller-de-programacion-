@@ -4,6 +4,7 @@
 #include "player_race.h"
 #include "player_class.h"
 #include "inventory.h"
+#include "item.h"
 
 #include <string>
 
