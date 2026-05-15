@@ -8,6 +8,7 @@
 class ServerDeserializer {
  private:
     void deserialize_register(const std::vector<uint8_t>& payload, ClientCmd& cmd);
+    void deserialize_move(const std::vector<uint8_t>& payload, ClientCmd& cmd);
 
  public:
     void deserialize_cmd(uint8_t type, const std::vector<uint8_t>& payload, ClientCmd& cmd);

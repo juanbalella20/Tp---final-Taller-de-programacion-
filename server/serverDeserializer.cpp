@@ -11,6 +11,10 @@ void ServerDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
     cmd.set_class(CLASS_MAP_INV.at(payload[LEN_NAME_SIZE_FIELD + name_len + LEN_RACE]));
 }
 
+void ServerDeserializer::deserialize_move(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+    cmd.set_direction(static_cast<Direction>(payload[0]));
+}
+
 void ServerDeserializer::deserialize_cmd(uint8_t type, const std::vector<uint8_t>& payload, ClientCmd& cmd) {
     cmd.set_message_type(static_cast<MessageType>(type));
 
@@ -19,8 +23,11 @@ void ServerDeserializer::deserialize_cmd(uint8_t type, const std::vector<uint8_t
             deserialize_register(payload, cmd);
             break;
 
-        case MSG_LOGIN:
         case MSG_MOVE:
+            deserialize_move(payload, cmd);
+            break;
+
+        case MSG_LOGIN:
         case MSG_ATTACK:
         case MSG_TAKE:
         case MSG_THROW:
