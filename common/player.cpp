@@ -9,19 +9,19 @@ Player::Player(const std::string name, PlayerRace player_race, PlayerClass playe
     player_class(player_class), 
     player_inventory() {
 
-    lives = calculate_max_life();
+    lives = max_life();
     gold = 0;
     experience = 0;
-    mana = calculate_max_mana();
+    mana = max_mana();
     level = 0;
 }
 
-int Player::calculate_max_life() {
+int Player::max_life() {
     // VidaMax = Constitución * FClaseVida * FRazaVida * Nivel
     return player_race.life_strength() * player_class.life_strength() * level;
 }
 
-int Player::calculate_max_mana() {
+int Player::max_mana() {
     // ManaMax = Inteligencia * FClaseMana * FRazaMana * Nivel
     return player_race.mana_strength() * player_class.mana_strength() * level;
 }

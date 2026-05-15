@@ -26,9 +26,9 @@ private:
     PlayerClass player_class;
     Inventory player_inventory;
 
-    int calculate_max_life();
+    int max_life();
 
-    int calculate_max_mana();
+    int max_mana();
 
     void level_up();
 
