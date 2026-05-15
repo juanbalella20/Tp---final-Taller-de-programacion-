@@ -73,11 +73,25 @@ const std::unordered_map<std::string, Race> RACE_MAP = {
     {"gnome",  RACE_GNOME},
 };
 
+const std::unordered_map<uint8_t, std::string> RACE_MAP_INV = {
+    {RACE_HUMAN,  "human"},
+    {RACE_ELF,    "elf"},
+    {RACE_DWARF,  "dwarf"},
+    {RACE_GNOME,  "gnome"},
+};
+
 const std::unordered_map<std::string, Class> CLASS_MAP = {
     {"mage",    MAGE},
     {"cleric",  CLERIC},
     {"paladin", PALADIN},
     {"warrior", WARRIOR},
+};
+
+const std::unordered_map<uint8_t, std::string> CLASS_MAP_INV = {
+    {MAGE,    "mage"},
+    {CLERIC,  "cleric"},
+    {PALADIN, "paladin"},
+    {WARRIOR, "warrior"},
 };
 
 #endif  // PROTOCOL_CONSTANTS_H
