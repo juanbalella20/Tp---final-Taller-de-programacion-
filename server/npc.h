@@ -16,6 +16,7 @@ class NPC {
     private:
         int npc_id;
         std::string name;
+        ItemDataBase itemdatabase;
     // an npc_id is generated and a name
     NPC();
     public:
