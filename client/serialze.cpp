@@ -20,6 +20,8 @@ Serializer::Serializer() {
     handlers[MSG_LIST]     = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_LIST); };
     handlers[MSG_REV_CLAN] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_REV_CLAN); };
     handlers[MSG_LEFT_CLAN]= [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_LEFT_CLAN); };
+    handlers[MSG_DEP_GOLD] = [this](const ClientCmd& cmd) { return serialize_gold(MSG_DEP_GOLD, cmd); };
+    handlers[MSG_RET_GOLD] = [this](const ClientCmd& cmd) { return serialize_gold(MSG_RET_GOLD, cmd); };
 }
 
 void Serializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {
@@ -84,6 +86,17 @@ std::vector<uint8_t> Serializer::serialize_no_payload(uint8_t type) {
     std::vector<uint8_t> buf;
     buf.reserve(LEN_HEADER);
     write_header(buf, type, 0);
+    return buf;
+}
+
+std::vector<uint8_t> Serializer::serialize_gold(uint8_t type, const ClientCmd& cmd) {
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + sizeof(uint32_t));
+    write_header(buf, type, sizeof(uint32_t));
+    uint32_t amount_be = htonl(cmd.get_gold());
+    uint8_t amount_bytes[sizeof(uint32_t)];
+    std::memcpy(amount_bytes, &amount_be, sizeof(uint32_t));
+    buf.insert(buf.end(), amount_bytes, amount_bytes + sizeof(uint32_t));
     return buf;
 }
 

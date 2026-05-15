@@ -19,6 +19,7 @@ class Serializer {
     std::vector<uint8_t> serialize_entity_and_name(uint8_t type, const ClientCmd& cmd);
     std::vector<uint8_t> serialize_item_id(uint8_t type, const ClientCmd& cmd);
     std::vector<uint8_t> serialize_no_payload(uint8_t type);
+    std::vector<uint8_t> serialize_gold(uint8_t type, const ClientCmd& cmd);
 
  public:
     Serializer();
