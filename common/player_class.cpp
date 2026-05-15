@@ -8,6 +8,14 @@ int PlayerClass::class_inteligence() {
     return inteligence; 
 }
 
+int PlayerClass::class_agility() {
+    return agility; 
+}
+
+int PlayerClass::class_strength() {
+    return strength; 
+}
+
 int PlayerClass::class_life_factor() {
     return life_factor;
 }

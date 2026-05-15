@@ -18,6 +18,10 @@ public:
 
     int race_inteligence();
 
+    int race_agility();
+
+    int race_strength();
+
     int race_life_factor();
 
     int race_mana_factor();

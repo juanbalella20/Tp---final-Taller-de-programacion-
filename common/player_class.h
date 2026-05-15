@@ -18,6 +18,10 @@ public:
 
     int class_inteligence();
 
+    int class_agility();
+
+    int class_strength();
+
     int class_life_factor();
 
     int class_mana_factor();
