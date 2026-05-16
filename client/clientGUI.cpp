@@ -1,4 +1,4 @@
-#include "display.h"
+#include "clientGUI.h"
 #include <SDL3/SDL_main.h>
 #include <iostream>
 

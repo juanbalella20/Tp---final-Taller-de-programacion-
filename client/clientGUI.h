@@ -1,5 +1,5 @@
-#ifndef CLIENT_DISPLAY_H
-#define CLIENT_DISPLAY_H
+#ifndef CLIENT_GUI_H
+#define CLIENT_GUI_H
 
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
@@ -22,4 +22,4 @@ bool game_new(GameDisplay& g);
 void game_run(GameDisplay& g);
 void game_free(GameDisplay& g);
 
-#endif  // CLIENT_DISPLAY_H
+#endif  // CLIENT_GUI_H
