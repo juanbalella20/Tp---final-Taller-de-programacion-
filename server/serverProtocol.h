@@ -5,6 +5,7 @@
 #include "../common/clientCmd.h"
 #include "../common/gamMsg.h"
 #include "../common/socket.h"
+#include "serverSerializer.h"
 
 #include <arpa/inet.h>
 #include <cstdint>
@@ -14,6 +15,7 @@ class ServerProtocol {
  private:
     Socket socket;
     ServerDeserializer deserializer;
+    ServerSerializer serializer;
   
 
  public:

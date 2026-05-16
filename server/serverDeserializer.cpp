@@ -2,6 +2,7 @@
 #include "../common/protocol_constants.h"
 #include <arpa/inet.h>
 #include <cstring>
+#include <stdexcept>
 
 ServerDeserializer::ServerDeserializer() {
     handlers[MSG_REGISTER] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
@@ -24,7 +25,26 @@ ServerDeserializer::ServerDeserializer() {
     handlers[MSG_RETIRE]   = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
     handlers[MSG_DEP_GOLD] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_gold(payload, cmd); };
     handlers[MSG_RET_GOLD] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_gold(payload, cmd); };
+    handlers[MSG_MEDITATE] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
+    handlers[MSG_RESURRECT]= [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
+    handlers[MSG_CURE]     = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
+    handlers[MSG_LIST]     = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
+    handlers[MSG_REV_CLAN] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
+    handlers[MSG_LEFT_CLAN]= [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
 }
+
 
 void ServerDeserializer::deserialize_register(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
     uint8_t name_len = payload[0];
@@ -56,6 +76,13 @@ void ServerDeserializer::read_entity_and_name(const std::vector<uint8_t>& payloa
 
 void ServerDeserializer::deserialize_attack(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
     read_entity_and_name(payload, cmd);
+}
+
+void ServerDeserializer::deserialize_no_payload(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+    (void)cmd;
+    if (!payload.empty()) {
+        throw std::invalid_argument("Payload invalido para mensaje sin datos");
+    }
 }
 
 

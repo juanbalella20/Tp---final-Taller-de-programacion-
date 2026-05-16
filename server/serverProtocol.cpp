@@ -20,7 +20,10 @@ bool ServerProtocol::receive_command(ClientCmd& cmd) {
     return true;
 }
 
-void ServerProtocol::send_event(const GameMsg& msg) {}
+void ServerProtocol::send_event(const GameMsg& msg) {
+    std::vector<uint8_t> bytes = serializer.serialize_cmd(msg);
+    socket.sendall(bytes.data(), bytes.size());
+}
 
 void ServerProtocol::disconnect() {
     socket.shutdown(SHUT_RDWR);

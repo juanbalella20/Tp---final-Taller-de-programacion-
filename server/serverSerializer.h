@@ -1,0 +1,22 @@
+#ifndef SERVER_SRC_SERVER_SERIALIZER_H_
+#define SERVER_SRC_SERVER_SERIALIZER_H_
+
+#include "../common/gameMsg.h"
+#include <vector>
+#include <functional>
+#include <unordered_map>
+
+class ServerSerializer {
+private:
+    using Handler = std::function<std::vector<uint8_t>(const GameMsg&)>;
+    std::unordered_map<uint8_t, Handler> handlers;
+
+    void write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len);
+    std::vector<uint8_t> serialize_move(const GameMsg& msg);
+
+ public:
+    ServerSerializer();
+    std::vector<uint8_t> serialize_cmd(const GameMsg& msg);
+};
+
+#endif  // SERVER_SRC_SERVER_SERIALIZER_H_
