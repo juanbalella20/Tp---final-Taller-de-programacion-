@@ -35,10 +35,10 @@ enum MessageType : uint8_t {
     MSG_FOUND_CLAN   = 0x14,  // Fundar un clan                   [x cliente]  [x servidor]
     MSG_JOIN_CLAN    = 0x15,  // Pedir unirse a un clan           [x cliente]  [x servidor]
     MSG_REV_CLAN     = 0x16,  // Revisar pedidos del clan         [cliente OK] [servidor OK]
-    MSG_CLAN_ACEP    = 0x17,  // Aceptar jugador al clan          [x cliente]  [x servidor]
-    MSG_CLAN_RECH    = 0x18,  // Rechazar jugador del clan        [x cliente]  [x servidor]
-    MSG_CLAN_BAN     = 0x19,  // Banear jugador del clan          [x cliente]  [x servidor]
-    MSG_CLAN_KICK    = 0x1A,  // Echar jugador del clan           [x cliente]  [x servidor]
+    MSG_CLAN_ACEP    = 0x17,  // Aceptar jugador al clan          [cliente OK] [x servidor]
+    MSG_CLAN_RECH    = 0x18,  // Rechazar jugador del clan        [cliente OK] [x servidor]
+    MSG_CLAN_BAN     = 0x19,  // Banear jugador del clan          [cliente OK] [x servidor]
+    MSG_CLAN_KICK    = 0x1A,  // Echar jugador del clan           [cliente OK] [x servidor]
     MSG_LEFT_CLAN    = 0x1B,  // Dejar el clan                    [cliente OK] [servidor OK]
 };
 

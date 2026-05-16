@@ -19,9 +19,14 @@ Serializer::Serializer() {
     handlers[MSG_CURE]     = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CURE); };
     handlers[MSG_LIST]     = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_LIST); };
     handlers[MSG_REV_CLAN] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_REV_CLAN); };
-    handlers[MSG_LEFT_CLAN]= [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_LEFT_CLAN); };
-    handlers[MSG_DEP_GOLD] = [this](const ClientCmd& cmd) { return serialize_gold(MSG_DEP_GOLD, cmd); };
+    handlers[MSG_LEFT_CLAN] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_LEFT_CLAN); };
+    handlers[MSG_CLAN_ACEP] = [this](const ClientCmd& cmd) { return serialize_player_name(MSG_CLAN_ACEP, cmd); };
+    handlers[MSG_CLAN_RECH] = [this](const ClientCmd& cmd) { return serialize_player_name(MSG_CLAN_RECH, cmd); };
+    handlers[MSG_CLAN_BAN]  = [this](const ClientCmd& cmd) { return serialize_player_name(MSG_CLAN_BAN,  cmd); };
+    handlers[MSG_CLAN_KICK] = [this](const ClientCmd& cmd) { return serialize_player_name(MSG_CLAN_KICK, cmd); };
+    handlers[MSG_DEP_GOLD]  = [this](const ClientCmd& cmd) { return serialize_gold(MSG_DEP_GOLD, cmd); };
     handlers[MSG_RET_GOLD] = [this](const ClientCmd& cmd) { return serialize_gold(MSG_RET_GOLD, cmd); };
+ 
 }
 
 void Serializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {
@@ -31,6 +36,7 @@ void Serializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t 
     std::memcpy(largo_bytes, &largo_be, sizeof(uint16_t));
     buf.insert(buf.end(), largo_bytes, largo_bytes + sizeof(uint16_t));
 }
+
 
 std::vector<uint8_t> Serializer::serialize_register(const ClientCmd& cmd) {
     const std::string& name = cmd.get_player_name();
@@ -64,6 +70,19 @@ std::vector<uint8_t> Serializer::serialize_entity_and_name(uint8_t type, const C
     buf.reserve(LEN_HEADER + payload_len);
     write_header(buf, type, payload_len);
     buf.push_back(static_cast<uint8_t>(cmd.get_target_type()));
+    buf.push_back(target_len);
+    buf.insert(buf.end(), target.begin(), target.end());
+    return buf;
+}
+
+std::vector<uint8_t> Serializer::serialize_player_name(uint8_t type, const ClientCmd& cmd) {
+    const std::string& target = cmd.get_target_name();
+    uint8_t target_len = static_cast<uint8_t>(target.size());
+    uint16_t payload_len = LEN_NAME_SIZE_FIELD + target_len;
+
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, type, payload_len);
     buf.push_back(target_len);
     buf.insert(buf.end(), target.begin(), target.end());
     return buf;
