@@ -1,145 +1,105 @@
 #include "clientGUI.h"
-#include <SDL3/SDL_main.h>
+#include <SDL3_image/SDL_image.h>
 #include <iostream>
+#include <stdexcept>
 
-// inicializa SDL, window y renderer
-bool game_init_sdl(GameDisplay& g) {
+ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
+    : window(nullptr), renderer(nullptr), background(nullptr), event{},
+      is_running(false), outgoing(outgoing), receiving(receiving), player(nullptr) {}
 
+ClientGUI::~ClientGUI() {
+    freeSDL();
+}
+
+void ClientGUI::initSDL() {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
-        std::cout << "Error initializing SDL3" << std::endl;
-        return false;
+        throw std::runtime_error(std::string("SDL_Init: ") + SDL_GetError());
     }
-    g.window = SDL_CreateWindow(WIN_NAME, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
-    if (!g.window) {
-        std::cout << "Error creating Window" << std::endl;
-        return false;
+    window = SDL_CreateWindow(WIN_NAME, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+    if (!window) {
+        throw std::runtime_error(std::string("SDL_CreateWindow: ") + SDL_GetError());
     }
-    g.renderer = SDL_CreateRenderer(g.window, NULL);
-    if (!g.renderer) {
-        std::cout << "Error creating Render" << std::endl;
-        return false;
-    } 
-
-    SDL_Surface *icon_surf = IMG_Load("images/logo.jpeg");
-    if (icon_surf) {
-        SDL_SetWindowIcon(g.window, icon_surf);
-        SDL_DestroySurface(icon_surf);
+    renderer = SDL_CreateRenderer(window, nullptr);
+    if (!renderer) {
+        throw std::runtime_error(std::string("SDL_CreateRenderer: ") + SDL_GetError());
     }
 
-    return true;
+    SDL_Surface* icon = IMG_Load("images/logo.jpeg");
+    if (icon) {
+        SDL_SetWindowIcon(window, icon);
+        SDL_DestroySurface(icon);
+    }
 }
 
-// creates background !
-bool game_load_media(GameDisplay& g) {
-    g.background = IMG_LoadTexture(g.renderer, "images/background.jpg");
-    if (!g.background) {
-        fprintf(stderr, "Error loading Texture: %s\n", SDL_GetError());
-        return false;
+void ClientGUI::loadMedia() {
+    background = IMG_LoadTexture(renderer, "images/background.jpg");
+    if (!background) {
+        throw std::runtime_error(std::string("Loading background: ") + SDL_GetError());
     }
-
-    return true;
 }
 
-// libera los recursos de windows y renderer, cierra el SDL
-void game_free(GameDisplay& g) {
+void ClientGUI::freeSDL() {
+    player.reset();
 
-    player_free(g.player);
-
-    if(g.background) {
-        SDL_DestroyTexture(g.background);
-        g.background = NULL;
+    if (background) {
+        SDL_DestroyTexture(background);
+        background = nullptr;
     }
-
-    if (g.window) {
-        SDL_DestroyWindow(g.window); 
-        g.window = NULL;
+    if (renderer) {
+        SDL_DestroyRenderer(renderer);
+        renderer = nullptr;
     }
-    if (g.renderer) {
-        SDL_DestroyRenderer(g.renderer); 
-        g.renderer = NULL;
+    if (window) {
+        SDL_DestroyWindow(window);
+        window = nullptr;
     }
     SDL_Quit();
-
 }
 
-// analiza los eventos que son enviados desde el usuario
-void game_events(GameDisplay& g) {
-    while (SDL_PollEvent(&g.event)) {
-        switch (g.event.type)
-        {
-        case SDL_EVENT_QUIT:
-            g.is_running = false;
-            break;
-        case SDL_EVENT_KEY_DOWN :
-            switch (g.event.key.scancode)
-            {
-            case SDL_SCANCODE_ESCAPE:
-                g.is_running = false;
-                break;            
+void ClientGUI::handleEvents() {
+    while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+            case SDL_EVENT_QUIT:
+                is_running = false;
+                break;
+            case SDL_EVENT_KEY_DOWN:
+                if (event.key.scancode == SDL_SCANCODE_ESCAPE) {
+                    is_running = false;
+                }
+                break;
             default:
                 break;
-            }
-            break;
-        default:
-            break;
         }
     }
 }
 
-void game_update(GameDisplay &g) {
-    player_update(g.player);
+void ClientGUI::update() {
+    player->update();
+    //outgoing.push(player_update());
 }
 
-// dibuja el renderer
-void game_draw(GameDisplay& g) {
-    SDL_RenderClear(g.renderer);
-    
-    SDL_RenderTexture(g.renderer, g.background, NULL, NULL);
-    player_draw(g.player);
-
-    SDL_RenderPresent(g.renderer);
+void ClientGUI::draw() {
+    SDL_RenderClear(renderer);
+    SDL_RenderTexture(renderer, background, nullptr, nullptr);
+    player->draw();
+    SDL_RenderPresent(renderer);
 }
 
-// si no esta inicializado, setea is_running a true
-bool game_new(GameDisplay& g) {
-    if (!game_init_sdl(g)) {
-        return false;
-    }
-    if (!game_load_media(g)) {
-        return false;
-    }
-    if (!player_new(g.player, g.renderer)) {
-        return false;
-    }
+void ClientGUI::run() {
+    try {
+        initSDL();
+        loadMedia();
+        player = std::make_unique<PlayerDisplay>(renderer, "images/player.png");
+        is_running = true;
 
-    g.is_running = true;
-    return true;
+        SDL_Delay(100);
+        while (is_running && should_keep_running()) {
+            handleEvents();
+            update();
+            draw();
+            SDL_Delay(16);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "ClientGUI error: " << e.what() << std::endl;
+    }
 }
-
-// mientras este corriendo, se dibuja y captura eventos
-void game_run(GameDisplay& g) {
-    SDL_Delay(100);
-    while (g.is_running) {
-        game_events(g);
-        game_update(g);
-        game_draw(g);
-        SDL_Delay(16);
-    }
-
-}
-
-int main(void) {
-    bool exit_status = EXIT_FAILURE;
-
-    GameDisplay game = {0};
-
-    if (game_new(game)) {
-        game_run(game);
-        exit_status = EXIT_SUCCESS;
-    }
-
-    game_free(game);
-    return exit_status;
-}
-
-

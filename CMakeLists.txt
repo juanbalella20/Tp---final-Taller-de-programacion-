@@ -32,9 +32,13 @@ add_executable(client
 target_include_directories(client PRIVATE client)
 target_link_libraries(client PRIVATE common SDL3::SDL3)
 
-# ── Display test (SDL3 sandbox) ─────────────────────────────────────────────
-add_executable(display_test client/display.cpp client/displayPlayer.cpp)
-target_link_libraries(display_test PRIVATE SDL3::SDL3 SDL3_image::SDL3_image)
+# ── GUI test (SDL3 sandbox) ─────────────────────────────────────────────────
+add_executable(gui_test
+    client/guiTest.cpp
+    client/clientGUI.cpp
+    client/displayPlayer.cpp
+)
+target_link_libraries(gui_test PRIVATE common SDL3::SDL3 SDL3_image::SDL3_image)
 
 # ── Server ──────────────────────────────────────────────────────────────────
 add_executable(server

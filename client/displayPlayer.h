@@ -2,31 +2,33 @@
 #define DISPLAY_PLAYER_H
 
 #include <SDL3/SDL.h>
-#include <SDL3_image/SDL_image.h>
+#include <string>
 
 #define PLAYER_VEL 3.0f
 
-struct PlayerDisplay {
-    SDL_Renderer *renderer;
-    SDL_Texture *image;
+class PlayerDisplay {
+private:
+    SDL_Renderer* renderer;
+    SDL_Texture* image;
     SDL_FRect rect;
-    const bool *keystate;
+    const bool* keystate;
+
+public:
+    // Carga la imagen y setea una posicion inicial
+    PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath);
+    ~PlayerDisplay();
+
+    PlayerDisplay(const PlayerDisplay&) = delete;
+    PlayerDisplay& operator=(const PlayerDisplay&) = delete;
+    PlayerDisplay(PlayerDisplay&& other) noexcept;
+    PlayerDisplay& operator=(PlayerDisplay&& other) noexcept;
+
+    // Lee el teclado y mueve el jugador. (Solo para el jugador local)
+    void update();
+    // For remote players: set position from server messages
+    // Para jugadores remotos: setear la posicion segun los mensajes del server
+    void setPosition(float x, float y);
+    void draw() const;
 };
- /*
-  * Constructor de Player display.
-  * Guarda el renderer
-  * Carga la image (from disk into a surface)
-  * Convierte la surface en texture
-  * Lee el texture width/height y lo guarda
-  * Setea posicion initial
-  * Toma el estado del teclado
-  */
-bool player_new(PlayerDisplay& player, SDL_Renderer* renderer);
-// libera los recursos del spray
-void player_free(PlayerDisplay& player);
-// se encarga del movimiento del jugador
-void player_update(PlayerDisplay& player);
-// le indica al SDL pintar la textura del player por pantalla
-void player_draw(const PlayerDisplay& player);
 
 #endif
