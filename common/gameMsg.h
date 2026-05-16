@@ -1,6 +1,6 @@
 #ifndef GAME_MSG_H
 #define GAME_MSG_H
-#include "common/protocol_constants.h"
+#include "../common/protocol_constants.h"
 
 class GameMsg {
     private:

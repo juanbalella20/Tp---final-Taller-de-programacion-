@@ -2,8 +2,6 @@
 #include "../common/queue.h"
 #include "../common/clientCmd.h"
 
-class GameMsg {};  // stub until common/gameMsg.h exists
-
 int main() {
     Queue<ClientCmd> outgoing;
     Queue<GameMsg> receiving;

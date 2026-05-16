@@ -8,8 +8,8 @@
 #include "../common/thread.h"
 #include "../common/queue.h"
 #include "../common/clientCmd.h"
+#include "../common/gameMsg.h"
 
-class GameMsg;  // eliminar cuando se mergee 
 
 #define WIN_NAME "Argentum"
 #define WINDOW_WIDTH 800
@@ -35,6 +35,8 @@ private:
     void handleEvents();
     void update();
     void draw();
+
+    void sendMoveCmd(Direction dir);
 
 public:
     ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving);
