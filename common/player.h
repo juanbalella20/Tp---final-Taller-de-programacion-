@@ -4,9 +4,15 @@
 #include "player_race.h"
 #include "player_class.h"
 #include "inventory.h"
+<<<<<<< HEAD
 #include "item.h"
 
 #include <string>
+=======
+
+#include <string>
+#include <memory>
+>>>>>>> origin/dev
 
 enum class PlayerStatus { ALIVE, DEAD };
 
@@ -21,15 +27,15 @@ private:
     int id_clan;
     int level;
     PlayerStatus status;
-    Item equipped_item;
+    std::shared_ptr<Item> equipped_item;
 
     PlayerRace player_race;
     PlayerClass player_class;
     Inventory player_inventory;
 
-    int calculate_max_life();
+    int max_life();
 
-    int calculate_max_mana();
+    int max_mana();
 
     void level_up();
 
@@ -46,13 +52,17 @@ public:
 
     void use_object(Item item);
 
+    int damage_attack();
+
+    void recv_attack(int damage);
+
     void revive();
 
-    void heal();
+    void heal_life(const int healthy_life);
 
-    void restore_lives(); // to-do
+    void heal_mana(const int healthy_mana);
 
-    void restore_mana(); // to-do
+    void heal(const int healthy_life, const int healthy_mana);
 
     void add_gold(const int extra_gold);
 

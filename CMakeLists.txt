@@ -1,0 +1,52 @@
+cmake_minimum_required(VERSION 3.16)
+project(argentum CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
+
+# SDL3 from vendored source
+add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
+add_subdirectory(vendored/SDL_image EXCLUDE_FROM_ALL)
+
+# ── Common library (shared by client and server) ────────────────────────────
+add_library(common STATIC
+    common/socket.cpp
+    common/resolver.cpp
+    common/resolvererror.cpp
+    common/liberror.cpp
+    common/clientCmd.cpp
+)
+target_include_directories(common PUBLIC common)
+
+# ── Client ──────────────────────────────────────────────────────────────────
+add_executable(client
+    client/clientmain.cpp
+    client/clientApp.cpp
+    client/clientProtocol.cpp
+    client/serialze.cpp
+    client/parser.cpp
+)
+target_include_directories(client PRIVATE client)
+target_link_libraries(client PRIVATE common SDL3::SDL3)
+
+# ── Display test (SDL3 sandbox) ─────────────────────────────────────────────
+add_executable(display_test client/display.cpp client/displayPlayer.cpp)
+target_link_libraries(display_test PRIVATE SDL3::SDL3 SDL3_image::SDL3_image)
+
+# ── Server ──────────────────────────────────────────────────────────────────
+add_executable(server
+    server/server.cpp
+    server/serverApp.cpp
+    server/acceptor.cpp
+    server/clientHandler.cpp
+    server/clientRegistryMonitor.cpp
+    server/receiverThread.cpp
+    server/senderThread.cpp
+    server/serverProtocol.cpp
+    server/serverDeserializer.cpp
+)
+target_include_directories(server PRIVATE server)
+target_link_libraries(server PRIVATE common)

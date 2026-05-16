@@ -8,13 +8,31 @@ private:
     int agility;
     int strength;
     int endurance;
+    float life_factor;
+    float mana_factor;
 
 public:
-    PlayerClass();
+    PlayerClass() {}
     
-    int life_strength();
+    void set_wizard();
 
-    int mana_strength();
+    void set_cleric();
+
+    void set_paladin();
+
+    void set_warrior();
+
+    int class_constitution();
+
+    int class_inteligence();
+
+    int class_agility();
+
+    int class_strength();
+
+    int class_life_factor();
+
+    int class_mana_factor();
 };
 
 #endif

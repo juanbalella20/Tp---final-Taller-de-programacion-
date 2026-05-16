@@ -5,25 +5,26 @@
 Player::Player(const std::string name, PlayerRace player_race, PlayerClass player_class):
     name(name),
     status(PlayerStatus::ALIVE),
+    equipped_item(nullptr),
     player_race(player_race), 
     player_class(player_class), 
     player_inventory() {
 
-    lives = calculate_max_life();
+    lives = max_life();
     gold = 0;
     experience = 0;
-    mana = calculate_max_mana();
+    mana = max_mana();
     level = 0;
 }
 
-int Player::calculate_max_life() {
+int Player::max_life() {
     // VidaMax = Constitución * FClaseVida * FRazaVida * Nivel
-    return player_race.life_strength() * player_class.life_strength() * level;
+    return player_race.race_constitution() * player_class.class_constitution() * player_class.class_life_factor() * player_race.race_life_factor() * level;
 }
 
-int Player::calculate_max_mana() {
+int Player::max_mana() {
     // ManaMax = Inteligencia * FClaseMana * FRazaMana * Nivel
-    return player_race.mana_strength() * player_class.mana_strength() * level;
+    return player_race.race_inteligence() * player_class.class_inteligence() * player_class.class_mana_factor() * player_race.race_mana_factor() * level;
 }
 
 void Player::level_up() {
@@ -42,7 +43,7 @@ void Player::drop_item(Item item) {
 }
 
 void Player::equip_item(Item item) {
-    if ( /*no tiene ningun item equipado*/ ) {
+    if (equipped_item == nullptr) {
         player_inventory.unequip_item(item);
         equipped_item = item;
     } else {
@@ -53,13 +54,13 @@ void Player::equip_item(Item item) {
 }
 
 void Player::unequip_item(Item item) {
-    if ( /*no tiene ningun item equipado*/ ) {
+    if (equipped_item == nullptr) {
         return;
     }
 
     if (equipped_item == item) {
         player_inventory.equip_item(item);
-        equipped_item = /* sin item equipado */;
+        equipped_item = nullptr;
     }
 }
 
@@ -67,15 +68,44 @@ void Player::use_object(Item item) {
     item.use_item();
 }
 
+int Player::damage_attack() {
+    // Daño = Fuerza * rand(DañoArmaMin, DañoArmaMax)
+}
+
+void Player::recv_attack(int damage) {
+    // Esquivar si rand(0, 1) ^ Agilidad < 0.001
+
+    // Defensa = rand(ArmaduraMin, ArmaduraMax) + rand(EscudoMin, EscudoMax) + rand(CascoMin, CascoMax)
+
+    // lives -= (damage - defense)
+}
+
 void Player::revive() {
-    // Vida = FRazaRecuperacion * segundos
+    lives = max_life();
+    mana = max_mana();
     status = PlayerStatus::ALIVE;
     experience = 0;
 }
 
-void Player::heal() {
-    // Vida = FRazaRecuperacion * segundos
-    // Mana = FClaseMeditacion * Inteligencia * segundos
+void Player::heal_life(const int healthy_life) {
+    if (lives + healthy_life < max_life()) {
+        lives += healthy_life;
+    } else {
+        lives = max_life();
+    }
+}
+
+void Player::heal_mana(const int healthy_mana) {
+    if (mana + healthy_mana < max_mana()) {
+        mana += healthy_mana;
+    } else {
+        mana = max_mana();
+    }
+}
+
+void Player::heal(const int healthy_life, const int healthy_mana) {
+    heal_life(healthy_life);
+    heal_mana(healthy_mana);
 }
 
 void Player::add_gold(const int extra_gold) {

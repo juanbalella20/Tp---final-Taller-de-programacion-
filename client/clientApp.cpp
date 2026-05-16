@@ -1,49 +1,45 @@
-#include "client_app.h"
-
+#include "clientApp.h"
+#include "parser.h"
 #include <iostream>
 #include <stdexcept>
 #include <utility>
 
-ClientApp::ClientApp(const std::string& host, const std::string& port): host_(host), port_(port) {}
+ClientApp::ClientApp(const std::string& host,
+                     const std::string& port,
+                     const std::string& player_name,
+                     const std::string& race,
+                     const std::string& klass):
+        host_(host), port_(port), player_name_(player_name), race_(race), class_(klass) {}
 
-ClientProtocol ClientApp::initialize_connection() {
-    Socket skt(host_.c_str(), port_.c_str());
-    ClientProtocol protocol(std::move(skt));
-    printer_.print_ask_name();
-    std::string name;
-    if (reader_.read_line(name)) {
-        ClientCmd cmd;
-        cmd.set_type(ClientCmdType::REGISTER_NAME);
-        cmd.set_player_name(name);
-        protocol.send_command(cmd);
-        return protocol;
-    } else {
-        throw std::runtime_error("Failed to read player name");
-    }
+void ClientApp::initialize_connection(ClientProtocol& protocol) {
+    ClientCmd cmd;
+    //Apriori lo voy a pensar como registro sin persistencia
+    cmd.set_message_type(MSG_REGISTER);
+    cmd.set_player_name(player_name_);
+    cmd.set_race(race_);
+    cmd.set_class(class_);
+   
+    protocol.send_command(cmd);
 }
 
-bool ClientApp::handle_command(ClientProtocol& protocol, const std::string& line) {
-    try {
-        ClientCmd cmd = parser_.parse(line);
-        if (cmd.type() == ClientCmdType::EXIT) {
-            protocol.disconnect();
-            return false;
+
+void ClientApp::game_loop(ClientProtocol& protocol) {
+    std::string input;
+    while (std::getline(std::cin, input)) {
+        if (input == "q")
+            break;
+        try {
+            ClientCmd cmd = Parser::parse(input);
+            protocol.send_command(cmd);
+        } catch (const std::invalid_argument& e) {
+            std::cout << e.what() << "\n";
         }
-        if (cmd.type() == ClientCmdType::READ) {
-            for (uint16_t i = 0; i < cmd.read_count(); i++) {
-                printer_.print_event(protocol.receive_event());
-            }
-            return true;
-        }
-        protocol.send_command(cmd);
-    } catch (const std::exception& e) {
-        printer_.print_error(e.what());
     }
-    return true;
 }
 
 void ClientApp::run() {
-    ClientProtocol protocol = initialize_connection();
-    std::string line;
-    while (reader_.read_line(line) && handle_command(protocol, line)) {}
+    Socket skt(host_.c_str(), port_.c_str());
+    ClientProtocol protocol(std::move(skt));
+    initialize_connection(protocol);
+    game_loop(protocol);
 }
