@@ -13,17 +13,17 @@ const uint16_t LEN_ENTITY = 1;  // 1 byte para el tipo de entidad (player/npc)
 const uint16_t LEN_DIRECTION = 1;
 
 enum MessageType : uint8_t {
-    MSG_REGISTER     = 0x01,  // Crear personaje nuevo           [cliente OK] [servidor OK]
+    MSG_REGISTER     = 0x01,  // Crear personaje nuevo            [cliente OK] [servidor OK]
     MSG_LOGIN        = 0x02,  // Conectarse con personaje         [x cliente]  [x servidor]
     MSG_MOVE         = 0x03,  // Mover personaje                  [cliente OK] [servidor OK]
     MSG_ATTACK       = 0x04,  // Atacar jugador o NPC             [cliente OK] [servidor OK]
     MSG_TAKE         = 0x05,  // Recoger item del suelo           [x cliente]  [x servidor]
     MSG_THROW        = 0x06,  // Tirar item del inventario        [cliente OK] [servidor OK]
     MSG_EQUIP        = 0x07,  // Equipar item del inventario      [cliente OK] [servidor OK]
-    MSG_MEDITATE     = 0x08,  // Entrar/salir estado meditacion   [cliente OK] [x servidor]
-    MSG_RESURRECT    = 0x09,  // Resucitar (fantasma)             [cliente OK] [x servidor]
-    MSG_CURE         = 0x0A,  // Pedir curacion al sacerdote      [cliente OK] [x servidor]
-    MSG_LIST         = 0x0B,  // Listar items comerciante/banquero[cliente OK] [x servidor]
+    MSG_MEDITATE     = 0x08,  // Entrar/salir estado meditacion   [cliente OK] [servidor OK]
+    MSG_RESURRECT    = 0x09,  // Resucitar (fantasma)             [cliente OK] [servidor OK]
+    MSG_CURE         = 0x0A,  // Pedir curacion al sacerdote      [cliente OK] [servidor OK]
+    MSG_LIST         = 0x0B,  // Listar items comerciante/banquero[cliente OK] [servidor OK]
     MSG_BUY          = 0x0C,  // Comprar item                     [cliente OK] [servidor OK]
     MSG_SELL         = 0x0D,  // Vender item a comerciante        [cliente OK] [servidor OK]
     MSG_DEPOSIT      = 0x0E,  // Depositar item en banco          [cliente OK] [servidor OK]
@@ -34,12 +34,12 @@ enum MessageType : uint8_t {
     MSG_SELECT       = 0x13,  // Seleccionar entidad (click)      [cliente OK] [servidor OK]
     MSG_FOUND_CLAN   = 0x14,  // Fundar un clan                   [x cliente]  [x servidor]
     MSG_JOIN_CLAN    = 0x15,  // Pedir unirse a un clan           [x cliente]  [x servidor]
-    MSG_REV_CLAN     = 0x16,  // Revisar pedidos del clan         [cliente OK] [x servidor]
+    MSG_REV_CLAN     = 0x16,  // Revisar pedidos del clan         [cliente OK] [servidor OK]
     MSG_CLAN_ACEP    = 0x17,  // Aceptar jugador al clan          [x cliente]  [x servidor]
     MSG_CLAN_RECH    = 0x18,  // Rechazar jugador del clan        [x cliente]  [x servidor]
     MSG_CLAN_BAN     = 0x19,  // Banear jugador del clan          [x cliente]  [x servidor]
     MSG_CLAN_KICK    = 0x1A,  // Echar jugador del clan           [x cliente]  [x servidor]
-    MSG_LEFT_CLAN    = 0x1B,  // Dejar el clan                    [cliente OK] [x servidor]
+    MSG_LEFT_CLAN    = 0x1B,  // Dejar el clan                    [cliente OK] [servidor OK]
 };
 
 enum Direction : uint8_t {
