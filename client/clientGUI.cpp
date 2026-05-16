@@ -75,6 +75,7 @@ void ClientGUI::handleEvents() {
 
 void ClientGUI::update() {
     player->update();
+    //outgoing.push(player_update());
 }
 
 void ClientGUI::draw() {
@@ -100,5 +101,5 @@ void ClientGUI::run() {
         }
     } catch (const std::exception& e) {
         std::cerr << "ClientGUI error: " << e.what() << std::endl;
-    } catch (const ClosedQueue&) {}
+    }
 }
