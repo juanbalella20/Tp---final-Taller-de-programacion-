@@ -20,6 +20,8 @@ private:
     int mana;
     int id_clan;
     int level;
+    int coord_x;
+    int coord_y;
     PlayerStatus status;
     std::shared_ptr<Item> equipped_item;
 
@@ -65,6 +67,12 @@ public:
     int get_gold();
 
     std::string get_name() const;
+
+    int get_coord_x();
+
+    int get_coord_y();
+
+    void update_position(const int x, const int y);
 };
 
 #endif

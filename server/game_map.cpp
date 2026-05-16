@@ -9,8 +9,7 @@ std::vector<std::vector<int>> GameMap::get_map() {
 }
 
 void GameMap::add_player(Player player) {
-    position_coord coord{player.get_coord_x(), player.get_coord_y()};
-    players_coord.insert({player, coord});
+    players.push_back(player);
 }
 
 bool GameMap::is_movement_valid(const ClientCmd cmd) {
@@ -24,11 +23,9 @@ bool GameMap::is_movement_valid(const ClientCmd cmd) {
 }
 
 void GameMap::update_position(const ClientCmd cmd) {
-    for (auto& [player, coord] : players_coord) {
+    for (auto& player : players) {
         if (player.get_name() == cmd.get_player_name()) {
-            position_coord new_pos{cmd.get_coord_x(), cmd.get_coord_y()};
-            players_coord[player] = new_pos;
-            player.update_position(coord.x, coord.y);
+            player.update_position(cmd.get_coord_x(), cmd.get_coord_y());
         }
     }
 }

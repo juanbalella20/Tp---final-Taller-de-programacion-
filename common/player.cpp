@@ -128,3 +128,16 @@ int Player::get_gold() {
 std::string Player::get_name() const {
     return name;
 }
+
+int Player::get_coord_x() {
+    return coord_x;
+}
+
+int Player::get_coord_y() {
+    return coord_y;
+}
+
+void Player::update_position(const int x, const int y) {
+    coord_x = x;
+    coord_y = y;
+}

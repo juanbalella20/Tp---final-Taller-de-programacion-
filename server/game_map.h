@@ -34,7 +34,7 @@ class GameMap {
 
 private:
     std::vector<std::vector<int>> map;
-    std::map<Player, position_coord> players_coord;
+    std::vector<Player> players;
 
     sectorPerimiter forest_perimiter;
     sectorPerimiter town_perimiter;
