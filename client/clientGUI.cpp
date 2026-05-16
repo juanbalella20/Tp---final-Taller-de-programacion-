@@ -63,8 +63,28 @@ void ClientGUI::handleEvents() {
                 is_running = false;
                 break;
             case SDL_EVENT_KEY_DOWN:
-                if (event.key.scancode == SDL_SCANCODE_ESCAPE) {
-                    is_running = false;
+                switch (event.key.scancode) {
+                    case SDL_SCANCODE_ESCAPE:
+                        is_running = false;
+                        break;
+                    case SDL_SCANCODE_UP:
+                    case SDL_SCANCODE_W:
+                        sendMoveCmd(DIR_NORTH);
+                        break;
+                    case SDL_SCANCODE_DOWN:
+                    case SDL_SCANCODE_S:
+                        sendMoveCmd(DIR_SOUTH);
+                        break;
+                    case SDL_SCANCODE_RIGHT:
+                    case SDL_SCANCODE_D:
+                        sendMoveCmd(DIR_EAST);
+                        break;
+                    case SDL_SCANCODE_LEFT:
+                    case SDL_SCANCODE_A:
+                        sendMoveCmd(DIR_WEST);
+                        break;
+                    default:
+                        break;
                 }
                 break;
             default:
@@ -73,9 +93,15 @@ void ClientGUI::handleEvents() {
     }
 }
 
+void ClientGUI::sendMoveCmd(Direction dir) {
+    ClientCmd cmd;
+    cmd.set_message_type(MSG_MOVE);
+    cmd.set_direction(dir);
+    outgoing.push(cmd);
+}
+
 void ClientGUI::update() {
     player->update();
-    //outgoing.push(player_update());
 }
 
 void ClientGUI::draw() {
