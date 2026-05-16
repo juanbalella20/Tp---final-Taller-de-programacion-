@@ -2,9 +2,9 @@
 
 #include <vector>
 
-GameMap::GameMap() : map(HEIGHT, std::vector<int>(WIDTH, 0)) {}
+GameMap::GameMap() : map(HEIGHT, std::vector<elements>(WIDTH, elements::empty)) {}
 
-std::vector<std::vector<int>> GameMap::get_map() {
+std::vector<std::vector<elements>> GameMap::get_map() {
     return map;
 }
 
@@ -16,6 +16,10 @@ bool GameMap::is_movement_valid(const ClientCmd cmd) {
     int x = cmd.get_coord_x();
     int y = cmd.get_coord_y();
     if (x >= HEIGHT || y >= WIDTH || x < 0 || y < 0) {
+        return false;
+    }
+
+    if (map[x][y] != elements::empty) {
         return false;
     }
 

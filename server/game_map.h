@@ -33,7 +33,7 @@ enum class elements {
 class GameMap {
 
 private:
-    std::vector<std::vector<int>> map;
+    std::vector<std::vector<elements>> map;
     std::vector<Player> players;
 
     sectorPerimiter forest_perimiter;
@@ -44,7 +44,7 @@ private:
 public:
     GameMap() {}
 
-    std::vector<std::vector<int>> get_map();
+    std::vector<std::vector<elements>> get_map();
 
     void add_player(Player player);
 
