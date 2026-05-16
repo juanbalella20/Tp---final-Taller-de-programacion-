@@ -19,6 +19,8 @@ class ClientCmd {
     std::string item_id;
     Direction direction;
     uint32_t gold;
+    int coord_x;
+    int coord_y;
 
  public:
     ClientCmd();
@@ -54,6 +56,12 @@ class ClientCmd {
 
     void set_gold(uint32_t amount);
     uint32_t get_gold() const;
+
+    void set_coord_x(int x);
+    int get_coord_x() const;
+
+    void set_coord_y(int y);
+    int get_coord_y() const;
 };
 
 #endif  // COMMON_CLIENT_CMD_H_

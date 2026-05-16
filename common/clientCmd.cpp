@@ -10,7 +10,9 @@ ClientCmd::ClientCmd():
         race("human"),
         klass("mage"),
         direction(DIR_NORTH),
-        gold(0) {}
+        gold(0),
+        coord_x(0),
+        coord_y(0) {}
 
 
 
@@ -43,3 +45,9 @@ const std::string& ClientCmd::get_item_id() const { return this->item_id; }
 
 void ClientCmd::set_gold(uint32_t amount) { this->gold = amount; }
 uint32_t ClientCmd::get_gold() const { return this->gold; }
+
+void ClientCmd::set_coord_x(int x) { this->coord_x = x; }
+int ClientCmd::get_coord_x() const { return this->coord_x; }
+
+void ClientCmd::set_coord_y(int y) { this->coord_y = y; }
+int ClientCmd::get_coord_y() const { return this->coord_y; }
