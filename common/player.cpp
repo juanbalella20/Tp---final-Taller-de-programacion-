@@ -125,6 +125,6 @@ int Player::get_gold() {
     return gold;
 }
 
-std::string Player::get_name() {
+std::string Player::get_name() const {
     return name;
 }

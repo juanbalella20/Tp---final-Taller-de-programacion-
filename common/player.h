@@ -64,7 +64,7 @@ public:
 
     int get_gold();
 
-    std::string get_name();
+    std::string get_name() const;
 };
 
 #endif
