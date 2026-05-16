@@ -4,16 +4,18 @@
 #include "../common/clientCmd.h"
 #include <vector>
 #include "serializer.h"
+#include "deserializer.h"
 class ClientProtocol {
 private:
     Socket socket;
     Serializer serializer;
-    //ClientDeserializer deserializer;
+    ClientDeserializer deserializer;
  public:
     ClientProtocol(Socket&& socket);
     ~ClientProtocol();
     void initialize_connection();
     void send_command(const ClientCmd& cmd);
+    bool receive_event(GameMsg& msg);
 
     
 };

@@ -3,20 +3,24 @@
 #include <string>
 #include "clientProtocol.h"
 #include "../common/clientCmd.h"
-#include "parser.h"
-
+#include "../common/gameMsg.h"
+#include "../common/queue.h"
+#include "networkSenderThread.h"
+#include "networkReceiverThread.h"
+#include "GUIThread.h"
 
 class ClientApp {
  private:
-   std::string host_;
-   std::string port_;
-   std::string player_name_;
-   std::string race_;
-   std::string class_;
-   //ClientPrinter printer_;
-   //ClientReader reader_;
-   void initialize_connection(ClientProtocol& protocol);
-   void game_loop(ClientProtocol& protocol);
+    std::string host_;
+    std::string port_;
+    std::string player_name_;
+    std::string race_;
+    std::string class_;
+
+    Queue<ClientCmd> sendingQueue;
+    Queue<GameMsg> receivingQueue;
+
+    void initialize_connection(ClientProtocol& protocol);
 
  public:
     ClientApp(const std::string& host,
