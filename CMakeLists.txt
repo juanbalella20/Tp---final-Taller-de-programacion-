@@ -18,6 +18,7 @@ add_library(common STATIC
     common/resolvererror.cpp
     common/liberror.cpp
     common/clientCmd.cpp
+    common/gameMsg.cpp
 )
 target_include_directories(common PUBLIC common)
 
@@ -26,6 +27,7 @@ add_executable(client
     client/clientmain.cpp
     client/clientApp.cpp
     client/clientProtocol.cpp
+    client/deserializer.cpp
     client/serialze.cpp
     client/parser.cpp
 )
