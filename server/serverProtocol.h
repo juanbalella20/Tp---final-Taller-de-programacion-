@@ -1,22 +1,20 @@
 #ifndef SERVER_SRC_SERVER_PROTOCOL_H_
 #define SERVER_SRC_SERVER_PROTOCOL_H_
 
-//#include "server_serializer.h"
-//#include "server_deserializer.h"
+#include "serverDeserializer.h"
 #include "../common/clientCmd.h"
 #include "../common/gamMsg.h"
 #include "../common/socket.h"
 
+#include <arpa/inet.h>
 #include <cstdint>
 #include <vector>
 
 class ServerProtocol {
  private:
     Socket socket;
-    //ServerSerializer serializer;
-    //ServerDeserializer deserializer;
-    std::vector<uint8_t> recv_register_payload();
-    std::vector<uint8_t> recv_defeat_payload();
+    ServerDeserializer deserializer;
+  
 
  public:
     explicit ServerProtocol(Socket&& socket);
