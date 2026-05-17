@@ -5,6 +5,7 @@
 
 ServerSerializer::ServerSerializer() {
     handlers[MSG_MOVE] = [this](const GameMsg& msg) { return serialize_move(msg); };
+    handlers[MSG_SEND_MAP] = [this](const GameMsg& msg) { return serialize_map(msg); };
 }
 
 void ServerSerializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {
@@ -20,6 +21,29 @@ std::vector<uint8_t> ServerSerializer::serialize_move(const GameMsg& msg) {
     buf.reserve(LEN_HEADER + LEN_DIRECTION);
     write_header(buf, MSG_MOVE, LEN_DIRECTION);
     buf.push_back(static_cast<uint8_t>(msg.get_direction()));
+    return buf;
+}
+
+std::vector<uint8_t> ServerSerializer::serialize_map(const GameMsg& msg) {
+    const auto& map = msg.get_map();
+    uint16_t payload_len = 0;
+    for (const auto& row : map) {
+        payload_len += static_cast<uint16_t>(row.size());
+    }
+
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, MSG_SEND_MAP, payload_len);
+
+    for (const auto& row : map) {
+        for (elements cell : row) {
+            auto it = ELEMENT_TYPE_MAP.find(cell);
+            uint8_t encoded = (it != ELEMENT_TYPE_MAP.end()) ? static_cast<uint8_t>(it->second)
+                                                              : static_cast<uint8_t>(ELEMENT_EMPTY);
+            buf.push_back(encoded);
+        }
+    }
+
     return buf;
 }
 
