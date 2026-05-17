@@ -1,7 +1,7 @@
 #ifndef DESERIALIZER_H
 #define DESERIALIZER_H
 
-#include "common/gameMsg.h"
+#include "../common/gameMsg.h"
 #include <cstdint>
 #include <functional>
 #include <unordered_map>

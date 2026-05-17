@@ -1,11 +1,11 @@
 #include "clientProtocol.h"
-#include "common/gameMsg.h"
-#include "common/protocol_constants.h"
+#include "../common/gameMsg.h"
+#include "../common/protocol_constants.h"
 #include <arpa/inet.h>
 
 ClientProtocol::ClientProtocol(Socket&& socket) : socket(std::move(socket)),serializer() {}
 
-/*
+
 ClientProtocol::~ClientProtocol() {
     try {
         socket.shutdown(SHUT_RDWR);
@@ -14,7 +14,7 @@ ClientProtocol::~ClientProtocol() {
         socket.close();
     } catch (...) {}
 }
-*/
+
 void ClientProtocol::send_command(const ClientCmd& cmd) {
     std::vector<uint8_t> bytes = serializer.serialize_cmd(cmd);
     socket.sendall(bytes.data(), bytes.size());
