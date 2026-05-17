@@ -37,6 +37,14 @@ void ClientRegistryMonitor::remove_client(uint32_t client_id) {
     registers.erase(client_id);
 }
 
+void ClientRegistryMonitor::notify_client(uint32_t client_id, const GameMsg& msg) {
+    std::lock_guard<std::mutex> lock(mtx);
+    auto it = registers.find(client_id);
+    if (it == registers.end()) {
+        throw std::runtime_error("client_id is not registered");
+    }
+    it->second.sending_queue.get().push(msg);
+}
 
 void ClientRegistryMonitor::notify_clients(const GameMsg& msg) {
     std::lock_guard<std::mutex> lock(mtx);

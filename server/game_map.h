@@ -42,7 +42,7 @@ private:
     sectorPerimiter desert_perimiter;
 
 public:
-    GameMap() {}
+    GameMap();
 
     std::vector<std::vector<elements>> get_map();
 

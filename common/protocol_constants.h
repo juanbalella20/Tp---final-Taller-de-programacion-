@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include "../server/game_map.h"
 
 const uint16_t LEN_HEADER = 3;  // 1 byte para tipo de mensaje + 2 bytes para largo del payload
 const uint16_t LEN_NAME_SIZE_FIELD = 1;  // 1 byte para largo del nombre
@@ -40,6 +41,7 @@ enum MessageType : uint8_t {
     MSG_CLAN_BAN     = 0x19,  // Banear jugador del clan          [cliente OK] [x servidor]
     MSG_CLAN_KICK    = 0x1A,  // Echar jugador del clan           [cliente OK] [x servidor]
     MSG_LEFT_CLAN    = 0x1B,  // Dejar el clan                    [cliente OK] [servidor OK]
+    MSG_SEND_MAP      = 0x1C,  // Enviar mapa al cliente           
 };
 
 enum Direction : uint8_t {
@@ -66,6 +68,29 @@ enum Class : uint8_t {
     CLERIC  = 0x01,  
     PALADIN = 0x02, 
     WARRIOR = 0x03,  
+};
+enum Sector : uint8_t {
+    SECTOR_FOREST = 0x00,
+    SECTOR_TOWN   = 0x01,
+    SECTOR_CITY   = 0x02,
+    SECTOR_DESERT = 0x03,
+};
+
+
+enum ELEMENT_TYPE : uint8_t {
+    ELEMENT_PLAYER = 0x00,
+    ELEMENT_NPC    = 0x01,
+    ELEMENT_OBJECT = 0x02,
+    ELEMENT_BUILDING = 0x03,
+    ELEMENT_EMPTY = 0x04,
+};
+
+const std::unordered_map<elements, ELEMENT_TYPE> ELEMENT_TYPE_MAP = {
+    {elements::players, ELEMENT_PLAYER},
+    {elements::npcs, ELEMENT_NPC},
+    {elements::objects, ELEMENT_OBJECT},
+    {elements::buildings, ELEMENT_BUILDING},
+    {elements::empty, ELEMENT_EMPTY},
 };
 
 const std::unordered_map<std::string, Race> RACE_MAP = {

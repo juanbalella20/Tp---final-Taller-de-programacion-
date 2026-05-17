@@ -19,6 +19,7 @@ class ClientRegistryMonitor {
     void assign_name(uint32_t client_id, const std::string& player_name);
     std::string get_name(uint32_t client_id);
     void remove_client(uint32_t client_id);
+    void notify_client(uint32_t client_id, const GameMsg& msg);
     void notify_clients(const GameMsg& msg);
 };
 

@@ -5,6 +5,7 @@
 #include "../common/queue.h"
 #include "../common/thread.h"
 #include "clientRegistryMonitor.h"
+#include "game_map.h"
 
 class GameLoop : public Thread {
  public:
@@ -14,6 +15,7 @@ class GameLoop : public Thread {
  private:
     Queue<ClientCmd>& receiving_queue;
     ClientRegistryMonitor& client_registry_monitor;
+    GameMap game_map;
 };
 
 #endif  // SERVER_SRC_GAMELOOP_H_
