@@ -2,6 +2,7 @@
 #define INVENTORY_H_
 
 #include <vector>
+#include "item.h"
 
 class Inventory {
 

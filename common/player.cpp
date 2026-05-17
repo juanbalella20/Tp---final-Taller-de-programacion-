@@ -34,6 +34,9 @@ void Player::level_up() {
     }
 }
 
+/* TODO: implement ITEM */
+
+/*
 void Player::add_item(Item item) {
     player_inventory.add_item(item);
 }
@@ -67,6 +70,7 @@ void Player::unequip_item(Item item) {
 void Player::use_object(Item item) {
     item.use_item();
 }
+*/
 
 int Player::damage_attack() {
     // Daño = Fuerza * rand(DañoArmaMin, DañoArmaMax)
