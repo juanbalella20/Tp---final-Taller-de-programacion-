@@ -33,3 +33,8 @@ void GameMap::update_position(const ClientCmd cmd) {
         }
     }
 }
+
+std::string GameMap::sector_of_position(int x, int y) {
+    // to-do: obtener sector según posición
+    return "desert";
+}

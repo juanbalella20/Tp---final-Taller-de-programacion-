@@ -51,6 +51,8 @@ public:
     bool is_movement_valid(const ClientCmd cmd);
 
     void update_position(const ClientCmd cmd);
+
+    std::string sector_of_position(int x, int y);
 };
 
 
