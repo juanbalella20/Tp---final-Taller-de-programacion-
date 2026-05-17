@@ -32,8 +32,8 @@ private:
     Queue<ClientCmd>& outgoing;
     Queue<GameMsg>& receiving;
 
-    //std::unique_ptr<PlayerDisplay> player;
-    PlayerDisplay& player;
+    std::unique_ptr<PlayerDisplay> player;
+    //PlayerDisplay& player;
 
     void initSDL();
     void loadMedia(zones zone);

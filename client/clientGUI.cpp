@@ -5,8 +5,7 @@
 
 ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
     : window(nullptr), renderer(nullptr), background(nullptr), event{},
-      is_running(false), outgoing(outgoing), receiving(receiving), player(nullptr),
-       {}
+      is_running(false), outgoing(outgoing), receiving(receiving) {}
 
 ClientGUI::~ClientGUI() {
     freeSDL();
@@ -119,16 +118,16 @@ void ClientGUI::update() {
             }
             switch (msg.get_direction()) {
                 case DIR_NORTH:
-                    player.move_up();
+                    player->move_up();
                     break;
                 case DIR_SOUTH:
-                player.move_down();
+                player->move_down();
                     break;
                 case DIR_EAST:
-                    player.move_right();
+                    player->move_right();
                     break;
                 case DIR_WEST:
-                    player.move_left();
+                    player->move_left();
                     break;
             }
         }
@@ -141,7 +140,7 @@ void ClientGUI::update() {
 void ClientGUI::draw() {
     SDL_RenderClear(renderer);
     SDL_RenderTexture(renderer, background, nullptr, nullptr);
-    player.draw();
+    player->draw();
     SDL_RenderPresent(renderer);
 }
 
