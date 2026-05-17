@@ -1,7 +1,7 @@
 #include "client_handler.h"
-#include "common/queue.h"
-#include "common/socket.h"
-#include "common/clientCmd.h"
+#include "../common/queue.h"
+#include "../common/socket.h"
+#include "../common/clientCmd.h"
 
 #include <utility>
 
@@ -36,6 +36,11 @@ ClientHandler::~ClientHandler() {
         sender.join();
     } catch (...) {}
 }
+
+bool ClientHandler::is_alive() const {
+    return receiver.is_alive() || sender.is_alive();
+}
+
 
 void ClientHandler::start() {
     bool registrated = false;

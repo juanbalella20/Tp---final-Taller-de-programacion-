@@ -24,6 +24,7 @@ class ClientHandler {
                   ClientRegistryMonitor& client_registry_monitor);
     ~ClientHandler();
     void start();
+    bool is_alive() const;
 };
 
 #endif  // SERVER_SRC_SERVER_CLIENT_HANDLER_H_

@@ -53,6 +53,14 @@ void Acceptor::run(){
     clear();
 }
 
+void Acceptor::reap() {
+    // Elimina los ClientHandlers que han terminado su ejecución.
+    clients.erase(std::remove_if(clients.begin(), clients.end(),
+                                 [](const std::unique_ptr<ClientHandler>& handler) {
+                                     return !handler->is_alive();
+                                 }),
+                  clients.end());
+}
 
 
 

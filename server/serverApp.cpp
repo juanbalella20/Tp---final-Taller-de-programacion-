@@ -26,4 +26,12 @@ void ServerApp::run() {
             break;
         }
     }
+
+    acceptor.stop();
+    game_loop.stop();
+    try {
+        receiving_queue.close();
+    } catch (...) {}
+    acceptor.join();
+    game_loop.join();
 }
