@@ -1,5 +1,6 @@
 #include "clientGUI.h"
 #include <SDL3_image/SDL_image.h>
+#include <array>
 #include <iostream>
 #include <stdexcept>
 
@@ -25,6 +26,9 @@ void ClientGUI::initSDL() {
     }
 
     SDL_Surface* icon = IMG_Load("images/logo.jpeg");
+    if (!icon) {
+        icon = IMG_Load("imagenes/logo.jpeg");
+    }
     if (icon) {
         SDL_SetWindowIcon(window, icon);
         SDL_DestroySurface(icon);
@@ -36,7 +40,16 @@ void ClientGUI::loadMedia(zones zone) {
     switch (zone)
     {
     case zones::DESERT : {
-        background = IMG_LoadTexture(renderer, "images/background.jpg");
+        constexpr std::array<const char*, 2> bg_paths = {
+            "images/background.jpg",
+            "imagenes/background.jpg"
+        };
+        for (const char* path : bg_paths) {
+            background = IMG_LoadTexture(renderer, path);
+            if (background) {
+                break;
+            }
+        }
         if (!background) {
             throw std::runtime_error(std::string("Loading background: ") + SDL_GetError());
         }
@@ -139,8 +152,12 @@ void ClientGUI::update() {
 
 void ClientGUI::draw() {
     SDL_RenderClear(renderer);
-    SDL_RenderTexture(renderer, background, nullptr, nullptr);
-    player->draw();
+    if (background) {
+        SDL_RenderTexture(renderer, background, nullptr, nullptr);
+    }
+    if (player) {
+        player->draw();
+    }
     SDL_RenderPresent(renderer);
 }
 
@@ -150,8 +167,11 @@ void ClientGUI::init_draw() {
     // aca recibe del protocolo la zona
     // hardocodeado para test
     loadMedia(zones::DESERT);
-    PlayerDisplay player = PlayerDisplay(renderer, "images/player.png");
-    //player = std::make_unique<PlayerDisplay>(renderer, "images/player.png");
+    try {
+        player = std::make_unique<PlayerDisplay>(renderer, "images/player.png");
+    } catch (const std::runtime_error&) {
+        player = std::make_unique<PlayerDisplay>(renderer, "imagenes/player.png");
+    }
     is_running = true;
     SDL_Delay(100);
 
