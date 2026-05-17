@@ -7,7 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
-# SDL3 from vendored source
+# SDL3 from vendored source (required)
+
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(vendored/SDL_image EXCLUDE_FROM_ALL)
 
@@ -30,9 +31,14 @@ add_executable(client
     client/deserializer.cpp
     client/serialze.cpp
     client/parser.cpp
+    client/clientGUI.cpp
+    client/displayPlayer.cpp
+    client/networkSenderThread.cpp
+    client/networkReceiverThread.cpp
+
 )
 target_include_directories(client PRIVATE client)
-target_link_libraries(client PRIVATE common SDL3::SDL3)
+target_link_libraries(client PRIVATE common SDL3::SDL3 SDL3_image::SDL3_image)
 
 # ── GUI test (SDL3 sandbox) ─────────────────────────────────────────────────
 add_executable(gui_test
@@ -53,6 +59,8 @@ add_executable(server
     server/senderThread.cpp
     server/serverProtocol.cpp
     server/serverDeserializer.cpp
+    server/serverSerializer.cpp
+    server/gameloop.cpp
 )
 target_include_directories(server PRIVATE server)
 target_link_libraries(server PRIVATE common)

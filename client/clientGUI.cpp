@@ -5,7 +5,8 @@
 
 ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
     : window(nullptr), renderer(nullptr), background(nullptr), event{},
-      is_running(false), outgoing(outgoing), receiving(receiving), player(nullptr) {}
+      is_running(false), outgoing(outgoing), receiving(receiving), player(nullptr),
+       {}
 
 ClientGUI::~ClientGUI() {
     freeSDL();
@@ -101,7 +102,31 @@ void ClientGUI::sendMoveCmd(Direction dir) {
 }
 
 void ClientGUI::update() {
-    player->update();
+    try {
+        GameMsg msg(0);
+        while (receiving.try_pop(msg)) {
+            if (msg.get_type() != MSG_MOVE) {
+                continue;
+            }
+            switch (msg.get_direction()) {
+                case DIR_NORTH:
+                    player_y -= PLAYER_VEL;
+                    break;
+                case DIR_SOUTH:
+                    player_y += PLAYER_VEL;
+                    break;
+                case DIR_EAST:
+                    player_x += PLAYER_VEL;
+                    break;
+                case DIR_WEST:
+                    player_x -= PLAYER_VEL;
+                    break;
+            }
+        }
+    } catch (const ClosedQueue&) {
+        is_running = false;
+    }
+    player->setPosition(player_x, player_y);
 }
 
 void ClientGUI::draw() {
