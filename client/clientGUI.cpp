@@ -124,6 +124,9 @@ void ClientGUI::sendMoveCmd(Direction dir) {
 
 void ClientGUI::update() {
     try {
+        if (!player) {
+            return;
+        }
         GameMsg msg(0);
         while (receiving.try_pop(msg)) {
             if (msg.get_type() != MSG_MOVE) {
@@ -147,7 +150,6 @@ void ClientGUI::update() {
     } catch (const ClosedQueue&) {
         is_running = false;
     }
-    GameMsg game_msg = receiving.pop();
 }
 
 void ClientGUI::draw() {
@@ -184,8 +186,7 @@ void ClientGUI::run() {
 
         while (is_running && should_keep_running()) {
             handleEvents();
-            // comentado solo para testear:
-            //update();
+            update();
             draw();
             SDL_Delay(16);
         }
