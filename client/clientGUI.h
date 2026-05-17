@@ -15,6 +15,12 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
+enum class zones {
+    DESERT,
+    FOREST,
+    CITY
+};
+
 class ClientGUI: public Thread {
 private:
     SDL_Window* window;
@@ -26,10 +32,11 @@ private:
     Queue<ClientCmd>& outgoing;
     Queue<GameMsg>& receiving;
 
-    std::unique_ptr<PlayerDisplay> player;
+    //std::unique_ptr<PlayerDisplay> player;
+    PlayerDisplay& player;
 
     void initSDL();
-    void loadMedia();
+    void loadMedia(zones zone);
     void freeSDL();
 
     void handleEvents();
@@ -37,6 +44,9 @@ private:
     void draw();
 
     void sendMoveCmd(Direction dir);
+
+    // recibe mensaje del server y hace el dibujo inicial
+    void init_draw();
 
 public:
     ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving);

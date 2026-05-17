@@ -29,6 +29,11 @@ public:
     // Para jugadores remotos: setear la posicion segun los mensajes del server
     void setPosition(float x, float y);
     void draw() const;
+
+    void move_up();
+    void move_down();
+    void move_left();
+    void move_right();
 };
 
 #endif

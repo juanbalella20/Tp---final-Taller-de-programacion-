@@ -32,10 +32,19 @@ void ClientGUI::initSDL() {
     }
 }
 
-void ClientGUI::loadMedia() {
-    background = IMG_LoadTexture(renderer, "images/background.jpg");
-    if (!background) {
-        throw std::runtime_error(std::string("Loading background: ") + SDL_GetError());
+// tiene que recibir los 4 sectorPerimiter y mostrar solo eso
+void ClientGUI::loadMedia(zones zone) {
+    switch (zone)
+    {
+    case zones::DESERT : {
+        background = IMG_LoadTexture(renderer, "images/background.jpg");
+        if (!background) {
+            throw std::runtime_error(std::string("Loading background: ") + SDL_GetError());
+        }
+        break;
+    }
+    default:
+        break;
     }
 }
 
@@ -110,43 +119,54 @@ void ClientGUI::update() {
             }
             switch (msg.get_direction()) {
                 case DIR_NORTH:
-                    player_y -= PLAYER_VEL;
+                    player.move_up();
                     break;
                 case DIR_SOUTH:
-                    player_y += PLAYER_VEL;
+                player.move_down();
                     break;
                 case DIR_EAST:
-                    player_x += PLAYER_VEL;
+                    player.move_right();
                     break;
                 case DIR_WEST:
-                    player_x -= PLAYER_VEL;
+                    player.move_left();
                     break;
             }
         }
     } catch (const ClosedQueue&) {
         is_running = false;
     }
-    player->setPosition(player_x, player_y);
+    GameMsg game_msg = receiving.pop();
 }
 
 void ClientGUI::draw() {
     SDL_RenderClear(renderer);
     SDL_RenderTexture(renderer, background, nullptr, nullptr);
-    player->draw();
+    player.draw();
     SDL_RenderPresent(renderer);
+}
+
+void ClientGUI::init_draw() {
+    // la info se la pasa el cliente desde config?
+    initSDL(); 
+    // aca recibe del protocolo la zona
+    // hardocodeado para test
+    loadMedia(zones::DESERT);
+    PlayerDisplay player = PlayerDisplay(renderer, "images/player.png");
+    //player = std::make_unique<PlayerDisplay>(renderer, "images/player.png");
+    is_running = true;
+    SDL_Delay(100);
+
 }
 
 void ClientGUI::run() {
     try {
-        initSDL();
-        loadMedia();
-        player = std::make_unique<PlayerDisplay>(renderer, "images/player.png");
-        is_running = true;
+        // protocol.get_mapa();
+        init_draw();
 
-        SDL_Delay(100);
         while (is_running && should_keep_running()) {
             handleEvents();
-            update();
+            // comentado solo para testear:
+            //update();
             draw();
             SDL_Delay(16);
         }

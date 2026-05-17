@@ -43,6 +43,20 @@ PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
     return *this;
 }
 
+void PlayerDisplay::move_up() {
+    rect.y -= PLAYER_VEL;
+}
+void PlayerDisplay::move_down() {
+    rect.y += PLAYER_VEL;
+
+}
+void PlayerDisplay::move_left() {
+    rect.x -= PLAYER_VEL;
+}
+void PlayerDisplay::move_right() {
+    rect.x += PLAYER_VEL;
+}
+
 void PlayerDisplay::update() {
     if (keystate[SDL_SCANCODE_LEFT]  || keystate[SDL_SCANCODE_A]) rect.x -= PLAYER_VEL;
     if (keystate[SDL_SCANCODE_RIGHT] || keystate[SDL_SCANCODE_D]) rect.x += PLAYER_VEL;
