@@ -3,7 +3,7 @@
 
 #include "serverDeserializer.h"
 #include "../common/clientCmd.h"
-#include "../common/gamMsg.h"
+#include "../common/gameMsg.h"
 #include "../common/socket.h"
 #include "serverSerializer.h"
 

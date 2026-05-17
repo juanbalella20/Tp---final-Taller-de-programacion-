@@ -3,7 +3,7 @@
 
 #include "../common/thread.h"
 #include "../common/queue.h"
-#include "../common/gamMsg.h"
+#include "../common/gameMsg.h"
 // #include "server_protocol.h"  // Missing file: server/server_protocol.h
 #include "serverProtocol.h"
 
