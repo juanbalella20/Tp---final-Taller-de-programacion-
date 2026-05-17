@@ -7,7 +7,7 @@
 #include "../common/queue.h"
 #include "networkSenderThread.h"
 #include "networkReceiverThread.h"
-#include "GUIThread.h"
+#include "clientGUI.h"
 
 class ClientApp {
  private:

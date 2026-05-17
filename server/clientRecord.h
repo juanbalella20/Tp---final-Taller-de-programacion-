@@ -2,7 +2,7 @@
 #define SERVER_SRC_SERVER_CLIENT_RECORD_H_
 
 #include <functional>
-#include "../common/gamMsg.h"
+#include "../common/gameMsg.h"
 #include <string>
 #include "../common/queue.h"
 
