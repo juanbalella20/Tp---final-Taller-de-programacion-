@@ -12,7 +12,7 @@ void GameMap::add_player(Player player) {
     players.push_back(player);
 }
 
-bool GameMap::is_movement_valid(const ClientCmd cmd) {
+bool GameMap::is_movement_valid(ClientCmd cmd) {
     int x = cmd.get_coord_x();
     int y = cmd.get_coord_y();
     if (x >= HEIGHT || y >= WIDTH || x < 0 || y < 0) {
@@ -26,7 +26,7 @@ bool GameMap::is_movement_valid(const ClientCmd cmd) {
     return true;
 }
 
-void GameMap::update_position(const ClientCmd cmd) {
+void GameMap::update_position(ClientCmd cmd) {
     for (auto& player : players) {
         if (player.get_name() == cmd.get_player_name()) {
             player.update_position(cmd.get_coord_x(), cmd.get_coord_y());
