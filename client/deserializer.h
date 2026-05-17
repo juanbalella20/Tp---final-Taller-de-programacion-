@@ -13,6 +13,7 @@ class ClientDeserializer {
     std::unordered_map<uint8_t, Handler> handlers;
 
     void deserialize_move(const std::vector<uint8_t>& payload, GameMsg& msg);
+    void deserialize_map(const std::vector<uint8_t>& payload, GameMsg& msg);
 
  public:
     ClientDeserializer();
