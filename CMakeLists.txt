@@ -7,8 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
-# SDL3 from vendored source (required)
-
+# SDL3 from vendored source
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(vendored/SDL_image EXCLUDE_FROM_ALL)
 
@@ -20,6 +19,11 @@ add_library(common STATIC
     common/liberror.cpp
     common/clientCmd.cpp
     common/gameMsg.cpp
+    common/player.cpp
+    common/player_class.cpp 
+    common/player_race.cpp
+    # TODO: add when Item type exists:
+    # common/inventory.cpp common/player_class.cpp common/player_race.cpp
 )
 target_include_directories(common PUBLIC common)
 
@@ -35,18 +39,17 @@ add_executable(client
     client/displayPlayer.cpp
     client/networkSenderThread.cpp
     client/networkReceiverThread.cpp
-
 )
 target_include_directories(client PRIVATE client)
 target_link_libraries(client PRIVATE common SDL3::SDL3 SDL3_image::SDL3_image)
 
 # ── GUI test (SDL3 sandbox) ─────────────────────────────────────────────────
-add_executable(gui_test
-    client/guiTest.cpp
-    client/clientGUI.cpp
-    client/displayPlayer.cpp
-)
-target_link_libraries(gui_test PRIVATE common SDL3::SDL3 SDL3_image::SDL3_image)
+# add_executable(gui_test
+#     client/guiTest.cpp
+#     client/clientGUI.cpp
+#     client/displayPlayer.cpp
+# )
+# target_link_libraries(gui_test PRIVATE common SDL3::SDL3 SDL3_image::SDL3_image)
 
 # ── Server ──────────────────────────────────────────────────────────────────
 add_executable(server
@@ -61,6 +64,12 @@ add_executable(server
     server/serverDeserializer.cpp
     server/serverSerializer.cpp
     server/gameloop.cpp
+    server/game_map.cpp
+    # not implemented yet
+    # server/npcBanker.cpp
+    # server/npcHostile.cpp
+    # server/npcPriest.cpp
+    # server/npcSeller.cpp
 )
 target_include_directories(server PRIVATE server)
 target_link_libraries(server PRIVATE common)

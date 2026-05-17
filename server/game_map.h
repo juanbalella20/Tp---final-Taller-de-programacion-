@@ -3,6 +3,7 @@
 
 #include "../common/clientCmd.h"
 #include "../common/player.h"
+#include "../common/game_constants.h"
 
 #include <vector>
 #include <map>
@@ -10,25 +11,7 @@
 #define HEIGHT 8
 #define WIDTH 8
 
-struct position_coord {
-    int x;
-    int y;
-};
 
-struct sectorPerimiter {
-    position_coord top_left;
-    position_coord top_right;
-    position_coord bottom_left;
-    position_coord bottom_right;
-};
-
-enum class elements {
-    players,
-    npcs,
-    objects,
-    buildings,
-    empty
-};
 
 class GameMap {
 
@@ -48,9 +31,9 @@ public:
 
     void add_player(Player player);
 
-    bool is_movement_valid(const ClientCmd cmd);
+    bool is_movement_valid(ClientCmd cmd);
 
-    void update_position(const ClientCmd cmd);
+    void update_position(ClientCmd cmd);
 
     std::string sector_of_position(int x, int y);
 };

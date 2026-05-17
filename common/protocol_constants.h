@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
-#include "../server/game_map.h"
+#include "game_constants.h"
 
 const uint16_t LEN_HEADER = 3;  // 1 byte para tipo de mensaje + 2 bytes para largo del payload
 const uint16_t LEN_NAME_SIZE_FIELD = 1;  // 1 byte para largo del nombre
