@@ -8,9 +8,6 @@
 #include <vector>
 #include <map>
 
-#define HEIGHT 8
-#define WIDTH 8
-
 
 
 class GameMap {

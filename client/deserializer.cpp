@@ -1,5 +1,6 @@
 #include "deserializer.h"
 #include "../common/protocol_constants.h"
+#include "../common/game_constants.h"
 
 #include <stdexcept>
 
