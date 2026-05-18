@@ -194,15 +194,5 @@ void ClientGUI::run() {
         std::cerr << "ClientGUI error: " << e.what() << std::endl;
     }
 
-    if (renderer) {
-        SDL_DestroyRenderer(renderer);
-        renderer = nullptr;
-    }
-
-    if (window) {
-        SDL_DestroyWindow(window);
-        window = nullptr;
-    }
-
-    SDL_Quit();
+    freeSDL();
 }
