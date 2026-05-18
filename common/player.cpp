@@ -74,6 +74,7 @@ void Player::use_object(Item item) {
 
 int Player::damage_attack() {
     // Daño = Fuerza * rand(DañoArmaMin, DañoArmaMax)
+    return 0;
 }
 
 void Player::recv_attack(int damage) {

@@ -16,7 +16,7 @@ private:
     void initialize_connection();
     void send_command(const ClientCmd& cmd);
     bool receive_event(GameMsg& msg);
-
+    void shutdown();
     
 };
 

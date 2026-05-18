@@ -37,3 +37,7 @@ bool ClientProtocol::receive_event(GameMsg& msg) {
     deserializer.deserialize_cmd(type, payload, msg);
     return true;
 }
+
+void ClientProtocol::shutdown() {
+    socket.shutdown(SHUT_RDWR);
+}

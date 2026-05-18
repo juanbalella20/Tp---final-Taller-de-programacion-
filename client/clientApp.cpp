@@ -29,12 +29,16 @@ void ClientApp::run() {
 
     sender.start();
     receiver.start();
-    gui.start();
+    // gui.start();
 
-    gui.join();
+    // gui.join();
 
+    gui.run();
+    
     sendingQueue.close();
     receivingQueue.close();
+
+    protocol.shutdown();
 
     sender.join();
     receiver.join();
