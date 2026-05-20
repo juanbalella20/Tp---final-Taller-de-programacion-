@@ -10,6 +10,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 # SDL3 from vendored source
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(vendored/SDL_image EXCLUDE_FROM_ALL)
+add_subdirectory(vendored/SDL_ttf EXCLUDE_FROM_ALL)
 
 # ── Common library (shared by client and server) ────────────────────────────
 add_library(common STATIC
@@ -42,6 +43,8 @@ add_executable(client
 )
 target_include_directories(client PRIVATE client)
 target_link_libraries(client PRIVATE common SDL3::SDL3 SDL3_image::SDL3_image)
+# find_package(SDL3_ttf REQUIRED)
+target_link_libraries(client PRIVATE SDL3_ttf::SDL3_ttf)
 
 # ── GUI test (SDL3 sandbox) ─────────────────────────────────────────────────
 # add_executable(gui_test
