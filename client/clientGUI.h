@@ -4,6 +4,7 @@
 #include <SDL3/SDL.h>
 #include <string>
 #include <memory>
+#include "minichat.h"
 #include "displayPlayer.h"
 #include "../common/thread.h"
 #include "../common/queue.h"
@@ -34,6 +35,8 @@ private:
 
     std::unique_ptr<PlayerDisplay> player;
     //PlayerDisplay& player;
+
+    MiniChat mini_chat;
 
     void initSDL();
     void loadMedia(zones zone);

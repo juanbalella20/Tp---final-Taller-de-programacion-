@@ -6,7 +6,7 @@
 
 ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
     : window(nullptr), renderer(nullptr), background(nullptr), event{},
-      is_running(false), outgoing(outgoing), receiving(receiving) {}
+      is_running(false), outgoing(outgoing), receiving(receiving), mini_chat(renderer) {}
 
 ClientGUI::~ClientGUI() {
     freeSDL();
@@ -80,6 +80,11 @@ void ClientGUI::freeSDL() {
 
 void ClientGUI::handleEvents() {
     while (SDL_PollEvent(&event)) {
+
+        if (mini_chat.handle_event(event)) {
+            continue;
+        }
+
         switch (event.type) {
             case SDL_EVENT_QUIT:
                 is_running = false;
@@ -113,12 +118,24 @@ void ClientGUI::handleEvents() {
                 break;
         }
     }
+
+    if (mini_chat.has_pending_outbound_message()) {
+        std::string msg = mini_chat.pop_outbound_message();
+        sendChatCmd(msg);
+    }
 }
 
 void ClientGUI::sendMoveCmd(Direction dir) {
     ClientCmd cmd;
     cmd.set_message_type(MSG_MOVE);
     cmd.set_direction(dir);
+    outgoing.push(cmd);
+}
+
+void ClientGUI::sendChatCmd(const std::string& msg) {
+    ClientCmd cmd;
+    cmd.set_message_type(MSG_CHAT);
+    cmd.set_chat_text(msg);
     outgoing.push(cmd);
 }
 
@@ -129,24 +146,32 @@ void ClientGUI::update() {
         }
         GameMsg msg(0);
         while (receiving.try_pop(msg)) {
-            if (msg.get_type() != MSG_MOVE) {
-                continue;
-            }
-            switch (msg.get_direction()) {
-                case DIR_NORTH:
-                    player->move_up();
+            switch (msg.get_type()) {
+                case MSG_MOVE:
+                    switch (msg.get_direction()) {
+                        case DIR_NORTH:
+                            player->move_up();
+                            break;
+                        case DIR_SOUTH:
+                        player->move_down();
+                            break;
+                        case DIR_EAST:
+                            player->move_right();
+                            break;
+                        case DIR_WEST:
+                            player->move_left();
+                            break;
+                    }
                     break;
-                case DIR_SOUTH:
-                player->move_down();
-                    break;
-                case DIR_EAST:
-                    player->move_right();
-                    break;
-                case DIR_WEST:
-                    player->move_left();
+                case MSG_CHAT:
+                    std::string msg_server = msg.get_chat_content();
+                    chat_inbox.push(msg_server);
                     break;
             }
         }
+
+        mini_chat.update(chat_inbox);
+
     } catch (const ClosedQueue&) {
         is_running = false;
     }
