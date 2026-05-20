@@ -17,6 +17,7 @@ class GameMsg {
     void set_map(const std::vector<std::vector<elements>>& new_map);
     const std::vector<std::vector<elements>>& get_map() const;
     void set_type(uint8_t new_type);
+    std::string get_chat_content();
 };
 
 

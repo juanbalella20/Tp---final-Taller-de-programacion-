@@ -62,6 +62,8 @@ class ClientCmd {
 
     void set_coord_y(int y);
     int get_coord_y() const;
+
+    void set_chat_text(const std::string&);
 };
 
 #endif  // COMMON_CLIENT_CMD_H_
