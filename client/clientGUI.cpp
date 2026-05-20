@@ -1,12 +1,13 @@
 #include "clientGUI.h"
 #include <SDL3_image/SDL_image.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <array>
 #include <iostream>
 #include <stdexcept>
 
 ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
     : window(nullptr), renderer(nullptr), background(nullptr), event{},
-      is_running(false), outgoing(outgoing), receiving(receiving), mini_chat(renderer) {}
+      is_running(false), outgoing(outgoing), receiving(receiving) {}
 
 ClientGUI::~ClientGUI() {
     freeSDL();
@@ -33,6 +34,14 @@ void ClientGUI::initSDL() {
         SDL_SetWindowIcon(window, icon);
         SDL_DestroySurface(icon);
     }
+
+    if (!TTF_Init() == -1) {
+        throw std::runtime_error(std::string("TTF_Init: ") + SDL_GetError());
+    }
+
+    chat_font = TTF_OpenFont("ruta", 16);
+
+    mini_chat = std::make_unique<MiniChat>(renderer, chat_font);
 }
 
 // tiene que recibir los 4 sectorPerimiter y mostrar solo eso
@@ -81,7 +90,7 @@ void ClientGUI::freeSDL() {
 void ClientGUI::handleEvents() {
     while (SDL_PollEvent(&event)) {
 
-        if (mini_chat.handle_event(event)) {
+        if (mini_chat->handle_event(event)) {
             continue;
         }
 
@@ -119,8 +128,8 @@ void ClientGUI::handleEvents() {
         }
     }
 
-    if (mini_chat.has_pending_outbound_message()) {
-        std::string msg = mini_chat.pop_outbound_message();
+    if (mini_chat->has_pending_outbound_message()) {
+        std::string msg = mini_chat->pop_outbound_message();
         sendChatCmd(msg);
     }
 }
@@ -170,7 +179,7 @@ void ClientGUI::update() {
             }
         }
 
-        mini_chat.update(chat_inbox);
+        mini_chat->update(chat_inbox);
 
     } catch (const ClosedQueue&) {
         is_running = false;
@@ -185,6 +194,7 @@ void ClientGUI::draw() {
     if (player) {
         player->draw();
     }
+    mini_chat->render();
     SDL_RenderPresent(renderer);
 }
 

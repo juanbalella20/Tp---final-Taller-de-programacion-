@@ -2,6 +2,7 @@
 #define CLIENT_GUI_H
 
 #include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <string>
 #include <memory>
 #include "minichat.h"
@@ -28,15 +29,16 @@ private:
     SDL_Renderer* renderer;
     SDL_Texture* background;
     SDL_Event event;
+    TTF_Font* chat_font;
     bool is_running;
+    std::unique_ptr<MiniChat> mini_chat;
 
     Queue<ClientCmd>& outgoing;
     Queue<GameMsg>& receiving;
+    Queue<std::string> chat_inbox;
 
     std::unique_ptr<PlayerDisplay> player;
     //PlayerDisplay& player;
-
-    MiniChat mini_chat;
 
     void initSDL();
     void loadMedia(zones zone);
@@ -47,6 +49,7 @@ private:
     void draw();
 
     void sendMoveCmd(Direction dir);
+    void sendChatCmd(const std::string& msg);
 
     // recibe mensaje del server y hace el dibujo inicial
     void init_draw();
