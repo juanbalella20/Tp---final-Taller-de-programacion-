@@ -21,6 +21,7 @@ class ClientCmd {
     uint32_t gold;
     int coord_x;
     int coord_y;
+    std::string chat_text;
 
  public:
     ClientCmd();
@@ -63,7 +64,7 @@ class ClientCmd {
     void set_coord_y(int y);
     int get_coord_y() const;
 
-    void set_chat_text(const std::string&);
+    void set_chat_text(const std::string& text);
 };
 
 #endif  // COMMON_CLIENT_CMD_H_

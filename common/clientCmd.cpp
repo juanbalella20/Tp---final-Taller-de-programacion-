@@ -51,3 +51,5 @@ int ClientCmd::get_coord_x() const { return this->coord_x; }
 
 void ClientCmd::set_coord_y(int y) { this->coord_y = y; }
 int ClientCmd::get_coord_y() const { return this->coord_y; }
+
+void ClientCmd::set_chat_text(const std::string& text) { this->chat_text = text; }
