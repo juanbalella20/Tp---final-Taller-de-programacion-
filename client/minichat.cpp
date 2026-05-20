@@ -113,6 +113,18 @@ void MiniChat::pop_oldest_message() {
     }
 }
 
+bool MiniChat::has_pending_outbound_message() const {
+    return !outbound_msg.empty();
+}
+
+std::string MiniChat::pop_outbound_message() {
+    std::string msg = std::move(outbound_msg);
+
+    outbound_msg.clear();
+
+    return msg;
+}
+
 MiniChat::~MiniChat() {
     while (!msg_history.empty()) {
         pop_oldest_message();
