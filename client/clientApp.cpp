@@ -18,7 +18,6 @@ void ClientApp::initialize_connection(ClientProtocol& protocol) {
     protocol.send_command(cmd);
 }
 
-
 void ClientApp::run() {
     Socket skt(host_.c_str(), port_.c_str());
     ClientProtocol protocol(std::move(skt));
