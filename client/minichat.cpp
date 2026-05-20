@@ -125,6 +125,47 @@ std::string MiniChat::pop_outbound_message() {
     return msg;
 }
 
+void MiniChat::render() {
+    float start_x = 20.0f;
+    float start_y = 300.0f;
+    float spacing = 5.0f;
+    float current_y = start_y;
+
+    Uint8 alpha = is_active ? 180 : 100;
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, alpha);
+
+    SDL_FRect bg_rect = { 10.0f, start_y - 10.0f, 300.0f, (MAX_LINES + 2) * 25.0f };
+    SDL_RenderFillRect(renderer, &bg_rect);
+
+    for (const auto& msg : msg_history) {
+        SDL_FRect dest_rect = { start_x, current_y, msg.width, msg.height };
+        SDL_RenderTexture(renderer, msg.texture, nullptr, &dest_rect);
+
+        current_y += msg.height + spacing;
+    }
+
+    if (is_active) {
+        std::string prompt = "> " + player_input;
+
+        if ((SDL_GetTicks() / 500) % 2 == 0) {
+            prompt += "_";
+        }
+
+        float input_width = 0.0f;
+        float input_height = 0.0f;
+        SDL_Texture* input_texture = create_texture_from_msg(prompt, input_width, input_height);
+
+        if (input_texture) {
+            SDL_FRect dest_rect = { start_x, current_y, input_width, input_height };
+            SDL_RenderTexture(renderer, input_texture, nullptr, &dest_rect);
+
+            SDL_DestroyTexture(input_texture);
+        }
+    }
+
+}
+
 MiniChat::~MiniChat() {
     while (!msg_history.empty()) {
         pop_oldest_message();

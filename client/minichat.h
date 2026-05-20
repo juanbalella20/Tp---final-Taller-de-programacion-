@@ -7,12 +7,14 @@
 #include <deque>
 #include "../common/queue.h"
 
+#define MAX_LINES 8
+
 struct chatMessage {
     std::string text;
     SDL_Texture* texture;
     float width;
     float height;
-}
+};
 
 class MiniChat {
 
@@ -41,6 +43,8 @@ public:
     std::string pop_outbound_message();
 
     void update(Queue<std::string>& inbox);
+
+    void render();
 
     ~MiniChat();
 };
