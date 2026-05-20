@@ -19,9 +19,9 @@ private:
 public:
     MiniChat(SDL_Renderer* renderer);
 
-    bool is_active() const;
-
     bool handle_event(const SDL_Event& event);
+
+    void toggle_active();
 
     bool has_pending_outbound_message() const;
 
