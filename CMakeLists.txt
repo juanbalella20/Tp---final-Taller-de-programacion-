@@ -32,6 +32,7 @@ target_include_directories(common PUBLIC common)
 add_executable(client
     client/clientmain.cpp
     client/clientApp.cpp
+    client/minichat.cpp
     client/clientProtocol.cpp
     client/deserializer.cpp
     client/serialze.cpp
