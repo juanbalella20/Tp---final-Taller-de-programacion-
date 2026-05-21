@@ -40,19 +40,8 @@ void ClientGUI::loadMedia(zones zone) {
     switch (zone)
     {
     case zones::DESERT : {
-        constexpr std::array<const char*, 2> bg_paths = {
-            "images/background.jpg",
-            "imagenes/background.jpg"
-        };
-        for (const char* path : bg_paths) {
-            background = IMG_LoadTexture(renderer, path);
-            if (background) {
-                break;
-            }
-        }
-        if (!background) {
-            throw std::runtime_error(std::string("Loading background: ") + SDL_GetError());
-        }
+        tilemap = std::make_unique<TileMap>(renderer);
+        tilemap->load("data/maps/desert/map.toml");
         break;
     }
     default:
@@ -85,6 +74,7 @@ void ClientGUI::handleEvents() {
                 is_running = false;
                 break;
             case SDL_EVENT_KEY_DOWN:
+                if (event.key.repeat) break;
                 switch (event.key.scancode) {
                     case SDL_SCANCODE_ESCAPE:
                         is_running = false;
@@ -132,20 +122,16 @@ void ClientGUI::update() {
             if (msg.get_type() != MSG_MOVE) {
                 continue;
             }
+            int x = player->getTileX();
+            int y = player->getTileY();
             switch (msg.get_direction()) {
-                case DIR_NORTH:
-                    player->move_up();
-                    break;
-                case DIR_SOUTH:
-                player->move_down();
-                    break;
-                case DIR_EAST:
-                    player->move_right();
-                    break;
-                case DIR_WEST:
-                    player->move_left();
-                    break;
+                case DIR_NORTH: --y; break;
+                case DIR_SOUTH: ++y; break;
+                case DIR_EAST:  ++x; break;
+                case DIR_WEST:  --x; break;
+                default: break;
             }
+            player->setTilePosition(x, y);
         }
     } catch (const ClosedQueue&) {
         is_running = false;
@@ -157,6 +143,9 @@ void ClientGUI::draw() {
     if (background) {
         SDL_RenderTexture(renderer, background, nullptr, nullptr);
     }
+    if (tilemap) {
+        tilemap->render();
+    }
     if (player) {
         player->draw();
     }
@@ -165,18 +154,13 @@ void ClientGUI::draw() {
 
 void ClientGUI::init_draw() {
     // la info se la pasa el cliente desde config?
-    initSDL(); 
+    initSDL();
     // aca recibe del protocolo la zona
     // hardocodeado para test
     loadMedia(zones::DESERT);
-    try {
-        player = std::make_unique<PlayerDisplay>(renderer, "images/player.png");
-    } catch (const std::runtime_error&) {
-        player = std::make_unique<PlayerDisplay>(renderer, "imagenes/player.png");
-    }
+    
     is_running = true;
     SDL_Delay(100);
-
 }
 
 void ClientGUI::run() {

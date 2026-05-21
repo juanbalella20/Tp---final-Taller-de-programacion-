@@ -21,8 +21,8 @@ enum class elements {
     empty
 };
 
-#define HEIGHT 8
-#define WIDTH 8
+#define HEIGHT 16
+#define WIDTH 29
 
 
 #endif
