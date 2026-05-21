@@ -4,18 +4,21 @@
 #include <SDL3/SDL.h>
 #include <string>
 
-#define PLAYER_VEL 3.0f
+// #define PLAYER_VEL 3.0f
+// para testing:
+#define PLAYER_VEL 8.0f
 
 class PlayerDisplay {
 private:
     SDL_Renderer* renderer;
     SDL_Texture* image;
     SDL_FRect rect;
+    int tileSize;
     const bool* keystate;
 
 public:
-    // Carga la imagen y setea una posicion inicial
-    PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath);
+    // Carga la imagen. La posicion inicial es (0, 0). Tile size en pixels.
+    PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize = 64);
     ~PlayerDisplay();
 
     PlayerDisplay(const PlayerDisplay&) = delete;
@@ -25,8 +28,12 @@ public:
 
     // Lee el teclado y mueve el jugador. (Solo para el jugador local)
     void update();
-    // For remote players: set position from server messages
-    // Para jugadores remotos: setear la posicion segun los mensajes del server
+    // Setea la posicion segun coords en celdas (las que manda el server).
+    void setTilePosition(int col, int row);
+    // Posicion actual en celdas (derivada de rect / tileSize).
+    int getTileX() const;
+    int getTileY() const;
+    // Setea la posicion en pixels (legacy; preferir setTilePosition).
     void setPosition(float x, float y);
     void draw() const;
 
