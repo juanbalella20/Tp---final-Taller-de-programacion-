@@ -58,6 +58,67 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     return {false, player_name, 0, 0};
 }
 
+
+
+
+// TODO: hacer una clase lectora de TBL!
+void GameMap::read_desert() {
+    const std::string path = "data/maps/desert/map.toml";
+
+    toml::table tbl;
+    try {
+        tbl = toml::parse_file(path);
+    } catch (const toml::parse_error& e) {
+        throw std::runtime_error("GameMap: parse " + path + ": " +
+                                 std::string(e.description()));
+    }
+
+    width  = tbl["width"].value_or(0);
+    height = tbl["height"].value_or(0);
+    if (width <= 0 || height <= 0) {
+        throw std::runtime_error("GameMap: width/height invlidos en " + path);
+    }
+
+    // Matriz [filas=height][columnas=width], todo vaco inicialmente.
+    map.assign(height, std::vector<elements>(width, elements::empty));
+
+    // [[collider]] = rectngulos no transitables, en celdas.
+    if (auto* arr = tbl["collider"].as_array()) {
+        for (auto& node : *arr) {
+            auto* t = node.as_table();
+            if (!t) continue;
+            int cx = (*t)["x"].value_or(0);
+            int cy = (*t)["y"].value_or(0);
+            int cw = (*t)["w"].value_or(1);
+            int ch = (*t)["h"].value_or(1);
+
+            for (int row = cy; row < cy + ch && row < height; ++row) {
+                if (row < 0) continue;
+                for (int col = cx; col < cx + cw && col < width; ++col) {
+                    if (col < 0) continue;
+                    map[row][col] = elements::buildings;
+                }
+            }
+        }
+    }
+
+    // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
+    spawns.clear();
+    if (auto* arr = tbl["spawn"].as_array()) {
+        for (auto& node : *arr) {
+            auto* t = node.as_table();
+            if (!t) continue;
+            std::string name = (*t)["name"].value_or<std::string>("");
+            if (name.empty()) continue;
+            position_coord p{
+                (*t)["x"].value_or(0),
+                (*t)["y"].value_or(0),
+            };
+            spawns[name] = p;
+        }
+    }
+}
+
 std::string GameMap::sector_of_position(int x, int y) {
     // to-do: obtener sector segn posicin
     (void)x; (void)y;
