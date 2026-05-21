@@ -158,7 +158,40 @@ void ClientGUI::init_draw() {
     // aca recibe del protocolo la zona
     // hardocodeado para test
     loadMedia(zones::DESERT);
-    
+    int tileSize = tilemap->getTileSize();
+    try {
+        player = std::make_unique<PlayerDisplay>(renderer, "images/player.png", tileSize);
+        std::cout << "[DEBUG] PlayerDisplay created (images/)" << std::endl;
+    } catch (const std::runtime_error& e) {
+        std::cout << "[DEBUG] images/player.png failed: " << e.what()
+                  << " - trying imagenes/" << std::endl;
+        player = std::make_unique<PlayerDisplay>(renderer, "imagenes/player.png", tileSize);
+        std::cout << "[DEBUG] PlayerDisplay created (imagenes/)" << std::endl;
+    }
+
+    // Posicionar al player en el spawn "player_start" del TOML.
+    if (tilemap) {
+        std::cout << "[DEBUG] spawns count=" << tilemap->getSpawns().size() << std::endl;
+        bool found = false;
+        for (const auto& sp : tilemap->getSpawns()) {
+            std::cout << "[DEBUG] spawn: name='" << sp.name
+                      << "' x=" << sp.x << " y=" << sp.y << std::endl;
+            if (sp.name == "player_start") {
+                player->setTilePosition(sp.x, sp.y);
+                std::cout << "[DEBUG] player positioned at ("
+                          << sp.x << "," << sp.y << ")" << std::endl;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            std::cout << "[DEBUG] player_start NOT FOUND, defaulting to (1,1)" << std::endl;
+            player->setTilePosition(1, 1);
+        }
+    } else {
+        std::cout << "[DEBUG] no tilemap, player at default (0,0)" << std::endl;
+    }
+
     is_running = true;
     SDL_Delay(100);
 }
