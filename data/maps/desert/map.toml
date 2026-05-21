@@ -1,0 +1,63 @@
+# Mapa "Desert"
+# Las rutas de los PNG son relativas a este archivo.
+# Las capas se dibujan EN ORDEN: la primera atrs, la ltima adelante.
+
+tile_size = 64
+width  = 29
+height = 16
+
+# ── Capas visuales ──────────────────────────────────────────────────────────
+[[layer]]
+file = "desert-background.png"
+
+[[layer]]
+file = "desert-sand.png"
+
+[[layer]]
+file = "desert-buildings.png"
+collider = true
+
+
+# ── Colliders manuales (en celdas) ──────────────────────────────────────────
+# Coords aproximadas de los edificios visibles en la capa Buildings.
+
+# Castillo central
+[[collider]]
+x = 12
+y = 1
+w = 5
+h = 4
+
+# Dos casitas pegadas, arriba-izquierda
+[[collider]]
+x = 4
+y = 1
+w = 4
+h = 3
+
+# Castillo abajo-derecha
+[[collider]]
+x = 23
+y = 8
+w = 2
+h = 4
+
+# Casita derecha-arriba
+[[collider]]
+x = 18
+y = 2
+w = 4
+h = 4
+
+# Casita inferior-medio derecha
+[[collider]]
+x = 16
+y = 5
+w = 2
+h = 3
+
+# ── Spawns / puntos de inters ──────────────────────────────────────────────
+[[spawn]]
+name = "player_start"
+x = 5
+y = 5
