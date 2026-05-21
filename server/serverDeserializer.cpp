@@ -12,10 +12,10 @@ ServerDeserializer::ServerDeserializer() {
         deserialize_move(payload, cmd);
     };
     handlers[MSG_ATTACK] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
-        deserialize_attack(payload, cmd);
+        read_coords(payload, cmd);
     };
     handlers[MSG_SELECT] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
-        deserialize_attack(payload, cmd);
+        read_coords(payload, cmd);
     };
     handlers[MSG_BUY]     = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
     handlers[MSG_SELL]    = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
@@ -48,6 +48,7 @@ ServerDeserializer::ServerDeserializer() {
 
 void ServerDeserializer::deserialize_register(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
     uint8_t name_len = payload[0];
+    //payload+1, es el inicio del nombre; y termina en el inicio del payload + 1 (largo del nombre) + largo del nombre
     std::string name(payload.begin() + LEN_NAME_SIZE_FIELD,
                      payload.begin() + LEN_NAME_SIZE_FIELD + name_len);
     cmd.set_player_name(name);
@@ -72,6 +73,14 @@ void ServerDeserializer::read_entity_and_name(const std::vector<uint8_t>& payloa
     std::string target_name(payload.begin() + LEN_ENTITY + LEN_NAME_SIZE_FIELD,
                             payload.begin() + LEN_ENTITY + LEN_NAME_SIZE_FIELD + target_len);
     cmd.set_target_name(target_name);
+}
+
+void ServerDeserializer::read_coords(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+    uint16_t x_be, y_be;
+    std::memcpy(&x_be, payload.data(), LEN_COORD);
+    std::memcpy(&y_be, payload.data() + LEN_COORD, LEN_COORD);
+    cmd.set_coord_x(ntohs(x_be));
+    cmd.set_coord_y(ntohs(y_be));
 }
 
 void ServerDeserializer::deserialize_attack(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
