@@ -16,6 +16,8 @@ class GameLoop : public Thread {
     Queue<ClientCmd>& receiving_queue;
     ClientRegistryMonitor& client_registry_monitor;
     GameMap game_map;
+    void load_maps();
+    void load_world();
 };
 
 #endif  // SERVER_SRC_GAMELOOP_H_
