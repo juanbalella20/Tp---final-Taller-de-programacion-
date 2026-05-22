@@ -151,7 +151,7 @@ void ClientGUI::sendMoveCmd(Direction dir) {
 
 void ClientGUI::sendChatCmd(const std::string& msg) {
     try {
-        ClientCmd cmd = parser.parse(msg);
+        ClientCmd cmd = parser.parse_chat(msg);
         outgoing.push(cmd);
     } catch (const std::invalid_argument& e) {
         chat_inbox.push(std::string("Error: ") + e.what());
@@ -166,7 +166,7 @@ void ClientGUI::update() {
         GameMsg msg(0);
         while (receiving.try_pop(msg)) {
             switch (msg.get_type()) {
-                case MSG_MOVE:
+                case MSG_MOVE: {
                     int x = player->getTileX();
                     int y = player->getTileY();
                     switch (msg.get_direction()) {
@@ -177,6 +177,8 @@ void ClientGUI::update() {
                         default: break;
                     }
                     player->setTilePosition(x, y);
+                    break;
+                }
                 case MSG_FOUND_CLAN:
                 case MSG_JOIN_CLAN:
                 case MSG_REV_CLAN:

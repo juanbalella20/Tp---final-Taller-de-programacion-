@@ -37,7 +37,21 @@ ClientCmd Parser::parse(const std::string& input) {
         cmd.set_message_type(MSG_ATTACK);
         cmd.set_target_type(entity_type == "npc" ? ENTITY_NPC : ENTITY_PLAYER);
         cmd.set_target_name(target_name);
-    } else if (command == "/meditar") {
+    } else {
+        throw std::invalid_argument("Comando desconocido: " + command);
+    }
+
+    return cmd;
+}
+
+ClientCmd Parser::parse_chat(const std::string& input) {
+    std::istringstream ss(input);
+    std::string command;
+    ss >> command;
+
+    ClientCmd cmd;
+
+    if (command == "/meditar") {
         cmd.set_message_type(MSG_MEDITATE);
     } else if (command == "/fundar-clan") {
         std::string clan_name;
