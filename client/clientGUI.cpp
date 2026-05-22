@@ -143,10 +143,12 @@ void ClientGUI::sendMoveCmd(Direction dir) {
 }
 
 void ClientGUI::sendChatCmd(const std::string& msg) {
-    ClientCmd cmd;
-    cmd.set_message_type(/*MSG_*/);
-    cmd.set_chat_content(msg);
-    outgoing.push(cmd);
+    try {
+        ClientCmd cmd = parser.parse(msg);
+        outgoing.push(cmd);
+    } catch (const std::invalid_argument& e) {
+        chat_inbox.push(std::string("Error: ") + e.what());
+    }
 }
 
 void ClientGUI::update() {
@@ -173,9 +175,15 @@ void ClientGUI::update() {
                             break;
                     }
                     break;
-                case /*MSG_CHAT*/:
-                    std::string msg_server = msg.get_chat_content();
-                    chat_inbox.push(msg_server);
+                case MSG_FOUND_CLAN:
+                case MSG_JOIN_CLAN:
+                case MSG_REV_CLAN:
+                case MSG_CLAN_ACEP:
+                case MSG_CLAN_BAN:
+                case MSG_CLAN_KICK:
+                case MSG_CLAN_RECH:
+                case MSG_LEFT_CLAN:
+                    chat_inbox.push(msg.get_chat_content());
                     break;
             }
         }
