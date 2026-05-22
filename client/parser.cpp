@@ -37,6 +37,16 @@ ClientCmd Parser::parse(const std::string& input) {
         cmd.set_message_type(MSG_ATTACK);
         cmd.set_target_type(entity_type == "npc" ? ENTITY_NPC : ENTITY_PLAYER);
         cmd.set_target_name(target_name);
+    } else if (command == "/meditar") {
+        cmd.set_message_type(MSG_MEDITATE);
+    } else if (command == "/fundar-clan") {
+        std::string clan_name;
+        if (!(ss >> clan_name)) {
+            throw std::invalid_argument("Uso: /fundar-clan <nombre>");
+        }
+
+        cmd.set_message_type(MSG_FOUND_CLAN);
+        cmd.set_target_name(clan_name);
     } else {
         throw std::invalid_argument("Comando desconocido: " + command);
     }
