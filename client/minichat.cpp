@@ -4,11 +4,14 @@
 #include <SDL3_ttf/SDL_ttf.h>
 
 MiniChat::MiniChat(SDL_Renderer* renderer, TTF_Font* font) : 
+    active(false),
     renderer(renderer),
     font(font) {}
 
+bool MiniChat::is_active() const { return active; }
+
 bool MiniChat::handle_event(const SDL_Event& event) {
-    if (!is_active) {
+    if (!active) {
         return false;
     }
 
@@ -45,11 +48,11 @@ bool MiniChat::handle_event(const SDL_Event& event) {
 }
 
 void MiniChat::toggle_active() {
-    is_active = !is_active;
+    active = !active;
 
     SDL_Window* window = SDL_GetRenderWindow(renderer);
 
-    if (is_active) {
+    if (active) {
         player_input.clear();
         SDL_StartTextInput(window);
     } else {
@@ -137,7 +140,7 @@ void MiniChat::render() {
     float spacing = 5.0f;
     float current_y = start_y;
 
-    Uint8 alpha = is_active ? 180 : 100;
+    Uint8 alpha = active ? 180 : 100;
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, alpha);
 
@@ -151,7 +154,7 @@ void MiniChat::render() {
         current_y += msg.height + spacing;
     }
 
-    if (is_active) {
+    if (active) {
         std::string prompt = "> " + player_input;
 
         if ((SDL_GetTicks() / 500) % 2 == 0) {

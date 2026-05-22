@@ -19,7 +19,7 @@ struct chatMessage {
 class MiniChat {
 
 private:
-    bool is_active;
+    bool active;
     std::string player_input;
     std::string outbound_msg;
     std::deque<chatMessage> msg_history;
@@ -35,6 +35,8 @@ private:
 
 public:
     MiniChat(SDL_Renderer* renderer, TTF_Font* font);
+
+    bool is_active() const;
 
     /*
     Si el chat está inactivo, no hace nada (false)
