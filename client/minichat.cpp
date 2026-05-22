@@ -12,6 +12,10 @@ bool MiniChat::handle_event(const SDL_Event& event) {
         return false;
     }
 
+    if (event.type == SDL_EVENT_QUIT) {
+        return false;
+    }
+
     if (event.type == SDL_EVENT_KEY_DOWN) {
         switch (event.key.scancode) {
             case SDL_SCANCODE_ESCAPE:
