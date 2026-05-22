@@ -91,6 +91,28 @@ void GameLoop::run() {
                     int dy = std::abs(attacker->get_coord_y() - target->get_coord_y());
                     if (dx + dy > 1) break;
 
+                    // Calcular daño
+                    int damage = attacker->damage_attack();
+ 
+                    // Esquiva: rand(0,1)^Agilidad < 0.001
+                    // TODO: cuando PlayerRace exponga agilidad al gameloop,
+                    // usar la agilidad real del target. Por ahora siempre aplica daño.
+                    bool evaded = false;
+ 
+                    if (evaded) {
+                        GameMsg evade_msg(MSG_ATTACK);
+                        evade_msg.set_player_name(attacker_name);
+                        client_registry_monitor.notify_client(cmd.get_client_id(), evade_msg);
+                        break;
+                    }
+ 
+                    target->recv_attack(damage);
+ 
+                    // Experiencia al atacante
+                    int exp = damage * std::max(target->get_level() - attacker->get_level() + 10, 0);
+                    attacker->add_experience(exp);
+                    attacker->check_level_up();
+
                     
                 }
                 default:
