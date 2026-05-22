@@ -145,7 +145,7 @@ void ClientGUI::sendMoveCmd(Direction dir) {
 void ClientGUI::sendChatCmd(const std::string& msg) {
     ClientCmd cmd;
     cmd.set_message_type(/*MSG_*/);
-    cmd.set_chat_text(msg);
+    cmd.set_chat_content(msg);
     outgoing.push(cmd);
 }
 
