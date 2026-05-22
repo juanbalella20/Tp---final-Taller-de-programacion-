@@ -100,6 +100,12 @@ void ClientGUI::handleEvents() {
                 is_running = false;
                 break;
             case SDL_EVENT_KEY_DOWN:
+                if (event.key.scancode == SDL_SCANCODE_T) {
+                    if (!(mini_chat->is_active())) {
+                        mini_chat->toggle_active();
+                    }
+                    break;
+                }
                 switch (event.key.scancode) {
                     case SDL_SCANCODE_ESCAPE:
                         is_running = false;
