@@ -44,8 +44,25 @@ private:
     void loadMedia(zones zone);
     void freeSDL();
 
+    /*
+    Por cada evento del teclado, primero se fija si es del MiniChat.
+    Si sí, no hace nada más. Si no, mueve al personaje.
+    Después, le pregunta al MiniChat si hay un mensaje nuevo.
+    Si sí, lo obtiene y llama a sendChatCmd()
+    */
     void handleEvents();
+
+    /*
+    Lee los mensajes que llegan del servidor.
+    Si llegó uno del chat, lo guarda en chat_inbox.
+    Luego, llama al update de MiniChat.
+    */
     void update();
+
+    /*
+    Llama a lo último al render de MiniChat para que el chat
+    se dibuje por encima de todo lo anterior dibujado.
+    */
     void draw();
 
     void sendMoveCmd(Direction dir);
