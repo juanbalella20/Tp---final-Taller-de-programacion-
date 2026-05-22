@@ -7,7 +7,7 @@
 
 ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
     : window(nullptr), renderer(nullptr), background(nullptr), event{}, chat_font(nullptr),
-      is_running(false), mini_chat(nullptr), outgoing(outgoing), receiving(receiving) {}
+      is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving) {}
 
 ClientGUI::~ClientGUI() {
     freeSDL();

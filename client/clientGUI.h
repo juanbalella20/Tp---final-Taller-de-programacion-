@@ -7,6 +7,7 @@
 #include <memory>
 #include "minichat.h"
 #include "displayPlayer.h"
+#include "parser.h"
 #include "../common/thread.h"
 #include "../common/queue.h"
 #include "../common/clientCmd.h"
@@ -32,7 +33,7 @@ private:
     TTF_Font* chat_font;
     bool is_running;
     std::unique_ptr<MiniChat> mini_chat;
-
+    Parser parser;
     Queue<ClientCmd>& outgoing;
     Queue<GameMsg>& receiving;
     Queue<std::string> chat_inbox;
