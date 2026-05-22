@@ -73,6 +73,10 @@ public:
     int get_coord_y();
 
     void update_position(const int x, const int y);
+
+    bool is_ghost() const;
+    
+    void set_ghost();
 };
 
 #endif

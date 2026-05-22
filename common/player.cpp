@@ -146,3 +146,11 @@ void Player::update_position(const int x, const int y) {
     coord_x = x;
     coord_y = y;
 }
+
+bool Player::is_ghost() const {
+    return status == PlayerStatus::DEAD;
+}
+ 
+void Player::set_ghost() {
+    status = PlayerStatus::DEAD;
+}

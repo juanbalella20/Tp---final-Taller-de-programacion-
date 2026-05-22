@@ -61,6 +61,17 @@ void GameLoop::run() {
                     }
                     break;
                 }
+                case MSG_ATTACK: {
+                    std::string attacker_name =
+                        client_registry_monitor.get_name(cmd.get_client_id());
+                    Player* attacker = game_map.get_player(attacker_name);
+                    if (!attacker || attacker->is_ghost()) break;
+                    if (cmd.get_target_type() != ENTITY_PLAYER) break;
+                
+
+
+                    
+                }
                 default:
                     break;
             }

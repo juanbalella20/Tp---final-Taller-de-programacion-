@@ -144,3 +144,11 @@ void GameMap::read_forest() {}
 void GameMap::read_town() {}
 //TODO
 void GameMap::set_positions() {}
+
+Player* GameMap::get_player(const std::string& name) {
+    for (auto& player : players) {
+        if (player.get_name() == name) return &player;
+    }
+    return nullptr;
+}
+

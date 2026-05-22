@@ -57,6 +57,8 @@ public:
     // Lee archivo de persistencia
     void set_positions();
     void load_players();
+
+    Player* get_player(const std::string& name);
 };
 
 
