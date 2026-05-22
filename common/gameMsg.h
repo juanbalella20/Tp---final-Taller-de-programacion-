@@ -8,6 +8,9 @@ class GameMsg {
     uint8_t type;
     Direction direction;
     std::vector<std::vector<elements>> map;
+    std::string chat_content;
+    std::string item_id;
+    uint32_t gold;
 
     public:
     GameMsg(uint8_t type, Direction direction = DIR_NORTH) : type(type), direction(direction) {}
@@ -17,7 +20,12 @@ class GameMsg {
     void set_map(const std::vector<std::vector<elements>>& new_map);
     const std::vector<std::vector<elements>>& get_map() const;
     void set_type(uint8_t new_type);
-    std::string get_chat_content();
+    void set_chat_content(const std::string& content);
+    const std::string& get_chat_content() const;
+    void set_item_id(const std::string& id);
+    const std::string& get_item_id() const;
+    void set_gold(uint32_t gold);
+    uint32_t get_gold() const;
 };
 
 
