@@ -81,9 +81,16 @@ public:
     int get_lives() const;
 
     int get_level() const;
-    
+
     int get_clan_id() const;
 
+    int damage_attack();
+
+    void recv_attack(int damage);
+
+    void add_experience(int exp);
+
+    void check_level_up();
 };
 
 #endif

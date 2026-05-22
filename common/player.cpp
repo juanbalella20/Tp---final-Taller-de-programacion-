@@ -166,3 +166,29 @@ int Player::get_level() const {
 int Player::get_clan_id() const {
     return id_clan;
 }
+
+int Player::damage_attack() {
+    // Daño = Fuerza * rand(DañoArmaMin, DañoArmaMax)
+    // TODO: cuando Item este definido, usar el arma equipada
+    return player_race.race_strength() + player_class.class_strength();
+}
+ 
+void Player::recv_attack(int damage) {
+    // TODO: cuando Item este definido, calcular defensa de armadura/escudo/casco
+    // Por ahora aplica el daño directo
+    lives -= damage;
+    if (lives < 0) lives = 0;
+}
+ 
+void Player::add_experience(int exp) {
+    experience += exp;
+}
+ 
+void Player::check_level_up() {
+    int limit = static_cast<int>(1000 * std::pow(level, 1.8));
+    if (experience >= limit) {
+        level += 1;
+        lives = max_life();
+        mana  = max_mana();
+    }
+}
