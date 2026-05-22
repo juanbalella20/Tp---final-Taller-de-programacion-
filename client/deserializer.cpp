@@ -75,3 +75,40 @@ void ClientDeserializer::deserialize_map(const std::vector<uint8_t>& payload, Ga
 
     msg.set_map(map);
 }
+
+static std::string read_string(const std::vector<uint8_t>& payload, size_t& offset) {
+    if (offset + 2 > payload.size()) {
+        throw std::invalid_argument("Payload demasiado corto para leer string");
+    }
+
+    uint16_t len = (payload[offset] << 8) | payload[offset + 1];
+    offset += 2;
+
+    if (offset + len > payload.size()) {
+        throw std::invalid_argument("Payload demasiado corto para leer contenido del string");
+    }
+
+    std::string result(payload.begin() + offset, payload.begin() + offset + len);
+    offset += len;
+    
+    return result;
+}
+
+void ClientDeserializer::deserialize_text(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    size_t offset = 0;
+    msg.set_chat_content(read_string(payload, offset));
+}
+
+void ClientDeserializer::desrialize_gold(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    if (payload.size() != 4) {
+        throw std::invalid_argument("Payload inválido para mensaje de oro");
+    }
+
+    uint32_t amount = (payload[0] << 24) | (payload[1] << 16) | (payload[2] << 8) | payload[3];
+    msg.set_gold(amount);
+}
+
+void ClientDeserializer::desrialize_item(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    size_t offset = 0;
+    msg.set_item_id(read_string(payload, offset));
+}
