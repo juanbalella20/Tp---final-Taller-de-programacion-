@@ -11,6 +11,9 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_SEND_MAP] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_map(payload, msg);
     };
+    handlers[MSG_FOUND_CLAN] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_text(payload, msg);
+    };
 }
 
 void ClientDeserializer::deserialize_move(const std::vector<uint8_t>& payload, GameMsg& msg) {
