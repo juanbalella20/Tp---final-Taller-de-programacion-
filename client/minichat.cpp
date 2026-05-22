@@ -127,6 +127,7 @@ std::string MiniChat::pop_outbound_message() {
 }
 
 void MiniChat::render() {
+    // TO-DO: calcularlos relativos al tamaño de la ventana
     float start_x = 20.0f;
     float start_y = 300.0f;
     float spacing = 5.0f;
