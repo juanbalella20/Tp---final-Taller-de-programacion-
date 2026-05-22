@@ -11,6 +11,7 @@ ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
 
 ClientGUI::~ClientGUI() {
     freeSDL();
+    TTF_CloseFont(chat_font);
 }
 
 void ClientGUI::initSDL() {
@@ -143,7 +144,7 @@ void ClientGUI::sendMoveCmd(Direction dir) {
 
 void ClientGUI::sendChatCmd(const std::string& msg) {
     ClientCmd cmd;
-    cmd.set_message_type(MSG_CHAT);
+    cmd.set_message_type(/*MSG_*/);
     cmd.set_chat_text(msg);
     outgoing.push(cmd);
 }
@@ -172,7 +173,7 @@ void ClientGUI::update() {
                             break;
                     }
                     break;
-                case MSG_CHAT:
+                case /*MSG_CHAT*/:
                     std::string msg_server = msg.get_chat_content();
                     chat_inbox.push(msg_server);
                     break;

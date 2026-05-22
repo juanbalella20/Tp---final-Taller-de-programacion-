@@ -19,6 +19,7 @@ bool MiniChat::handle_event(const SDL_Event& event) {
                 toggle_active();
                 break;
             case SDL_SCANCODE_KP_ENTER:
+            case SDL_SCANCODE_RETURN:
                 if (!player_input.empty()) {
                     outbound_msg = player_input;
                     player_input.clear();
@@ -170,6 +171,4 @@ MiniChat::~MiniChat() {
     while (!msg_history.empty()) {
         pop_oldest_message();
     }
-
-    TTF_CloseFont(font);
 }
