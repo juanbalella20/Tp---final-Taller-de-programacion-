@@ -1,6 +1,7 @@
 #include "gameloop.h"
 
 #include <iostream>
+#include <cmath>
 
 #include "../common/gameMsg.h"
 
@@ -112,8 +113,47 @@ void GameLoop::run() {
                     int exp = damage * std::max(target->get_level() - attacker->get_level() + 10, 0);
                     attacker->add_experience(exp);
                     attacker->check_level_up();
-
                     
+                    // Notificar resultado del ataque a ambos
+                    GameMsg atk_msg(MSG_ATTACK);
+                    atk_msg.set_player_name(attacker_name);
+                    atk_msg.set_coord_x(damage);  // usamos coord_x para transportar el daño
+                    client_registry_monitor.notify_clients(atk_msg);
+ 
+                    // Muerte del target
+                    if (target->get_lives() <= 0) {
+                        // Experiencia bonus
+                        int exp_bonus = static_cast<int>(
+                            (rand() / (float)RAND_MAX) * 0.1f * std::max(target->get_level() - attacker->get_level() + 10, 0)
+                        );
+                        attacker->add_experience(exp_bonus);
+                        attacker->check_level_up();
+ 
+                        // Oro en exceso del muerto cae al suelo
+                        int oro_max = static_cast<int>(100 * std::pow(target->get_level(), 1.1));
+                        int exceso  = std::max(0, target->get_gold() - oro_max);
+                        if (exceso > 0) {
+                            target->give_gold(exceso);
+                            // TODO: game_map.add_gold_on_floor(target->get_coord_x(), target->get_coord_y(), exceso);
+                        }
+ 
+                        // TODO: tirar inventario al suelo cuando Item este definido
+ 
+                        target->set_ghost();
+ 
+                        GameMsg dead_msg(MSG_ATTACK);
+                        dead_msg.set_player_name(target->get_name());
+                        client_registry_monitor.notify_clients(dead_msg);
+ 
+                        std::cout << "[INFO: MSG_ATTACK] " << target->get_name()
+                                  << " murio, matado por " << attacker_name << std::endl;
+                    }
+ 
+                    std::cout << "[INFO: MSG_ATTACK] " << attacker_name
+                              << " -> " << target->get_name()
+                              << " dmg=" << damage << std::endl;
+                    break;
+
                 }
                 default:
                     break;
