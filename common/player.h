@@ -77,6 +77,13 @@ public:
     bool is_ghost() const;
     
     void set_ghost();
+
+    int get_lives() const;
+
+    int get_level() const;
+    
+    int get_clan_id() const;
+
 };
 
 #endif

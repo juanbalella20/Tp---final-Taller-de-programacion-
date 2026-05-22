@@ -154,3 +154,15 @@ bool Player::is_ghost() const {
 void Player::set_ghost() {
     status = PlayerStatus::DEAD;
 }
+
+int Player::get_lives() const {
+    return lives;
+}
+ 
+int Player::get_level() const {
+    return level;
+}
+ 
+int Player::get_clan_id() const {
+    return id_clan;
+}

@@ -67,8 +67,29 @@ void GameLoop::run() {
                     Player* attacker = game_map.get_player(attacker_name);
                     if (!attacker || attacker->is_ghost()) break;
                     if (cmd.get_target_type() != ENTITY_PLAYER) break;
-                
 
+                    // Solo soportamos ataque a jugadores por ahora
+                    // TODO: cuando NPCs esten implementados, manejar ENTITY_NPC
+                    if (cmd.get_target_type() != ENTITY_PLAYER) break;
+ 
+                    Player* target = game_map.get_player(cmd.get_target_name());
+                    if (!target || target->is_ghost()) break;
+ 
+                    // Fair play: ninguno puede ser newbie (nivel <= 12)
+                    if (attacker->get_level() <= 12 || target->get_level() <= 12) break;
+ 
+                    // Diferencia de nivel no puede superar 10
+                    if (std::abs(attacker->get_level() - target->get_level()) > 10) break;
+ 
+                    // Mismo clan no pueden atacarse
+                    if (attacker->get_clan_id() != -1 &&
+                        attacker->get_clan_id() == target->get_clan_id()) break;
+                    
+                    // Validar rango (cuerpo a cuerpo: deben ser adyacentes)
+                    // TODO: cuando Item este definido, verificar si el arma es a distancia
+                    int dx = std::abs(attacker->get_coord_x() - target->get_coord_x());
+                    int dy = std::abs(attacker->get_coord_y() - target->get_coord_y());
+                    if (dx + dy > 1) break;
 
                     
                 }
