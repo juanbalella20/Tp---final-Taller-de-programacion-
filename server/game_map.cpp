@@ -60,15 +60,17 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
 
 
 void GameMap::load_players() {
-    // Hardcoded para testing: un player "hero" en el spawn "player_start".
-    // TODO: leer roster desde persistencia.
-    Player hero("hero", PlayerRace(), PlayerClass());
+    // Players are added dynamically via add_player() when clients register.
+}
+
+void GameMap::spawn_player(const std::string& name) {
     auto it = spawns.find("player_start");
     int start_x = (it != spawns.end()) ? it->second.x : 1;
     int start_y = (it != spawns.end()) ? it->second.y : 1;
-    hero.update_position(start_x, start_y);
-    players.push_back(hero);
-    std::cout << "[DEBUG: load_players] hero at ("
+    Player p(name, PlayerRace(), PlayerClass());
+    p.update_position(start_x, start_y);
+    players.push_back(p);
+    std::cout << "[DEBUG: spawn_player] " << name << " at ("
               << start_x << "," << start_y << ")" << std::endl;
 }
 

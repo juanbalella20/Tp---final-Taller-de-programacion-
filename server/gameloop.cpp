@@ -36,8 +36,8 @@ void GameLoop::run() {
                       << std::endl;
             switch (cmd.get_message_type()) {
                 case MSG_REGISTER: {
-                    // TODO: crear el jugador
                     client_registry_monitor.assign_name(cmd.get_client_id(), cmd.get_player_name());
+                    game_map.spawn_player(cmd.get_player_name());
                     GameMsg msg(MSG_SEND_MAP);
                     msg.set_map(game_map.get_map());
                     client_registry_monitor.notify_client(cmd.get_client_id(), msg);
@@ -61,6 +61,20 @@ void GameLoop::run() {
                     }
                     break;
                 }
+                case MSG_SELECT: {
+                    std::string name =
+                        client_registry_monitor.get_name(cmd.get_client_id());
+                    uint16_t coor_x = cmd.get_coord_x();
+                    uint16_t coor_y = cmd.get_coord_y();
+                    std::cout << "[DEBUG: MSG_SELECT] received cmd type="
+                      << static_cast<int>(cmd.get_message_type())
+                      << "client_id" << cmd.get_client_id()
+                      << "coor_x" << coor_x
+                      << "coor_y" << coor_y
+                      << std::endl;
+                    //std::string sector = game_map.sector_of_position(coor_x, coor_y);
+                    break;
+                }
                 default:
                     break;
             }
@@ -71,3 +85,4 @@ void GameLoop::run() {
         }
     }
 }
+

@@ -67,6 +67,15 @@ void ClientGUI::freeSDL() {
     SDL_Quit();
 }
 
+void ClientGUI::sendCoord(int x, int y) {
+    ClientCmd cmd;
+    cmd.set_message_type(MSG_SELECT);
+    cmd.set_coord_x(x);
+    cmd.set_coord_y(y);
+    outgoing.push(cmd);
+}
+
+
 void ClientGUI::handleEvents() {
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
@@ -98,6 +107,9 @@ void ClientGUI::handleEvents() {
                     default:
                         break;
                 }
+                break;
+            case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                sendCoord(event.button.x, event.button.y);
                 break;
             default:
                 break;

@@ -52,6 +52,10 @@ private:
     // recibe mensaje del server y hace el dibujo inicial
     void init_draw();
 
+    //PRE: SE RECIBEM LAS COORDENADAS DE DONDE ESTAN
+    //POS ESAS COORDENADAS SE ENVIAN AL SERVIDOR PARA QUE SE MUEVA EL JUGADOR A ESA POS
+    void sendCoord(int x, int y);
+
 public:
     ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving);
     ~ClientGUI();

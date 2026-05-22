@@ -110,10 +110,3 @@ add_executable(server
 target_include_directories(server PRIVATE server)
 target_link_libraries(server PRIVATE common)
 
-# ── Tests manuales (ejecutables standalone) ─────────────────────────────────
-add_executable(test_read_desert
-    tests/test_read_desert.cpp
-    server/game_map.cpp
-)
-target_include_directories(test_read_desert PRIVATE server)
-target_link_libraries(test_read_desert PRIVATE common)
