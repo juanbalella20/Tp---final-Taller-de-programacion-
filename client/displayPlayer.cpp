@@ -4,8 +4,10 @@
 #include <string>
 #include <iostream>
 
-PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath)
-    : renderer(renderer), image(nullptr), rect{64.0f, 64.0f, 64.0f, 64.0f},
+PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize)
+    : renderer(renderer), image(nullptr),
+      rect{0.0f, 0.0f, static_cast<float>(tileSize), static_cast<float>(tileSize)},
+      tileSize(tileSize),
       keystate(SDL_GetKeyboardState(nullptr)) {
 
     SDL_Surface* surf = IMG_Load(imagePath.c_str());
@@ -27,7 +29,7 @@ PlayerDisplay::~PlayerDisplay() {
 
 PlayerDisplay::PlayerDisplay(PlayerDisplay&& other) noexcept
     : renderer(other.renderer), image(other.image), rect(other.rect),
-      keystate(other.keystate) {
+      tileSize(other.tileSize), keystate(other.keystate) {
     other.image = nullptr;
 }
 
@@ -37,6 +39,7 @@ PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
         renderer = other.renderer;
         image = other.image;
         rect = other.rect;
+        tileSize = other.tileSize;
         keystate = other.keystate;
         other.image = nullptr;
     }
@@ -67,6 +70,19 @@ void PlayerDisplay::update() {
 void PlayerDisplay::setPosition(float x, float y) {
     rect.x = x;
     rect.y = y;
+}
+
+void PlayerDisplay::setTilePosition(int col, int row) {
+    rect.x = static_cast<float>(col * tileSize);
+    rect.y = static_cast<float>(row * tileSize);
+}
+
+int PlayerDisplay::getTileX() const {
+    return static_cast<int>(rect.x) / tileSize;
+}
+
+int PlayerDisplay::getTileY() const {
+    return static_cast<int>(rect.y) / tileSize;
 }
 
 void PlayerDisplay::draw() const {

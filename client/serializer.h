@@ -18,7 +18,10 @@ class Serializer {
     // [MOVE]
     std::vector<uint8_t> serialize_move(const ClientCmd& cmd);
 
-    // [ATTACK, SELECT] — entity_type + target_name
+    // [ATTACK, SELECT] — x + y coords (uint16_t big endian)
+    std::vector<uint8_t> serialize_coords(uint8_t type, const ClientCmd& cmd);
+
+    // entity_type + target_name (ya no usado por ATTACK/SELECT)
     std::vector<uint8_t> serialize_entity_and_name(uint8_t type, const ClientCmd& cmd);
 
     // [FOUND_CLAN, JOIN_CLAN, CLAN_ACEP, CLAN_RECH, CLAN_BAN, CLAN_KICK] — solo target_name

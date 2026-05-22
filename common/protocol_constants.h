@@ -12,6 +12,7 @@ const uint16_t LEN_RACE = 1;  // 1 byte para la raza
 const uint16_t LEN_CLASS = 1;  // 1 byte para la clase
 const uint16_t LEN_ENTITY = 1;  // 1 byte para el tipo de entidad (player/npc)
 const uint16_t LEN_DIRECTION = 1;
+const uint16_t LEN_COORD = 2;  // 2 bytes para cada coordenada (x e y)
 
 enum MessageType : uint8_t {
     MSG_REGISTER     = 0x01,  // Crear personaje nuevo            [cliente OK] [servidor OK]

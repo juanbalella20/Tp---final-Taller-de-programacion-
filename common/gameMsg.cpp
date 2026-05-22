@@ -12,3 +12,10 @@ void GameMsg::set_item_id(const std::string& id) { this->item_id = id; }
 const std::string& GameMsg::get_item_id() const { return this->item_id; }
 void GameMsg::set_gold(uint32_t gold) { this->gold = gold; }
 uint32_t GameMsg::get_gold() const { return this->gold; }
+
+void GameMsg::set_player_name(const std::string& name) { this->player_name = name; }
+const std::string& GameMsg::get_player_name() const { return player_name; }
+void GameMsg::set_coord_x(int x) { this->coord_x = x; }
+int GameMsg::get_coord_x() const { return coord_x; }
+void GameMsg::set_coord_y(int y) { this->coord_y = y; }
+int GameMsg::get_coord_y() const { return coord_y; }

@@ -50,19 +50,8 @@ void ClientGUI::loadMedia(zones zone) {
     switch (zone)
     {
     case zones::DESERT : {
-        constexpr std::array<const char*, 2> bg_paths = {
-            "images/background.jpg",
-            "imagenes/background.jpg"
-        };
-        for (const char* path : bg_paths) {
-            background = IMG_LoadTexture(renderer, path);
-            if (background) {
-                break;
-            }
-        }
-        if (!background) {
-            throw std::runtime_error(std::string("Loading background: ") + SDL_GetError());
-        }
+        tilemap = std::make_unique<TileMap>(renderer);
+        tilemap->load("data/maps/desert/map.toml");
         break;
     }
     default:
@@ -87,6 +76,15 @@ void ClientGUI::freeSDL() {
     }
     SDL_Quit();
 }
+
+void ClientGUI::sendCoord(int x, int y) {
+    ClientCmd cmd;
+    cmd.set_message_type(MSG_SELECT);
+    cmd.set_coord_x(x);
+    cmd.set_coord_y(y);
+    outgoing.push(cmd);
+}
+
 
 void ClientGUI::handleEvents() {
     while (SDL_PollEvent(&event)) {
@@ -130,6 +128,9 @@ void ClientGUI::handleEvents() {
                         break;
                 }
                 break;
+            case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                sendCoord(event.button.x, event.button.y);
+                break;
             default:
                 break;
         }
@@ -166,21 +167,16 @@ void ClientGUI::update() {
         while (receiving.try_pop(msg)) {
             switch (msg.get_type()) {
                 case MSG_MOVE:
+                    int x = player->getTileX();
+                    int y = player->getTileY();
                     switch (msg.get_direction()) {
-                        case DIR_NORTH:
-                            player->move_up();
-                            break;
-                        case DIR_SOUTH:
-                        player->move_down();
-                            break;
-                        case DIR_EAST:
-                            player->move_right();
-                            break;
-                        case DIR_WEST:
-                            player->move_left();
-                            break;
+                        case DIR_NORTH: --y; break;
+                        case DIR_SOUTH: ++y; break;
+                        case DIR_EAST:  ++x; break;
+                        case DIR_WEST:  --x; break;
+                        default: break;
                     }
-                    break;
+                    player->setTilePosition(x, y);
                 case MSG_FOUND_CLAN:
                 case MSG_JOIN_CLAN:
                 case MSG_REV_CLAN:
@@ -206,6 +202,9 @@ void ClientGUI::draw() {
     if (background) {
         SDL_RenderTexture(renderer, background, nullptr, nullptr);
     }
+    if (tilemap) {
+        tilemap->render();
+    }
     if (player) {
         player->draw();
     }
@@ -215,18 +214,46 @@ void ClientGUI::draw() {
 
 void ClientGUI::init_draw() {
     // la info se la pasa el cliente desde config?
-    initSDL(); 
+    initSDL();
     // aca recibe del protocolo la zona
     // hardocodeado para test
     loadMedia(zones::DESERT);
+    int tileSize = tilemap->getTileSize();
     try {
-        player = std::make_unique<PlayerDisplay>(renderer, "images/player.png");
-    } catch (const std::runtime_error&) {
-        player = std::make_unique<PlayerDisplay>(renderer, "imagenes/player.png");
+        player = std::make_unique<PlayerDisplay>(renderer, "images/player.png", tileSize);
+        std::cout << "[DEBUG] PlayerDisplay created (images/)" << std::endl;
+    } catch (const std::runtime_error& e) {
+        std::cout << "[DEBUG] images/player.png failed: " << e.what()
+                  << " - trying imagenes/" << std::endl;
+        player = std::make_unique<PlayerDisplay>(renderer, "imagenes/player.png", tileSize);
+        std::cout << "[DEBUG] PlayerDisplay created (imagenes/)" << std::endl;
     }
+
+    // Posicionar al player en el spawn "player_start" del TOML.
+    if (tilemap) {
+        std::cout << "[DEBUG] spawns count=" << tilemap->getSpawns().size() << std::endl;
+        bool found = false;
+        for (const auto& sp : tilemap->getSpawns()) {
+            std::cout << "[DEBUG] spawn: name='" << sp.name
+                      << "' x=" << sp.x << " y=" << sp.y << std::endl;
+            if (sp.name == "player_start") {
+                player->setTilePosition(sp.x, sp.y);
+                std::cout << "[DEBUG] player positioned at ("
+                          << sp.x << "," << sp.y << ")" << std::endl;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            std::cout << "[DEBUG] player_start NOT FOUND, defaulting to (1,1)" << std::endl;
+            player->setTilePosition(1, 1);
+        }
+    } else {
+        std::cout << "[DEBUG] no tilemap, player at default (0,0)" << std::endl;
+    }
+
     is_running = true;
     SDL_Delay(100);
-
 }
 
 void ClientGUI::run() {

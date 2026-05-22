@@ -12,11 +12,14 @@
 #include "../common/queue.h"
 #include "../common/clientCmd.h"
 #include "../common/gameMsg.h"
+#include "tileMap.h"
 
 
 #define WIN_NAME "Argentum"
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
+//#define WINDOW_WIDTH 1920
+//#define WINDOW_HEIGHT 1080
 
 enum class zones {
     DESERT,
@@ -40,6 +43,7 @@ private:
 
     std::unique_ptr<PlayerDisplay> player;
     //PlayerDisplay& player;
+    std::unique_ptr<TileMap> tilemap;
 
     void initSDL();
     void loadMedia(zones zone);
@@ -71,6 +75,10 @@ private:
 
     // recibe mensaje del server y hace el dibujo inicial
     void init_draw();
+
+    //PRE: SE RECIBEM LAS COORDENADAS DE DONDE ESTAN
+    //POS ESAS COORDENADAS SE ENVIAN AL SERVIDOR PARA QUE SE MUEVA EL JUGADOR A ESA POS
+    void sendCoord(int x, int y);
 
 public:
     ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving);

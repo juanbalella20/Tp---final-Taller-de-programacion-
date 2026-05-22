@@ -6,8 +6,8 @@
 Serializer::Serializer() {
     handlers[MSG_REGISTER] = [this](const ClientCmd& cmd) { return serialize_register(cmd); };
     handlers[MSG_MOVE]     = [this](const ClientCmd& cmd) { return serialize_move(cmd); };
-    handlers[MSG_ATTACK]   = [this](const ClientCmd& cmd) { return serialize_entity_and_name(MSG_ATTACK, cmd); };
-    handlers[MSG_SELECT]   = [this](const ClientCmd& cmd) { return serialize_entity_and_name(MSG_SELECT, cmd); };
+    handlers[MSG_ATTACK]   = [this](const ClientCmd& cmd) { return serialize_coords(MSG_ATTACK, cmd); };
+    handlers[MSG_SELECT]   = [this](const ClientCmd& cmd) { return serialize_coords(MSG_SELECT, cmd); };
     handlers[MSG_BUY]      = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_BUY, cmd); };
     handlers[MSG_SELL]     = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_SELL, cmd); };
     handlers[MSG_EQUIP]    = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_EQUIP, cmd); };
@@ -35,8 +35,12 @@ void Serializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t 
     buf.push_back(type);
     uint16_t largo_be = htons(payload_len);
     uint8_t largo_bytes[sizeof(uint16_t)];
-    std::memcpy(largo_bytes, &largo_be, sizeof(uint16_t));
+    std::memcpy(largo_bytes, &largo_be, sizeof(uint16_t));//void* memcpy(void* destino, const void* origen, size_t cantidad_de_bytes);
+    // memcpy se usa para copiar los bytes de largo_be (en formato big-endian) al arreglo largo_bytes,
+    //que luego se inserta en el buffer de salida. 
+    //Esto asegura que el header del mensaje tenga el formato correcto esperado por el protocolo de comunicación.
     buf.insert(buf.end(), largo_bytes, largo_bytes + sizeof(uint16_t));
+    
 }
 
 
@@ -63,6 +67,20 @@ std::vector<uint8_t> Serializer::serialize_move(const ClientCmd& cmd) {
     return buf;
 }
 
+std::vector<uint8_t> Serializer::serialize_coords(uint8_t type, const ClientCmd& cmd) {
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + LEN_COORD + LEN_COORD);
+    write_header(buf, type, LEN_COORD + LEN_COORD);
+    uint16_t x_be = htons(static_cast<uint16_t>(cmd.get_coord_x()));
+    uint16_t y_be = htons(static_cast<uint16_t>(cmd.get_coord_y()));
+    uint8_t tmp[2];
+    std::memcpy(tmp, &x_be, LEN_COORD);
+    buf.insert(buf.end(), tmp, tmp + LEN_COORD);
+    std::memcpy(tmp, &y_be, LEN_COORD);
+    buf.insert(buf.end(), tmp, tmp + LEN_COORD);
+    return buf;
+}
+/*
 std::vector<uint8_t> Serializer::serialize_entity_and_name(uint8_t type, const ClientCmd& cmd) {
     const std::string& target = cmd.get_target_name();
     uint8_t target_len = static_cast<uint8_t>(target.size());
@@ -76,7 +94,7 @@ std::vector<uint8_t> Serializer::serialize_entity_and_name(uint8_t type, const C
     buf.insert(buf.end(), target.begin(), target.end());
     return buf;
 }
-
+*/
 std::vector<uint8_t> Serializer::serialize_name(uint8_t type, const ClientCmd& cmd) {
     const std::string& target = cmd.get_target_name();
     uint8_t target_len = static_cast<uint8_t>(target.size());

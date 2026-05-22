@@ -19,6 +19,7 @@ class ServerDeserializer {
 
     void deserialize_register(const std::vector<uint8_t>& payload, ClientCmd& cmd);
     void deserialize_move(const std::vector<uint8_t>& payload, ClientCmd& cmd);
+    void read_coords(const std::vector<uint8_t>& payload, ClientCmd& cmd);
     void deserialize_attack(const std::vector<uint8_t>& payload, ClientCmd& cmd);
     void deserialize_no_payload(const std::vector<uint8_t>& payload, ClientCmd& cmd);
 
