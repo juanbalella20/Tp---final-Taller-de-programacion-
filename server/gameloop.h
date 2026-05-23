@@ -21,6 +21,7 @@ class GameLoop : public Thread {
 
     void handle_attack(const ClientCmd& cmd);
     void handle_meditate(const ClientCmd& cmd);
+    void handle_resurrect(const ClientCmd& cmd);
 };
 
 #endif  // SERVER_SRC_GAMELOOP_H_
