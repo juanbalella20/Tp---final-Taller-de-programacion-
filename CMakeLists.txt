@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
-# ── Vendored submodules (SDL3, SDL3_image) ──────────────────────────────────
+# ── Vendored submodules (SDL3, SDL3_image, SDL3_ttf) ────────────────────────
 # If submodules aren't initialized, try to do it automatically; otherwise fail
 # with a clear message instead of a cryptic "CMakeLists.txt not found".
 function(ensure_submodule path)
@@ -41,6 +41,11 @@ endfunction()
 
 ensure_submodule(vendored/SDL)
 ensure_submodule(vendored/SDL_image)
+ensure_submodule(vendored/SDL_ttf)
+
+# Build SDL_ttf with vendored third-party deps (freetype/harfbuzz/plutosvg)
+# so external users don't need to apt install extra dev packages.
+set(SDLTTF_VENDORED ON CACHE BOOL "Build SDL_ttf with vendored dependencies" FORCE)
 
 # SDL3 from vendored source
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
@@ -113,4 +118,3 @@ add_executable(server
 )
 target_include_directories(server PRIVATE server)
 target_link_libraries(server PRIVATE common)
-
