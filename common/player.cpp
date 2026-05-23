@@ -159,7 +159,7 @@ bool Player::is_meditating() const {
     return meditating;
 }
  
-void Player::toggle_meditation() {
+void Player::change_meditation() {
     meditating = !meditating;
 }
  
