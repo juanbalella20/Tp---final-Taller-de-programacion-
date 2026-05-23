@@ -63,29 +63,7 @@ void GameLoop::run() {
                     break;
                 }
                 case MSG_ATTACK: handle_attack(cmd); break;
-                case MSG_MEDITATE: {
-                    std::string name =
-                        client_registry_monitor.get_name(cmd.get_client_id());
-                    Player* player = game_map.get_player(name);
-                    if (!player) break;
- 
-                    // Fantasmas no pueden meditar
-                    if (player->is_ghost()) break;
- 
-                    // Guerreros no pueden meditar
-                    if (!player->can_meditate()) break;
- 
-                    player->change_meditation();
- 
-                    GameMsg msg(MSG_MEDITATE);
-                    msg.set_player_name(name);
-                    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
- 
-                    std::cout << "[INFO: MSG_MEDITATE] " << name
-                              << (player->is_meditating() ? " empezo a meditar" : " dejo de meditar")
-                              << std::endl;
-                    break;
-                }
+                case MSG_MEDITATE: handle_meditate(cmd); break;
                 case MSG_RESURRECT: {
                     std::string name =
                         client_registry_monitor.get_name(cmd.get_client_id());
@@ -220,4 +198,24 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
               << " -> " << target->get_name()
               << " dmg=" << damage << std::endl;
 }
+
+void GameLoop::handle_meditate(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    Player* player = game_map.get_player(name);
+    if (!player) return;
+ 
+    if (player->is_ghost()) return;
+    if (!player->can_meditate()) return;
+ 
+    player->change_meditation();
+ 
+    GameMsg msg(MSG_MEDITATE);
+    msg.set_player_name(name);
+    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+ 
+    std::cout << "[INFO: MSG_MEDITATE] " << name
+              << (player->is_meditating() ? " empezo a meditar" : " dejo de meditar")
+              << std::endl;
+}
+
 
