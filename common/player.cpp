@@ -155,6 +155,23 @@ void Player::set_ghost() {
     status = PlayerStatus::DEAD;
 }
 
+bool Player::is_meditating() const {
+    return meditating;
+}
+ 
+void Player::toggle_meditation() {
+    meditating = !meditating;
+}
+ 
+void Player::stop_meditation() {
+    meditating = false;
+}
+ 
+bool Player::can_meditate() const {
+    return player_class.class_can_meditate(); //Tengoq ue actualizar player_class, solo el guerrero no puede meditar
+}
+
+
 int Player::get_lives() const {
     return lives;
 }

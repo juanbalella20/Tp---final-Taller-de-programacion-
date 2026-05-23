@@ -22,6 +22,7 @@ private:
     int level;
     int coord_x;
     int coord_y;
+    bool meditating;
     PlayerStatus status;
     std::shared_ptr<Item> equipped_item;
 
@@ -77,6 +78,14 @@ public:
     bool is_ghost() const;
     
     void set_ghost();
+
+    bool is_meditating() const;
+
+    void change_meditation();
+
+    void stop_meditation();
+
+    bool can_meditate() const;
 
     int get_lives() const;
 
