@@ -1,0 +1,208 @@
+#include "mapLoader.h"
+
+#include <filesystem>
+#include <stdexcept>
+#include "../vendored/tomlplusplus/toml.hpp"
+#include <iostream>
+
+int MapLoader::get_tile_size() const {
+    return tile_size;
+}
+int MapLoader::get_width() const {
+    return width;
+}
+int MapLoader::get_height() const {
+    return height;
+}
+
+const std::map<std::string, position_coord>& MapLoader::get_spawns() const {
+    return spawns;
+}
+
+const std::vector<Tileset>& MapLoader::get_tilesets() const {
+    return tilesets;
+}
+
+const std::vector<MapLayerData>& MapLoader::get_layers() const {
+    return layers;
+}
+
+
+const TileDef* MapLoader::find_tile(int id) const {
+    if (id == 0) return nullptr;
+    auto it = tiles.find(id);
+    if (it == tiles.end()) return nullptr;
+    return &it->second;
+}
+
+bool MapLoader::is_collidable(int x, int y) const {
+    if (x < 0 || y < 0 || x >= width || y >= height) return true;
+    for (const auto& layer : layers) {
+        if (y >= static_cast<int>(layer.data.size())) continue;
+        const auto& row = layer.data[y];
+        if (x >= static_cast<int>(row.size())) continue;
+        int id = row[x];
+        const TileDef* td = find_tile(id);
+        if (td && td->collidable) return true;
+    }
+    return false;
+}
+
+
+void MapLoader::parse_tilesets(const toml::table& tbl,
+                               const std::filesystem::path& baseDir) {
+    auto* arr = tbl["tileset"].as_array();
+    if (!arr) {
+        throw std::runtime_error("MapLoader: falta [[tileset]] en el TOML");
+    }
+    // recorre el array de tilesets
+    for (auto& node : *arr) {
+        auto* t = node.as_table();
+        if (!t) continue;
+
+        Tileset ts;
+        ts.name          = (*t)["name"].value_or<std::string>("");
+        // Guarda el path relativo del set (por ejemplo sand.png)
+        std::string file = (*t)["file"].value_or<std::string>("");
+        ts.columns       = (*t)["columns"].value_or(1);
+        ts.tile_count    = (*t)["tile_count"].value_or(1);
+        ts.firstgid      = (*t)["firstgid"].value_or(0);
+        ts.collidable    = (*t)["collidable"].value_or(false);
+
+        if (file.empty()) {
+            throw std::runtime_error("MapLoader: tileset sin 'file'");
+        }
+        if (ts.columns <= 0 || ts.tile_count <= 0 || ts.firstgid <= 0) {
+            throw std::runtime_error(
+                "MapLoader: tileset '" + ts.name +
+                "' tiene columns/tile_count/firstgid invalidos");
+        }
+        // convierte path relativo (file) a path absoluto (file_path)
+        ts.file_path = (baseDir / file).string();
+
+        tilesets.push_back(std::move(ts));
+    }
+
+    if (tilesets.empty()) {
+        throw std::runtime_error("MapLoader: ningun [[tileset]] valido");
+    }
+}
+
+void MapLoader::build_tile_index() {
+    for (int ts_idx = 0; ts_idx < static_cast<int>(tilesets.size()); ++ts_idx) {
+        const Tileset& ts = tilesets[ts_idx];
+        for (int local = 0; local < ts.tile_count; ++local) {
+            TileDef td;
+            td.id = ts.firstgid + local;
+            td.tileset_index = ts_idx;
+            td.local_index = local;
+            td.collidable = ts.collidable;
+            tiles[td.id] = td;
+        }
+    }
+}
+
+void MapLoader::parse_layers(const toml::table& tbl) {
+    // detecta que existan capas "layers" en el archivo
+    auto* arr = tbl["layer"].as_array();
+    // Debug print :
+    std::cout << "[DEBUG]: tbl['layer']: " << arr << std::endl;
+    //
+    if (!arr) {
+        throw std::runtime_error("MapLoader: falta [[layer]] en el TOML");
+    }
+    // itera cada layer
+    for (auto& node : *arr) {
+        auto* t = node.as_table();
+        if (!t) continue;
+
+        MapLayerData layer;
+        // si esa capa no tien atributo 'name', se ignora
+        layer.name = (*t)["name"].value_or<std::string>("");
+
+        // lee la matriz 'data' del TOML
+        auto* data_arr = (*t)["data"].as_array();
+        if (!data_arr) {
+            throw std::runtime_error(
+                "MapLoader: capa '" + layer.name + "' sin 'data'");
+        }
+
+        layer.data.reserve(data_arr->size());
+        for (auto& row_node : *data_arr) {
+            auto* row_arr = row_node.as_array();
+            if (!row_arr) {
+                throw std::runtime_error(
+                    "MapLoader: capa '" + layer.name +
+                    "' tiene una fila que no es array");
+            }
+            std::vector<int> row;
+            row.reserve(row_arr->size());
+            for (auto& cell : *row_arr) {
+                row.push_back(static_cast<int>(cell.value_or<int64_t>(0)));
+            }
+            layer.data.push_back(std::move(row));
+        }
+
+        // valida que la matriz coincida con el width y height del TOML
+        if (static_cast<int>(layer.data.size()) != height) {
+            throw std::runtime_error(
+                "MapLoader: capa '" + layer.name + "' tiene " +
+                std::to_string(layer.data.size()) +
+                " filas, se esperaban " + std::to_string(height));
+        }
+        for (size_t r = 0; r < layer.data.size(); ++r) {
+            if (static_cast<int>(layer.data[r].size()) != width) {
+                throw std::runtime_error(
+                    "MapLoader: capa '" + layer.name + "' fila " +
+                    std::to_string(r) + " tiene " +
+                    std::to_string(layer.data[r].size()) +
+                    " columnas, se esperaban " + std::to_string(width));
+            }
+        }
+
+        layers.push_back(std::move(layer));
+    }
+}
+
+void MapLoader::parse_spawns(const toml::table& tbl) {
+    auto* arr = tbl["spawn"].as_array();
+    if (!arr) return;
+
+    for (auto& node : *arr) {
+        auto* t = node.as_table();
+        if (!t) continue;
+
+        std::string name = (*t)["name"].value_or<std::string>("");
+        if (name.empty()) continue;
+        position_coord p{
+            (*t)["x"].value_or(0),
+            (*t)["y"].value_or(0),
+        };
+        spawns[name] = p;
+    }
+}
+
+
+void MapLoader::load(const std::string& tomlPath) {
+    std::filesystem::path baseDir = std::filesystem::path(tomlPath).parent_path();
+
+    toml::table tbl;
+    try {
+        tbl = toml::parse_file(tomlPath);
+    } catch (const toml::parse_error& e) {
+        throw std::runtime_error(std::string("MapLoader: parse ") + tomlPath +
+                                 ": " + std::string(e.description()));
+    }
+
+    tile_size = tbl["tile_size"].value_or(64);
+    width     = tbl["width"].value_or(0);
+    height    = tbl["height"].value_or(0);
+    if (width <= 0 || height <= 0) {
+        throw std::runtime_error("MapLoader: width/height invalidos en " + tomlPath);
+    }
+
+    parse_tilesets(tbl, baseDir);
+    build_tile_index();
+    parse_layers(tbl);
+    parse_spawns(tbl);
+}

@@ -55,8 +55,9 @@ add_library(common STATIC
     common/clientCmd.cpp
     common/gameMsg.cpp
     common/player.cpp
-    common/player_class.cpp 
+    common/player_class.cpp
     common/player_race.cpp
+    common/mapLoader.cpp
     # TODO: add when Item type exists:
     # common/inventory.cpp common/player_class.cpp common/player_race.cpp
 )

@@ -25,6 +25,8 @@ void ClientGUI::initSDL() {
         throw std::runtime_error(std::string("SDL_CreateRenderer: ") + SDL_GetError());
     }
 
+    SDL_SetRenderLogicalPresentation(renderer, LOGICAL_WIDTH, LOGICAL_HEIGHT,SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
     SDL_Surface* icon = IMG_Load("images/logo.jpeg");
     if (!icon) {
         icon = IMG_Load("imagenes/logo.jpeg");
@@ -41,7 +43,7 @@ void ClientGUI::loadMedia(zones zone) {
     {
     case zones::DESERT : {
         tilemap = std::make_unique<TileMap>(renderer);
-        tilemap->load("data/maps/desert/map.toml");
+        tilemap->load_map("data/maps/desert/map.toml");
         break;
     }
     default:
@@ -51,6 +53,7 @@ void ClientGUI::loadMedia(zones zone) {
 
 void ClientGUI::freeSDL() {
     player.reset();
+    tilemap.reset();
 
     if (background) {
         SDL_DestroyTexture(background);
@@ -158,6 +161,8 @@ void ClientGUI::init_draw() {
     // aca recibe del protocolo la zona
     // hardocodeado para test
     loadMedia(zones::DESERT);
+    // tile_size viene del TOML
+    // el player se escala con el mismo tamano de celda
     int tileSize = tilemap->getTileSize();
     try {
         player = std::make_unique<PlayerDisplay>(renderer, "images/player.png", tileSize);
@@ -170,21 +175,19 @@ void ClientGUI::init_draw() {
     }
 
     // Posicionar al player en el spawn "player_start" del TOML.
+    // (posicionar al player en el spawn que indica el server!)
     if (tilemap) {
-        std::cout << "[DEBUG] spawns count=" << tilemap->getSpawns().size() << std::endl;
-        bool found = false;
-        for (const auto& sp : tilemap->getSpawns()) {
-            std::cout << "[DEBUG] spawn: name='" << sp.name
-                      << "' x=" << sp.x << " y=" << sp.y << std::endl;
-            if (sp.name == "player_start") {
-                player->setTilePosition(sp.x, sp.y);
-                std::cout << "[DEBUG] player positioned at ("
-                          << sp.x << "," << sp.y << ")" << std::endl;
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
+        const auto& spawns = tilemap->getSpawns();
+        std::cout << "[DEBUG] spawns count=" << spawns.size() << std::endl;
+        // hardcodeado desde el .toml
+        auto it = spawns.find("player_start");
+        if (it != spawns.end()) {
+            player->setTilePosition(it->second.x, it->second.y);
+            // debug print!
+            std::cout << "[DEBUG] player positioned at ("
+                      << it->second.x << "," << it->second.y << ")" << std::endl;
+        } else {
+            // debug print!
             std::cout << "[DEBUG] player_start NOT FOUND, defaulting to (1,1)" << std::endl;
             player->setTilePosition(1, 1);
         }

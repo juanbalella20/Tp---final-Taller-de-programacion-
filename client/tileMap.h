@@ -5,29 +5,13 @@
 #include <string>
 #include <vector>
 
-struct MapLayer {
-    SDL_Texture* texture;
-    bool collider;
-};
-
-struct ColliderRect {
-    int x, y, w, h;  // en celdas (no en pxeles)
-};
-
-struct SpawnPoint {
-    std::string name;
-    int x, y;  // en celdas
-};
+#include "../common/mapLoader.h"
 
 class TileMap {
 private:
     SDL_Renderer* renderer;
-    int tileSize;
-    int width;   // ancho en celdas
-    int height;  // alto en celdas
-    std::vector<MapLayer> layers;
-    std::vector<ColliderRect> colliders;
-    std::vector<SpawnPoint> spawns;
+    MapLoader mapData;
+    std::vector<SDL_Texture*> tileset_textures;
 
 public:
     explicit TileMap(SDL_Renderer* renderer);
@@ -36,23 +20,25 @@ public:
     TileMap(const TileMap&) = delete;
     TileMap& operator=(const TileMap&) = delete;
 
-    // Carga un mapa desde un .toml. Las rutas de los PNG en el TOML son
-    // relativas al directorio del .toml.
-    void load(const std::string& tomlPath);
+    // Parsea el TOML (via MapLoader) 
+    // y carga las texturas de cada tileset en el vector
+    // tileset_textures
+    void load_map(const std::string& tomlPath);
 
-    // Dibuja todas las capas en el orden en el que estn en el TOML.
+    // recorre las capas en orden, y para cada celda no vacía calcula el 
+    // recorte del spritesheet (src) y la posición en pantalla (dst)
     void render() const;
 
-    int getTileSize()  const { return tileSize; }
-    int getWidth()     const { return width; }
-    int getHeight()    const { return height; }
-    int getPixelWidth()  const { return width * tileSize; }
-    int getPixelHeight() const { return height * tileSize; }
+    int getTileSize() const;
+    int getWidth() const;
+    int getHeight() const;
+    int getPixelWidth() const;
+    int getPixelHeight() const;
 
-    bool isBlocked(int cellX, int cellY);
+    // Consultar colisiones (delegado a MapData::is_solid).
+    bool isBlocked(int cellX, int cellY) const { return mapData.is_collidable(cellX, cellY); }
 
-    const std::vector<ColliderRect>& getColliders() const { return colliders; }
-    const std::vector<SpawnPoint>&   getSpawns()    const { return spawns; }
+    const std::map<std::string, position_coord>& getSpawns() const { return mapData.get_spawns(); }
 };
 
 #endif

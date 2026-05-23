@@ -1,102 +1,86 @@
 #include "tileMap.h"
 
 #include <SDL3_image/SDL_image.h>
-#include <filesystem>
 #include <stdexcept>
 
-#include "../vendored/tomlplusplus/toml.hpp"
-
 TileMap::TileMap(SDL_Renderer* renderer)
-    : renderer(renderer), tileSize(0), width(0), height(0) {}
+    : renderer(renderer), mapData() {}
 
 TileMap::~TileMap() {
-    for (auto& l : layers) {
-        if (l.texture) SDL_DestroyTexture(l.texture);
+    for (auto* tex : tileset_textures) {
+        if (tex) SDL_DestroyTexture(tex);
     }
-    layers.clear();
+    tileset_textures.clear();
 }
 
-void TileMap::load(const std::string& tomlPath) {
-    std::filesystem::path baseDir = std::filesystem::path(tomlPath).parent_path();
+int TileMap::getTileSize() const {
+    return mapData.get_tile_size();
+}
+int TileMap::getWidth() const {
+    return mapData.get_width();
+}
+int TileMap::getHeight() const {
+    return mapData.get_height();
+}
+int TileMap::getPixelWidth() const {
+    return mapData.get_width() * mapData.get_tile_size();
+}
+int TileMap::getPixelHeight() const {
+    return mapData.get_height() * mapData.get_tile_size();
+}
 
-    toml::table tbl;
-    // Se abre el TOML file
-    try {
-        tbl = toml::parse_file(tomlPath);
-    } catch (const toml::parse_error& e) {
-        throw std::runtime_error(std::string("TileMap: parse ") + tomlPath +
-                                 ": " + std::string(e.description()));
-    }
 
-    // 
-    tileSize = tbl["tile_size"].value_or(64);
-    width    = tbl["width"].value_or(0);
-    height   = tbl["height"].value_or(0);
-    if (width <= 0 || height <= 0) {
-        throw std::runtime_error("TileMap: width/height invlidos en " + tomlPath);
-    }
 
-    // [[layer]] — array de tablas con {file, collider?}
-    if (auto* arr = tbl["layer"].as_array()) {
-        for (auto& node : *arr) {
-            auto* layerTbl = node.as_table();
-            if (!layerTbl) continue;
+void TileMap::load_map(const std::string& tomlPath) {
+    mapData.load(tomlPath);
 
-            std::string file = (*layerTbl)["file"].value_or<std::string>("");
-            if (file.empty()) continue;
-            
-            // abro el path de la imagen
-            std::filesystem::path imgPath = baseDir / file;
-            SDL_Texture* tex = IMG_LoadTexture(renderer, imgPath.string().c_str());
-            if (!tex) {
-                throw std::runtime_error("TileMap: no pude cargar " +
-                                         imgPath.string() + " (" + SDL_GetError() + ")");
-            }
-
-            MapLayer ml{tex, (*layerTbl)["collider"].value_or(false)};
-            layers.push_back(ml);
+    // carga texturas
+    const auto& tilesets = mapData.get_tilesets();
+    tileset_textures.reserve(tilesets.size());
+    for (const auto& ts : tilesets) {
+        SDL_Texture* tex = IMG_LoadTexture(renderer, ts.file_path.c_str());
+        if (!tex) {
+            throw std::runtime_error("TileMap: no pude cargar " +
+                                     ts.file_path + " (" + SDL_GetError() + ")");
         }
-    }
-
-    // [[collider]] — array de tablas con {x, y, w, h}
-    if (auto* arr = tbl["collider"].as_array()) {
-        for (auto& node : *arr) {
-            auto* t = node.as_table();
-            if (!t) continue;
-            ColliderRect c{
-                (*t)["x"].value_or(0),
-                (*t)["y"].value_or(0),
-                (*t)["w"].value_or(1),
-                (*t)["h"].value_or(1),
-            };
-            colliders.push_back(c);
-        }
-    }
-
-    // [[spawn]] — array de tablas con {name, x, y}
-    if (auto* arr = tbl["spawn"].as_array()) {
-        for (auto& node : *arr) {
-            auto* t = node.as_table();
-            if (!t) continue;
-            SpawnPoint s{
-                (*t)["name"].value_or<std::string>(""),
-                (*t)["x"].value_or(0),
-                (*t)["y"].value_or(0),
-            };
-            spawns.push_back(std::move(s));
-        }
+        // evitar suavizado al escalar
+        SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
+        tileset_textures.push_back(tex);
     }
 }
 
 void TileMap::render() const {
-    for (const auto& l : layers) {
-        if (l.texture) {
-            SDL_RenderTexture(renderer, l.texture, nullptr, nullptr);
+    const int ts = mapData.get_tile_size();
+    if (ts <= 0) return;
+
+    const int w = mapData.get_width();
+    const int h = mapData.get_height();
+    const float tsf = static_cast<float>(ts);   // version float para los SDL_FRect
+    const auto& tilesets = mapData.get_tilesets();
+
+    // itera las layers siguiendo el orden del TOML:
+    // 1ero la capa del fondo y por ultimo la capa de frente (algoritmo del pintor)
+    for (const auto& layer : mapData.get_layers()) {
+        for (int row = 0; row < h; ++row) {
+            if (row >= static_cast<int>(layer.data.size())) continue;
+            const auto& data_row = layer.data[row];
+            for (int col = 0; col < w; ++col) {
+                if (col >= static_cast<int>(data_row.size())) continue;
+                int id = data_row[col];
+                const TileDef* td = mapData.find_tile(id);
+                if (!td) continue;
+
+                const Tileset& ts_def = tilesets[td->tileset_index];
+                const int local = td->local_index;
+                const float sx = (local % ts_def.columns) * tsf;
+                const float sy = (local / ts_def.columns) * tsf;
+
+                SDL_FRect src{ sx, sy, tsf, tsf };
+                SDL_FRect dst{ col * tsf, row * tsf, tsf, tsf };
+                SDL_RenderTexture(renderer,
+                                  tileset_textures[td->tileset_index],
+                                  &src, &dst);
+            }
         }
     }
-}
-
-// TODO
-bool TileMap::isBlocked(int cellX, int cellY) {
-    return true;
 }

@@ -13,10 +13,13 @@
 
 
 #define WIN_NAME "Argentum"
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
 //#define WINDOW_WIDTH 1920
 //#define WINDOW_HEIGHT 1080
+#define WINDOW_WIDTH 800    
+#define WINDOW_HEIGHT 600
+
+#define LOGICAL_WIDTH  1280
+#define LOGICAL_HEIGHT 720
 
 enum class zones {
     DESERT,
@@ -36,7 +39,6 @@ private:
     Queue<GameMsg>& receiving;
 
     std::unique_ptr<PlayerDisplay> player;
-    //PlayerDisplay& player;
     std::unique_ptr<TileMap> tilemap;
 
     void initSDL();
