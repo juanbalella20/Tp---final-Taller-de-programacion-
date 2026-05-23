@@ -12,7 +12,8 @@ ClientCmd::ClientCmd():
         direction(DIR_NORTH),
         gold(0),
         coord_x(0),
-        coord_y(0) {}
+        coord_y(0),
+        chat_content() {}
 
 
 
@@ -51,3 +52,7 @@ int ClientCmd::get_coord_x() const { return this->coord_x; }
 
 void ClientCmd::set_coord_y(int y) { this->coord_y = y; }
 int ClientCmd::get_coord_y() const { return this->coord_y; }
+
+void ClientCmd::set_chat_content(const std::string& content) { this->chat_content = content; }
+
+const std::string& ClientCmd::get_chat_content() const { return this->chat_content; }

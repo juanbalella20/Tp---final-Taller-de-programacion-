@@ -42,7 +42,7 @@ enum MessageType : uint8_t {
     MSG_CLAN_BAN     = 0x19,  // Banear jugador del clan          [cliente OK] [x servidor]
     MSG_CLAN_KICK    = 0x1A,  // Echar jugador del clan           [cliente OK] [x servidor]
     MSG_LEFT_CLAN    = 0x1B,  // Dejar el clan                    [cliente OK] [servidor OK]
-    MSG_SEND_MAP      = 0x1C,  // Enviar mapa al cliente           
+    MSG_SEND_MAP     = 0x1C,  // Enviar mapa al cliente            
 };
 
 enum Direction : uint8_t {

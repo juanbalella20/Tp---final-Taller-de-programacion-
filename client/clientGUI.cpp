@@ -1,18 +1,19 @@
 #include "clientGUI.h"
 #include <SDL3_image/SDL_image.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <array>
 #include <iostream>
 #include <stdexcept>
 
 ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
-    : window(nullptr), renderer(nullptr), background(nullptr), event{},
-      is_running(false), outgoing(outgoing), receiving(receiving),
-      enemy_texture(nullptr),
-      selected_npc_tile_x(-1), selected_npc_tile_y(-1),
+    : window(nullptr), renderer(nullptr), background(nullptr), event{}, chat_font(nullptr),
+      is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
+      enemy_texture(nullptr), selected_npc_tile_x(-1), selected_npc_tile_y(-1),
       show_attack_button(false) {}
 
 ClientGUI::~ClientGUI() {
     freeSDL();
+    TTF_CloseFont(chat_font);
 }
 
 void ClientGUI::initSDL() {
@@ -36,6 +37,14 @@ void ClientGUI::initSDL() {
         SDL_SetWindowIcon(window, icon);
         SDL_DestroySurface(icon);
     }
+
+    if (!TTF_Init() == -1) {
+        throw std::runtime_error(std::string("TTF_Init: ") + SDL_GetError());
+    }
+
+    chat_font = TTF_OpenFont("fonts/Roboto-VariableFont_wdth,wght.ttf", 16);
+
+    mini_chat = std::make_unique<MiniChat>(renderer, chat_font);
 }
 
 // tiene que recibir los 4 sectorPerimiter y mostrar solo eso
@@ -114,12 +123,22 @@ void ClientGUI::selectCoord(int tile_x, int tile_y) {
 
 void ClientGUI::handleEvents() {
     while (SDL_PollEvent(&event)) {
+
+        if (mini_chat->handle_event(event)) {
+            continue;
+        }
+
         switch (event.type) {
             case SDL_EVENT_QUIT:
                 is_running = false;
                 break;
             case SDL_EVENT_KEY_DOWN:
-                if (event.key.repeat) break;
+                if (event.key.scancode == SDL_SCANCODE_T) {
+                    if (!(mini_chat->is_active())) {
+                        mini_chat->toggle_active();
+                    }
+                    //break;
+                }
                 switch (event.key.scancode) {
                     case SDL_SCANCODE_ESCAPE:
                         is_running = false;
@@ -164,6 +183,11 @@ void ClientGUI::handleEvents() {
                 break;
         }
     }
+
+    if (mini_chat->has_pending_outbound_message()) {
+        std::string msg = mini_chat->pop_outbound_message();
+        sendChatCmd(msg);
+    }
 }
 
 void ClientGUI::sendMoveCmd(Direction dir) {
@@ -173,6 +197,15 @@ void ClientGUI::sendMoveCmd(Direction dir) {
     outgoing.push(cmd);
 }
 
+void ClientGUI::sendChatCmd(const std::string& msg) {
+    try {
+        ClientCmd cmd = parser.parse_chat(msg);
+        outgoing.push(cmd);
+    } catch (const std::invalid_argument& e) {
+        chat_inbox.push(std::string("Error: ") + e.what());
+    }
+}
+
 void ClientGUI::update() {
     try {
         if (!player) {
@@ -180,21 +213,40 @@ void ClientGUI::update() {
         }
         GameMsg msg(0);
         while (receiving.try_pop(msg)) {
-            if (msg.get_type() == MSG_SEND_MAP) {
-                world_map = msg.get_map();
-            } else if (msg.get_type() == MSG_MOVE) {
-                int x = player->getTileX();
-                int y = player->getTileY();
-                switch (msg.get_direction()) {
-                    case DIR_NORTH: --y; break;
-                    case DIR_SOUTH: ++y; break;
-                    case DIR_EAST:  ++x; break;
-                    case DIR_WEST:  --x; break;
-                    default: break;
+            switch (msg.get_type()) {
+                case MSG_SEND_MAP:
+                    world_map = msg.get_map();
+                    break;
+                case MSG_MOVE: {
+                    int x = player->getTileX();
+                    int y = player->getTileY();
+                    switch (msg.get_direction()) {
+                        case DIR_NORTH: --y; break;
+                        case DIR_SOUTH: ++y; break;
+                        case DIR_EAST:  ++x; break;
+                        case DIR_WEST:  --x; break;
+                        default: break;
+                    }
+                    player->setTilePosition(x, y);
+                    break;
                 }
-                player->setTilePosition(x, y);
+                case MSG_FOUND_CLAN:
+                case MSG_JOIN_CLAN:
+                case MSG_REV_CLAN:
+                case MSG_CLAN_ACEP:
+                case MSG_CLAN_BAN:
+                case MSG_CLAN_KICK:
+                case MSG_CLAN_RECH:
+                case MSG_LEFT_CLAN:
+                    chat_inbox.push(msg.get_chat_content());
+                    break;
+                default:
+                    break;
             }
         }
+
+        mini_chat->update(chat_inbox);
+
     } catch (const ClosedQueue&) {
         is_running = false;
     }
@@ -240,6 +292,7 @@ void ClientGUI::draw() {
         player->draw();
     }
     drawAttackButton();
+    mini_chat->render();
     SDL_RenderPresent(renderer);
 }
 

@@ -6,5 +6,6 @@
 class Parser {
  public:
     static ClientCmd parse(const std::string& input);
+    static ClientCmd parse_chat(const std::string& input);
 };
 #endif  // PARSER_H
