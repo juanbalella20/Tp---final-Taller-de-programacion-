@@ -160,11 +160,17 @@ void ClientGUI::sendChatCmd(const std::string& msg) {
 
 void ClientGUI::update() {
     try {
+        // static bool tested = false;
+        // if (!tested) {
+        //     chat_inbox.push("Hola");
+        //     tested = true;
+        // }
         if (!player) {
             return;
         }
         GameMsg msg(0);
         while (receiving.try_pop(msg)) {
+            std::cout << "Mesaje recibido tipo: " << (int)msg.get_type() << std::endl;
             switch (msg.get_type()) {
                 case MSG_MOVE: {
                     int x = player->getTileX();
@@ -180,35 +186,15 @@ void ClientGUI::update() {
                     break;
                 }
                 case MSG_MEDITATE:
-                    chat_inbox.push("Meditando...");
-                    break;
                 case MSG_RESURRECT:
-                    chat_inbox.push("Resucitaste!:D");
-                    break;
                 case MSG_CURE:
-                    chat_inbox.push("Fuiste curado!:D");
-                    break;
                 case MSG_LIST:
-                    chat_inbox.push(msg.get_chat_content());
-                    break;
                 case MSG_BUY:
-                    chat_inbox.push("Compraste: " + msg.get_item_id());
-                    break;
                 case MSG_SELL:
-                    chat_inbox.push("Vendiste: " + msg.get_item_id());
-                    break;
                 case MSG_DEPOSIT:
-                    chat_inbox.push("Depositaste: " + msg.get_item_id());
-                    break;
                 case MSG_RETIRE:
-                    chat_inbox.push("Retiraste: " + msg.get_item_id());
-                    break;
                 case MSG_DEP_GOLD:
-                    chat_inbox.push("Depositaste " + std::to_string(msg.get_gold()) + " oro");
-                    break;
                 case MSG_RET_GOLD:
-                    chat_inbox.push("Retiraste " + std::to_string(msg.get_gold()) + " oro");
-                    break;
                 case MSG_FOUND_CLAN:
                 case MSG_JOIN_CLAN:
                 case MSG_REV_CLAN:
