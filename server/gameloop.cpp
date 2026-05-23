@@ -75,6 +75,10 @@ void GameLoop::run() {
                     //std::string sector = game_map.sector_of_position(coor_x, coor_y);
                     break;
                 }
+                case MSG_MEDITATE: {
+                    /* lógica*/
+                }
+                /* etc con los demás*/
                 default:
                     break;
             }
