@@ -2,7 +2,7 @@
 #define GAME_MAP_H_
 
 #include "../common/clientCmd.h"
-#include "../common/player.h"
+#include "player.h"
 #include "../common/game_constants.h"
 
 #include <vector>

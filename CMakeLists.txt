@@ -60,9 +60,6 @@ add_library(common STATIC
     common/liberror.cpp
     common/clientCmd.cpp
     common/gameMsg.cpp
-    common/player.cpp
-    common/player_class.cpp 
-    common/player_race.cpp
     # TODO: add when Item type exists:
     # common/inventory.cpp common/player_class.cpp common/player_race.cpp
 )
@@ -110,6 +107,9 @@ add_executable(server
     server/serverSerializer.cpp
     server/gameloop.cpp
     server/game_map.cpp
+    server/player.cpp
+    server/player_class.cpp
+    server/player_race.cpp
     # not implemented yet
     # server/npcBanker.cpp
     # server/npcHostile.cpp
