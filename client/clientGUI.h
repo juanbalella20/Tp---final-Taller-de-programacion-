@@ -4,6 +4,7 @@
 #include <SDL3/SDL.h>
 #include <string>
 #include <memory>
+#include <vector>
 #include "displayPlayer.h"
 #include "../common/thread.h"
 #include "../common/queue.h"
@@ -55,6 +56,7 @@ private:
     //PRE: SE RECIBEM LAS COORDENADAS DE DONDE ESTAN
     //POS ESAS COORDENADAS SE ENVIAN AL SERVIDOR PARA QUE SE MUEVA EL JUGADOR A ESA POS
     void sendCoord(int x, int y);
+    std::vector<int> translate_tile_to_coord(int pixel_x, int pixel_y) const;
 
 public:
     ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving);

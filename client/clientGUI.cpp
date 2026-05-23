@@ -67,11 +67,17 @@ void ClientGUI::freeSDL() {
     SDL_Quit();
 }
 
+std::vector<int> ClientGUI::translate_tile_to_coord(int pixel_x, int pixel_y) const {
+    int tileSize = tilemap ? tilemap->getTileSize() : 64;
+    return {pixel_x / tileSize, pixel_y / tileSize};
+}
+
 void ClientGUI::sendCoord(int x, int y) {
+    auto coords = translate_tile_to_coord(x, y);
     ClientCmd cmd;
     cmd.set_message_type(MSG_SELECT);
-    cmd.set_coord_x(x);
-    cmd.set_coord_y(y);
+    cmd.set_coord_x(coords[0]);
+    cmd.set_coord_y(coords[1]);
     outgoing.push(cmd);
 }
 
