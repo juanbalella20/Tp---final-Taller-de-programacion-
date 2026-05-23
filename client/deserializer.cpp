@@ -99,11 +99,11 @@ void ClientDeserializer::deserialize_map(const std::vector<uint8_t>& payload, Ga
 }
 
 static std::string read_string(const std::vector<uint8_t>& payload, size_t& offset) {
-    if (offset + 2 > payload.size()) {
+    if (offset + 1 > payload.size()) {
         throw std::invalid_argument("Payload demasiado corto para leer string");
     }
 
-    uint8_t len = (payload[offset] << 8) | payload[offset + 1];
+    uint8_t len = payload[offset];
     offset += 1;
 
     if (offset + len > payload.size()) {
