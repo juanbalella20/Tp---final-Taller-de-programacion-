@@ -76,7 +76,12 @@ void GameLoop::run() {
                     break;
                 }
                 case MSG_MEDITATE: {
-                    /* lógica*/
+                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+                    // meditar al jugador : game_map.medidate_player(name) ?
+                    GameMsg msg(MSG_MEDITATE);
+                    msg.set_chat_content("Estás meditando...");
+                    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    break;
                 }
                 /* etc con los demás*/
                 default:
