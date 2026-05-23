@@ -103,8 +103,8 @@ static std::string read_string(const std::vector<uint8_t>& payload, size_t& offs
         throw std::invalid_argument("Payload demasiado corto para leer string");
     }
 
-    uint16_t len = (payload[offset] << 8) | payload[offset + 1];
-    offset += 2;
+    uint8_t len = (payload[offset] << 8) | payload[offset + 1];
+    offset += 1;
 
     if (offset + len > payload.size()) {
         throw std::invalid_argument("Payload demasiado corto para leer contenido del string");
