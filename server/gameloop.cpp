@@ -62,98 +62,7 @@ void GameLoop::run() {
                     }
                     break;
                 }
-                case MSG_ATTACK: {
-                    std::string attacker_name =
-                        client_registry_monitor.get_name(cmd.get_client_id());
-                    Player* attacker = game_map.get_player(attacker_name);
-                    if (!attacker || attacker->is_ghost()) break;
-                    if (cmd.get_target_type() != ENTITY_PLAYER) break;
-
-                    // Solo soportamos ataque a jugadores por ahora
-                    // TODO: cuando NPCs esten implementados, manejar ENTITY_NPC
-                    if (cmd.get_target_type() != ENTITY_PLAYER) break;
- 
-                    Player* target = game_map.get_player(cmd.get_target_name());
-                    if (!target || target->is_ghost()) break;
- 
-                    // Fair play: ninguno puede ser newbie (nivel <= 12)
-                    if (attacker->get_level() <= 12 || target->get_level() <= 12) break;
- 
-                    // Diferencia de nivel no puede superar 10
-                    if (std::abs(attacker->get_level() - target->get_level()) > 10) break;
- 
-                    // Mismo clan no pueden atacarse
-                    if (attacker->get_clan_id() != -1 &&
-                        attacker->get_clan_id() == target->get_clan_id()) break;
-                    
-                    // Validar rango (cuerpo a cuerpo: deben ser adyacentes)
-                    // TODO: cuando Item este definido, verificar si el arma es a distancia
-                    int dx = std::abs(attacker->get_coord_x() - target->get_coord_x());
-                    int dy = std::abs(attacker->get_coord_y() - target->get_coord_y());
-                    if (dx + dy > 1) break;
-
-                    // Calcular daño
-                    int damage = attacker->damage_attack();
- 
-                    // Esquiva: rand(0,1)^Agilidad < 0.001
-                    // TODO: cuando PlayerRace exponga agilidad al gameloop,
-                    // usar la agilidad real del target. Por ahora siempre aplica daño.
-                    bool evaded = false;
- 
-                    if (evaded) {
-                        GameMsg evade_msg(MSG_ATTACK);
-                        evade_msg.set_player_name(attacker_name);
-                        client_registry_monitor.notify_client(cmd.get_client_id(), evade_msg);
-                        break;
-                    }
- 
-                    target->recv_attack(damage);
- 
-                    // Experiencia al atacante
-                    int exp = damage * std::max(target->get_level() - attacker->get_level() + 10, 0);
-                    attacker->add_experience(exp);
-                    attacker->check_level_up();
-                    
-                    // Notificar resultado del ataque a ambos
-                    GameMsg atk_msg(MSG_ATTACK);
-                    atk_msg.set_player_name(attacker_name);
-                    atk_msg.set_coord_x(damage);  // usamos coord_x para transportar el daño
-                    client_registry_monitor.notify_clients(atk_msg);
- 
-                    // Muerte del target
-                    if (target->get_lives() <= 0) {
-                        // Experiencia bonus
-                        int exp_bonus = static_cast<int>(
-                            (rand() / (float)RAND_MAX) * 0.1f * std::max(target->get_level() - attacker->get_level() + 10, 0)
-                        );
-                        attacker->add_experience(exp_bonus);
-                        attacker->check_level_up();
- 
-                        // Oro en exceso del muerto cae al suelo
-                        int oro_max = static_cast<int>(100 * std::pow(target->get_level(), 1.1));
-                        int exceso  = std::max(0, target->get_gold() - oro_max);
-                        if (exceso > 0) {
-                            target->give_gold(exceso);
-                            // TODO: game_map.add_gold_on_floor(target->get_coord_x(), target->get_coord_y(), exceso);
-                        }
- 
-                        // TODO: tirar inventario al suelo cuando Item este definido
- 
-                        target->set_ghost();
- 
-                        GameMsg dead_msg(MSG_ATTACK);
-                        dead_msg.set_player_name(target->get_name());
-                        client_registry_monitor.notify_clients(dead_msg);
- 
-                        std::cout << "[INFO: MSG_ATTACK] " << target->get_name()
-                                  << " murio, matado por " << attacker_name << std::endl;
-                    }
- 
-                    std::cout << "[INFO: MSG_ATTACK] " << attacker_name
-                              << " -> " << target->get_name()
-                              << " dmg=" << damage << std::endl;
-                    break;
-                }
+                case MSG_ATTACK: handle_attack(cmd); break;
                 case MSG_MEDITATE: {
                     std::string name =
                         client_registry_monitor.get_name(cmd.get_client_id());
@@ -225,3 +134,90 @@ void GameLoop::run() {
         }
     }
 }
+
+void GameLoop::handle_attack(const ClientCmd& cmd) {
+    std::string attacker_name = client_registry_monitor.get_name(cmd.get_client_id());
+    Player* attacker = game_map.get_player(attacker_name);
+    if (!attacker || attacker->is_ghost()) return;
+ 
+    // TODO: cuando NPCs estén implementados, manejar ENTITY_NPC
+    if (cmd.get_target_type() != ENTITY_PLAYER) return;
+ 
+    Player* target = game_map.get_player(cmd.get_target_name());
+    if (!target || target->is_ghost()) return;
+ 
+    // Fair play: ninguno puede ser newbie (nivel <= 12)
+    if (attacker->get_level() <= 12 || target->get_level() <= 12) return;
+ 
+    // Diferencia de nivel no puede superar 10
+    if (std::abs(attacker->get_level() - target->get_level()) > 10) return;
+ 
+    // Mismo clan no pueden atacarse
+    if (attacker->get_clan_id() != -1 &&
+        attacker->get_clan_id() == target->get_clan_id()) return;
+ 
+    // Rango cuerpo a cuerpo: deben ser adyacentes
+    // TODO: cuando Item esté definido, verificar si el arma es a distancia
+    int dx = std::abs(attacker->get_coord_x() - target->get_coord_x());
+    int dy = std::abs(attacker->get_coord_y() - target->get_coord_y());
+    if (dx + dy > 1) return;
+ 
+    attacker->stop_meditation();
+ 
+    int damage = attacker->damage_attack();
+ 
+    // Esquiva: rand(0,1)^Agilidad < 0.001
+    // TODO: usar agilidad real del target cuando este expuesta en Player
+    bool evaded = false;
+ 
+    if (evaded) {
+        GameMsg evade_msg(MSG_ATTACK);
+        evade_msg.set_player_name(attacker_name);
+        client_registry_monitor.notify_client(cmd.get_client_id(), evade_msg);
+        return;
+    }
+ 
+    target->recv_attack(damage);
+ 
+    int exp = damage * std::max(target->get_level() - attacker->get_level() + 10, 0);
+    attacker->add_experience(exp);
+    attacker->check_level_up();
+ 
+    GameMsg atk_msg(MSG_ATTACK);
+    atk_msg.set_player_name(attacker_name);
+    atk_msg.set_coord_x(damage);
+    client_registry_monitor.notify_clients(atk_msg);
+ 
+    if (target->get_lives() <= 0) {
+        int exp_bonus = static_cast<int>(
+            (rand() / (float)RAND_MAX) * 0.1f *
+            std::max(target->get_level() - attacker->get_level() + 10, 0)
+        );
+        attacker->add_experience(exp_bonus);
+        attacker->check_level_up();
+ 
+        int oro_max = static_cast<int>(100 * std::pow(target->get_level(), 1.1));
+        int exceso  = std::max(0, target->get_gold() - oro_max);
+        if (exceso > 0) {
+            target->give_gold(exceso);
+            // TODO: game_map.add_gold_on_floor(target->get_coord_x(),
+            //                                  target->get_coord_y(), exceso);
+        }
+ 
+        // TODO: tirar inventario al suelo cuando Item se mergee
+ 
+        target->set_ghost();
+ 
+        GameMsg dead_msg(MSG_ATTACK);
+        dead_msg.set_player_name(target->get_name());
+        client_registry_monitor.notify_clients(dead_msg);
+ 
+        std::cout << "[INFO: MSG_ATTACK] " << target->get_name()
+                  << " murio, matado por " << attacker_name << std::endl;
+    }
+ 
+    std::cout << "[INFO: MSG_ATTACK] " << attacker_name
+              << " -> " << target->get_name()
+              << " dmg=" << damage << std::endl;
+}
+
