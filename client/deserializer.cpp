@@ -11,8 +11,27 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_SEND_MAP] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_map(payload, msg);
     };
-    handlers[MSG_FOUND_CLAN] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
-        deserialize_text(payload, msg);
+    for (uint8_t type : {
+        (uint8_t)MSG_MEDITATE, (uint8_t)MSG_RESURRECT, (uint8_t)MSG_CURE, (uint8_t)MSG_LIST,
+        (uint8_t)MSG_FOUND_CLAN, (uint8_t)MSG_JOIN_CLAN, (uint8_t)MSG_LEFT_CLAN, (uint8_t)MSG_CLAN_ACEP,
+        (uint8_t)MSG_CLAN_BAN, (uint8_t)MSG_CLAN_KICK, (uint8_t)MSG_CLAN_RECH, (uint8_t)MSG_REV_CLAN
+    }) {
+        handlers[type] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+            deserialize_text(payload, msg);
+        };
+    };
+    for (uint8_t type : {
+        (uint8_t)MSG_BUY, (uint8_t)MSG_SELL, (uint8_t)MSG_DEPOSIT, (uint8_t)MSG_RETIRE, (uint8_t)MSG_TAKE, (uint8_t)MSG_THROW
+    }) {
+        handlers[type] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+            deserialize_item(payload, msg);
+        };
+    };
+    handlers[MSG_DEP_GOLD] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_gold(payload, msg);
+    };
+    handlers[MSG_RET_GOLD] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_gold(payload, msg);
     };
 }
 
@@ -102,7 +121,7 @@ void ClientDeserializer::deserialize_text(const std::vector<uint8_t>& payload, G
     msg.set_chat_content(read_string(payload, offset));
 }
 
-void ClientDeserializer::desrialize_gold(const std::vector<uint8_t>& payload, GameMsg& msg) {
+void ClientDeserializer::deserialize_gold(const std::vector<uint8_t>& payload, GameMsg& msg) {
     if (payload.size() != 4) {
         throw std::invalid_argument("Payload inválido para mensaje de oro");
     }
@@ -111,7 +130,7 @@ void ClientDeserializer::desrialize_gold(const std::vector<uint8_t>& payload, Ga
     msg.set_gold(amount);
 }
 
-void ClientDeserializer::desrialize_item(const std::vector<uint8_t>& payload, GameMsg& msg) {
+void ClientDeserializer::deserialize_item(const std::vector<uint8_t>& payload, GameMsg& msg) {
     size_t offset = 0;
     msg.set_item_id(read_string(payload, offset));
 }
