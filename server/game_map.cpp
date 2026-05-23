@@ -152,3 +152,18 @@ Player* GameMap::get_player(const std::string& name) {
     return nullptr;
 }
 
+bool GameMap::player_exists(const std::string& name) {
+    return get_player(name) != nullptr;
+}
+
+position_coord GameMap::get_spawn_position() {
+    auto it = spawns.find("player_start");
+    if (it != spawns.end()) return it->second;
+    // Fallback: primera celda libre del mapa
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            if (map[y][x] == elements::empty) return {x, y};
+        }
+    }
+    return {1, 1};
+}

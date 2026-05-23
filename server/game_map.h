@@ -57,6 +57,8 @@ public:
     // Lee archivo de persistencia
     void set_positions();
     void load_players();
+    bool player_exists(const std::string& name);  
+    position_coord get_spawn_position();           
 
     Player* get_player(const std::string& name);
 };

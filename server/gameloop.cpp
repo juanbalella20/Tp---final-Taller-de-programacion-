@@ -177,6 +177,44 @@ void GameLoop::run() {
                               << std::endl;
                     break;
                 }
+                case MSG_RESURRECT: {
+                    std::string name =
+                        client_registry_monitor.get_name(cmd.get_client_id());
+                    Player* player = game_map.get_player(name);
+                    if (!player) break;
+ 
+                    // Solo los fantasmas pueden resucitar
+                    if (!player->is_ghost()) break;
+ 
+                    if (!cmd.get_target_name().empty() &&
+                        cmd.get_target_type() == ENTITY_NPC) {
+                        // Caso B: tiene sacerdote seleccionado
+                        // TODO: verificar que el target es NpcPriest y que es adyacente
+                        // Por ahora resucitamos en el spawn
+                        position_coord spawn = game_map.get_spawn_position();
+                        player->revive();
+                        player->update_position(spawn.x, spawn.y);
+ 
+                        GameMsg msg(MSG_RESURRECT);
+                        msg.set_player_name(name);
+                        msg.set_coord_x(spawn.x);
+                        msg.set_coord_y(spawn.y);
+                        client_registry_monitor.notify_clients(msg);
+ 
+                        std::cout << "[INFO: MSG_RESURRECT] " << name
+                                  << " resucito en (" << spawn.x << "," << spawn.y << ")"
+                                  << std::endl;
+                    } else {
+                        // Caso A: sin sacerdote, resurreccion remota con timer
+                        // TODO: calcular distancia al sacerdote mas cercano,
+                        // inmovilizar al jugador y arrancar el timer.
+                        // Requiere tick periodico aunque no se cuando lo vamos a implementar.
+                        std::cout << "[TODO: MSG_RESURRECT] resurreccion remota no implementada"
+                                  << std::endl;
+                    }
+                    break;
+                }
+
                 default:
                     break;
             }
