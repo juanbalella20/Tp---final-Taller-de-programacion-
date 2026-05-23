@@ -61,6 +61,21 @@ void GameLoop::run() {
                     }
                     break;
                 }
+                case MSG_ATTACK: {
+                    int x = cmd.get_coord_x();
+                    int y = cmd.get_coord_y();
+                    auto result = game_map.attack_npc(x, y);
+                    std::cout << "[DEBUG: MSG_ATTACK] x=" << x << " y=" << y
+                              << " hit=" << result.hit
+                              << " died=" << result.npc_died << std::endl;
+                    if (result.hit) {
+                        // Manda el mapa actualizado (sin el NPC) a todos los clientes
+                        GameMsg map_msg(MSG_SEND_MAP);
+                        map_msg.set_map(game_map.get_map());
+                        client_registry_monitor.notify_clients(map_msg);
+                    }
+                    break;
+                }
                 case MSG_SELECT: {
                     std::string name =
                         client_registry_monitor.get_name(cmd.get_client_id());

@@ -10,6 +10,7 @@
 #include "../common/queue.h"
 #include "../common/clientCmd.h"
 #include "../common/gameMsg.h"
+#include "../common/game_constants.h"
 #include "tileMap.h"
 
 
@@ -37,8 +38,16 @@ private:
     Queue<GameMsg>& receiving;
 
     std::unique_ptr<PlayerDisplay> player;
-    //PlayerDisplay& player;
+     //PlayerDisplay& player;
     std::unique_ptr<TileMap> tilemap;
+
+    std::vector<std::vector<elements>> world_map;
+    SDL_Texture* enemy_texture;
+
+    // tile seleccionado con NPC; {-1,-1} = ninguno
+    int selected_npc_tile_x;
+    int selected_npc_tile_y;
+    bool show_attack_button;
 
     void initSDL();
     void loadMedia(zones zone);
@@ -47,16 +56,21 @@ private:
     void handleEvents();
     void update();
     void draw();
+    void drawEnemies();
+    void drawAttackButton();
 
     void sendMoveCmd(Direction dir);
-
-    // recibe mensaje del server y hace el dibujo inicial
-    void init_draw();
-
+    void sendAttackCmd(int tile_x, int tile_y);
     //PRE: SE RECIBEM LAS COORDENADAS DE DONDE ESTAN
     //POS ESAS COORDENADAS SE ENVIAN AL SERVIDOR PARA QUE SE MUEVA EL JUGADOR A ESA POS
     void sendCoord(int x, int y);
+
+    // Verifica si hay NPC en la celda clickeada y muestra el botón "Pegar"
+    void selectCoord(int tile_x, int tile_y);
+
     std::vector<int> translate_tile_to_coord(int pixel_x, int pixel_y) const;
+ // recibe mensaje del server y hace el dibujo inicial
+    void init_draw();
 
 public:
     ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving);

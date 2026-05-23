@@ -6,7 +6,10 @@
 
 ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
     : window(nullptr), renderer(nullptr), background(nullptr), event{},
-      is_running(false), outgoing(outgoing), receiving(receiving) {}
+      is_running(false), outgoing(outgoing), receiving(receiving),
+      enemy_texture(nullptr),
+      selected_npc_tile_x(-1), selected_npc_tile_y(-1),
+      show_attack_button(false) {}
 
 ClientGUI::~ClientGUI() {
     freeSDL();
@@ -52,6 +55,10 @@ void ClientGUI::loadMedia(zones zone) {
 void ClientGUI::freeSDL() {
     player.reset();
 
+    if (enemy_texture) {
+        SDL_DestroyTexture(enemy_texture);
+        enemy_texture = nullptr;
+    }
     if (background) {
         SDL_DestroyTexture(background);
         background = nullptr;
@@ -72,13 +79,36 @@ std::vector<int> ClientGUI::translate_tile_to_coord(int pixel_x, int pixel_y) co
     return {pixel_x / tileSize, pixel_y / tileSize};
 }
 
-void ClientGUI::sendCoord(int x, int y) {
-    auto coords = translate_tile_to_coord(x, y);
+void ClientGUI::sendAttackCmd(int tile_x, int tile_y) {
+    ClientCmd cmd;
+    cmd.set_message_type(MSG_ATTACK);
+    cmd.set_coord_x(tile_x);
+    cmd.set_coord_y(tile_y);
+    outgoing.push(cmd);
+}
+
+void ClientGUI::sendCoord(int tile_x, int tile_y) {
     ClientCmd cmd;
     cmd.set_message_type(MSG_SELECT);
-    cmd.set_coord_x(coords[0]);
-    cmd.set_coord_y(coords[1]);
+    cmd.set_coord_x(tile_x);
+    cmd.set_coord_y(tile_y);
     outgoing.push(cmd);
+}
+
+void ClientGUI::selectCoord(int tile_x, int tile_y) {
+    if (!world_map.empty() &&
+        tile_y >= 0 && tile_y < static_cast<int>(world_map.size()) &&
+        tile_x >= 0 && tile_x < static_cast<int>(world_map[tile_y].size()) &&
+        world_map[tile_y][tile_x] == elements::npcs) {
+        selected_npc_tile_x = tile_x;
+        selected_npc_tile_y = tile_y;
+        show_attack_button = true;
+    } else {
+        show_attack_button = false;
+        selected_npc_tile_x = -1;
+        selected_npc_tile_y = -1;
+        sendCoord(tile_x, tile_y);
+    }
 }
 
 
@@ -114,9 +144,22 @@ void ClientGUI::handleEvents() {
                         break;
                 }
                 break;
-            case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                sendCoord(event.button.x, event.button.y);
+            case SDL_EVENT_MOUSE_BUTTON_DOWN: {
+                int mx = static_cast<int>(event.button.x);
+                int my = static_cast<int>(event.button.y);
+                // Click en el botón "Pegar"
+                SDL_FRect btn = {10, 10, 120, 40};
+                if (show_attack_button &&
+                    mx >= btn.x && mx <= btn.x + btn.w &&
+                    my >= btn.y && my <= btn.y + btn.h) {
+                    sendAttackCmd(selected_npc_tile_x, selected_npc_tile_y);
+                    show_attack_button = false;
+                } else {
+                    auto coords = translate_tile_to_coord(mx, my);
+                    selectCoord(coords[0], coords[1]);
+                }
                 break;
+            }
             default:
                 break;
         }
@@ -137,23 +180,51 @@ void ClientGUI::update() {
         }
         GameMsg msg(0);
         while (receiving.try_pop(msg)) {
-            if (msg.get_type() != MSG_MOVE) {
-                continue;
+            if (msg.get_type() == MSG_SEND_MAP) {
+                world_map = msg.get_map();
+            } else if (msg.get_type() == MSG_MOVE) {
+                int x = player->getTileX();
+                int y = player->getTileY();
+                switch (msg.get_direction()) {
+                    case DIR_NORTH: --y; break;
+                    case DIR_SOUTH: ++y; break;
+                    case DIR_EAST:  ++x; break;
+                    case DIR_WEST:  --x; break;
+                    default: break;
+                }
+                player->setTilePosition(x, y);
             }
-            int x = player->getTileX();
-            int y = player->getTileY();
-            switch (msg.get_direction()) {
-                case DIR_NORTH: --y; break;
-                case DIR_SOUTH: ++y; break;
-                case DIR_EAST:  ++x; break;
-                case DIR_WEST:  --x; break;
-                default: break;
-            }
-            player->setTilePosition(x, y);
         }
     } catch (const ClosedQueue&) {
         is_running = false;
     }
+}
+
+void ClientGUI::drawEnemies() {
+    if (world_map.empty() || !enemy_texture || !tilemap) return;
+    int tileSize = tilemap->getTileSize();
+    for (int row = 0; row < static_cast<int>(world_map.size()); ++row) {
+        for (int col = 0; col < static_cast<int>(world_map[row].size()); ++col) {
+            if (world_map[row][col] == elements::npcs) {
+                SDL_FRect dst = {
+                    static_cast<float>(col * tileSize),
+                    static_cast<float>(row * tileSize),
+                    static_cast<float>(tileSize),
+                    static_cast<float>(tileSize)
+                };
+                SDL_RenderTexture(renderer, enemy_texture, nullptr, &dst);
+            }
+        }
+    }
+}
+
+void ClientGUI::drawAttackButton() {
+    if (!show_attack_button) return;
+    SDL_FRect btn = {10, 10, 120, 40};
+    SDL_SetRenderDrawColor(renderer, 200, 50, 50, 255);
+    SDL_RenderFillRect(renderer, &btn);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderRect(renderer, &btn);
 }
 
 void ClientGUI::draw() {
@@ -164,9 +235,11 @@ void ClientGUI::draw() {
     if (tilemap) {
         tilemap->render();
     }
+    drawEnemies();
     if (player) {
         player->draw();
     }
+    drawAttackButton();
     SDL_RenderPresent(renderer);
 }
 
@@ -176,6 +249,14 @@ void ClientGUI::init_draw() {
     // aca recibe del protocolo la zona
     // hardocodeado para test
     loadMedia(zones::DESERT);
+
+    SDL_Surface* enemy_surf = IMG_Load("enemigo.png");
+    if (!enemy_surf) enemy_surf = IMG_Load("images/enemigo.png");
+    if (enemy_surf) {
+        enemy_texture = SDL_CreateTextureFromSurface(renderer, enemy_surf);
+        SDL_DestroySurface(enemy_surf);
+    }
+
     int tileSize = tilemap->getTileSize();
     try {
         player = std::make_unique<PlayerDisplay>(renderer, "images/player.png", tileSize);

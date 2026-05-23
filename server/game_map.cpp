@@ -115,6 +115,9 @@ void GameMap::read_desert() {
         }
     }
 
+    // NPC de prueba hardcodeado: posicion (7,5), cerca del player_start (5,5)
+    spawn_npc(7, 5);
+
     // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
     spawns.clear();
     if (auto* arr = tbl["spawn"].as_array()) {
@@ -130,6 +133,26 @@ void GameMap::read_desert() {
             spawns[name] = p;
         }
     }
+}
+
+void GameMap::spawn_npc(int x, int y) {
+    if (y >= 0 && y < height && x >= 0 && x < width) {
+        map[y][x] = elements::npcs;
+        std::cout << "[DEBUG: spawn_npc] NPC at (" << x << "," << y << ")" << std::endl;
+    }
+}
+
+GameMap::AttackResult GameMap::attack_npc(int x, int y) {
+    if (y < 0 || y >= height || x < 0 || x >= width) {
+        return {false, false};
+    }
+    if (map[y][x] != elements::npcs) {
+        return {false, false};
+    }
+    // Hardcodeado: muere de un golpe
+    map[y][x] = elements::empty;
+    std::cout << "[DEBUG: attack_npc] NPC at (" << x << "," << y << ") killed" << std::endl;
+    return {true, true};
 }
 
 std::string GameMap::sector_of_position(int x, int y) {
