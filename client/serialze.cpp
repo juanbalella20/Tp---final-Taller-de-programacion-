@@ -31,6 +31,7 @@ Serializer::Serializer() {
     handlers[MSG_CHEAT_KILL] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CHEAT_KILL); };
     handlers[MSG_CHEAT_INF_HP] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CHEAT_INF_HP); };
     handlers[MSG_CHEAT_INF_MANA] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CHEAT_INF_MANA); };
+    handlers[MSG_PRIVATE] = [this](const ClientCmd& cmd) { return serialize_private(cmd); };
 }
 
 void Serializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {
@@ -147,4 +148,15 @@ std::vector<uint8_t> Serializer::serialize_cmd(const ClientCmd& cmd) {
         return it->second(cmd);
     }
     return {};
+}
+
+std::vector<uint8_t> Serializer::serialize_private(const ClientCmd& cmd) {
+    std::vector<uint8_t> payload;
+    const std::string& target = cmd.get_target_name();
+    payload.push_back(static_cast<uint8_t>(target.size()));
+    payload.insert(payload.end(), target.begin(), target.end());
+    const std::string& content = cmd.get_chat_content();
+    payload.push_back(static_cast<uint8_t>(content.size()));
+    payload.insert(payload.end(), content.begin(), content.end());
+    return payload;
 }

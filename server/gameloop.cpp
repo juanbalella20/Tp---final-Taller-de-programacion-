@@ -108,6 +108,15 @@ void GameLoop::run() {
                     client_registry_monitor.notify_client(cmd.get_client_id(), msg);
                     break;
                 }
+                case MSG_PRIVATE: {
+                    std::string sender = client_registry_monitor.get_name(cmd.get_client_id());
+                    std::string target = cmd.get_target_name();
+                    GameMsg msg(MSG_PRIVATE);
+                    msg.set_player_name(sender);
+                    msg.set_chat_content(cmd.get_chat_content());
+                    //client_registry_monitor.notify_client_by_name(target, msg);
+                    break;
+                }
                 default:
                     break;
             }

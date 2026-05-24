@@ -185,6 +185,7 @@ void ClientGUI::update() {
                     player->setTilePosition(x, y);
                     break;
                 }
+                case MSG_PRIVATE:
                 case MSG_MEDITATE:
                 case MSG_RESURRECT:
                 case MSG_CURE:

@@ -39,6 +39,9 @@ ClientDeserializer::ClientDeserializer() {
     }) {
         handlers[type] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) { deserialize_text(payload, msg); };
     };
+    handlers[MSG_PRIVATE] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_private(payload, msg);
+    };
 }
 
 void ClientDeserializer::deserialize_move(const std::vector<uint8_t>& payload, GameMsg& msg) {
@@ -139,4 +142,10 @@ void ClientDeserializer::deserialize_gold(const std::vector<uint8_t>& payload, G
 void ClientDeserializer::deserialize_item(const std::vector<uint8_t>& payload, GameMsg& msg) {
     size_t offset = 0;
     msg.set_item_id(read_string(payload, offset));
+}
+
+void ClientDeserializer::deserialize_item(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    size_t offset = 0;
+    msg.set_player_name(read_string(payload, offset));
+    msg.set_chat_content(read_string(payload, offset));
 }
