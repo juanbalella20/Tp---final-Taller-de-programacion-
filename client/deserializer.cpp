@@ -144,7 +144,7 @@ void ClientDeserializer::deserialize_item(const std::vector<uint8_t>& payload, G
     msg.set_item_id(read_string(payload, offset));
 }
 
-void ClientDeserializer::deserialize_item(const std::vector<uint8_t>& payload, GameMsg& msg) {
+void ClientDeserializer::deserialize_private(const std::vector<uint8_t>& payload, GameMsg& msg) {
     size_t offset = 0;
     msg.set_player_name(read_string(payload, offset));
     msg.set_chat_content(read_string(payload, offset));
