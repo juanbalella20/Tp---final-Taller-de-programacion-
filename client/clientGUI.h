@@ -20,6 +20,8 @@
 
 #define LOGICAL_WIDTH  1280
 #define LOGICAL_HEIGHT 720
+//#define LOGICAL_WIDTH  1920
+//#define LOGICAL_HEIGHT 1080
 
 enum class zones {
     DESERT,
@@ -31,7 +33,6 @@ class ClientGUI: public Thread {
 private:
     SDL_Window* window;
     SDL_Renderer* renderer;
-    SDL_Texture* background;
     SDL_Event event;
     bool is_running;
 

@@ -5,7 +5,7 @@
 #include <stdexcept>
 
 ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
-    : window(nullptr), renderer(nullptr), background(nullptr), event{},
+    : window(nullptr), renderer(nullptr), event{},
       is_running(false), outgoing(outgoing), receiving(receiving) {}
 
 ClientGUI::~ClientGUI() {
@@ -55,10 +55,7 @@ void ClientGUI::freeSDL() {
     player.reset();
     tilemap.reset();
 
-    if (background) {
-        SDL_DestroyTexture(background);
-        background = nullptr;
-    }
+
     if (renderer) {
         SDL_DestroyRenderer(renderer);
         renderer = nullptr;
@@ -143,9 +140,6 @@ void ClientGUI::update() {
 
 void ClientGUI::draw() {
     SDL_RenderClear(renderer);
-    if (background) {
-        SDL_RenderTexture(renderer, background, nullptr, nullptr);
-    }
     if (tilemap) {
         tilemap->render();
     }
