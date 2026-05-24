@@ -151,12 +151,17 @@ std::vector<uint8_t> Serializer::serialize_cmd(const ClientCmd& cmd) {
 }
 
 std::vector<uint8_t> Serializer::serialize_private(const ClientCmd& cmd) {
-    std::vector<uint8_t> payload;
+    std::vector<uint8_t> buf;
     const std::string& target = cmd.get_target_name();
-    payload.push_back(static_cast<uint8_t>(target.size()));
-    payload.insert(payload.end(), target.begin(), target.end());
     const std::string& content = cmd.get_chat_content();
-    payload.push_back(static_cast<uint8_t>(content.size()));
-    payload.insert(payload.end(), content.begin(), content.end());
-    return payload;
+    uint8_t target_len = static_cast<uint8_t>(target.size());
+    uint8_t content_len = static_cast<uint8_t>(content.size());
+    uint16_t payload_len = 1 + target_len + 1 + content_len;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, MSG_PRIVATE, payload_len);
+    buf.push_back(target_len);
+    buf.insert(buf.end(), target.begin(), target.end());
+    buf.push_back(content_len);
+    buf.insert(buf.end(), content.begin(), content.end());
+    return buf;
 }
