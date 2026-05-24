@@ -44,6 +44,23 @@ ClientCmd Parser::parse(const std::string& input) {
     return cmd;
 }
 
+ClientCmd Parser::parse_private(const std::string& command, std::istringstream& ss) {
+    std::string target = command.substr(1);
+    if (target.empty()) {
+        throw std::invalid_argument("Uso: @<nick> <mensaje>");
+    }
+    std::string content;
+    std::getline(ss, content);
+    if (!content.empty() && content.front() == ' ') {
+        content = content.substr(1);
+    }
+    ClientCmd cmd;
+    cmd.set_message_type(MSG_PRIVATE);
+    cmd.set_target_name(target);
+    cmd.set_chat_content(content);
+    return cmd;
+}
+
 ClientCmd Parser::parse_no_payload(MessageType type) {
     ClientCmd cmd;
     cmd.set_message_type(type);
@@ -201,6 +218,10 @@ ClientCmd Parser::parse_chat(const std::string& input) {
     ss >> command;
 
     ClientCmd cmd;
+
+    if (command.front() == '@') {
+        return parse_private(command, ss);
+    }
 
     if (health_command(command, cmd)) {
         return cmd;

@@ -5,6 +5,7 @@
 
 class Parser {
  private:
+    ClientCmd parse_private(const std::string& command, std::istringstream& ss);
     ClientCmd parse_no_payload(MessageType type);
     ClientCmd parse_item_cmd(MessageType type, std::istringstream& ss, const std::string& correct_use);
     ClientCmd parse_gold_cmd(MessageType type, std::istringstream& ss, const std::string& correct_use);
