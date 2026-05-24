@@ -14,6 +14,11 @@ ServerSerializer::ServerSerializer() {
     }) {
         handlers[type] = [this](const GameMsg& msg) { return serialize_text(msg); };
     };
+    for (uint8_t type : {
+        (uint8_t)MSG_CHEAT_KILL, (uint8_t)MSG_CHEAT_INF_HP, (uint8_t)MSG_CHEAT_INF_MANA
+    }) {
+        handlers[type] = [this](const GameMsg& msg) { return serialize_text(msg); };
+    };
 }
 
 void ServerSerializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {

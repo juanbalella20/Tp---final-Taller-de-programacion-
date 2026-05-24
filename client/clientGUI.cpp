@@ -204,6 +204,9 @@ void ClientGUI::update() {
                 case MSG_CLAN_RECH:
                 case MSG_LEFT_CLAN:
                 case MSG_CHAT:
+                case MSG_CHEAT_KILL:
+                case MSG_CHEAT_INF_HP:
+                case MSG_CHEAT_INF_MANA:
                     chat_inbox.push(msg.get_chat_content());
                     break;
             }

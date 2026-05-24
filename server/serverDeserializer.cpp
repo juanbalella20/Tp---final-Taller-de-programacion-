@@ -40,7 +40,16 @@ ServerDeserializer::ServerDeserializer() {
     handlers[MSG_REV_CLAN] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_no_payload(payload, cmd);
     };
-    handlers[MSG_LEFT_CLAN]= [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+    handlers[MSG_LEFT_CLAN] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
+    handlers[MSG_CHEAT_KILL] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
+    handlers[MSG_CHEAT_INF_HP] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
+    handlers[MSG_CHEAT_INF_MANA] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_no_payload(payload, cmd);
     };
 }
