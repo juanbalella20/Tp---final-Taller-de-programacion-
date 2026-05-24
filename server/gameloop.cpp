@@ -84,6 +84,30 @@ void GameLoop::run() {
                     break;
                 }
                 /* etc con los demás*/
+                case MSG_CHEAT_KILL: {
+                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+                    // game_map.kill_player(name);
+                    GameMsg msg(MSG_CHAT);
+                    msg.set_chat_content("Moriste instantáneamente.");
+                    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    break;
+                }
+                case MSG_CHEAT_INF_HP: {
+                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+                    // game_map.set_infinite_hp(name);
+                    GameMsg msg(MSG_CHAT);
+                    msg.set_chat_content("Vida infinita activada.");
+                    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    break;
+                }
+                case MSG_CHEAT_INF_MANA: {
+                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+                    // game_map.set_infinite_mana(name);
+                    GameMsg msg(MSG_CHAT);
+                    msg.set_chat_content("Mana infinito activado.");
+                    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    break;
+                }
                 default:
                     break;
             }
