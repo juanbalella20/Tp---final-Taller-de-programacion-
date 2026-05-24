@@ -69,6 +69,10 @@ public:
     void load_players();
     void spawn_player(const std::string& name);
     const Player& get_player(const std::string& name) const;
+    bool player_exists(const std::string& name);  
+    position_coord get_spawn_position();           
+
+    //Player* get_player(const std::string& name);
 };
 
 

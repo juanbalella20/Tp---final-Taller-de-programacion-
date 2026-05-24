@@ -75,18 +75,7 @@ void Player::use_object(Item item) {
 }
 */
 
-int Player::damage_attack() {
-    // Daño = Fuerza * rand(DañoArmaMin, DañoArmaMax)
-    return 0;
-}
 
-void Player::recv_attack(int damage) {
-    // Esquivar si rand(0, 1) ^ Agilidad < 0.001
-
-    // Defensa = rand(ArmaduraMin, ArmaduraMax) + rand(EscudoMin, EscudoMax) + rand(CascoMin, CascoMax)
-
-    // lives -= (damage - defense)
-}
 
 void Player::revive() {
     lives = max_life();
@@ -148,4 +137,67 @@ int Player::get_coord_y() {
 void Player::update_position(const int x, const int y) {
     coord_x = x;
     coord_y = y;
+}
+
+bool Player::is_ghost() const {
+    return status == PlayerStatus::DEAD;
+}
+ 
+void Player::set_ghost() {
+    status = PlayerStatus::DEAD;
+}
+
+bool Player::is_meditating() const {
+    return meditating;
+}
+ 
+void Player::change_meditation() {
+    meditating = !meditating;
+}
+ 
+void Player::stop_meditation() {
+    meditating = false;
+}
+/* 
+bool Player::can_meditate() const {
+    return player_class.class_can_meditate(); //Tengoq ue actualizar player_class, solo el guerrero no puede meditar
+}
+*/
+
+int Player::get_lives() const {
+    return lives;
+}
+ 
+int Player::get_level() const {
+    return level;
+}
+ 
+int Player::get_clan_id() const {
+    return id_clan;
+}
+
+int Player::damage_attack() {
+    // Daño = Fuerza * rand(DañoArmaMin, DañoArmaMax)
+    // TODO: cuando Item este definido, usar el arma equipada
+    return player_race.race_strength() + player_class.class_strength();
+}
+ 
+void Player::recv_attack(int damage) {
+    // TODO: cuando Item este definido, calcular defensa de armadura/escudo/casco
+    // Por ahora aplica el daño directo
+    lives -= damage;
+    if (lives < 0) lives = 0;
+}
+ 
+void Player::add_experience(int exp) {
+    experience += exp;
+}
+ 
+void Player::check_level_up() {
+    int limit = static_cast<int>(1000 * std::pow(level, 1.8));
+    if (experience >= limit) {
+        level += 1;
+        lives = max_life();
+        mana  = max_mana();
+    }
 }

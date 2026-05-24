@@ -22,6 +22,7 @@ private:
     int level;
     int coord_x;
     int coord_y;
+    bool meditating;
     PlayerStatus status;
     std::shared_ptr<Item> equipped_item;
 
@@ -48,9 +49,6 @@ public:
 
     void use_object(Item item);
 
-    int damage_attack();
-
-    void recv_attack(int damage);
 
     void revive();
 
@@ -75,6 +73,31 @@ public:
     void update_position(const int x, const int y);
 
     const Inventory& get_inventory() const;
+    bool is_ghost() const;
+    
+    void set_ghost();
+
+    bool is_meditating() const;
+
+    void change_meditation();
+
+    void stop_meditation();
+
+    bool can_meditate() const;
+
+    int get_lives() const;
+
+    int get_level() const;
+
+    int get_clan_id() const;
+
+    int damage_attack();
+
+    void recv_attack(int damage);
+
+    void add_experience(int exp);
+
+    void check_level_up();
 };
 
 #endif
