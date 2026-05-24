@@ -203,6 +203,7 @@ void ClientGUI::update() {
                 case MSG_CLAN_KICK:
                 case MSG_CLAN_RECH:
                 case MSG_LEFT_CLAN:
+                case MSG_CHAT:
                     chat_inbox.push(msg.get_chat_content());
                     break;
             }
