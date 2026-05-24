@@ -95,3 +95,15 @@ void GameLoop::run() {
     }
 }
 
+/*
+Avisar sobre reaparición de NPCs:
+
+std::vector<std::string> npcs_respawned = game_map.update_respawns()
+for (const auto& npc : npcs_respawned) {
+    GameMsg msg(MSG_CHAT)
+    msg.set_chat_content(npc + " ha reaparecido.")
+    client_registry_monitor.notify_clients(msg)
+}
+
+(y algo así para la reaparición de los players...)
+*/
