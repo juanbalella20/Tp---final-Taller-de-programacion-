@@ -4,10 +4,11 @@
 #include <stdexcept>
 
 ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
-    : window(nullptr), renderer(nullptr), background(nullptr), event{}, chat_font(nullptr),
+    : window(nullptr), renderer(nullptr), event{}, chat_font(nullptr),
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
       enemy_texture(nullptr), selected_npc_tile_x(-1), selected_npc_tile_y(-1),
       show_attack_button(false) {}
+    
 
 ClientGUI::~ClientGUI() {
     freeSDL();
@@ -26,6 +27,8 @@ void ClientGUI::initSDL() {
     if (!renderer) {
         throw std::runtime_error(std::string("SDL_CreateRenderer: ") + SDL_GetError());
     }
+
+    SDL_SetRenderLogicalPresentation(renderer, LOGICAL_WIDTH, LOGICAL_HEIGHT,SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
     SDL_Surface* icon = IMG_Load("images/logo.jpeg");
     if (!icon) {
@@ -51,7 +54,7 @@ void ClientGUI::loadMedia(zones zone) {
     {
     case zones::DESERT : {
         tilemap = std::make_unique<TileMap>(renderer);
-        tilemap->load("data/maps/desert/map.toml");
+        tilemap->load_map("data/maps/desert/map.toml");
         break;
     }
     default:
@@ -61,15 +64,14 @@ void ClientGUI::loadMedia(zones zone) {
 
 void ClientGUI::freeSDL() {
     player.reset();
+    tilemap.reset();
+
 
     if (enemy_texture) {
         SDL_DestroyTexture(enemy_texture);
         enemy_texture = nullptr;
     }
-    if (background) {
-        SDL_DestroyTexture(background);
-        background = nullptr;
-    }
+    
     if (renderer) {
         SDL_DestroyRenderer(renderer);
         renderer = nullptr;
@@ -351,9 +353,6 @@ void ClientGUI::drawInventoryPanel() {
 
 void ClientGUI::draw() {
     SDL_RenderClear(renderer);
-    if (background) {
-        SDL_RenderTexture(renderer, background, nullptr, nullptr);
-    }
     if (tilemap) {
         tilemap->render();
     }
@@ -381,6 +380,8 @@ void ClientGUI::init_draw() {
         SDL_DestroySurface(enemy_surf);
     }
 
+    // tile_size viene del TOML
+    // el player se escala con el mismo tamano de celda
     int tileSize = tilemap->getTileSize();
     try {
         player = std::make_unique<PlayerDisplay>(renderer, "images/player.png", tileSize);
@@ -393,21 +394,19 @@ void ClientGUI::init_draw() {
     }
 
     // Posicionar al player en el spawn "player_start" del TOML.
+    // (posicionar al player en el spawn que indica el server!)
     if (tilemap) {
-        std::cout << "[DEBUG] spawns count=" << tilemap->getSpawns().size() << std::endl;
-        bool found = false;
-        for (const auto& sp : tilemap->getSpawns()) {
-            std::cout << "[DEBUG] spawn: name='" << sp.name
-                      << "' x=" << sp.x << " y=" << sp.y << std::endl;
-            if (sp.name == "player_start") {
-                player->setTilePosition(sp.x, sp.y);
-                std::cout << "[DEBUG] player positioned at ("
-                          << sp.x << "," << sp.y << ")" << std::endl;
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
+        const auto& spawns = tilemap->getSpawns();
+        std::cout << "[DEBUG] spawns count=" << spawns.size() << std::endl;
+        // hardcodeado desde el .toml
+        auto it = spawns.find("player_start");
+        if (it != spawns.end()) {
+            player->setTilePosition(it->second.x, it->second.y);
+            // debug print!
+            std::cout << "[DEBUG] player positioned at ("
+                      << it->second.x << "," << it->second.y << ")" << std::endl;
+        } else {
+            // debug print!
             std::cout << "[DEBUG] player_start NOT FOUND, defaulting to (1,1)" << std::endl;
             player->setTilePosition(1, 1);
         }

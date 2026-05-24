@@ -19,10 +19,15 @@
 
 
 #define WIN_NAME "Argentum"
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
 //#define WINDOW_WIDTH 1920
 //#define WINDOW_HEIGHT 1080
+#define WINDOW_WIDTH 800    
+#define WINDOW_HEIGHT 600
+
+#define LOGICAL_WIDTH  1280
+#define LOGICAL_HEIGHT 720
+//#define LOGICAL_WIDTH  1920
+//#define LOGICAL_HEIGHT 1080
 
 enum class zones {
     DESERT,
@@ -34,7 +39,6 @@ class ClientGUI: public Thread {
 private:
     SDL_Window* window;
     SDL_Renderer* renderer;
-    SDL_Texture* background;
     SDL_Event event;
     TTF_Font* chat_font;
     bool is_running;
@@ -45,7 +49,6 @@ private:
     Queue<std::string> chat_inbox;
 
     std::unique_ptr<PlayerDisplay> player;
-     //PlayerDisplay& player;
     std::unique_ptr<TileMap> tilemap;
 
     std::vector<std::vector<elements>> world_map;

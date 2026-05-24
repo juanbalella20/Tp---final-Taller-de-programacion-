@@ -1,10 +1,10 @@
 #include "game_map.h"
 
+#include <iostream>
 #include <stdexcept>
 #include <vector>
-#include <iostream>
 
-#include "../vendored/tomlplusplus/toml.hpp"
+#include "../common/mapLoader.h"
 
 GameMap::GameMap() : width(0), height(0), map() {}
 
@@ -74,43 +74,18 @@ void GameMap::spawn_player(const std::string& name) {
               << start_x << "," << start_y << ")" << std::endl;
 }
 
-// TODO: hacer una clase lectora de TBL!
 void GameMap::read_desert() {
-    const std::string path = "data/maps/desert/map.toml";
+    MapLoader md;
+    md.load("data/maps/desert/map.toml");
 
-    toml::table tbl;
-    try {
-        tbl = toml::parse_file(path);
-    } catch (const toml::parse_error& e) {
-        throw std::runtime_error("GameMap: parse " + path + ": " +
-                                 std::string(e.description()));
-    }
-
-    width  = tbl["width"].value_or(0);
-    height = tbl["height"].value_or(0);
-    if (width <= 0 || height <= 0) {
-        throw std::runtime_error("GameMap: width/height invlidos en " + path);
-    }
-
-    // Matriz [filas=height][columnas=width], todo vaco inicialmente.
+    width  = md.get_width();
+    height = md.get_height();
     map.assign(height, std::vector<elements>(width, elements::empty));
 
-    // [[collider]] = rectngulos no transitables, en celdas.
-    if (auto* arr = tbl["collider"].as_array()) {
-        for (auto& node : *arr) {
-            auto* t = node.as_table();
-            if (!t) continue;
-            int cx = (*t)["x"].value_or(0);
-            int cy = (*t)["y"].value_or(0);
-            int cw = (*t)["w"].value_or(1);
-            int ch = (*t)["h"].value_or(1);
-
-            for (int row = cy; row < cy + ch && row < height; ++row) {
-                if (row < 0) continue;
-                for (int col = cx; col < cx + cw && col < width; ++col) {
-                    if (col < 0) continue;
-                    map[row][col] = elements::buildings;
-                }
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            if (md.is_collidable(x, y)) {
+                map[y][x] = elements::buildings;
             }
         }
     }
@@ -119,21 +94,9 @@ void GameMap::read_desert() {
     spawn_npc(7, 5);
 
     // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
-    spawns.clear();
-    if (auto* arr = tbl["spawn"].as_array()) {
-        for (auto& node : *arr) {
-            auto* t = node.as_table();
-            if (!t) continue;
-            std::string name = (*t)["name"].value_or<std::string>("");
-            if (name.empty()) continue;
-            position_coord p{
-                (*t)["x"].value_or(0),
-                (*t)["y"].value_or(0),
-            };
-            spawns[name] = p;
-        }
-    }
+    spawns = md.get_spawns();
 }
+
 
 void GameMap::spawn_npc(int x, int y) {
     if (y >= 0 && y < height && x >= 0 && x < width) {
