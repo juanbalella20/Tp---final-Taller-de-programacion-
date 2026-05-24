@@ -17,6 +17,9 @@ Player::Player(const std::string name, PlayerRace player_race, PlayerClass playe
     level = 0;
 }
 
+const Inventory& Player::get_inventory() const {
+    return player_inventory;
+}
 int Player::max_life() {
     // VidaMax = Constitución * FClaseVida * FRazaVida * Nivel
     return player_race.race_constitution() * player_class.class_constitution() * player_class.class_life_factor() * player_race.race_life_factor() * level;

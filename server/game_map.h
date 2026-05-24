@@ -68,6 +68,7 @@ public:
     void set_positions();
     void load_players();
     void spawn_player(const std::string& name);
+    const Player& get_player(const std::string& name) const;
 };
 
 

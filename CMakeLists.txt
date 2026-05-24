@@ -110,6 +110,8 @@ add_executable(server
     server/player.cpp
     server/player_class.cpp
     server/player_race.cpp
+    server/inventory.cpp
+    server/item.cpp
     # not implemented yet
     # server/npcBanker.cpp
     # server/npcHostile.cpp

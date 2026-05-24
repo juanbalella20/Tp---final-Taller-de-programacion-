@@ -3,6 +3,8 @@
 #include <iostream>
 
 #include "../common/gameMsg.h"
+#include "../common/item_info.h"
+#include "item.h"
 
 GameLoop::GameLoop(Queue<ClientCmd>& receiving_queue,
                    ClientRegistryMonitor& client_registry_monitor):
@@ -45,6 +47,14 @@ void GameLoop::run() {
                       << static_cast<int>(cmd.get_message_type())
                       << "client_id" << cmd.get_client_id()
                       << std::endl;
+                    const Player& p = game_map.get_player(cmd.get_player_name());
+                    std::vector<ItemInfo> item_infos;
+                    for (Item* item : p.get_inventory().get_items()) {
+                        item_infos.emplace_back(item->getId(), item->getName(), item->getPrice());
+                    }
+                    GameMsg inv_msg(MSG_INVENTORY);
+                    inv_msg.set_items(item_infos);
+                    client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
                     break;
                 }
                 case MSG_MOVE: {

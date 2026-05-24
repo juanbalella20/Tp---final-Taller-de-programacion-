@@ -2,23 +2,32 @@
 #define INVENTORY_H_
 
 #include <vector>
+#include <memory>
+
 #include "item.h"
 
 class Inventory {
 
 private:
-    std::vector<Item> items;
+    std::vector<std::unique_ptr<Item>> items;
+    Item* equipped_item = nullptr;
+
+    static constexpr int MAX_SLOTS = 25;  //a definir
 
 public:
     Inventory() {}
 
-    void add_item(Item item);
+    std::vector<Item*> get_items() const;
 
-    void drop_item(Item item);
+    bool add_item(std::unique_ptr<Item> item);
 
-    void equip_item(Item item);
+    std::unique_ptr<Item> drop_item(Item* item);
 
-    void unequip_item(Item item);
+    void equip_item(Item* item);
+
+    void unequip_item();
+
+    bool is_full() const;
 };
 
 

@@ -14,6 +14,7 @@
 #include "../common/clientCmd.h"
 #include "../common/gameMsg.h"
 #include "../common/game_constants.h"
+#include "../common/item_info.h"
 #include "tileMap.h"
 
 
@@ -48,12 +49,16 @@ private:
     std::unique_ptr<TileMap> tilemap;
 
     std::vector<std::vector<elements>> world_map;
+    std::vector<ItemInfo> inventory;
     SDL_Texture* enemy_texture;
 
     // tile seleccionado con NPC; {-1,-1} = ninguno
     int selected_npc_tile_x;
     int selected_npc_tile_y;
     bool show_attack_button;
+
+    static constexpr int PANEL_WIDTH = 200;
+    static constexpr int GAME_WIDTH  = WINDOW_WIDTH - PANEL_WIDTH;
 
     void initSDL();
     void loadMedia(zones zone);
@@ -81,6 +86,7 @@ private:
     void draw();
     void drawEnemies();
     void drawAttackButton();
+    void drawInventoryPanel();
 
     void sendMoveCmd(Direction dir);
     void sendAttackCmd(int tile_x, int tile_y);

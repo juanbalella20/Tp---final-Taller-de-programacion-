@@ -73,6 +73,8 @@ public:
     int get_coord_y();
 
     void update_position(const int x, const int y);
+
+    const Inventory& get_inventory() const;
 };
 
 #endif

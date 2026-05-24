@@ -13,7 +13,7 @@ std::vector<std::vector<elements>> GameMap::get_map() {
 }
 
 void GameMap::add_player(Player player) {
-    players.push_back(player);
+    players.push_back(std::move(player));
 }
 
 // TODO: refactorizar funcion
@@ -69,7 +69,7 @@ void GameMap::spawn_player(const std::string& name) {
     int start_y = (it != spawns.end()) ? it->second.y : 1;
     Player p(name, PlayerRace(), PlayerClass());
     p.update_position(start_x, start_y);
-    players.push_back(p);
+    players.push_back(std::move(p));
     std::cout << "[DEBUG: spawn_player] " << name << " at ("
               << start_x << "," << start_y << ")" << std::endl;
 }
@@ -161,6 +161,14 @@ std::string GameMap::sector_of_position(int x, int y) {
     return "desert";
 }
 
+const Player& GameMap::get_player(const std::string& name) const {
+    for (const auto& player : players) {
+        if (player.get_name() == name) {
+            return player;
+        }
+    }
+    throw std::runtime_error("Player not found: " + name);
+}
 // TODO
 void GameMap::read_city() {}
 // TODO

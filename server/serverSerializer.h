@@ -14,6 +14,7 @@ private:
     void write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len);
     std::vector<uint8_t> serialize_move(const GameMsg& msg);
     std::vector<uint8_t> serialize_map(const GameMsg& msg);
+    std::vector<uint8_t> serialize_inventory(const GameMsg& msg);
 
  public:
     ServerSerializer();

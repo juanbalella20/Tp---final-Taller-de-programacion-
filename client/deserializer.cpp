@@ -1,6 +1,7 @@
 #include "deserializer.h"
 #include "../common/protocol_constants.h"
 #include "../common/game_constants.h"
+#include "../common/item_info.h"
 
 #include <stdexcept>
 
@@ -13,6 +14,9 @@ ClientDeserializer::ClientDeserializer() {
     };
     handlers[MSG_FOUND_CLAN] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_text(payload, msg);
+    };
+    handlers[MSG_INVENTORY] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_inventory(payload, msg);
     };
 }
 
@@ -80,12 +84,12 @@ void ClientDeserializer::deserialize_map(const std::vector<uint8_t>& payload, Ga
 }
 
 static std::string read_string(const std::vector<uint8_t>& payload, size_t& offset) {
-    if (offset + 2 > payload.size()) {
+    if (offset + 1 > payload.size()) {
         throw std::invalid_argument("Payload demasiado corto para leer string");
     }
 
-    uint16_t len = (payload[offset] << 8) | payload[offset + 1];
-    offset += 2;
+    uint8_t len = payload[offset];
+    offset += 1;
 
     if (offset + len > payload.size()) {
         throw std::invalid_argument("Payload demasiado corto para leer contenido del string");
@@ -93,7 +97,6 @@ static std::string read_string(const std::vector<uint8_t>& payload, size_t& offs
 
     std::string result(payload.begin() + offset, payload.begin() + offset + len);
     offset += len;
-    
     return result;
 }
 
@@ -114,4 +117,16 @@ void ClientDeserializer::desrialize_gold(const std::vector<uint8_t>& payload, Ga
 void ClientDeserializer::desrialize_item(const std::vector<uint8_t>& payload, GameMsg& msg) {
     size_t offset = 0;
     msg.set_item_id(read_string(payload, offset));
+}
+
+void ClientDeserializer::deserialize_inventory(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    size_t offset = 0;
+    std::vector<ItemInfo> items;
+
+    while (offset < payload.size()) {
+        std::string name = read_string(payload, offset);
+        items.emplace_back("", name, 0);
+    }
+
+    msg.set_items(items);
 }

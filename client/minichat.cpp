@@ -134,18 +134,22 @@ std::string MiniChat::pop_outbound_message() {
 }
 
 void MiniChat::render() {
-    // TO-DO: calcularlos relativos al tamaño de la ventana
-    float start_x = 20.0f;
-    float start_y = 300.0f;
-    float spacing = 5.0f;
-    float current_y = start_y;
+    float panel_x = 10.0f;
+    float panel_y = 10.0f;
+    float panel_w = 580.0f;
+    float line_h  = 20.0f;
+    float spacing = 3.0f;
+    float input_h = active ? (line_h + 6.0f) : 0.0f;
+    float panel_h = MAX_LINES * (line_h + spacing) + 10.0f + input_h;
 
-    Uint8 alpha = active ? 180 : 100;
+    Uint8 alpha = active ? 200 : 140;
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, alpha);
-
-    SDL_FRect bg_rect = { 10.0f, start_y - 10.0f, 300.0f, (MAX_LINES + 2) * 25.0f };
+    SDL_FRect bg_rect = { panel_x, panel_y, panel_w, panel_h };
     SDL_RenderFillRect(renderer, &bg_rect);
+
+    float start_x = panel_x + 8.0f;
+    float current_y = panel_y + 5.0f;
 
     for (const auto& msg : msg_history) {
         SDL_FRect dest_rect = { start_x, current_y, msg.width, msg.height };

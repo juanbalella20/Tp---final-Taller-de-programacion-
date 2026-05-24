@@ -1,7 +1,5 @@
 #include "clientGUI.h"
 #include <SDL3_image/SDL_image.h>
-#include <SDL3_ttf/SDL_ttf.h>
-#include <array>
 #include <iostream>
 #include <stdexcept>
 
@@ -166,8 +164,10 @@ void ClientGUI::handleEvents() {
             case SDL_EVENT_MOUSE_BUTTON_DOWN: {
                 int mx = static_cast<int>(event.button.x);
                 int my = static_cast<int>(event.button.y);
-                // Click en el botón "Pegar"
-                SDL_FRect btn = {10, 10, 120, 40};
+                // Click en el botón "Pegar" (panel derecho, parte inferior)
+                SDL_FRect btn = {static_cast<float>(GAME_WIDTH + 10),
+                                 static_cast<float>(WINDOW_HEIGHT - 60),
+                                 static_cast<float>(PANEL_WIDTH - 20), 40};
                 if (show_attack_button &&
                     mx >= btn.x && mx <= btn.x + btn.w &&
                     my >= btn.y && my <= btn.y + btn.h) {
@@ -216,6 +216,9 @@ void ClientGUI::update() {
             switch (msg.get_type()) {
                 case MSG_SEND_MAP:
                     world_map = msg.get_map();
+                    break;
+                case MSG_INVENTORY:
+                    inventory = msg.get_items();
                     break;
                 case MSG_MOVE: {
                     int x = player->getTileX();
@@ -279,6 +282,73 @@ void ClientGUI::drawAttackButton() {
     SDL_RenderRect(renderer, &btn);
 }
 
+void ClientGUI::drawInventoryPanel() {
+    // Fondo del panel derecho
+    SDL_FRect panel = {static_cast<float>(GAME_WIDTH), 0,
+                       static_cast<float>(PANEL_WIDTH), static_cast<float>(WINDOW_HEIGHT)};
+    SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+    SDL_RenderFillRect(renderer, &panel);
+    SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
+    SDL_RenderRect(renderer, &panel);
+
+    // Titulo "Inventario"
+    if (chat_font) {
+        SDL_Color white = {255, 255, 255, 255};
+        SDL_Surface* surf = TTF_RenderText_Solid(chat_font, "Inventario", 0, white);
+        if (surf) {
+            SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+            SDL_FRect dst = {static_cast<float>(GAME_WIDTH + 10), 10,
+                             static_cast<float>(surf->w), static_cast<float>(surf->h)};
+            SDL_RenderTexture(renderer, tex, nullptr, &dst);
+            SDL_DestroyTexture(tex);
+            SDL_DestroySurface(surf);
+        }
+    }
+
+    // Items del inventario
+    int y_offset = 40;
+    for (const auto& item : inventory) {
+        if (chat_font) {
+            SDL_Color color = {220, 220, 220, 255};
+            SDL_Surface* surf = TTF_RenderText_Solid(chat_font, item.get_name().c_str(), 0, color);
+            if (surf) {
+                SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+                SDL_FRect dst = {static_cast<float>(GAME_WIDTH + 10), static_cast<float>(y_offset),
+                                 static_cast<float>(surf->w), static_cast<float>(surf->h)};
+                SDL_RenderTexture(renderer, tex, nullptr, &dst);
+                SDL_DestroyTexture(tex);
+                SDL_DestroySurface(surf);
+            }
+        }
+        y_offset += 25;
+    }
+
+    // Boton "Pegar" en la parte inferior del panel
+    if (show_attack_button) {
+        SDL_FRect btn = {static_cast<float>(GAME_WIDTH + 10),
+                         static_cast<float>(WINDOW_HEIGHT - 60),
+                         static_cast<float>(PANEL_WIDTH - 20), 40};
+        SDL_SetRenderDrawColor(renderer, 200, 50, 50, 255);
+        SDL_RenderFillRect(renderer, &btn);
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderRect(renderer, &btn);
+
+        if (chat_font) {
+            SDL_Color white = {255, 255, 255, 255};
+            SDL_Surface* surf = TTF_RenderText_Solid(chat_font, "PEGAR", 0, white);
+            if (surf) {
+                SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+                SDL_FRect dst = {btn.x + (btn.w - surf->w) / 2.0f,
+                                 btn.y + (btn.h - surf->h) / 2.0f,
+                                 static_cast<float>(surf->w), static_cast<float>(surf->h)};
+                SDL_RenderTexture(renderer, tex, nullptr, &dst);
+                SDL_DestroyTexture(tex);
+                SDL_DestroySurface(surf);
+            }
+        }
+    }
+}
+
 void ClientGUI::draw() {
     SDL_RenderClear(renderer);
     if (background) {
@@ -291,7 +361,7 @@ void ClientGUI::draw() {
     if (player) {
         player->draw();
     }
-    drawAttackButton();
+    drawInventoryPanel();
     mini_chat->render();
     SDL_RenderPresent(renderer);
 }
@@ -303,8 +373,9 @@ void ClientGUI::init_draw() {
     // hardocodeado para test
     loadMedia(zones::DESERT);
 
-    SDL_Surface* enemy_surf = IMG_Load("enemigo.png");
+    SDL_Surface* enemy_surf = IMG_Load("imagenes/enemigo.png");
     if (!enemy_surf) enemy_surf = IMG_Load("images/enemigo.png");
+    if (!enemy_surf) enemy_surf = IMG_Load("enemigo.png");
     if (enemy_surf) {
         enemy_texture = SDL_CreateTextureFromSurface(renderer, enemy_surf);
         SDL_DestroySurface(enemy_surf);

@@ -1,6 +1,7 @@
 #ifndef GAME_MSG_H
 #define GAME_MSG_H
-#include "../common/protocol_constants.h"
+#include "protocol_constants.h"
+#include "item_info.h"
 #include <string>
 #include <vector>
 
@@ -15,6 +16,7 @@ class GameMsg {
     std::string player_name;
     int coord_x;
     int coord_y;
+    std::vector<ItemInfo> items;
 
     public:
     GameMsg(uint8_t type, Direction direction = DIR_NORTH)
@@ -38,6 +40,8 @@ class GameMsg {
     int get_coord_x() const;
     void set_coord_y(int y);
     int get_coord_y() const;
+    void set_items(const std::vector<ItemInfo>& items);
+    const std::vector<ItemInfo>& get_items() const;
 };
 
 

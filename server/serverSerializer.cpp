@@ -1,11 +1,13 @@
 #include "serverSerializer.h"
 #include "../common/protocol_constants.h"
+#include "../common/item_info.h"
 #include <arpa/inet.h>
 #include <cstring>
 
 ServerSerializer::ServerSerializer() {
     handlers[MSG_MOVE] = [this](const GameMsg& msg) { return serialize_move(msg); };
     handlers[MSG_SEND_MAP] = [this](const GameMsg& msg) { return serialize_map(msg); };
+    handlers[MSG_INVENTORY] = [this](const GameMsg& msg) { return serialize_inventory(msg); };
 }
 
 void ServerSerializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {
@@ -15,6 +17,27 @@ void ServerSerializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uin
     std::memcpy(largo_bytes, &largo_be, sizeof(uint16_t));
     buf.insert(buf.end(), largo_bytes, largo_bytes + sizeof(uint16_t));
 }
+
+std::vector<uint8_t> ServerSerializer::serialize_inventory(const GameMsg& msg) {
+    const std::vector<ItemInfo>& items = msg.get_items();
+    uint16_t payload_len = 0;
+    for (const auto& item : items) {
+        payload_len += LEN_ITEM_ID + static_cast<uint16_t>(item.get_name().size());
+    }
+
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, MSG_INVENTORY, payload_len);
+
+    for (const auto& item : items) {
+        const std::string& name = item.get_name();
+        buf.push_back(static_cast<uint8_t>(name.size()));
+        buf.insert(buf.end(), name.begin(), name.end());
+    }
+
+    return buf;
+}
+
 
 std::vector<uint8_t> ServerSerializer::serialize_move(const GameMsg& msg) {
     std::vector<uint8_t> buf;
