@@ -151,6 +151,12 @@ ClientCmd Parser::parse_chat(const std::string& input) {
         }
         cmd.set_message_type(MSG_RET_GOLD);
         cmd.set_gold(amount);
+    } else if (command == "/cheat-morir") {
+        cmd.set_message_type(MSG_CHEAT_KILL);
+    } else if (command == "/cheat-vida") {
+        cmd.set_message_type(MSG_CHEAT_INF_HP);
+    } else if (command == "/cheat-mana") {
+        cmd.set_message_type(MSG_CHEAT_INF_MANA);
     } else {
         throw std::invalid_argument("Comando desconocido: " + command);
     }
