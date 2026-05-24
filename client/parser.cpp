@@ -44,6 +44,157 @@ ClientCmd Parser::parse(const std::string& input) {
     return cmd;
 }
 
+ClientCmd Parser::parse_no_payload(MessageType type) {
+    ClientCmd cmd;
+    cmd.set_message_type(type);
+    return cmd;
+}
+
+ClientCmd Parser::parse_item_cmd(MessageType type, std::istringstream& ss, const std::string& correct_use) {
+    std::string item;
+    if (!(ss >> item)) {
+        throw std::invalid_argument(correct_use);
+    }
+    ClientCmd cmd;
+    cmd.set_message_type(type);
+    cmd.set_item_id(item);
+    return cmd;
+}
+
+ClientCmd Parser::parse_gold_cmd(MessageType type, std::istringstream& ss, const std::string& correct_use) {
+    int32_t amount;
+    if (!(ss >> amount)) {
+        throw std::invalid_argument(correct_use);
+    }
+    ClientCmd cmd;
+    cmd.set_message_type(type);
+    cmd.set_gold(amount);
+    return cmd;
+}
+
+ClientCmd Parser::parse_name_cmd(MessageType type, std::istringstream& ss, const std::string& correct_use) {
+    std::string name;
+    if (!(ss >> name)) {
+        throw std::invalid_argument(correct_use);
+    }
+    ClientCmd cmd;
+    cmd.set_message_type(type);
+    cmd.set_target_name(name);
+    return cmd;
+}
+
+bool Parser::health_command(const std::string& command, ClientCmd& cmd) {
+    if (command == "/meditar") {
+        cmd = parse_no_payload(MSG_MEDITATE);
+        return true;
+    }
+    if (command == "/resucitar") {
+        cmd = parse_no_payload(MSG_RESURRECT);
+        return true;
+    }
+    if (command == "/curar") {
+        cmd = parse_no_payload(MSG_CURE);
+        return true;
+    }
+    return false;
+}
+
+bool Parser::cheat_command(const std::string& command, ClientCmd& cmd) {
+    if (command == "/cheat-morir") {
+        cmd = parse_no_payload(MSG_CHEAT_KILL);
+        return true;
+    }
+    if (command == "/cheat-vida") {
+        cmd = parse_no_payload(MSG_CHEAT_INF_HP);
+        return true;
+    }
+    if (command == "/cheat-mana") {
+        cmd = parse_no_payload(MSG_CHEAT_INF_MANA);
+        return true;
+    }
+    return false;
+}
+
+bool Parser::item_related_command(const std::string& command, ClientCmd& cmd, std::istringstream& ss) {
+    if (command == "/depositar") {
+        cmd = parse_item_cmd(MSG_DEPOSIT, ss, "Uso: /depositar <objeto>");
+        return true;
+    } 
+    if (command == "/retirar") {
+        cmd = parse_item_cmd(MSG_RETIRE, ss, "Uso: /retirar <objeto>");
+        return true;
+    } 
+    if (command == "/listar") {
+        cmd = parse_no_payload(MSG_LIST);
+        return true;
+    } 
+    if (command == "/comprar") {
+        cmd = parse_item_cmd(MSG_BUY, ss, "Uso: /comprar <objeto>");
+        return true;
+    } 
+    if (command == "/vender") {
+        cmd = parse_item_cmd(MSG_SELL, ss, "Uso: /vender <objeto>");
+        return true;
+    }
+    if (command == "/tomar") {
+        cmd = parse_no_payload(MSG_TAKE);
+        return true;
+    } 
+    if (command == "/tirar") {
+        cmd = parse_no_payload(MSG_THROW);
+        return true;
+    }
+    return false;
+}
+
+bool Parser::clan_related_command(const std::string& command, ClientCmd& cmd, std::istringstream& ss) {
+    if (command == "/fundar-clan") {
+        cmd = parse_name_cmd(MSG_FOUND_CLAN, ss, "Uso: /fundar-clan <nombre>");
+        return true;
+    }
+    if (command == "/unirse") {
+        cmd = parse_name_cmd(MSG_JOIN_CLAN, ss, "Uso: /unirse <nombre>");
+        return true;
+    }
+    if (command == "/revisar-clan") {
+        cmd = parse_no_payload(MSG_REV_CLAN);
+        return true;
+    } 
+    if (command == "/clan-aceptar") {
+        cmd = parse_name_cmd(MSG_CLAN_ACEP, ss, "Uso: /clan-aceptar <nombre>");
+        return true;
+    } 
+    if (command == "/clan-rechazar") {
+        cmd = parse_name_cmd(MSG_CLAN_RECH, ss, "Uso: /clan-rechazar <nombre>");
+        return true;
+    }
+    if (command == "/clan-ban") {
+        cmd = parse_name_cmd(MSG_CLAN_BAN, ss, "Uso: /clan-ban <nombre>");
+        return true;
+    }
+    if (command == "/clan-kick") {
+        cmd = parse_name_cmd(MSG_CLAN_KICK, ss, "Uso: /clan-kick <nombre>");
+        return true;
+    } 
+    if (command == "/dejar-clan") {
+        cmd = parse_no_payload(MSG_LEFT_CLAN);
+        return true;
+    }
+    return false;
+}
+
+bool Parser::gold_related_command(const std::string& command, ClientCmd& cmd, std::istringstream& ss) {
+    if (command == "/dep-oro") {
+        cmd = parse_gold_cmd(MSG_DEP_GOLD, ss, "Uso: /dep-oro <cantidad>");
+        return true;
+    }
+    if (command == "/ret-oro") {
+        cmd = parse_gold_cmd(MSG_RET_GOLD, ss, "Uso: /ret-oro <cantidad>");
+        return true;
+    }
+    return false;
+}
+
 ClientCmd Parser::parse_chat(const std::string& input) {
     std::istringstream ss(input);
     std::string command;
@@ -51,115 +202,21 @@ ClientCmd Parser::parse_chat(const std::string& input) {
 
     ClientCmd cmd;
 
-    if (command == "/meditar") {
-        cmd.set_message_type(MSG_MEDITATE);
-    } else if (command == "/fundar-clan") {
-        std::string clan_name;
-        if (!(ss >> clan_name)) {
-            throw std::invalid_argument("Uso: /fundar-clan <nombre>");
-        }
-        cmd.set_message_type(MSG_FOUND_CLAN);
-        cmd.set_target_name(clan_name);
-    } else if (command == "/resucitar") {
-        cmd.set_message_type(MSG_RESURRECT);
-    } else if (command == "/curar") {
-        cmd.set_message_type(MSG_CURE);
-    } else if (command == "/depositar") {
-        std::string item;
-        if (!(ss >> item)) {
-            throw std::invalid_argument("Uso: /depositar <objeto>");
-        }
-        cmd.set_message_type(MSG_DEPOSIT);
-        cmd.set_item_id(item);
-    } else if (command == "/retirar") {
-        std::string item;
-        if (!(ss >> item)) {
-            throw std::invalid_argument("Uso: /retirar <objeto>");
-        }
-        cmd.set_message_type(MSG_RETIRE);
-        cmd.set_item_id(item);
-    } else if (command == "/listar") {
-        cmd.set_message_type(MSG_LIST);
-    } else if (command == "/comprar") {
-        std::string item;
-        if (!(ss >> item)) {
-            throw std::invalid_argument("Uso: /comprar <objeto>");
-        }
-        cmd.set_message_type(MSG_BUY);
-        cmd.set_item_id(item);
-    } else if (command == "/vender") {
-        std::string item;
-        if (!(ss >> item)) {
-            throw std::invalid_argument("Uso: /vender <objeto>");
-        }
-        cmd.set_message_type(MSG_SELL);
-        cmd.set_item_id(item);
-    } else if (command == "/tomar") {
-        cmd.set_message_type(MSG_TAKE);
-    } else if (command == "/tirar") {
-        cmd.set_message_type(MSG_THROW);
-    } else if (command == "/unirse") {
-        std::string clan_name;
-        if (!(ss >> clan_name)) {
-            throw std::invalid_argument("Uso: /unirse <nombre>");
-        }
-        cmd.set_message_type(MSG_JOIN_CLAN);
-        cmd.set_target_name(clan_name);
-    } else if (command == "/revisar-clan") {
-        cmd.set_message_type(MSG_REV_CLAN);
-    } else if (command == "/clan-aceptar") {
-        std::string player;
-        if (!(ss >> player)) {
-            throw std::invalid_argument("Uso: /clan-aceptar <nombre>");
-        }
-        cmd.set_message_type(MSG_CLAN_ACEP);
-        cmd.set_target_name(player);
-    } else if (command == "/clan-rechazar") {
-        std::string player;
-        if (!(ss >> player)) {
-            throw std::invalid_argument("Uso: /clan-rechazar <nombre>");
-        }
-        cmd.set_message_type(MSG_CLAN_RECH);
-        cmd.set_target_name(player);
-    } else if (command == "/clan-ban") {
-        std::string player;
-        if (!(ss >> player)) {
-            throw std::invalid_argument("Uso: /clan-ban <nombre>");
-        }
-        cmd.set_message_type(MSG_CLAN_BAN);
-        cmd.set_target_name(player);
-    } else if (command == "/clan-kick") {
-        std::string player;
-        if (!(ss >> player)) {
-            throw std::invalid_argument("Uso: /clan-kick <nombre>");
-        }
-        cmd.set_message_type(MSG_CLAN_KICK);
-        cmd.set_target_name(player);
-    } else if (command == "/dejar-clan") {
-        cmd.set_message_type(MSG_LEFT_CLAN);
-    } else if (command == "/dep-oro") {
-        uint32_t amount;
-        if (!(ss >> amount)) {
-            throw std::invalid_argument("Uso: /dep-oro <cantidad>");
-        }
-        cmd.set_message_type(MSG_DEP_GOLD);
-        cmd.set_gold(amount);
-    } else if (command == "/ret-oro") {
-        uint32_t amount;
-        if (!(ss >> amount)) {
-            throw std::invalid_argument("Uso: /ret-oro <cantidad>");
-        }
-        cmd.set_message_type(MSG_RET_GOLD);
-        cmd.set_gold(amount);
-    } else if (command == "/cheat-morir") {
-        cmd.set_message_type(MSG_CHEAT_KILL);
-    } else if (command == "/cheat-vida") {
-        cmd.set_message_type(MSG_CHEAT_INF_HP);
-    } else if (command == "/cheat-mana") {
-        cmd.set_message_type(MSG_CHEAT_INF_MANA);
-    } else {
-        throw std::invalid_argument("Comando desconocido: " + command);
+    if (health_command(command, cmd)) {
+        return cmd;
     }
-
-    return cmd;
+    if (item_related_command(command, cmd, ss)) {
+        return cmd;
+    }
+    if (clan_related_command(command, cmd, ss)) {
+        return cmd;
+    }
+    if (gold_related_command(command, cmd, ss)) {
+        return cmd;
+    }
+    if (cheat_command(command, cmd)) {
+        return cmd;
+    }
+    
+    throw std::invalid_argument("Comando desconocido: " + command);
 }
