@@ -123,7 +123,7 @@ void ClientGUI::selectCoord(int tile_x, int tile_y) {
 
 void ClientGUI::handleEvents() {
     while (SDL_PollEvent(&event)) {
-
+        
         if (mini_chat->handle_event(event)) {
             continue;
         }
@@ -137,7 +137,7 @@ void ClientGUI::handleEvents() {
                     if (!(mini_chat->is_active())) {
                         mini_chat->toggle_active();
                     }
-                    //break;
+                    break;
                 }
                 switch (event.key.scancode) {
                     case SDL_SCANCODE_ESCAPE:
@@ -210,11 +210,17 @@ void ClientGUI::sendChatCmd(const std::string& msg) {
 
 void ClientGUI::update() {
     try {
+        // static bool tested = false;
+        // if (!tested) {
+        //     chat_inbox.push("Hola");
+        //     tested = true;
+        // }
         if (!player) {
             return;
         }
         GameMsg msg(0);
         while (receiving.try_pop(msg)) {
+            std::cout << "Mesaje recibido tipo: " << (int)msg.get_type() << std::endl;
             switch (msg.get_type()) {
                 case MSG_SEND_MAP:
                     world_map = msg.get_map();
@@ -235,6 +241,17 @@ void ClientGUI::update() {
                     player->setTilePosition(x, y);
                     break;
                 }
+                case MSG_PRIVATE:
+                case MSG_MEDITATE:
+                case MSG_RESURRECT:
+                case MSG_CURE:
+                case MSG_LIST:
+                case MSG_BUY:
+                case MSG_SELL:
+                case MSG_DEPOSIT:
+                case MSG_RETIRE:
+                case MSG_DEP_GOLD:
+                case MSG_RET_GOLD:
                 case MSG_FOUND_CLAN:
                 case MSG_JOIN_CLAN:
                 case MSG_REV_CLAN:
@@ -243,6 +260,10 @@ void ClientGUI::update() {
                 case MSG_CLAN_KICK:
                 case MSG_CLAN_RECH:
                 case MSG_LEFT_CLAN:
+                case MSG_CHAT:
+                case MSG_CHEAT_KILL:
+                case MSG_CHEAT_INF_HP:
+                case MSG_CHEAT_INF_MANA:
                     chat_inbox.push(msg.get_chat_content());
                     break;
                 default:

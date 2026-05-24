@@ -8,6 +8,20 @@ ServerSerializer::ServerSerializer() {
     handlers[MSG_MOVE] = [this](const GameMsg& msg) { return serialize_move(msg); };
     handlers[MSG_SEND_MAP] = [this](const GameMsg& msg) { return serialize_map(msg); };
     handlers[MSG_INVENTORY] = [this](const GameMsg& msg) { return serialize_inventory(msg); };
+    for (uint8_t type : {
+    (uint8_t)MSG_MEDITATE, (uint8_t)MSG_RESURRECT, (uint8_t)MSG_CURE, (uint8_t)MSG_LIST,
+    (uint8_t)MSG_FOUND_CLAN, (uint8_t)MSG_JOIN_CLAN, (uint8_t)MSG_LEFT_CLAN, (uint8_t)MSG_CLAN_ACEP,
+    (uint8_t)MSG_CLAN_BAN, (uint8_t)MSG_CLAN_KICK, (uint8_t)MSG_CLAN_RECH, (uint8_t)MSG_REV_CLAN,
+    (uint8_t)MSG_CHAT,
+    }) {
+        handlers[type] = [this](const GameMsg& msg) { return serialize_text(msg); };
+    };
+    for (uint8_t type : {
+        (uint8_t)MSG_CHEAT_KILL, (uint8_t)MSG_CHEAT_INF_HP, (uint8_t)MSG_CHEAT_INF_MANA
+    }) {
+        handlers[type] = [this](const GameMsg& msg) { return serialize_text(msg); };
+    };
+    handlers[MSG_PRIVATE] = [this](const GameMsg& msg) { return serialize_private(msg); };
 }
 
 void ServerSerializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {
@@ -77,3 +91,30 @@ std::vector<uint8_t> ServerSerializer::serialize_cmd(const GameMsg& msg) {
     }
     return {};
 }
+
+std::vector<uint8_t> ServerSerializer::serialize_text(const GameMsg& msg) {
+    const std::string& content = msg.get_chat_content();
+    uint16_t payload_len = LEN_NAME_SIZE_FIELD + static_cast<uint16_t>(content.size());
+
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, static_cast<uint8_t>(msg.get_type()), payload_len);
+    buf.push_back(static_cast<uint8_t>(content.size()));
+    buf.insert(buf.end(), content.begin(), content.end());
+    return buf;
+}
+
+std::vector<uint8_t> ServerSerializer::serialize_private(const GameMsg& msg) {
+    const std::string& sender = msg.get_player_name();
+    const std::string& content = msg.get_chat_content();
+    uint16_t payload_len = 1 + sender.size() + 1 + content.size();
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, MSG_PRIVATE, payload_len);
+    buf.push_back(static_cast<uint8_t>(sender.size()));
+    buf.insert(buf.end(), sender.begin(), sender.end());
+    buf.push_back(static_cast<uint8_t>(content.size()));
+    buf.insert(buf.end(), content.begin(), content.end());
+    return buf;
+}
+

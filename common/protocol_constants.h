@@ -44,7 +44,11 @@ enum MessageType : uint8_t {
     MSG_CLAN_KICK    = 0x1A,  // Echar jugador del clan           [cliente OK] [x servidor]
     MSG_LEFT_CLAN    = 0x1B,  // Dejar el clan                    [cliente OK] [servidor OK]
     MSG_SEND_MAP     = 0x1C,  // Enviar mapa al cliente      
-    MSG_INVENTORY    = 0x1D,  // Enviar inventario al cliente      
+    MSG_INVENTORY    = 0x1D,  // Enviar inventario al cliente             
+    MSG_CHAT         = 0x1E,  // Mensajes generales
+    MSG_CHEAT_KILL   = 0x1F,  // Cheat para morir automáticamente
+    MSG_CHEAT_INF_HP = 0x20,  // Cheat para vida infinita
+    MSG_CHEAT_INF_MANA = 0x21, // Cheat para maná infinito
 };
 
 enum Direction : uint8_t {

@@ -40,8 +40,20 @@ ServerDeserializer::ServerDeserializer() {
     handlers[MSG_REV_CLAN] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_no_payload(payload, cmd);
     };
-    handlers[MSG_LEFT_CLAN]= [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+    handlers[MSG_LEFT_CLAN] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_no_payload(payload, cmd);
+    };
+    handlers[MSG_CHEAT_KILL] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
+    handlers[MSG_CHEAT_INF_HP] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
+    handlers[MSG_CHEAT_INF_MANA] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
+    handlers[MSG_PRIVATE] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_private(payload, cmd);
     };
 }
 
@@ -94,6 +106,16 @@ void ServerDeserializer::deserialize_no_payload(const std::vector<uint8_t>& payl
     }
 }
 
+void ServerDeserializer::deserialize_private(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+    size_t offset = 0;
+    uint8_t target_len = payload[offset++];
+    std::string target(payload.begin() + offset, payload.begin() + offset + target_len);
+    offset += target_len;
+    uint8_t content_len = payload[offset++];
+    std::string content(payload.begin() + offset, payload.begin() + offset + content_len);
+    cmd.set_target_name(target);
+    cmd.set_chat_content(content);
+}
 
 void ServerDeserializer::read_gold(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
     uint32_t amount_be;

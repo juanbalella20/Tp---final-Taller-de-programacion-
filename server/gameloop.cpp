@@ -100,6 +100,48 @@ void GameLoop::run() {
                     //std::string sector = game_map.sector_of_position(coor_x, coor_y);
                     break;
                 }
+                case MSG_MEDITATE: {
+                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+                    // meditar al jugador : game_map.medidate_player(name) ?
+                    GameMsg msg(MSG_MEDITATE);
+                    msg.set_chat_content("Estás meditando...");
+                    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    break;
+                }
+                /* etc con los demás*/
+                case MSG_CHEAT_KILL: {
+                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+                    // game_map.kill_player(name);
+                    GameMsg msg(MSG_CHAT);
+                    msg.set_chat_content("Moriste instantáneamente.");
+                    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    break;
+                }
+                case MSG_CHEAT_INF_HP: {
+                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+                    // game_map.set_infinite_hp(name);
+                    GameMsg msg(MSG_CHAT);
+                    msg.set_chat_content("Vida infinita activada.");
+                    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    break;
+                }
+                case MSG_CHEAT_INF_MANA: {
+                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+                    // game_map.set_infinite_mana(name);
+                    GameMsg msg(MSG_CHAT);
+                    msg.set_chat_content("Mana infinito activado.");
+                    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    break;
+                }
+                case MSG_PRIVATE: {
+                    std::string sender = client_registry_monitor.get_name(cmd.get_client_id());
+                    std::string target = cmd.get_target_name();
+                    GameMsg msg(MSG_PRIVATE);
+                    msg.set_player_name(sender);
+                    msg.set_chat_content(cmd.get_chat_content());
+                    //client_registry_monitor.notify_client_by_name(target, msg);
+                    break;
+                }
                 default:
                     break;
             }
@@ -111,3 +153,15 @@ void GameLoop::run() {
     }
 }
 
+/*
+Avisar sobre reaparición de NPCs:
+
+std::vector<std::string> npcs_respawned = game_map.update_respawns()
+for (const auto& npc : npcs_respawned) {
+    GameMsg msg(MSG_CHAT)
+    msg.set_chat_content(npc + " ha reaparecido.")
+    client_registry_monitor.notify_clients(msg)
+}
+
+(y algo así para la reaparición de los players...)
+*/
