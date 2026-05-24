@@ -88,7 +88,7 @@ void ClientGUI::sendCoord(int x, int y) {
 
 void ClientGUI::handleEvents() {
     while (SDL_PollEvent(&event)) {
-
+        
         if (mini_chat->handle_event(event)) {
             continue;
         }
@@ -102,7 +102,7 @@ void ClientGUI::handleEvents() {
                     if (!(mini_chat->is_active())) {
                         mini_chat->toggle_active();
                     }
-                    //break;
+                    break;
                 }
                 switch (event.key.scancode) {
                     case SDL_SCANCODE_ESCAPE:
@@ -129,7 +129,8 @@ void ClientGUI::handleEvents() {
                 }
                 break;
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                sendCoord(event.button.x, event.button.y);
+                if (!mini_chat->is_active()) 
+                    sendCoord(event.button.x, event.button.y);
                 break;
             default:
                 break;
