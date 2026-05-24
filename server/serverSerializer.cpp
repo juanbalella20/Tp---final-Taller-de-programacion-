@@ -6,7 +6,14 @@
 ServerSerializer::ServerSerializer() {
     handlers[MSG_MOVE] = [this](const GameMsg& msg) { return serialize_move(msg); };
     handlers[MSG_SEND_MAP] = [this](const GameMsg& msg) { return serialize_map(msg); };
-    handlers[MSG_MEDITATE] = [this](const GameMsg& msg) { return serialize_text(msg); };
+    for (uint8_t type : {
+    (uint8_t)MSG_MEDITATE, (uint8_t)MSG_RESURRECT, (uint8_t)MSG_CURE, (uint8_t)MSG_LIST,
+    (uint8_t)MSG_FOUND_CLAN, (uint8_t)MSG_JOIN_CLAN, (uint8_t)MSG_LEFT_CLAN, (uint8_t)MSG_CLAN_ACEP,
+    (uint8_t)MSG_CLAN_BAN, (uint8_t)MSG_CLAN_KICK, (uint8_t)MSG_CLAN_RECH, (uint8_t)MSG_REV_CLAN,
+    (uint8_t)MSG_CHAT,
+    }) {
+        handlers[type] = [this](const GameMsg& msg) { return serialize_text(msg); };
+    };
 }
 
 void ServerSerializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {
