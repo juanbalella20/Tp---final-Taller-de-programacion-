@@ -6,7 +6,8 @@
 ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
     : window(nullptr), renderer(nullptr), event{}, chat_font(nullptr),
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
-      enemy_texture(nullptr), selected_npc_tile_x(-1), selected_npc_tile_y(-1),
+      enemy_texture(nullptr), inventory_bg_texture(nullptr),
+      selected_npc_tile_x(-1), selected_npc_tile_y(-1),
       show_attack_button(false) {}
     
 
@@ -70,6 +71,10 @@ void ClientGUI::freeSDL() {
     if (enemy_texture) {
         SDL_DestroyTexture(enemy_texture);
         enemy_texture = nullptr;
+    }
+    if (inventory_bg_texture) {
+        SDL_DestroyTexture(inventory_bg_texture);
+        inventory_bg_texture = nullptr;
     }
     
     if (renderer) {
@@ -310,13 +315,16 @@ void ClientGUI::drawAttackButton() {
 }
 
 void ClientGUI::drawInventoryPanel() {
-    // Fondo del panel derecho
     SDL_FRect panel = {static_cast<float>(GAME_WIDTH), 0,
                        static_cast<float>(PANEL_WIDTH), static_cast<float>(CANVAS_HEIGHT)};
-    SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
-    SDL_RenderFillRect(renderer, &panel);
-    SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
-    SDL_RenderRect(renderer, &panel);
+    if (inventory_bg_texture) {
+        SDL_RenderTexture(renderer, inventory_bg_texture, nullptr, &panel);
+    } else {
+        SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+        SDL_RenderFillRect(renderer, &panel);
+        SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
+        SDL_RenderRect(renderer, &panel);
+    }
 
     // Titulo "Inventario"
     if (chat_font) {
@@ -403,6 +411,13 @@ void ClientGUI::init_draw() {
     if (enemy_surf) {
         enemy_texture = SDL_CreateTextureFromSurface(renderer, enemy_surf);
         SDL_DestroySurface(enemy_surf);
+    }
+
+    SDL_Surface* inv_bg_surf = IMG_Load("imagenes/inventory-bg..png");
+    if (!inv_bg_surf) inv_bg_surf = IMG_Load("images/inventory-bg..png");
+    if (inv_bg_surf) {
+        inventory_bg_texture = SDL_CreateTextureFromSurface(renderer, inv_bg_surf);
+        SDL_DestroySurface(inv_bg_surf);
     }
 
     // tile_size viene del TOML

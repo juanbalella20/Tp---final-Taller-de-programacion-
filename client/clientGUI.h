@@ -54,6 +54,7 @@ private:
     std::vector<std::vector<elements>> world_map;
     std::vector<ItemInfo> inventory;
     SDL_Texture* enemy_texture;
+    SDL_Texture* inventory_bg_texture;
 
     // tile seleccionado con NPC; {-1,-1} = ninguno
     int selected_npc_tile_x;
