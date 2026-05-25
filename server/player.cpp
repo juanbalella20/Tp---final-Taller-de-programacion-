@@ -142,6 +142,10 @@ void Player::update_position(const int x, const int y) {
 bool Player::is_ghost() const {
     return status == PlayerStatus::DEAD;
 }
+
+bool Player::is_dead() const {
+    return status == PlayerStatus::DEAD;
+}
  
 void Player::set_ghost() {
     status = PlayerStatus::DEAD;
@@ -182,11 +186,15 @@ int Player::damage_attack() {
     return player_race.race_strength() + player_class.class_strength();
 }
  
-void Player::recv_attack(int damage) {
-    // TODO: cuando Item este definido, calcular defensa de armadura/escudo/casco
-    // Por ahora aplica el daño directo
+void Player::receive_damage(int damage) {
     lives -= damage;
     if (lives < 0) lives = 0;
+}
+
+void Player::attack(Entity& target, int target_x, int target_y) {
+    if (status == PlayerStatus::DEAD) return;
+    if (!equipped_item) return;
+    equipped_item->use_item(target, coord_x, coord_y, target_x, target_y);
 }
  
 void Player::add_experience(int exp) {
@@ -201,3 +209,5 @@ void Player::check_level_up() {
         mana  = max_mana();
     }
 }
+
+

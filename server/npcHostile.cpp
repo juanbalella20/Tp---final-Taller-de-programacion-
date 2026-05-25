@@ -6,6 +6,14 @@ NPChostile::NPChostile() {
     this->state = State::ALIVE;
 }
 
+std::string NPChostile::get_name() const {
+    return this->name;
+}
+
+bool NPChostile::is_dead() const {
+    return this->state == State::DEAD;
+}
+
 void NPChostile::set_state(State state) {
     this->state = state;
 }
@@ -145,7 +153,7 @@ void NPChostile::death() {
     set_state(State::DEAD);
 }
 
-void NPChostile::receive_dmg(int dmg) {
+void NPChostile::receive_damage(int dmg) {
     if (dmg >= get_hp()) {
         death();
         return;
@@ -161,7 +169,7 @@ void NPChostile::interact(Player player, Command cmd) {
             attack(player);
             break;
         case RECEIVE_DMG :
-            receive_dmg(player.damage_attack());
+            recv_attack(player.damage_attack());
             break;
         default:
             break;

@@ -1,4 +1,5 @@
 #include "gameloop.h"
+#include "game_exceptions.h"
 
 #include <iostream>
 #include <cmath>
@@ -77,16 +78,30 @@ void GameLoop::run() {
                 case MSG_ATTACK: {
                     int x = cmd.get_coord_x();
                     int y = cmd.get_coord_y();
-                    auto result = game_map.attack_npc(x, y);
-                    std::cout << "[DEBUG: MSG_ATTACK] x=" << x << " y=" << y
-                              << " hit=" << result.hit
-                              << " died=" << result.npc_died << std::endl;
-                    if (result.hit) {
-                        // Manda el mapa actualizado (sin el NPC) a todos los clientes
-                        GameMsg map_msg(MSG_SEND_MAP);
-                        map_msg.set_map(game_map.get_map());
-                        client_registry_monitor.notify_clients(map_msg);
-                        //si el npc murio hay que avisarle a todos los clientes que no esta ya,  asi lo borran del mapa
+                    std::string attacker_name = client_registry_monitor.get_name(cmd.get_client_id());
+                    try {
+                        auto result = game_map.attack(attacker_name, x, y);
+                        if (result.entity_died) {
+                            GameMsg map_msg(MSG_SEND_MAP);
+                            map_msg.set_map(game_map.get_map());
+                            client_registry_monitor.notify_clients(map_msg);
+                        }
+                    } catch (const NoEntityException& e) {
+                        GameMsg msg(MSG_CHAT);
+                        msg.set_chat_content(e.what());
+                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    } catch (const AttackNotAllowedException& e) {
+                        GameMsg msg(MSG_CHAT);
+                        msg.set_chat_content(e.what());
+                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    } catch (const NoWeaponEquippedException& e) {
+                        GameMsg msg(MSG_CHAT);
+                        msg.set_chat_content(e.what());
+                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    } catch (const OutOfRangeException& e) {
+                        GameMsg msg(MSG_CHAT);
+                        msg.set_chat_content(e.what());
+                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
                     }
                     break;
                 }

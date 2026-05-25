@@ -1,6 +1,8 @@
 #ifndef PLAYER_H_
 #define PLAYER_H_
 
+#include "entity.h"
+#include "entity.h"
 #include "player_race.h"
 #include "player_class.h"
 #include "inventory.h"
@@ -10,7 +12,7 @@
 
 enum class PlayerStatus { ALIVE, DEAD };
 
-class Player {
+class Player : public Entity {
 
 private:
     std::string name;
@@ -49,6 +51,7 @@ public:
 
     void use_object(Item item);
 
+    void attack(Entity& target, int target_x, int target_y);
 
     void revive();
 
@@ -64,7 +67,7 @@ public:
 
     int get_gold();
 
-    std::string get_name() const;
+    std::string get_name() const override;
 
     int get_coord_x();
 
@@ -74,6 +77,7 @@ public:
 
     const Inventory& get_inventory() const;
     bool is_ghost() const;
+    bool is_dead() const override;
     
     void set_ghost();
 
@@ -93,7 +97,7 @@ public:
 
     int damage_attack();
 
-    void recv_attack(int damage);
+    void receive_damage(int damage) override;
 
     void add_experience(int exp);
 

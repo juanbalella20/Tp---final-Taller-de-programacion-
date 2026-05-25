@@ -1,5 +1,7 @@
 #include "game_map.h"
+#include "game_exceptions.h"
 
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -105,17 +107,46 @@ void GameMap::spawn_npc(int x, int y) {
     }
 }
 
-GameMap::AttackResult GameMap::attack_npc(int x, int y) {
-    if (y < 0 || y >= height || x < 0 || x >= width) {
-        return {false, false};
+bool GameMap::look_for_entity(int x, int y) {
+    if (x < 0 || x >= width || y < 0 || y >= height) return false;
+    return map[y][x] == elements::npcs || map[y][x] == elements::players;
+}
+
+Entity* GameMap::find_entity_at(int x, int y) {
+    if (x < 0 || x >= width || y < 0 || y >= height) return nullptr;
+
+    if (map[y][x] == elements::players) {
+        const std::pair<int, int> target_pos{x, y};
+        auto player_it = std::ranges::find(players, target_pos, [](Player& player) {
+            return std::pair<int, int>{player.get_coord_x(), player.get_coord_y()};
+        });
+        if (player_it != players.end()) return &(*player_it);
     }
-    if (map[y][x] != elements::npcs) {
-        return {false, false};
+
+    if (map[y][x] == elements::npcs) {
+        return nullptr;
     }
-    // Hardcodeado: muere de un golpe
-    map[y][x] = elements::empty;
-    std::cout << "[DEBUG: attack_npc] NPC at (" << x << "," << y << ") killed" << std::endl;
-    return {true, true};
+
+    return nullptr;
+}
+
+GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, int y) {
+    if (!look_for_entity(x, y)) throw NoEntityException();
+
+    auto attacker_it = std::ranges::find(players, attacker_name, &Player::get_name);
+    if (attacker_it == players.end()) throw AttackerNotFoundException();
+    Player& attacker = *attacker_it;
+
+    Entity* target = find_entity_at(x, y);
+    if (target == nullptr) throw NoEntityException();
+
+    attacker.attack(*target, x, y);
+
+    if (target->is_dead()) {
+        map[y][x] = elements::empty;
+        return {true, true, target->get_name()};
+    }
+    return {true, false, target->get_name()};
 }
 
 std::string GameMap::sector_of_position(int x, int y) {

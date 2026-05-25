@@ -3,11 +3,13 @@
 
 #include "../common/clientCmd.h"
 #include "player.h"
+#include "npcHostile.h"
 #include "../common/game_constants.h"
 
 #include <vector>
 #include <map>
 #include <string>
+#include <utility>
 
 
 
@@ -19,6 +21,9 @@ private:
     std::vector<std::vector<elements>> map;
     std::vector<Player> players;
     std::map<std::string, position_coord> spawns;
+
+    bool look_for_entity(int x, int y);
+    Entity* find_entity_at(int x, int y);
 
     sectorPerimiter forest_perimiter;
     sectorPerimiter town_perimiter;
@@ -46,7 +51,8 @@ public:
 
     struct AttackResult {
         bool hit;
-        bool npc_died;
+        bool entity_died;
+        std::string entity_name;
     };
 
     // Calcula la nueva posicion del player a partir de su posicion actual
@@ -55,7 +61,7 @@ public:
     MoveResult try_move(Direction dir, const std::string& player_name);
 
     // Ataca la celda (x,y). Si hay un NPC lo mata (hardcodeado: muere de un golpe).
-    AttackResult attack_npc(int x, int y);
+    AttackResult attack(const std::string& atacker_name, int x, int y);
 
     void spawn_npc(int x, int y);
 

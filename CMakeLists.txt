@@ -113,6 +113,7 @@ add_executable(server
     server/player_race.cpp
     server/inventory.cpp
     server/item.cpp
+    server/arma.cpp
     # not implemented yet
     # server/npcBanker.cpp
     # server/npcHostile.cpp

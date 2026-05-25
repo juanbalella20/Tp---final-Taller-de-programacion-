@@ -13,10 +13,11 @@ struct Command {
 */
 
 class NPC {
-    private:
+    protected:
         int npc_id;
         std::string name;
         ItemDataBase itemdatabase;
+    public:
     // an npc_id is generated and a name
     NPC();
     public:
