@@ -15,7 +15,8 @@ public:
     Item(const std::string& id, const std::string& name, int price);
     virtual ~Item() = default;
 
-    std::string getId() const;
+    std::string get_id() const;
+    
 
     std::string getName() const;
     

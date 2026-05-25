@@ -55,6 +55,8 @@ private:
     std::vector<ItemInfo> inventory;
     SDL_Texture* enemy_texture;
     SDL_Texture* inventory_bg_texture;
+    SDL_Texture* frame_texture;
+    SDL_Texture* sword_texture;
 
     // tile seleccionado con NPC; {-1,-1} = ninguno
     int selected_npc_tile_x;
@@ -95,6 +97,7 @@ private:
 
     void sendMoveCmd(Direction dir);
     void sendAttackCmd(int tile_x, int tile_y);
+    void sendEquipCmd(const std::string& item_id);
     void sendChatCmd(const std::string& msg);
 
     // recibe mensaje del server y hace el dibujo inicial

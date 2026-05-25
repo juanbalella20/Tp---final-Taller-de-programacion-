@@ -3,7 +3,7 @@
 Item::Item(const std::string& id, const std::string& name, int price)
     : id(id), name(name), price(price) {}
 
-std::string Item::getId() const {
+std::string Item::get_id() const {
     return id;
 }
 

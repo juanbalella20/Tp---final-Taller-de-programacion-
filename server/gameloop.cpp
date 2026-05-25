@@ -54,7 +54,7 @@ void GameLoop::run() {
                     const Player& p = game_map.get_player(cmd.get_player_name());
                     std::vector<ItemInfo> item_infos;
                     for (Item* item : p.get_inventory().get_items()) {
-                        item_infos.emplace_back(item->getId(), item->getName(), item->getPrice());
+                        item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
                     }
                     GameMsg inv_msg(MSG_INVENTORY);
                     inv_msg.set_items(item_infos);
@@ -104,6 +104,12 @@ void GameLoop::run() {
                         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
                     }
                     break;
+                }
+                case MSG_EQUIP:{
+                    std::string name =
+                        client_registry_monitor.get_name(cmd.get_client_id());
+                        std::string item_id = cmd.get_item_id();
+                        game_map.player_equip_item(name, item_id);
                 }
                 case MSG_SELECT: {
                     std::string name =

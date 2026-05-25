@@ -41,11 +41,11 @@ private:
 public:
     Player(const std::string name, PlayerRace player_race, PlayerClass player_class);
 
-    void add_item(Item item);
+    void add_item(std::unique_ptr<Item> item);
 
     void drop_item(Item item);
 
-    void equip_item(Item item);
+    void equip_item(std::string item_id);
 
     void unequip_item(Item item);
 

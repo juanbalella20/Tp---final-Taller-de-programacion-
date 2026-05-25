@@ -1,4 +1,5 @@
 #include "inventory.h"
+#include "game_exceptions.h"
 
 bool Inventory::add_item(std::unique_ptr<Item> item) {
     if (is_full()) return false;
@@ -21,12 +22,17 @@ std::unique_ptr<Item> Inventory::drop_item(Item* item) {
     return nullptr;
 }
 
-void Inventory::equip_item(Item* item) {
+void Inventory::equip_item(std::string item_id) {
     // si había otro equipado lo desequipa
     if (equipped_item) {
         equipped_item = nullptr;
     }
-    equipped_item = item;
+    for (const auto& item : items) {
+        if (item->get_id() == item_id) {
+            equipped_item = item.get();
+            break;
+        }
+    }
 }
 
 void Inventory::unequip_item() {
@@ -35,6 +41,12 @@ void Inventory::unequip_item() {
 
 bool Inventory::is_full() const {
     return (int)items.size() >= MAX_SLOTS;
+}
+
+void Inventory::use_equipped(Entity& target, int attacker_x, int attacker_y, int target_x, int target_y) {
+    if (!equipped_item)
+        throw NoWeaponEquippedException();
+    equipped_item->use_item(target, attacker_x, attacker_y, target_x, target_y);
 }
 
 std::vector<Item*> Inventory::get_items() const {

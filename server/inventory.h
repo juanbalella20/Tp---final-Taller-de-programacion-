@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "item.h"
+#include "entity.h"
 
 class Inventory {
 
@@ -23,11 +24,12 @@ public:
 
     std::unique_ptr<Item> drop_item(Item* item);
 
-    void equip_item(Item* item);
+    void equip_item(std::string item_id);
 
     void unequip_item();
 
     bool is_full() const;
+    void use_equipped(Entity& target, int attacker_x, int attacker_y, int target_x, int target_y);
 };
 
 

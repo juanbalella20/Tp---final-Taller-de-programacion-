@@ -152,8 +152,9 @@ void ClientDeserializer::deserialize_inventory(const std::vector<uint8_t>& paylo
     std::vector<ItemInfo> items;
 
     while (offset < payload.size()) {
+        std::string id   = read_string(payload, offset);
         std::string name = read_string(payload, offset);
-        items.emplace_back("", name, 0);
+        items.emplace_back(id, name, 0);
     }
 
     msg.set_items(items);

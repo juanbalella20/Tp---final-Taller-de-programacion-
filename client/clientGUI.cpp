@@ -7,6 +7,7 @@ ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
     : window(nullptr), renderer(nullptr), event{}, chat_font(nullptr),
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
       enemy_texture(nullptr), inventory_bg_texture(nullptr),
+      frame_texture(nullptr), sword_texture(nullptr),
       selected_npc_tile_x(-1), selected_npc_tile_y(-1),
       show_attack_button(false) {}
     
@@ -76,6 +77,14 @@ void ClientGUI::freeSDL() {
         SDL_DestroyTexture(inventory_bg_texture);
         inventory_bg_texture = nullptr;
     }
+    if (frame_texture) {
+        SDL_DestroyTexture(frame_texture);
+        frame_texture = nullptr;
+    }
+    if (sword_texture) {
+        SDL_DestroyTexture(sword_texture);
+        sword_texture = nullptr;
+    }
     
     if (renderer) {
         SDL_DestroyRenderer(renderer);
@@ -98,6 +107,13 @@ void ClientGUI::sendAttackCmd(int tile_x, int tile_y) {
     cmd.set_message_type(MSG_ATTACK);
     cmd.set_coord_x(tile_x);
     cmd.set_coord_y(tile_y);
+    outgoing.push(cmd);
+}
+
+void ClientGUI::sendEquipCmd(const std::string& item_id) {
+    ClientCmd cmd;
+    cmd.set_message_type(MSG_EQUIP);
+    cmd.set_item_id(item_id);
     outgoing.push(cmd);
 }
 
@@ -175,16 +191,37 @@ void ClientGUI::handleEvents() {
                 SDL_RenderCoordinatesFromWindow(renderer, event.button.x, event.button.y, &lx, &ly);
                 int mx = static_cast<int>(lx);
                 int my = static_cast<int>(ly);
-                // Click en el botón "Pegar" (panel derecho, parte inferior)
-                SDL_FRect btn = {static_cast<float>(GAME_WIDTH + 10),
-                                 static_cast<float>(CANVAS_HEIGHT - 60),
-                                 static_cast<float>(PANEL_WIDTH - 20), 40};
-                if (show_attack_button &&
-                    mx >= btn.x && mx <= btn.x + btn.w &&
-                    my >= btn.y && my <= btn.y + btn.h) {
-                    sendAttackCmd(selected_npc_tile_x, selected_npc_tile_y);
-                    show_attack_button = false;
+
+                if (mx >= GAME_WIDTH) {
+                    // Click dentro del panel — nunca toca el mapa
+                    SDL_FRect btn = {static_cast<float>(GAME_WIDTH + 10),
+                                     static_cast<float>(CANVAS_HEIGHT - 60),
+                                     static_cast<float>(PANEL_WIDTH - 20), 40};
+                    if (show_attack_button &&
+                        mx >= btn.x && mx <= btn.x + btn.w &&
+                        my >= btn.y && my <= btn.y + btn.h) {
+                        sendAttackCmd(selected_npc_tile_x, selected_npc_tile_y);
+                        show_attack_button = false;
+                        break;
+                    }
+                    const int SLOT_SIZE = 48;
+                    const int SLOT_MARGIN = 8;
+                    int slot_x = GAME_WIDTH + SLOT_MARGIN;
+                    int slot_y = 40;
+                    for (const auto& item : inventory) {
+                        if (mx >= slot_x && mx <= slot_x + SLOT_SIZE &&
+                            my >= slot_y && my <= slot_y + SLOT_SIZE) {
+                            sendEquipCmd(item.get_id());
+                            break;
+                        }
+                        slot_x += SLOT_SIZE + SLOT_MARGIN;
+                        if (slot_x + SLOT_SIZE > GAME_WIDTH + PANEL_WIDTH - SLOT_MARGIN) {
+                            slot_x = GAME_WIDTH + SLOT_MARGIN;
+                            slot_y += SLOT_SIZE + SLOT_MARGIN;
+                        }
+                    }
                 } else {
+                    // Click en el area del juego
                     auto coords = translate_tile_to_coord(mx, my);
                     selectCoord(coords[0], coords[1]);
                 }
@@ -236,6 +273,9 @@ void ClientGUI::update() {
                     break;
                 case MSG_INVENTORY:
                     inventory = msg.get_items();
+                    std::cout << "[DEBUG] MSG_INVENTORY recibido: " << inventory.size() << " items" << std::endl;
+                    for (const auto& it : inventory)
+                        std::cout << "  item id='" << it.get_id() << "' name='" << it.get_name() << "'" << std::endl;
                     break;
                 case MSG_MOVE: {
                     int x = player->getTileX();
@@ -340,22 +380,27 @@ void ClientGUI::drawInventoryPanel() {
         }
     }
 
-    // Items del inventario
-    int y_offset = 40;
+    // Items del inventario — cada uno en un slot (frame + icono)
+    const int SLOT_SIZE = 48;
+    const int SLOT_MARGIN = 8;
+    int slot_x = GAME_WIDTH + SLOT_MARGIN;
+    int slot_y = 40;
+
     for (const auto& item : inventory) {
-        if (chat_font) {
-            SDL_Color color = {220, 220, 220, 255};
-            SDL_Surface* surf = TTF_RenderText_Solid(chat_font, item.get_name().c_str(), 0, color);
-            if (surf) {
-                SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
-                SDL_FRect dst = {static_cast<float>(GAME_WIDTH + 10), static_cast<float>(y_offset),
-                                 static_cast<float>(surf->w), static_cast<float>(surf->h)};
-                SDL_RenderTexture(renderer, tex, nullptr, &dst);
-                SDL_DestroyTexture(tex);
-                SDL_DestroySurface(surf);
-            }
+        SDL_Texture* icon = nullptr;
+        if (item.get_id() == "espada") icon = sword_texture;
+
+        if (icon) {
+            SDL_FRect icon_dst = {static_cast<float>(slot_x), static_cast<float>(slot_y),
+                                  static_cast<float>(SLOT_SIZE), static_cast<float>(SLOT_SIZE)};
+            SDL_RenderTexture(renderer, icon, nullptr, &icon_dst);
         }
-        y_offset += 25;
+
+        slot_x += SLOT_SIZE + SLOT_MARGIN;
+        if (slot_x + SLOT_SIZE > GAME_WIDTH + PANEL_WIDTH - SLOT_MARGIN) {
+            slot_x = GAME_WIDTH + SLOT_MARGIN;
+            slot_y += SLOT_SIZE + SLOT_MARGIN;
+        }
     }
 
     // Boton "Pegar" en la parte inferior del panel
@@ -386,6 +431,11 @@ void ClientGUI::drawInventoryPanel() {
 
 void ClientGUI::draw() {
     SDL_RenderClear(renderer);
+
+    // Limita el rendering del mapa y entidades al area del juego (excluye panel derecho)
+    SDL_Rect game_clip = {0, 0, GAME_WIDTH, CANVAS_HEIGHT};
+    SDL_SetRenderClipRect(renderer, &game_clip);
+
     if (tilemap) {
         tilemap->render();
     }
@@ -393,8 +443,12 @@ void ClientGUI::draw() {
     if (player) {
         player->draw();
     }
+
+    // Levanta el clip para dibujar el panel y el chat encima
+    SDL_SetRenderClipRect(renderer, nullptr);
+
     drawInventoryPanel();
-    mini_chat->render();
+    mini_chat->render(GAME_WIDTH, CANVAS_HEIGHT);
     SDL_RenderPresent(renderer);
 }
 
@@ -418,6 +472,23 @@ void ClientGUI::init_draw() {
     if (inv_bg_surf) {
         inventory_bg_texture = SDL_CreateTextureFromSurface(renderer, inv_bg_surf);
         SDL_DestroySurface(inv_bg_surf);
+    }
+
+    SDL_Surface* frame_surf = IMG_Load("imagenes/frame..png");
+    if (frame_surf) {
+        frame_texture = SDL_CreateTextureFromSurface(renderer, frame_surf);
+        SDL_DestroySurface(frame_surf);
+    }
+
+    SDL_Surface* sword_surf = IMG_Load("imagenes/es_boton-espada-off.bmp");
+    if (!sword_surf) sword_surf = IMG_Load("../imagenes/es_boton-espada-off.bmp");
+    if (sword_surf) {
+        SDL_SetSurfaceColorKey(sword_surf, true, SDL_MapRGB(SDL_GetPixelFormatDetails(sword_surf->format), nullptr, 0, 0, 0));
+        sword_texture = SDL_CreateTextureFromSurface(renderer, sword_surf);
+        SDL_DestroySurface(sword_surf);
+        std::cout << "[DEBUG] sword_texture loaded OK" << std::endl;
+    } else {
+        std::cout << "[DEBUG] sword_texture FAILED: " << SDL_GetError() << std::endl;
     }
 
     // tile_size viene del TOML

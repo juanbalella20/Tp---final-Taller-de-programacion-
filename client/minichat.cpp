@@ -133,10 +133,10 @@ std::string MiniChat::pop_outbound_message() {
     return msg;
 }
 
-void MiniChat::render() {
+void MiniChat::render(int game_width, int game_height) {
     float panel_x = 10.0f;
     float panel_y = 10.0f;
-    float panel_w = 580.0f;
+    float panel_w = static_cast<float>(game_width) - 20.0f;
     float line_h  = 20.0f;
     float spacing = 3.0f;
     float input_h = active ? (line_h + 6.0f) : 0.0f;

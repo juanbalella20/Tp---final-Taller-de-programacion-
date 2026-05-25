@@ -79,7 +79,7 @@ public:
     /*
     Dibuja y pega las texturas del historial en la pantalla
     */
-    void render();
+    void render(int game_width, int game_height);
 
     ~MiniChat();
 };

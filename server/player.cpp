@@ -38,13 +38,13 @@ void Player::level_up() {
     }
 }
 
+void Player::add_item(std::unique_ptr<Item> item) {
+    player_inventory.add_item(std::move(item));
+}
+
 /* TODO: implement ITEM */
 
 /*
-void Player::add_item(Item item) {
-    player_inventory.add_item(item);
-}
-
 void Player::drop_item(Item item) {
     player_inventory.drop_item(item);
 }
@@ -195,13 +195,15 @@ void Player::receive_damage(int damage) {
 void Player::attack(Entity& target, int target_x, int target_y) {
     if (status == PlayerStatus::DEAD)
         throw AttackNotAllowedException("Estás muerto, no podés atacar");
-    if (!equipped_item)
-        throw NoWeaponEquippedException();
-    equipped_item->use_item(target, coord_x, coord_y, target_x, target_y);
+    player_inventory.use_equipped(target, coord_x, coord_y, target_x, target_y);
 }
  
 void Player::add_experience(int exp) {
     experience += exp;
+}
+
+void Player::equip_item(std::string item_id) {
+    player_inventory.equip_item(item_id);
 }
  
 void Player::check_level_up() {

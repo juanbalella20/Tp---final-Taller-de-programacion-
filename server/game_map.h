@@ -23,6 +23,7 @@ private:
     std::vector<NPChostile> npcs;
     std::map<std::string, position_coord> spawns;
 
+    Player* find_player_by_name(const std::string& name);
     bool look_for_entity(int x, int y);
     Entity* find_entity_at(int x, int y);
 
@@ -71,11 +72,12 @@ public:
     void read_city();
     void read_forest();
     void read_town();
+    void player_equip_item(const std::string& player_name, const std::string& item_id);
     // Lee archivo de persistencia
     void set_positions();
     void load_players();
     void spawn_player(const std::string& name);
-    const Player& get_player(const std::string& name) const;
+    const Player& get_player(const std::string& name);
     bool player_exists(const std::string& name);  
     position_coord get_spawn_position();           
 

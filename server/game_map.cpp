@@ -1,5 +1,6 @@
 #include "game_map.h"
 #include "game_exceptions.h"
+#include "arma.h"
 
 #include <algorithm>
 #include <iostream>
@@ -17,7 +18,21 @@ std::vector<std::vector<elements>> GameMap::get_map() {
 void GameMap::add_player(Player player) {
     players.push_back(std::move(player));
 }
+ Player* GameMap::find_player_by_name(const std::string& name)  {
+    auto it = std::find_if(players.begin(), players.end(),
+                           [&name](const Player& p) { return p.get_name() == name; });
+    if (it == players.end()) return nullptr;
+    return &(*it);
+}
 
+void GameMap::player_equip_item(const std::string& player_name, const std::string& item_id) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) {
+        throw std::runtime_error("Player not found: " + player_name);
+    }
+    player->equip_item(item_id);
+    // TODO: equipar item por id cuando Player::equip_item esté implementado.
+}
 // TODO: refactorizar funcion
 static int dir_to_dx(Direction dir) {
     switch (dir) {
@@ -37,27 +52,27 @@ static int dir_to_dy(Direction dir) {
 }
 
 GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_name) {
-    for (auto& player : players) {
-        if (player.get_name() != player_name) continue;
-
-        int new_x = player.get_coord_x() + dir_to_dx(dir);
-        int new_y = player.get_coord_y() + dir_to_dy(dir);
-
-        std::cout << "[DEBUG: try_move " << player_name
-                  << "] (" << new_x << "," << new_y << ")" << std::endl;
-
-        // x es columna (width), y es fila (height). map se indexa [y][x].
-        if (new_x < 0 || new_y < 0 || new_x >= width || new_y >= height) {
-            return {false, player_name, 0, 0};
-        }
-        if (map[new_y][new_x] != elements::empty) {
-            return {false, player_name, 0, 0};
-        }
-
-        player.update_position(new_x, new_y);
-        return {true, player_name, new_x, new_y};
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) {
+        return {false, player_name, 0, 0};
     }
-    return {false, player_name, 0, 0};
+
+    int new_x = player->get_coord_x() + dir_to_dx(dir);
+    int new_y = player->get_coord_y() + dir_to_dy(dir);
+
+    std::cout << "[DEBUG: try_move " << player_name
+              << "] (" << new_x << "," << new_y << ")" << std::endl;
+
+    // x es columna (width), y es fila (height). map se indexa [y][x].
+    if (new_x < 0 || new_y < 0 || new_x >= width || new_y >= height) {
+        return {false, player_name, 0, 0};
+    }
+    if (map[new_y][new_x] != elements::empty) {
+        return {false, player_name, 0, 0};
+    }
+
+    player->update_position(new_x, new_y);
+    return {true, player_name, new_x, new_y};
 }
 
 
@@ -71,6 +86,7 @@ void GameMap::spawn_player(const std::string& name) {
     int start_y = (it != spawns.end()) ? it->second.y : 1;
     Player p(name, PlayerRace(), PlayerClass());
     p.update_position(start_x, start_y);
+    p.add_item(std::make_unique<Arma>("espada", "Espada", 100, 2, 10));
     players.push_back(std::move(p));
     std::cout << "[DEBUG: spawn_player] " << name << " at ("
               << start_x << "," << start_y << ")" << std::endl;
@@ -141,13 +157,7 @@ Entity* GameMap::find_entity_at(int x, int y) {
 GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, int y) {
     if (!look_for_entity(x, y)) throw NoEntityException();
 
-    Player* attacker = nullptr;
-    for (auto& player : players) {
-        if (player.get_name() == attacker_name) {
-            attacker = &player;
-            break;
-        }
-    }
+    Player* attacker = find_player_by_name(attacker_name);
     if (attacker == nullptr) throw AttackerNotFoundException();
 
     Entity* target = find_entity_at(x, y);
@@ -168,13 +178,14 @@ std::string GameMap::sector_of_position(int x, int y) {
     return "desert";
 }
 
-const Player& GameMap::get_player(const std::string& name) const {
-    for (const auto& player : players) {
-        if (player.get_name() == name) {
-            return player;
-        }
-    }
+const Player& GameMap::get_player(const std::string& name) {
+    Player* player = find_player_by_name(name);
+    if (player != nullptr) return *player;
     throw std::runtime_error("Player not found: " + name);
+}
+
+bool GameMap::player_exists(const std::string& name) {
+    return find_player_by_name(name) != nullptr;
 }
 // TODO
 void GameMap::read_city() {}
