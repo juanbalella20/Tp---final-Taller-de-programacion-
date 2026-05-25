@@ -22,7 +22,7 @@ enum class elements {
 };
 
 #define HEIGHT 16
-#define WIDTH 29
+#define WIDTH 30
 
 
 #endif
