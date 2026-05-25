@@ -163,6 +163,23 @@ void GameLoop::run() {
                     //client_registry_monitor.notify_client_by_name(target, msg);
                     break;
                 }
+                case MSG_BUY:{
+                    //recibis coordedas de donde tocaste 
+                    //recibis el item-> cmd
+                    // el player que toco-> cmd
+                    //game_map.buy_item(player_name, item_id,coordenadas); -> lista de npc
+                        //player.buy_item(item_id, npc);
+                            //aca tenes info de ORO, NPC, ITEM_ID, 
+                            //caso de npc con lista
+                            //RESTAR EL ORO
+
+                            //inventario.add(*item);
+                    break;
+
+
+
+                    
+                }
                 //case MSG_RESURRECT: handle_resurrect(cmd); break;
                 default:
                     break;
