@@ -9,7 +9,8 @@ ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
       enemy_texture(nullptr), inventory_bg_texture(nullptr),
       frame_texture(nullptr), sword_texture(nullptr),
       selected_npc_tile_x(-1), selected_npc_tile_y(-1),
-      show_attack_button(false) {}
+      show_attack_button(false),
+      mapViewport{0.0f, 0.0f, (float)GAME_WIDTH, (float)CANVAS_HEIGHT} {}
     
 
 ClientGUI::~ClientGUI() {
@@ -99,7 +100,9 @@ void ClientGUI::freeSDL() {
 
 std::vector<int> ClientGUI::translate_tile_to_coord(int pixel_x, int pixel_y) const {
     int tileSize = tilemap ? tilemap->getTileSize() : 64;
-    return {pixel_x / tileSize, pixel_y / tileSize};
+    int world_x = static_cast<int>(pixel_x + mapViewport.x);
+    int world_y = static_cast<int>(pixel_y + mapViewport.y);
+    return {world_x / tileSize, world_y / tileSize};
 }
 
 void ClientGUI::sendAttackCmd(int tile_x, int tile_y) {
@@ -334,8 +337,8 @@ void ClientGUI::drawEnemies() {
         for (int col = 0; col < static_cast<int>(world_map[row].size()); ++col) {
             if (world_map[row][col] == elements::npcs) {
                 SDL_FRect dst = {
-                    static_cast<float>(col * tileSize),
-                    static_cast<float>(row * tileSize),
+                    static_cast<float>(col * tileSize) - mapViewport.x,
+                    static_cast<float>(row * tileSize) - mapViewport.y,
                     static_cast<float>(tileSize),
                     static_cast<float>(tileSize)
                 };
@@ -428,8 +431,21 @@ void ClientGUI::drawInventoryPanel() {
         }
     }
 }
-
+#define TILESIZE 64
 void ClientGUI::draw() {
+    // centrar camara en el jugador
+    mapViewport.x = (player->get_x() + TILESIZE / 2) - mapViewport.w / 2;
+    mapViewport.y = (player->get_y() + TILESIZE / 2) - mapViewport.h / 2;
+
+    // clamp contra los bordes del mapa (en pixeles)
+    const float map_px_w = tilemap ? static_cast<float>(tilemap->getPixelWidth())  : mapViewport.w;
+    const float map_px_h = tilemap ? static_cast<float>(tilemap->getPixelHeight()) : mapViewport.h;
+
+    if (mapViewport.x < 0) mapViewport.x = 0;
+    if (mapViewport.y < 0) mapViewport.y = 0;
+    if (mapViewport.x + mapViewport.w > map_px_w) mapViewport.x = map_px_w - mapViewport.w;
+    if (mapViewport.y + mapViewport.h > map_px_h) mapViewport.y = map_px_h - mapViewport.h;
+
     SDL_RenderClear(renderer);
 
     // Limita el rendering del mapa y entidades al area del juego (excluye panel derecho)
@@ -437,12 +453,13 @@ void ClientGUI::draw() {
     SDL_SetRenderClipRect(renderer, &game_clip);
 
     if (tilemap) {
-        tilemap->render();
+        tilemap->render(mapViewport.x, mapViewport.y);
+    }
+    if (player) {
+        player->draw(mapViewport.x, mapViewport.y);
     }
     drawEnemies();
-    if (player) {
-        player->draw();
-    }
+    
 
     // Levanta el clip para dibujar el panel y el chat encima
     SDL_SetRenderClipRect(renderer, nullptr);
@@ -495,13 +512,11 @@ void ClientGUI::init_draw() {
     // el player se escala con el mismo tamano de celda
     int tileSize = tilemap->getTileSize();
     try {
-        player = std::make_unique<PlayerDisplay>(renderer, "images/player.png", tileSize);
+        player = std::make_unique<PlayerDisplay>(renderer, "imagenes/player.png", tileSize);
         std::cout << "[DEBUG] PlayerDisplay created (images/)" << std::endl;
     } catch (const std::runtime_error& e) {
         std::cout << "[DEBUG] images/player.png failed: " << e.what()
                   << " - trying imagenes/" << std::endl;
-        player = std::make_unique<PlayerDisplay>(renderer, "imagenes/player.png", tileSize);
-        std::cout << "[DEBUG] PlayerDisplay created (imagenes/)" << std::endl;
     }
 
     // Posicionar al player en el spawn "player_start" del TOML.
@@ -533,7 +548,6 @@ void ClientGUI::run() {
     try {
         // protocol.get_mapa();
         init_draw();
-
         while (is_running && should_keep_running()) {
             handleEvents();
             update();

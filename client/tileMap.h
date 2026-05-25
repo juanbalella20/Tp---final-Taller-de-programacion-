@@ -27,7 +27,7 @@ public:
 
     // recorre las capas en orden, y para cada celda no vacía calcula el 
     // recorte del spritesheet (src) y la posición en pantalla (dst)
-    void render() const;
+    void render(int mapViewport_x, int mapViewport_y) const;
 
     int getTileSize() const;
     int getWidth() const;
