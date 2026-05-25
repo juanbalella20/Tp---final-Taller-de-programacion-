@@ -86,6 +86,7 @@ add_executable(client
     client/clientGUI.cpp
     client/tileMap.cpp
     client/displayPlayer.cpp
+    client/camera.cpp
     client/networkSenderThread.cpp
     client/networkReceiverThread.cpp
 )

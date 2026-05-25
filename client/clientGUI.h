@@ -16,6 +16,7 @@
 #include "../common/game_constants.h"
 #include "../common/item_info.h"
 #include "tileMap.h"
+#include "camera.h"
 
 #define WIN_NAME "Argentum"
 #define WINDOW_WIDTH 1280
@@ -52,7 +53,7 @@ private:
     SDL_Texture* inventory_bg_texture;
     SDL_Texture* frame_texture;
     SDL_Texture* sword_texture;
-    SDL_FRect mapViewport;
+    Camera camera;
 
     // tile seleccionado con NPC; {-1,-1} = ninguno
     int selected_npc_tile_x;

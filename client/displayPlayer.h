@@ -35,7 +35,6 @@ public:
     int getTileY() const;
     // Setea la posicion en pixels (legacy; preferir setTilePosition).
     void setPosition(float x, float y);
-    void draw() const;
     void draw(float cam_x, float cam_y) const;
 
     void move_up();

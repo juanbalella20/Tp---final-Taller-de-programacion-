@@ -10,7 +10,7 @@ ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
       frame_texture(nullptr), sword_texture(nullptr),
       selected_npc_tile_x(-1), selected_npc_tile_y(-1),
       show_attack_button(false),
-      mapViewport{0.0f, 0.0f, (float)GAME_WIDTH, (float)CANVAS_HEIGHT} {}
+      camera((float)GAME_WIDTH, (float)CANVAS_HEIGHT) {}
     
 
 ClientGUI::~ClientGUI() {
@@ -100,8 +100,8 @@ void ClientGUI::freeSDL() {
 
 std::vector<int> ClientGUI::translate_tile_to_coord(int pixel_x, int pixel_y) const {
     int tileSize = tilemap ? tilemap->getTileSize() : 64;
-    int world_x = static_cast<int>(pixel_x + mapViewport.x);
-    int world_y = static_cast<int>(pixel_y + mapViewport.y);
+    int world_x = static_cast<int>(camera.screen_to_world_x(pixel_x));
+    int world_y = static_cast<int>(camera.screen_to_world_y(pixel_y));
     return {world_x / tileSize, world_y / tileSize};
 }
 
@@ -337,8 +337,8 @@ void ClientGUI::drawEnemies() {
         for (int col = 0; col < static_cast<int>(world_map[row].size()); ++col) {
             if (world_map[row][col] == elements::npcs) {
                 SDL_FRect dst = {
-                    static_cast<float>(col * tileSize) - mapViewport.x,
-                    static_cast<float>(row * tileSize) - mapViewport.y,
+                    camera.world_to_screen_x(static_cast<float>(col * tileSize)),
+                    camera.world_to_screen_y(static_cast<float>(row * tileSize)),
                     static_cast<float>(tileSize),
                     static_cast<float>(tileSize)
                 };
@@ -433,18 +433,13 @@ void ClientGUI::drawInventoryPanel() {
 }
 #define TILESIZE 64
 void ClientGUI::draw() {
-    // centrar camara en el jugador
-    mapViewport.x = (player->get_x() + TILESIZE / 2) - mapViewport.w / 2;
-    mapViewport.y = (player->get_y() + TILESIZE / 2) - mapViewport.h / 2;
-
-    // clamp contra los bordes del mapa (en pixeles)
-    const float map_px_w = tilemap ? static_cast<float>(tilemap->getPixelWidth())  : mapViewport.w;
-    const float map_px_h = tilemap ? static_cast<float>(tilemap->getPixelHeight()) : mapViewport.h;
-
-    if (mapViewport.x < 0) mapViewport.x = 0;
-    if (mapViewport.y < 0) mapViewport.y = 0;
-    if (mapViewport.x + mapViewport.w > map_px_w) mapViewport.x = map_px_w - mapViewport.w;
-    if (mapViewport.y + mapViewport.h > map_px_h) mapViewport.y = map_px_h - mapViewport.h;
+    // centrar camara en el jugador (en el centro del tile) y limitar al mapa
+    camera.center_on(player->get_x() + TILESIZE / 2.0f,
+                     player->get_y() + TILESIZE / 2.0f);
+    if (tilemap) {
+        camera.clamp_to(static_cast<float>(tilemap->getPixelWidth()),
+                        static_cast<float>(tilemap->getPixelHeight()));
+    }
 
     SDL_RenderClear(renderer);
 
@@ -453,10 +448,10 @@ void ClientGUI::draw() {
     SDL_SetRenderClipRect(renderer, &game_clip);
 
     if (tilemap) {
-        tilemap->render(mapViewport.x, mapViewport.y);
+        tilemap->render(camera.get_x(), camera.get_y());
     }
     if (player) {
-        player->draw(mapViewport.x, mapViewport.y);
+        player->draw(camera.get_x(), camera.get_y());
     }
     drawEnemies();
     
