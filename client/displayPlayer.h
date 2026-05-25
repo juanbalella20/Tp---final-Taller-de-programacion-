@@ -14,11 +14,11 @@ private:
     SDL_Texture* image;
     SDL_FRect rect;
     int tileSize;
-    const bool* keystate;
+    const bool* keystate;  
 
 public:
     // Carga la imagen. La posicion inicial es (0, 0). Tile size en pixels.
-    PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize = 64);
+    PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize);
     ~PlayerDisplay();
 
     PlayerDisplay(const PlayerDisplay&) = delete;
@@ -36,11 +36,15 @@ public:
     // Setea la posicion en pixels (legacy; preferir setTilePosition).
     void setPosition(float x, float y);
     void draw() const;
+    void draw(float cam_x, float cam_y) const;
 
     void move_up();
     void move_down();
     void move_left();
     void move_right();
+    int get_x();
+    int get_y();
+
 };
 
 #endif

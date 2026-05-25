@@ -17,17 +17,12 @@
 #include "../common/item_info.h"
 #include "tileMap.h"
 
-
 #define WIN_NAME "Argentum"
-//#define WINDOW_WIDTH 1920
-//#define WINDOW_HEIGHT 1080
-#define WINDOW_WIDTH 800    
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 720
 
-#define LOGICAL_WIDTH  1280
-#define LOGICAL_HEIGHT 720
-//#define LOGICAL_WIDTH  1920
-//#define LOGICAL_HEIGHT 1080
+#define LOGICAL_WIDTH  960
+#define LOGICAL_HEIGHT 576
 
 enum class zones {
     DESERT,
@@ -55,13 +50,14 @@ private:
     std::vector<ItemInfo> inventory;
     SDL_Texture* enemy_texture;
     SDL_Texture* inventory_bg_texture;
+    SDL_FRect mapViewport;
 
     // tile seleccionado con NPC; {-1,-1} = ninguno
     int selected_npc_tile_x;
     int selected_npc_tile_y;
     bool show_attack_button;
 
-    static constexpr int PANEL_WIDTH  = 200;
+    static constexpr int PANEL_WIDTH  = 192;
     static constexpr int GAME_WIDTH   = LOGICAL_WIDTH - PANEL_WIDTH;
     static constexpr int CANVAS_HEIGHT = LOGICAL_HEIGHT;
 
@@ -107,6 +103,9 @@ private:
     void selectCoord(int tile_x, int tile_y);
 
     std::vector<int> translate_tile_to_coord(int pixel_x, int pixel_y) const;
+
+    void set_logical_width(int logical_width);
+    void set_logical_height(int logical_height);
 
 public:
     ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving);

@@ -49,7 +49,7 @@ void TileMap::load_map(const std::string& tomlPath) {
     }
 }
 
-void TileMap::render() const {
+void TileMap::render(int mapViewport_x, int mapViewport_y) const {
     const int ts = mapData.get_tile_size();
     if (ts <= 0) return;
 
@@ -76,7 +76,7 @@ void TileMap::render() const {
                 const float sy = (local / ts_def.columns) * tsf;
 
                 SDL_FRect src{ sx, sy, tsf, tsf };
-                SDL_FRect dst{ col * tsf, row * tsf, tsf, tsf };
+                SDL_FRect dst{ (col * tsf)-mapViewport_x, (row * tsf)-mapViewport_y, tsf, tsf };
                 SDL_RenderTexture(renderer,
                                   tileset_textures[td->tileset_index],
                                   &src, &dst);

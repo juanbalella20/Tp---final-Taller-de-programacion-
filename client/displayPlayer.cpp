@@ -1,5 +1,6 @@
 #include "displayPlayer.h"
 #include <SDL3_image/SDL_image.h>
+#include "../common/game_constants.h"
 #include <stdexcept>
 #include <string>
 #include <iostream>
@@ -87,4 +88,17 @@ int PlayerDisplay::getTileY() const {
 
 void PlayerDisplay::draw() const {
     SDL_RenderTexture(renderer, image, nullptr, &rect);
+}
+
+void PlayerDisplay::draw(float cam_x, float cam_y) const {
+    SDL_FRect dst{ rect.x - cam_x, rect.y - cam_y, rect.w, rect.h };
+    SDL_RenderTexture(renderer, image, nullptr, &dst);
+}
+
+int PlayerDisplay::get_x() {
+    return rect.x;
+}
+
+int PlayerDisplay::get_y() {
+    return rect.y;
 }
