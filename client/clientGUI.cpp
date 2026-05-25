@@ -105,6 +105,8 @@ void ClientGUI::sendCoord(int tile_x, int tile_y) {
 }
 
 void ClientGUI::selectCoord(int tile_x, int tile_y) {
+
+
     if (!world_map.empty() &&
         tile_y >= 0 && tile_y < static_cast<int>(world_map.size()) &&
         tile_x >= 0 && tile_x < static_cast<int>(world_map[tile_y].size()) &&
@@ -164,11 +166,13 @@ void ClientGUI::handleEvents() {
                 }
                 break;
             case SDL_EVENT_MOUSE_BUTTON_DOWN: {
-                int mx = static_cast<int>(event.button.x);
-                int my = static_cast<int>(event.button.y);
+                float lx, ly;
+                SDL_RenderCoordinatesFromWindow(renderer, event.button.x, event.button.y, &lx, &ly);
+                int mx = static_cast<int>(lx);
+                int my = static_cast<int>(ly);
                 // Click en el botón "Pegar" (panel derecho, parte inferior)
                 SDL_FRect btn = {static_cast<float>(GAME_WIDTH + 10),
-                                 static_cast<float>(WINDOW_HEIGHT - 60),
+                                 static_cast<float>(CANVAS_HEIGHT - 60),
                                  static_cast<float>(PANEL_WIDTH - 20), 40};
                 if (show_attack_button &&
                     mx >= btn.x && mx <= btn.x + btn.w &&
@@ -308,7 +312,7 @@ void ClientGUI::drawAttackButton() {
 void ClientGUI::drawInventoryPanel() {
     // Fondo del panel derecho
     SDL_FRect panel = {static_cast<float>(GAME_WIDTH), 0,
-                       static_cast<float>(PANEL_WIDTH), static_cast<float>(WINDOW_HEIGHT)};
+                       static_cast<float>(PANEL_WIDTH), static_cast<float>(CANVAS_HEIGHT)};
     SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
     SDL_RenderFillRect(renderer, &panel);
     SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
@@ -349,7 +353,7 @@ void ClientGUI::drawInventoryPanel() {
     // Boton "Pegar" en la parte inferior del panel
     if (show_attack_button) {
         SDL_FRect btn = {static_cast<float>(GAME_WIDTH + 10),
-                         static_cast<float>(WINDOW_HEIGHT - 60),
+                         static_cast<float>(CANVAS_HEIGHT - 60),
                          static_cast<float>(PANEL_WIDTH - 20), 40};
         SDL_SetRenderDrawColor(renderer, 200, 50, 50, 255);
         SDL_RenderFillRect(renderer, &btn);

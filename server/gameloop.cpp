@@ -86,6 +86,7 @@ void GameLoop::run() {
                         GameMsg map_msg(MSG_SEND_MAP);
                         map_msg.set_map(game_map.get_map());
                         client_registry_monitor.notify_clients(map_msg);
+                        //si el npc murio hay que avisarle a todos los clientes que no esta ya,  asi lo borran del mapa
                     }
                     break;
                 }
@@ -94,12 +95,8 @@ void GameLoop::run() {
                         client_registry_monitor.get_name(cmd.get_client_id());
                     uint16_t coor_x = cmd.get_coord_x();
                     uint16_t coor_y = cmd.get_coord_y();
-                    std::cout << "[DEBUG: MSG_SELECT] received cmd type="
-                      << static_cast<int>(cmd.get_message_type())
-                      << "client_id" << cmd.get_client_id()
-                      << "coor_x" << coor_x
-                      << "coor_y" << coor_y
-                      << std::endl;
+                    std::cout << "[DEBUG: MSG_SELECT] col=" << coor_x
+                              << " fila=" << coor_y << std::endl;
                     //std::string sector = game_map.sector_of_position(coor_x, coor_y);
                     break;
                 }

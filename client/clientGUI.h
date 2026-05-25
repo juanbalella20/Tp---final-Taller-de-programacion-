@@ -60,8 +60,9 @@ private:
     int selected_npc_tile_y;
     bool show_attack_button;
 
-    static constexpr int PANEL_WIDTH = 200;
-    static constexpr int GAME_WIDTH  = WINDOW_WIDTH - PANEL_WIDTH;
+    static constexpr int PANEL_WIDTH  = 200;
+    static constexpr int GAME_WIDTH   = LOGICAL_WIDTH - PANEL_WIDTH;
+    static constexpr int CANVAS_HEIGHT = LOGICAL_HEIGHT;
 
     void initSDL();
     void loadMedia(zones zone);
