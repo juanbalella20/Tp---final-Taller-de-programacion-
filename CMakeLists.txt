@@ -114,9 +114,9 @@ add_executable(server
     server/inventory.cpp
     server/item.cpp
     server/arma.cpp
-    # not implemented yet
+    server/npc.cpp
+    server/npcHostile.cpp
     # server/npcBanker.cpp
-    # server/npcHostile.cpp
     # server/npcPriest.cpp
     # server/npcSeller.cpp
 )

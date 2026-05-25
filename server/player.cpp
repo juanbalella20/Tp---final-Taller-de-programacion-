@@ -1,4 +1,5 @@
 #include "player.h"
+#include "game_exceptions.h"
 
 #include <cmath>
 
@@ -192,8 +193,10 @@ void Player::receive_damage(int damage) {
 }
 
 void Player::attack(Entity& target, int target_x, int target_y) {
-    if (status == PlayerStatus::DEAD) return;
-    if (!equipped_item) return;
+    if (status == PlayerStatus::DEAD)
+        throw AttackNotAllowedException("Estás muerto, no podés atacar");
+    if (!equipped_item)
+        throw NoWeaponEquippedException();
     equipped_item->use_item(target, coord_x, coord_y, target_x, target_y);
 }
  

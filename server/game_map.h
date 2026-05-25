@@ -20,6 +20,7 @@ private:
     int height = 0;
     std::vector<std::vector<elements>> map;
     std::vector<Player> players;
+    std::vector<NPChostile> npcs;
     std::map<std::string, position_coord> spawns;
 
     bool look_for_entity(int x, int y);

@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include "item.h"
 
 
 class ItemDataBase {
@@ -26,6 +27,6 @@ class ItemDataBase {
         std::map<std::string, Item> get_armour();
         std::map<std::string, Item> get_magic_items();
 
-}
+};
 
 #endif 
