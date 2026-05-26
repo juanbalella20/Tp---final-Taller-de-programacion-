@@ -84,6 +84,8 @@ public:
     
     std::unique_ptr<Item> pick_up_item(const std::string& player_name);
     void give_item_to_player(const std::string& player_name, std::unique_ptr<Item> item);
+    void spawn_item(int x, int y, std::unique_ptr<Item> item);
+    
     //Player* get_player(const std::string& name);
 };
 

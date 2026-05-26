@@ -111,6 +111,8 @@ void GameMap::read_desert() {
 
     // NPC de prueba hardcodeado: posicion (7,5), cerca del player_start (5,5)
     spawn_npc(7, 5);
+    // Item de prueba hardcodeado: posicion (7, 7)
+    spawn_item(7, 7, std::make_unique<Arma>("1", "espada", 50, 2, 2));
 
     // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
     spawns = md.get_spawns();
@@ -211,6 +213,16 @@ void GameMap::give_item_to_player(const std::string& player_name, std::unique_pt
     Player* player = find_player_by_name(player_name);
     if (!player) throw std::runtime_error("Player not found: " + player_name);
     player->add_item(std::move(item));
+}
+
+void GameMap::spawn_item(int x, int y, std::unique_ptr<Item> item) {
+    if (y >= 0 && y < height && x >= 0 && x < width) {
+        std::string id = item->get_id();
+        positionCoord coord{x, y};
+        ground_items.push_back({coord, std::move(item)});
+        map[y][x] = elements::objects;
+        std::cout << "[DEBUG: spawn_item] " << id << " at (" << x << "," << y << ")" << std::endl;
+    }
 }
 
 // TODO
