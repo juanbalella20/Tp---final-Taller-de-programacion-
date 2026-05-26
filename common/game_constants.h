@@ -1,16 +1,21 @@
 #ifndef GAME_CONSTANTS_H
 #define GAME_CONSTANTS_H
 
-struct position_coord {
+struct positionCoord {
     int x;
     int y;
 };
 
 struct sectorPerimiter {
-    position_coord top_left;
-    position_coord top_right;
-    position_coord bottom_left;
-    position_coord bottom_right;
+    positionCoord top_left;
+    positionCoord top_right;
+    positionCoord bottom_left;
+    positionCoord bottom_right;
+};
+
+struct groundItem {
+    positionCoord pos;
+    std::unique_ptr<Item> item;
 };
 
 enum class elements {
