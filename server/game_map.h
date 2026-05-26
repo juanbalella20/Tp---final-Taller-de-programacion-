@@ -5,6 +5,8 @@
 #include "player.h"
 #include "npcHostile.h"
 #include "../common/game_constants.h"
+#include "npcSeller.h"
+#include "item_info.h"
 
 #include <vector>
 #include <map>
@@ -21,6 +23,7 @@ private:
     std::vector<std::vector<elements>> map;
     std::vector<Player> players;
     std::vector<NPChostile> npcs;
+    std::vector<NPCseller> sellers;
     std::map<std::string, position_coord> spawns;
 
     Player* find_player_by_name(const std::string& name);
@@ -66,6 +69,15 @@ public:
     AttackResult attack(const std::string& atacker_name, int x, int y);
 
     void spawn_npc(int x, int y);
+    void spawn_seller(int x, int y);
+
+    // Vender: el player vende item_id al seller adyacente.
+    // Devuelve true si la operacion fue exitosa.
+    bool player_sell_item(const std::string& player_name, int x, int y,const std::string& item_id);
+ 
+    // Lista los items del seller adyacente al player
+    std::vector<ItemInfo> list_seller_items(int x, int y);
+
 
     std::string sector_of_position(int x, int y);
     void read_desert();
