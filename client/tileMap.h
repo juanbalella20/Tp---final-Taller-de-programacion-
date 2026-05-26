@@ -38,7 +38,7 @@ public:
     // Consultar colisiones (delegado a MapData::is_solid).
     bool isBlocked(int cellX, int cellY) const { return mapData.is_collidable(cellX, cellY); }
 
-    const std::map<std::string, position_coord>& getSpawns() const { return mapData.get_spawns(); }
+    const std::map<std::string, positionCoord>& getSpawns() const { return mapData.get_spawns(); }
 };
 
 #endif

@@ -43,7 +43,7 @@ class MapLoader {
         std::vector<Tileset> tilesets;
         std::unordered_map<int, TileDef> tiles;   // id global -> tiledef
         std::vector<MapLayerData> layers;
-        std::map<std::string, position_coord> spawns;
+        std::map<std::string, positionCoord> spawns;
 
         /*
          * Recorre la tabla (array) de tilesets del TOML.
@@ -70,7 +70,7 @@ class MapLoader {
         int get_tile_size() const;
         int get_width() const;
         int get_height() const;
-        const std::map<std::string, position_coord>& get_spawns() const;
+        const std::map<std::string, positionCoord>& get_spawns() const;
         const std::vector<Tileset>& get_tilesets() const;
         const std::vector<MapLayerData>& get_layers() const;
 
