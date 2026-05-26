@@ -7,7 +7,7 @@ class NPCfriendly : public NPC {
     public:
         // an npc_id is generated and a name
         NPCfriendly();
-        void interact(Player player, Command cmd) override;
+        virtual void interact(Player& player, Command cmd) = 0;
         
 };
 

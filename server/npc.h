@@ -3,14 +3,14 @@
 
 #include <string>
 
-/*
+
 struct Command {
     int action; // ex: comprar
     int objeto; // ex: un item
     int cantidad; //
     int actual_gold; // ?
-}
-*/
+};
+
 
 class NPC {
     protected:
