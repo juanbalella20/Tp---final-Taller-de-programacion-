@@ -18,7 +18,8 @@ std::vector<std::vector<elements>> GameMap::get_map() {
 void GameMap::add_player(Player player) {
     players.push_back(std::move(player));
 }
- Player* GameMap::find_player_by_name(const std::string& name)  {
+
+Player* GameMap::find_player_by_name(const std::string& name)  {
     auto it = std::find_if(players.begin(), players.end(),
                            [&name](const Player& p) { return p.get_name() == name; });
     if (it == players.end()) return nullptr;
@@ -187,6 +188,31 @@ const Player& GameMap::get_player(const std::string& name) {
 bool GameMap::player_exists(const std::string& name) {
     return find_player_by_name(name) != nullptr;
 }
+
+std::unique_ptr<Item> GameMap::pick_up_item(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (!player) throw std::runtime_error("Player not found: " + player_name);
+
+    int x = player->get_coord_x();
+    int y = player->get_coord_y();
+
+    auto item_at_pos = std::find_if(ground_items.begin(), ground_items.end(),
+        [x, y](const groundItem& g_item) { return g_item.pos.x == x && g_item.pos.y == y;});
+    
+    if (item_at_pos == ground_items.end()) return nullptr;
+
+    auto item = std::move(item_at_pos->item);
+    ground_items.erase(item_at_pos);
+    map[y][x] = elements::empty;
+    return item;
+}
+
+void GameMap::give_item_to_player(const std::string& player_name, std::unique_ptr<Item> item) {
+    Player* player = find_player_by_name(player_name);
+    if (!player) throw std::runtime_error("Player not found: " + player_name);
+    player->add_item(std::move(item));
+}
+
 // TODO
 void GameMap::read_city() {}
 // TODO
@@ -207,7 +233,7 @@ bool GameMap::player_exists(const std::string& name) {
     return get_player(name) != nullptr;
 }
 
-position_coord GameMap::get_spawn_position() {
+positionCoord GameMap::get_spawn_position() {
     auto it = spawns.find("player_start");
     if (it != spawns.end()) return it->second;
     // Fallback: primera celda libre del mapa

@@ -21,7 +21,8 @@ private:
     std::vector<std::vector<elements>> map;
     std::vector<Player> players;
     std::vector<NPChostile> npcs;
-    std::map<std::string, position_coord> spawns;
+    std::map<std::string, positionCoord> spawns;
+    std::vector<groundItem> ground_items;
 
     Player* find_player_by_name(const std::string& name);
     bool look_for_entity(int x, int y);
@@ -40,7 +41,7 @@ public:
     int get_width()  const { return width; }
     int get_height() const { return height; }
 
-    const std::map<std::string, position_coord>& get_spawns() const { return spawns; }
+    const std::map<std::string, positionCoord>& get_spawns() const { return spawns; }
 
     void add_player(Player player);
 
@@ -79,8 +80,10 @@ public:
     void spawn_player(const std::string& name);
     const Player& get_player(const std::string& name);
     bool player_exists(const std::string& name);  
-    position_coord get_spawn_position();           
-
+    positionCoord get_spawn_position();       
+    
+    std::unique_ptr<Item> pick_up_item(const std::string& player_name);
+    void give_item_to_player(const std::string& player_name, std::unique_ptr<Item> item);
     //Player* get_player(const std::string& name);
 };
 

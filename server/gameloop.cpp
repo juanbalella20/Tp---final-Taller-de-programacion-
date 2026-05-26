@@ -174,18 +174,25 @@ void GameLoop::run() {
                             //RESTAR EL ORO
 
                             //inventario.add(*item);
+                    break; 
+                }
+
+                case MSG_TAKE: {
+                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+                    auto item = game_map.pick_up_item(name);
+                    GameMsg msg(MSG_TAKE);
+                    if (item) {
+                        game_map.give_item_to_player(name, std::move(item));
+                        msg.set_chat_content("Recogiste un objeto.");
+                    } else {
+                        msg.set_chat_content("No hay objetos acá");
+                    }
+                    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
                     break;
-
-
-
-                    
                 }
                 //case MSG_RESURRECT: handle_resurrect(cmd); break;
                 default:
                     break;
-
-                
-                
             }
         } catch (const ClosedQueue&) {
             break;
