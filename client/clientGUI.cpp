@@ -1,4 +1,5 @@
 #include "clientGUI.h"
+#include "npcSprite.h"
 #include <SDL3_image/SDL_image.h>
 #include <iostream>
 #include <stdexcept>
@@ -33,10 +34,7 @@ void ClientGUI::initSDL() {
 
     SDL_SetRenderLogicalPresentation(renderer, LOGICAL_WIDTH, LOGICAL_HEIGHT,SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
-    SDL_Surface* icon = IMG_Load("images/logo.jpeg");
-    if (!icon) {
-        icon = IMG_Load("imagenes/logo.jpeg");
-    }
+    SDL_Surface* icon = IMG_Load("imagenes/logo.jpeg");
     if (icon) {
         SDL_SetWindowIcon(window, icon);
         SDL_DestroySurface(icon);
@@ -332,17 +330,11 @@ void ClientGUI::update() {
 
 void ClientGUI::drawEnemies() {
     if (world_map.empty() || !enemy_texture || !tilemap) return;
-    int tileSize = tilemap->getTileSize();
+    const int tileSize = tilemap->getTileSize();
     for (int row = 0; row < static_cast<int>(world_map.size()); ++row) {
         for (int col = 0; col < static_cast<int>(world_map[row].size()); ++col) {
             if (world_map[row][col] == elements::npcs) {
-                SDL_FRect dst = {
-                    camera.world_to_screen_x(static_cast<float>(col * tileSize)),
-                    camera.world_to_screen_y(static_cast<float>(row * tileSize)),
-                    static_cast<float>(tileSize),
-                    static_cast<float>(tileSize)
-                };
-                SDL_RenderTexture(renderer, enemy_texture, nullptr, &dst);
+                NpcSprite(renderer, enemy_texture, col, row, tileSize).draw(camera);
             }
         }
     }
@@ -451,7 +443,7 @@ void ClientGUI::draw() {
         tilemap->render(camera.get_x(), camera.get_y());
     }
     if (player) {
-        player->draw(camera.get_x(), camera.get_y());
+        player->draw(camera);
     }
     drawEnemies();
     
@@ -472,7 +464,6 @@ void ClientGUI::init_draw() {
     loadMedia(zones::DESERT);
 
     SDL_Surface* enemy_surf = IMG_Load("imagenes/enemigo.png");
-    if (!enemy_surf) enemy_surf = IMG_Load("images/enemigo.png");
     if (!enemy_surf) enemy_surf = IMG_Load("enemigo.png");
     if (enemy_surf) {
         enemy_texture = SDL_CreateTextureFromSurface(renderer, enemy_surf);
@@ -480,7 +471,6 @@ void ClientGUI::init_draw() {
     }
 
     SDL_Surface* inv_bg_surf = IMG_Load("imagenes/inventory-bg..png");
-    if (!inv_bg_surf) inv_bg_surf = IMG_Load("images/inventory-bg..png");
     if (inv_bg_surf) {
         inventory_bg_texture = SDL_CreateTextureFromSurface(renderer, inv_bg_surf);
         SDL_DestroySurface(inv_bg_surf);
@@ -508,10 +498,8 @@ void ClientGUI::init_draw() {
     int tileSize = tilemap->getTileSize();
     try {
         player = std::make_unique<PlayerDisplay>(renderer, "imagenes/player.png", tileSize);
-        std::cout << "[DEBUG] PlayerDisplay created (images/)" << std::endl;
     } catch (const std::runtime_error& e) {
-        std::cout << "[DEBUG] images/player.png failed: " << e.what()
-                  << " - trying imagenes/" << std::endl;
+        std::cout << "[DEBUG] imagenes/player.png failed: " << e.what() << std::endl;
     }
 
     // Posicionar al player en el spawn "player_start" del TOML.

@@ -86,8 +86,13 @@ int PlayerDisplay::getTileY() const {
     return static_cast<int>(rect.y) / tileSize;
 }
 
-void PlayerDisplay::draw(float cam_x, float cam_y) const {
-    SDL_FRect dst{ rect.x - cam_x, rect.y - cam_y, rect.w, rect.h };
+void PlayerDisplay::draw(const Camera& camera) const {
+    SDL_FRect dst{
+        camera.world_to_screen_x(rect.x),
+        camera.world_to_screen_y(rect.y),
+        rect.w,
+        rect.h
+    };
     SDL_RenderTexture(renderer, image, nullptr, &dst);
 }
 

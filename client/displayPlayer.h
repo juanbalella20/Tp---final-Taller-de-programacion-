@@ -3,12 +3,13 @@
 
 #include <SDL3/SDL.h>
 #include <string>
+#include "worldEntity.h"
 
 // #define PLAYER_VEL 3.0f
 // para testing:
 #define PLAYER_VEL 8.0f
 
-class PlayerDisplay {
+class PlayerDisplay : public WorldEntity {
 private:
     SDL_Renderer* renderer;
     SDL_Texture* image;
@@ -35,7 +36,7 @@ public:
     int getTileY() const;
     // Setea la posicion en pixels (legacy; preferir setTilePosition).
     void setPosition(float x, float y);
-    void draw(float cam_x, float cam_y) const;
+    void draw(const Camera& camera) const override;
 
     void move_up();
     void move_down();
