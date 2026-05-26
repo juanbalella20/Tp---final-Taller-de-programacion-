@@ -44,10 +44,12 @@ void Player::add_item(std::unique_ptr<Item> item) {
 
 /* TODO: implement ITEM */
 
-/*
-void Player::drop_item(Item item) {
+
+void Player::drop_item(Item* item) {
     player_inventory.drop_item(item);
 }
+
+/*
 
 void Player::equip_item(Item item) {
     if (equipped_item == nullptr) {

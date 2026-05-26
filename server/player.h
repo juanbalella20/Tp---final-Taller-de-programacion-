@@ -43,7 +43,7 @@ public:
 
     void add_item(std::unique_ptr<Item> item);
 
-    void drop_item(Item item);
+    void drop_item(Item* item);
 
     void equip_item(std::string item_id);
 
