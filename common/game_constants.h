@@ -1,6 +1,9 @@
 #ifndef GAME_CONSTANTS_H
 #define GAME_CONSTANTS_H
 
+#include <memory>
+#include "../server/item.h"
+
 struct positionCoord {
     int x;
     int y;
