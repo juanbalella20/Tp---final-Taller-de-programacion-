@@ -76,6 +76,11 @@ void ClientGUI::freeSDL() {
         frame_texture = nullptr;
     }
 
+    if (item_texture) {
+        SDL_DestroyTexture(item_texture);
+        item_texture = nullptr;
+    }
+
     if (renderer) {
         SDL_DestroyRenderer(renderer);
         renderer = nullptr;
@@ -329,6 +334,10 @@ void ClientGUI::drawEnemies() {
     }
 }
 
+void ClientGUI::drawItems() {
+    
+}
+
 #define TILESIZE 64
 void ClientGUI::draw() {
     // centrar camara en el jugador (en el centro del tile) y limitar al mapa
@@ -371,6 +380,14 @@ void ClientGUI::draw() {
     SDL_RenderPresent(renderer);
 }
 
+static SDL_Texture* create_solid_texture(SDL_Renderer* renderer, int w, int h, Uint8 r, Uint8 g, Uint8 b) {
+    SDL_Texture* tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, w, h);
+    if (!tex) return nullptr;
+    std::vector<Uint32> pixels(w*h, (r<<24) | (g<<16) | (b<<8) | 0xFF);
+    SDL_UpdateTexture(tex, nullptr, pixels.data(), w*sizeof(Uint32));
+    return tex;
+}
+
 void ClientGUI::init_draw() {
     // la info se la pasa el cliente desde config?
     initSDL();
@@ -390,6 +407,8 @@ void ClientGUI::init_draw() {
         frame_texture = SDL_CreateTextureFromSurface(renderer, frame_surf);
         SDL_DestroySurface(frame_surf);
     }
+
+    item_texture = create_solid_texture(renderer, 32, 32, 255, 215, 0);
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
 
     // tile_size viene del TOML

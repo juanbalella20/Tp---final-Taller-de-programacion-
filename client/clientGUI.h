@@ -52,6 +52,7 @@ private:
     std::vector<std::vector<elements>> world_map;
     SDL_Texture* enemy_texture;
     SDL_Texture* frame_texture;
+    SDL_Texture* item_texture;
     Camera camera;
 
     // tile seleccionado con NPC; {-1,-1} = ninguno
@@ -87,6 +88,7 @@ private:
     */
     void draw();
     void drawEnemies();
+    void drawItems();
 
     void sendMoveCmd(Direction dir);
     void sendAttackCmd(int tile_x, int tile_y);
