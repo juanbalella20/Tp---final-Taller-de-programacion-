@@ -3,31 +3,32 @@
 
 #include "npcFriendly.h"
 
-class NPCseller: public NPCfriendly {
-    private:
-        Store store;
+#include "item_info.h"
+#include "item.h"
 
-        // gets store
-        Store get_store();
-        // adds an item from the store
-        void add_item_store(Item item);   
-        // deletes an item from the store
-        void delete_item_store(Item item);
-        // sells item to player
-        Item sell_item();
-        // buys item from player
-        void buy_item(Item item, Player player);
+#include <vector>
+#include <memory>
+#include <string>
 
-
-    public:
-        // an npc_id is generated and a name
-        NPCseller();
-        /* interacts with player:
-         * - buys item from player
-         * - sells item to player
-         */
-        void interact(Player player_tag, Command cmd) override;
-
+class Player;
+ 
+class NPCseller : public NPCfriendly {
+private:
+    int pos_x;
+    int pos_y;
+    std::vector<std::unique_ptr<Item>> store_items;
+ 
+    void init_store();
+ 
+public:
+    NPCseller(int x, int y);
+ 
+    int get_coord_x() const;
+    int get_coord_y() const;
+ 
+    std::vector<ItemInfo> list_items() const;
+    bool interact(Player& player, const std::string& item_id);
 };
+
 
 #endif 
