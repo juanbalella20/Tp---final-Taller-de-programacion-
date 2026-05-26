@@ -1,6 +1,11 @@
 #include "npcHostile.h"
 
-NPChostile::NPChostile() : lifepoints(0), attack_dmg(0), type(0), state(State::ALIVE), coord_x(0), coord_y(0) {}
+NPChostile::NPChostile(const std::string& name, int lifepoints, int attack_dmg, int ticks_to_spawn)
+    : lifepoints(lifepoints), max_lifepoints(lifepoints), attack_dmg(attack_dmg),
+      type(0), state(State::ALIVE), coord_x(0), coord_y(0),
+      remaining_ticks_to_spawn(0), ticks_to_spawn(ticks_to_spawn) {
+    this->name = name;
+}
 
 std::string NPChostile::get_name() const { return this->name; }
 
@@ -10,7 +15,42 @@ int NPChostile::get_coord_y() const { return coord_y; }
 
 bool NPChostile::is_dead() const { return state == State::DEAD; }
 
+bool NPChostile::can_spawn() const {
+    return state == State::DEAD && remaining_ticks_to_spawn == 0;
+}
+
 void NPChostile::set_state(State s) { this->state = s; }
+
+void NPChostile::drop() {}
+
+void NPChostile::death() {
+    lifepoints = 0;
+    drop();
+    set_state(State::DEAD);
+    remaining_ticks_to_spawn = ticks_to_spawn;
+}
+
+void NPChostile::reduce_ticks_to_spawn() {
+    if (remaining_ticks_to_spawn > 0) {
+        remaining_ticks_to_spawn--;
+    }
+}
+
+void NPChostile::revive(int x, int y) {
+    lifepoints = max_lifepoints;
+    set_position(x, y);
+    set_state(State::ALIVE);
+}
+
+void NPChostile::receive_damage(int dmg) {
+    lifepoints -= dmg;
+    if (lifepoints <= 0) {
+        death();
+    }
+}
+
+/*
+
 void NPChostile::set_type(int t) { this->type = t; }
 void NPChostile::set_attack(int atk) { this->attack_dmg = atk; }
 int NPChostile::get_attack() { return attack_dmg; }
@@ -55,17 +95,7 @@ void NPChostile::set_orc() {
     this->name = "Orc";
 }
 
-void NPChostile::drop() {}
 
-void NPChostile::death() {
-    lifepoints = 0;
-    drop();
-    set_state(State::DEAD);
-}
 
-void NPChostile::receive_damage(int dmg) {
-    lifepoints -= dmg;
-    if (lifepoints <= 0) {
-        death();
-    }
-}
+
+*/

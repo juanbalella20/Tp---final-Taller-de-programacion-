@@ -6,6 +6,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include <cstdlib>
 
 #include "../common/mapLoader.h"
 
@@ -108,23 +109,62 @@ void GameMap::read_desert() {
         }
     }
 
-    // NPC de prueba hardcodeado: posicion (7,5), cerca del player_start (5,5)
-    spawn_npc(7, 5);
+    // NPCs de prueba: goblin respawnea en 5s, spider en 2s
+    NPChostile goblin("Goblin", 30, 5, 100);
+    goblin.set_position(7, 5);
+    spawn_npc(goblin);
+
+    NPChostile spider("Spider", 20, 4, 40);
+    spider.set_position(9, 5);
+    spawn_npc(spider);
 
     // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
     spawns = md.get_spawns();
 }
 
 
-void GameMap::spawn_npc(int x, int y) {
+void GameMap::spawn_npc(NPChostile npc) {
+    int x = npc.get_coord_x();
+    int y = npc.get_coord_y();
     if (y >= 0 && y < height && x >= 0 && x < width) {
-        NPChostile npc;
-        npc.set_goblin(1);
-        npc.set_position(x, y);
-        npcs.push_back(std::move(npc));
         map[y][x] = elements::npcs;
-        std::cout << "[DEBUG: spawn_npc] NPChostile at (" << x << "," << y << ")" << std::endl;
+        npcs.push_back(std::move(npc));
+        std::cout << "[DEBUG: spawn_npc] " << npcs.back().get_name()
+                  << " at (" << x << "," << y << ")" << std::endl;
     }
+}
+
+
+std::pair<int,int> GameMap::find_random_empty_cell() {
+    std::vector<std::pair<int,int>> empty_cells;
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            if (map[y][x] == elements::empty) {
+                empty_cells.emplace_back(x, y);
+            }
+        }
+    }
+    if (empty_cells.empty()) return {-1, -1};
+    return empty_cells[rand() % empty_cells.size()];
+}
+
+bool GameMap::update_npcs() {
+    bool respawned = false;
+    for (auto& npc : npcs) {
+        if (!npc.is_dead()) continue;
+        npc.reduce_ticks_to_spawn();
+        if (!npc.can_spawn()) continue;
+
+        auto [rx, ry] = find_random_empty_cell();
+        if (rx == -1) continue;
+
+        npc.revive(rx, ry);
+        map[ry][rx] = elements::npcs;
+        std::cout << "[DEBUG: update_npcs] " << npc.get_name()
+                  << " respawned at (" << rx << "," << ry << ")" << std::endl;
+        respawned = true;
+    }
+    return respawned;
 }
 
 bool GameMap::look_for_entity(int x, int y) {

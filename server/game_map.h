@@ -26,6 +26,8 @@ private:
     Player* find_player_by_name(const std::string& name);
     bool look_for_entity(int x, int y);
     Entity* find_entity_at(int x, int y);
+    std::pair<int,int> find_random_empty_cell();
+    
 
     sectorPerimiter forest_perimiter;
     sectorPerimiter town_perimiter;
@@ -65,7 +67,8 @@ public:
     // Ataca la celda (x,y). Si hay un NPC lo mata (hardcodeado: muere de un golpe).
     AttackResult attack(const std::string& atacker_name, int x, int y);
 
-    void spawn_npc(int x, int y);
+    void spawn_npc(NPChostile npc);
+    bool update_npcs();
 
     std::string sector_of_position(int x, int y);
     void read_desert();
