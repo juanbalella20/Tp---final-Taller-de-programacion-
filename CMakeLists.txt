@@ -90,6 +90,7 @@ add_executable(client
     client/networkSenderThread.cpp
     client/networkReceiverThread.cpp
     client/npcSprite.cpp
+    client/hud.cpp
 )
 target_include_directories(client PRIVATE client)
 target_link_libraries(client PRIVATE common SDL3::SDL3 SDL3_image::SDL3_image)

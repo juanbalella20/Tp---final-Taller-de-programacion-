@@ -17,6 +17,7 @@
 #include "../common/item_info.h"
 #include "tileMap.h"
 #include "camera.h"
+#include "hud.h"
 
 #define WIN_NAME "Argentum"
 #define WINDOW_WIDTH 1280
@@ -43,22 +44,19 @@ private:
     Queue<ClientCmd>& outgoing;
     Queue<GameMsg>& receiving;
     Queue<std::string> chat_inbox;
+    std::unique_ptr<HUD> hud;
 
     std::unique_ptr<PlayerDisplay> player;
     std::unique_ptr<TileMap> tilemap;
 
     std::vector<std::vector<elements>> world_map;
-    std::vector<ItemInfo> inventory;
     SDL_Texture* enemy_texture;
-    SDL_Texture* inventory_bg_texture;
     SDL_Texture* frame_texture;
-    SDL_Texture* sword_texture;
     Camera camera;
 
     // tile seleccionado con NPC; {-1,-1} = ninguno
     int selected_npc_tile_x;
     int selected_npc_tile_y;
-    bool show_attack_button;
 
     static constexpr int PANEL_WIDTH  = 192;
     static constexpr int GAME_WIDTH   = LOGICAL_WIDTH - PANEL_WIDTH;
@@ -89,8 +87,6 @@ private:
     */
     void draw();
     void drawEnemies();
-    void drawAttackButton();
-    void drawInventoryPanel();
 
     void sendMoveCmd(Direction dir);
     void sendAttackCmd(int tile_x, int tile_y);

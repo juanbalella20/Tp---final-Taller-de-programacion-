@@ -7,11 +7,10 @@
 ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
     : window(nullptr), renderer(nullptr), event{}, chat_font(nullptr),
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
-      enemy_texture(nullptr), inventory_bg_texture(nullptr),
-      frame_texture(nullptr), sword_texture(nullptr),
-      selected_npc_tile_x(-1), selected_npc_tile_y(-1),
-      show_attack_button(false),
-      camera((float)GAME_WIDTH, (float)CANVAS_HEIGHT) {}
+      hud(nullptr),
+      enemy_texture(nullptr), frame_texture(nullptr),
+      camera((float)GAME_WIDTH, (float)CANVAS_HEIGHT),
+      selected_npc_tile_x(-1), selected_npc_tile_y(-1) {}
     
 
 ClientGUI::~ClientGUI() {
@@ -66,25 +65,17 @@ void ClientGUI::loadMedia(zones zone) {
 void ClientGUI::freeSDL() {
     player.reset();
     tilemap.reset();
-
+    hud.reset();
 
     if (enemy_texture) {
         SDL_DestroyTexture(enemy_texture);
         enemy_texture = nullptr;
     }
-    if (inventory_bg_texture) {
-        SDL_DestroyTexture(inventory_bg_texture);
-        inventory_bg_texture = nullptr;
-    }
     if (frame_texture) {
         SDL_DestroyTexture(frame_texture);
         frame_texture = nullptr;
     }
-    if (sword_texture) {
-        SDL_DestroyTexture(sword_texture);
-        sword_texture = nullptr;
-    }
-    
+
     if (renderer) {
         SDL_DestroyRenderer(renderer);
         renderer = nullptr;
@@ -135,9 +126,9 @@ void ClientGUI::selectCoord(int tile_x, int tile_y) {
         world_map[tile_y][tile_x] == elements::npcs) {
         selected_npc_tile_x = tile_x;
         selected_npc_tile_y = tile_y;
-        show_attack_button = true;
+        if (hud) hud->set_attack_button_visible(true);
     } else {
-        show_attack_button = false;
+        if (hud) hud->set_attack_button_visible(false);
         selected_npc_tile_x = -1;
         selected_npc_tile_y = -1;
         sendCoord(tile_x, tile_y);
@@ -195,30 +186,31 @@ void ClientGUI::handleEvents() {
 
                 if (mx >= GAME_WIDTH) {
                     // Click dentro del panel — nunca toca el mapa
-                    SDL_FRect btn = {static_cast<float>(GAME_WIDTH + 10),
-                                     static_cast<float>(CANVAS_HEIGHT - 60),
-                                     static_cast<float>(PANEL_WIDTH - 20), 40};
-                    if (show_attack_button &&
-                        mx >= btn.x && mx <= btn.x + btn.w &&
-                        my >= btn.y && my <= btn.y + btn.h) {
-                        sendAttackCmd(selected_npc_tile_x, selected_npc_tile_y);
-                        show_attack_button = false;
-                        break;
+                    if (hud && hud->is_attack_button_visible()) {
+                        const SDL_FRect& btn = hud->get_attack_button_rect();
+                        if (mx >= btn.x && mx <= btn.x + btn.w &&
+                            my >= btn.y && my <= btn.y + btn.h) {
+                            sendAttackCmd(selected_npc_tile_x, selected_npc_tile_y);
+                            hud->set_attack_button_visible(false);
+                            break;
+                        }
                     }
                     const int SLOT_SIZE = 48;
                     const int SLOT_MARGIN = 8;
                     int slot_x = GAME_WIDTH + SLOT_MARGIN;
                     int slot_y = 40;
-                    for (const auto& item : inventory) {
-                        if (mx >= slot_x && mx <= slot_x + SLOT_SIZE &&
-                            my >= slot_y && my <= slot_y + SLOT_SIZE) {
-                            sendEquipCmd(item.get_id());
-                            break;
-                        }
-                        slot_x += SLOT_SIZE + SLOT_MARGIN;
-                        if (slot_x + SLOT_SIZE > GAME_WIDTH + PANEL_WIDTH - SLOT_MARGIN) {
-                            slot_x = GAME_WIDTH + SLOT_MARGIN;
-                            slot_y += SLOT_SIZE + SLOT_MARGIN;
+                    if (hud) {
+                        for (const auto& item : hud->get_inventory()) {
+                            if (mx >= slot_x && mx <= slot_x + SLOT_SIZE &&
+                                my >= slot_y && my <= slot_y + SLOT_SIZE) {
+                                sendEquipCmd(item.get_id());
+                                break;
+                            }
+                            slot_x += SLOT_SIZE + SLOT_MARGIN;
+                            if (slot_x + SLOT_SIZE > GAME_WIDTH + PANEL_WIDTH - SLOT_MARGIN) {
+                                slot_x = GAME_WIDTH + SLOT_MARGIN;
+                                slot_y += SLOT_SIZE + SLOT_MARGIN;
+                            }
                         }
                     }
                 } else {
@@ -273,10 +265,7 @@ void ClientGUI::update() {
                     world_map = msg.get_map();
                     break;
                 case MSG_INVENTORY:
-                    inventory = msg.get_items();
-                    std::cout << "[DEBUG] MSG_INVENTORY recibido: " << inventory.size() << " items" << std::endl;
-                    for (const auto& it : inventory)
-                        std::cout << "  item id='" << it.get_id() << "' name='" << it.get_name() << "'" << std::endl;
+                    if (hud) hud->set_inventory(msg.get_items());
                     break;
                 case MSG_MOVE: {
                     int x = player->getTileX();
@@ -340,89 +329,6 @@ void ClientGUI::drawEnemies() {
     }
 }
 
-void ClientGUI::drawAttackButton() {
-    if (!show_attack_button) return;
-    SDL_FRect btn = {10, 10, 120, 40};
-    SDL_SetRenderDrawColor(renderer, 200, 50, 50, 255);
-    SDL_RenderFillRect(renderer, &btn);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderRect(renderer, &btn);
-}
-
-void ClientGUI::drawInventoryPanel() {
-    SDL_FRect panel = {static_cast<float>(GAME_WIDTH), 0,
-                       static_cast<float>(PANEL_WIDTH), static_cast<float>(CANVAS_HEIGHT)};
-    if (inventory_bg_texture) {
-        SDL_RenderTexture(renderer, inventory_bg_texture, nullptr, &panel);
-    } else {
-        SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
-        SDL_RenderFillRect(renderer, &panel);
-        SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
-        SDL_RenderRect(renderer, &panel);
-    }
-
-    // Titulo "Inventario"
-    if (chat_font) {
-        SDL_Color white = {255, 255, 255, 255};
-        SDL_Surface* surf = TTF_RenderText_Solid(chat_font, "Inventario", 0, white);
-        if (surf) {
-            SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
-            SDL_FRect dst = {static_cast<float>(GAME_WIDTH + 10), 10,
-                             static_cast<float>(surf->w), static_cast<float>(surf->h)};
-            SDL_RenderTexture(renderer, tex, nullptr, &dst);
-            SDL_DestroyTexture(tex);
-            SDL_DestroySurface(surf);
-        }
-    }
-
-    // Items del inventario — cada uno en un slot (frame + icono)
-    const int SLOT_SIZE = 48;
-    const int SLOT_MARGIN = 8;
-    int slot_x = GAME_WIDTH + SLOT_MARGIN;
-    int slot_y = 40;
-
-    for (const auto& item : inventory) {
-        SDL_Texture* icon = nullptr;
-        if (item.get_id() == "espada") icon = sword_texture;
-
-        if (icon) {
-            SDL_FRect icon_dst = {static_cast<float>(slot_x), static_cast<float>(slot_y),
-                                  static_cast<float>(SLOT_SIZE), static_cast<float>(SLOT_SIZE)};
-            SDL_RenderTexture(renderer, icon, nullptr, &icon_dst);
-        }
-
-        slot_x += SLOT_SIZE + SLOT_MARGIN;
-        if (slot_x + SLOT_SIZE > GAME_WIDTH + PANEL_WIDTH - SLOT_MARGIN) {
-            slot_x = GAME_WIDTH + SLOT_MARGIN;
-            slot_y += SLOT_SIZE + SLOT_MARGIN;
-        }
-    }
-
-    // Boton "Pegar" en la parte inferior del panel
-    if (show_attack_button) {
-        SDL_FRect btn = {static_cast<float>(GAME_WIDTH + 10),
-                         static_cast<float>(CANVAS_HEIGHT - 60),
-                         static_cast<float>(PANEL_WIDTH - 20), 40};
-        SDL_SetRenderDrawColor(renderer, 200, 50, 50, 255);
-        SDL_RenderFillRect(renderer, &btn);
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderRect(renderer, &btn);
-
-        if (chat_font) {
-            SDL_Color white = {255, 255, 255, 255};
-            SDL_Surface* surf = TTF_RenderText_Solid(chat_font, "PEGAR", 0, white);
-            if (surf) {
-                SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
-                SDL_FRect dst = {btn.x + (btn.w - surf->w) / 2.0f,
-                                 btn.y + (btn.h - surf->h) / 2.0f,
-                                 static_cast<float>(surf->w), static_cast<float>(surf->h)};
-                SDL_RenderTexture(renderer, tex, nullptr, &dst);
-                SDL_DestroyTexture(tex);
-                SDL_DestroySurface(surf);
-            }
-        }
-    }
-}
 #define TILESIZE 64
 void ClientGUI::draw() {
     // centrar camara en el jugador (en el centro del tile) y limitar al mapa
@@ -451,7 +357,16 @@ void ClientGUI::draw() {
     // Levanta el clip para dibujar el panel y el chat encima
     SDL_SetRenderClipRect(renderer, nullptr);
 
-    drawInventoryPanel();
+    if (hud) {
+        hud->drawInventoryPanel();
+        hud->drawAttackButton();
+        /* TODO:
+        hud->draw_hp();
+        hud->draw_mana();
+        hud->draw_gold();
+        hud->draw_xp();
+        */
+    }
     mini_chat->render(GAME_WIDTH, CANVAS_HEIGHT);
     SDL_RenderPresent(renderer);
 }
@@ -470,28 +385,12 @@ void ClientGUI::init_draw() {
         SDL_DestroySurface(enemy_surf);
     }
 
-    SDL_Surface* inv_bg_surf = IMG_Load("imagenes/inventory-bg..png");
-    if (inv_bg_surf) {
-        inventory_bg_texture = SDL_CreateTextureFromSurface(renderer, inv_bg_surf);
-        SDL_DestroySurface(inv_bg_surf);
-    }
-
     SDL_Surface* frame_surf = IMG_Load("imagenes/frame..png");
     if (frame_surf) {
         frame_texture = SDL_CreateTextureFromSurface(renderer, frame_surf);
         SDL_DestroySurface(frame_surf);
     }
-
-    SDL_Surface* sword_surf = IMG_Load("imagenes/es_boton-espada-off.bmp");
-    if (!sword_surf) sword_surf = IMG_Load("../imagenes/es_boton-espada-off.bmp");
-    if (sword_surf) {
-        SDL_SetSurfaceColorKey(sword_surf, true, SDL_MapRGB(SDL_GetPixelFormatDetails(sword_surf->format), nullptr, 0, 0, 0));
-        sword_texture = SDL_CreateTextureFromSurface(renderer, sword_surf);
-        SDL_DestroySurface(sword_surf);
-        std::cout << "[DEBUG] sword_texture loaded OK" << std::endl;
-    } else {
-        std::cout << "[DEBUG] sword_texture FAILED: " << SDL_GetError() << std::endl;
-    }
+    hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
 
     // tile_size viene del TOML
     // el player se escala con el mismo tamano de celda
