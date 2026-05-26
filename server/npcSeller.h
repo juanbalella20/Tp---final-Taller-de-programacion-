@@ -2,6 +2,7 @@
 #define NPC_FRIENDLY_SELLER_H_
 
 #include "npcFriendly.h"
+#include "npc.h"
 
 #include "item_info.h"
 #include "item.h"
@@ -27,7 +28,9 @@ public:
     int get_coord_y() const;
  
     std::vector<ItemInfo> list_items() const;
-    bool interact(Player& player, const std::string& item_id);
+    // interact = vender: saca el item del inventario del player y le da el oro
+    void interact(Player& player, Command cmd) override;
+
 };
 
 

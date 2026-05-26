@@ -23,21 +23,20 @@ std::vector<ItemInfo> NPCseller::list_items() const {
     return result;
 }
  
-bool NPCseller::interact(Player& player, const std::string& item_id) {
+void NPCseller::interact(Player& player, Command cmd) {
     // Buscamos el item en el inventario del player
     Item* item_to_sell = nullptr;
     for (Item* item : player.get_inventory().get_items()) {
-        if (item->get_id() == item_id) {
+        if (item->get_id() == cmd.item_id) {
             item_to_sell = item;
             break;
         }
     }
  
-    if (item_to_sell == nullptr) return false;
+    if (item_to_sell == nullptr) return;
  
     int price = item_to_sell->getPrice();
     player.drop_item(item_to_sell);
     player.add_gold(price);
- 
-    return true;
 }
+

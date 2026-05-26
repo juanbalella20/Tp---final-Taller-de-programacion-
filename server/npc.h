@@ -5,11 +5,12 @@
 
 
 struct Command {
-    int action; // ex: comprar
-    int objeto; // ex: un item
-    int cantidad; //
-    int actual_gold; // ?
+    int action;       // ex: comprar, vender
+    std::string item_id;  // id del item involucrado
+    int cantidad;
+    int actual_gold;
 };
+
 
 
 class NPC {
