@@ -188,6 +188,10 @@ void GameLoop::run() {
                         msg.set_chat_content("No hay objetos acá");
                     }
                     client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    
+                    GameMsg map_msg(MSG_SEND_MAP);
+                    map_msg.set_map(game_map.get_map());
+                    client_registry_monitor.notify_clients(map_msg);
                     break;
                 }
                 //case MSG_RESURRECT: handle_resurrect(cmd); break;
