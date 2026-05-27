@@ -184,6 +184,14 @@ void GameLoop::run() {
                     if (item) {
                         game_map.give_item_to_player(name, std::move(item));
                         msg.set_chat_content("Recogiste un objeto.");
+                        const Player& p = game_map.get_player(name);
+                        std::vector<ItemInfo> item_infos;
+                        for (Item* item : p.get_inventory().get_items()) {
+                            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
+                        }
+                        GameMsg inv_msg(MSG_INVENTORY);
+                        inv_msg.set_items(item_infos);
+                        client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
                     } else {
                         msg.set_chat_content("No hay objetos acá");
                     }
