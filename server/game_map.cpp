@@ -248,6 +248,11 @@ void GameMap::spawn_item(int x, int y, std::unique_ptr<Item> item) {
     }
 }
 
+uint32_t GameMap::get_player_gold(const std::string& name) {
+    Player* player = find_player_by_name(name);
+    return player->get_gold();
+}
+
 // TODO
 void GameMap::read_city() {}
 // TODO

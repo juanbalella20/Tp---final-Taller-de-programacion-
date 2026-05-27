@@ -88,7 +88,7 @@ public:
     void spawn_item(int x, int y, std::unique_ptr<Item> item);
 
     void spawn_gold(int x, int y, int amount);
-    
+    uint32_t get_player_gold(const std::string& name);
     //Player* get_player(const std::string& name);
 };
 
