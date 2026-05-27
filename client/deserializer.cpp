@@ -147,18 +147,10 @@ void ClientDeserializer::deserialize_gold(const std::vector<uint8_t>& payload, G
         throw std::invalid_argument("Payload inválido para mensaje de oro");
     }
 
-    // std::cout << "[DEBUG] Bytes (oro) recibidos: ";
-    // for (int i = 0; i < 4; i++) {
-    //     std::cout << static_cast<int>(payload[i]) << " ";
-    // }
-    // std::cout << std::endl;
-
     uint32_t amount;
     std::memcpy(&amount, payload.data(), sizeof(uint32_t));
     uint32_t gold = ntohl(amount);
     msg.set_gold(gold);
-
-    //std::cout << "[DEBUG] Oro final: " << msg.get_gold() << std::endl;
 }
 
 void ClientDeserializer::deserialize_item(const std::vector<uint8_t>& payload, GameMsg& msg) {

@@ -126,7 +126,6 @@ std::vector<uint8_t> ServerSerializer::serialize_private(const GameMsg& msg) {
 
 std::vector<uint8_t> ServerSerializer::serialize_gold(const GameMsg& msg) {
     uint32_t gold = msg.get_gold();
-    //std::cout << "[DEBUG] Serializando oro. Valor: " << gold << std::endl;
     std::vector<uint8_t> buf;
     uint16_t payload_len = sizeof(uint32_t);
 
