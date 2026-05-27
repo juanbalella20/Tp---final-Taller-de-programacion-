@@ -90,6 +90,7 @@ add_executable(client
     client/networkSenderThread.cpp
     client/networkReceiverThread.cpp
     client/npcSprite.cpp
+    client/itemSprite.cpp
     client/hud.cpp
 )
 target_include_directories(client PRIVATE client)
