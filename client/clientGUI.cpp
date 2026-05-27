@@ -1,5 +1,6 @@
 #include "clientGUI.h"
 #include "npcSprite.h"
+#include "itemSprite.h"
 #include <SDL3_image/SDL_image.h>
 #include <iostream>
 #include <stdexcept>
@@ -341,7 +342,8 @@ void ClientGUI::drawItems() {
     for (int row = 0; row < static_cast<int>(world_map.size()); ++row) {
         for (int col = 0; col < static_cast<int>(world_map[row].size()); ++col) {
             if (world_map[row][col] == elements::objects) {
-                NpcSprite(renderer, item_texture, col, row, tileSize).draw(camera);
+                SDL_FRect item_coutout = { 465.0f, 447.0f, 30.0f, 65.0f };
+                ItemSprite(renderer, item_texture, col, row, tileSize, item_coutout).draw(camera);
             }
         }
     }
@@ -391,14 +393,6 @@ void ClientGUI::draw() {
     SDL_RenderPresent(renderer);
 }
 
-static SDL_Texture* create_solid_texture(SDL_Renderer* renderer, int w, int h, Uint8 r, Uint8 g, Uint8 b) {
-    SDL_Texture* tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, w, h);
-    if (!tex) return nullptr;
-    std::vector<Uint32> pixels(w*h, (r<<24) | (g<<16) | (b<<8) | 0xFF);
-    SDL_UpdateTexture(tex, nullptr, pixels.data(), w*sizeof(Uint32));
-    return tex;
-}
-
 void ClientGUI::init_draw() {
     // la info se la pasa el cliente desde config?
     initSDL();
@@ -419,11 +413,11 @@ void ClientGUI::init_draw() {
         SDL_DestroySurface(frame_surf);
     }
 
-    SDL_Surface* item_surf = IMG_Load("imagenes/es_boton-espada-off.png");
-    if (!item_surf) { item_surf = IMG_Load("es_boton-espada-off.png"); }
-    if (item_surf) {
-        item_texture = SDL_CreateTextureFromSurface(renderer, item_surf);
-        SDL_DestroySurface(item_surf);
+    SDL_Surface* sheet_surf = IMG_Load("imagenes/Recursos/Graficos/3.png");
+    if (!sheet_surf) { sheet_surf = IMG_Load("3.png"); }
+    if (sheet_surf) {
+        item_texture = SDL_CreateTextureFromSurface(renderer, sheet_surf);
+        SDL_DestroySurface(sheet_surf);
     }
 
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
