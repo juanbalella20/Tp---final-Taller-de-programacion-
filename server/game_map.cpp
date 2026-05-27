@@ -226,6 +226,7 @@ std::unique_ptr<Item> GameMap::pick_up_item(const std::string& player_name) {
 
         if (gold_at_pos == ground_gold.end()) return nullptr;
 
+        player->add_gold(gold_at_pos->amount);
         ground_gold.erase(gold_at_pos);
         map[y][x] = elements::empty;
     }

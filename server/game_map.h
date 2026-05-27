@@ -89,6 +89,7 @@ public:
 
     void spawn_gold(int x, int y, int amount);
     uint32_t get_player_gold(const std::string& name);
+    
     //Player* get_player(const std::string& name);
 };
 
