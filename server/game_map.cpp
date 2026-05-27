@@ -68,7 +68,7 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     if (new_x < 0 || new_y < 0 || new_x >= width || new_y >= height) {
         return {false, player_name, 0, 0};
     }
-    if (map[new_y][new_x] != elements::empty) {
+    if (map[new_y][new_x] != elements::empty && map[new_y][new_x] != elements::objects) {
         return {false, player_name, 0, 0};
     }
 
