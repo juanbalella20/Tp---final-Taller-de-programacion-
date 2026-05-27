@@ -134,7 +134,7 @@ void GameMap::spawn_seller(int x, int y) {
         std::cout << "[DEBUG: spawn_seller] NPCseller at (" << x << "," << y << ")" << std::endl;
     }
 }
-
+ 
 bool GameMap::player_sell_item(const std::string& player_name, int x, int y, const std::string& item_id) {
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) throw std::runtime_error("Player not found: " + player_name);
@@ -148,8 +148,9 @@ bool GameMap::player_sell_item(const std::string& player_name, int x, int y, con
     }
     if (seller == nullptr) throw std::runtime_error("No hay un comerciante en esa posicion.");
  
-    bool sold = seller->interact(*player, item_id);
-    if (!sold) throw std::runtime_error("No tenes ese item en el inventario.");
+    Command cmd;
+    cmd.item_id = item_id;
+    seller->interact(*player, cmd);
  
     return true;
 }
@@ -165,7 +166,6 @@ std::vector<ItemInfo> GameMap::list_seller_items(int x, int y) {
     if (seller == nullptr) throw std::runtime_error("No hay un comerciante en esa posicion.");
     return seller->list_items();
 }
-
 
 bool GameMap::look_for_entity(int x, int y) {
     if (x < 0 || x >= width || y < 0 || y >= height) return false;

@@ -121,7 +121,7 @@ bool Player::give_gold(const int amount) {
     return false;
 }
 
-int Player::get_gold() {
+int Player::get_gold() const{
     return gold;
 }
 

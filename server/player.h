@@ -65,7 +65,7 @@ public:
 
     bool give_gold(const int amount);
 
-    int get_gold();
+    int get_gold() const;
 
     std::string get_name() const override;
 
