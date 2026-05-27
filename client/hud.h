@@ -24,6 +24,8 @@ private:
     SDL_FRect attack_btn;
     bool show_attack_button;
 
+    uint32_t gold_amount;
+
     float game_width;
     float panel_width;
     float canvas_height;
@@ -43,6 +45,8 @@ public:
     void set_attack_button_visible(bool visible);
     bool is_attack_button_visible() const { return show_attack_button; }
     const SDL_FRect& get_attack_button_rect() const { return attack_btn; }
+
+    void set_gold(uint32_t amount);
 
     void drawInventoryPanel();
     void drawAttackButton();

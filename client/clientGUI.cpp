@@ -317,6 +317,10 @@ void ClientGUI::update() {
                 case MSG_CHEAT_INF_MANA:
                     chat_inbox.push(msg.get_chat_content());
                     break;
+
+                case MSG_GOLD:
+                    if (hud) hud->set_gold(msg.get_gold());
+                    break;
                 default:
                     break;
             }
@@ -392,6 +396,8 @@ void ClientGUI::draw() {
     if (hud) {
         hud->drawInventoryPanel();
         hud->drawAttackButton();
+
+        hud->draw_gold();
         /* TODO:
         hud->draw_hp();
         hud->draw_mana();

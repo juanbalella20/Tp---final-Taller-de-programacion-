@@ -34,6 +34,10 @@ void HUD::set_attack_button_visible(bool visible) {
     show_attack_button = visible;
 }
 
+void HUD::set_gold(uint32_t amount) {
+    gold_amount = amount;
+}
+
 void HUD::drawAttackButton() {
     if (!show_attack_button) return;
 
@@ -100,6 +104,29 @@ void HUD::drawInventoryPanel() {
             slot_x = game_width + SLOT_MARGIN;
             slot_y += SLOT_SIZE + SLOT_MARGIN;
         }
+    }
+}
+
+void HUD::draw_gold() {
+    if (!font) return;
+
+    std::string gold_text = "Oro: " + std::to_string(gold_amount);
+
+    SDL_Color color = {255, 255, 255, 255};
+    SDL_Surface* surf = TTF_RenderText_Solid(font, gold_text.c_str(), 0, color);
+
+    if (surf) {
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
+
+        if (tex) {
+            float pos_x = game_width + 15.0f;
+            float pos_y = 400.0f;
+
+            SDL_FRect dest = { pos_x, pos_y, static_cast<float>(surf->w), static_cast<float>(surf->h)};
+            SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);
+            SDL_DestroyTexture(tex);
+        }
+        SDL_DestroySurface(surf);
     }
 }
 
