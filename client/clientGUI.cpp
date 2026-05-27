@@ -292,6 +292,7 @@ void ClientGUI::update() {
                 case MSG_LIST:
                 case MSG_BUY:
                 case MSG_SELL:
+                case MSG_TAKE:
                 case MSG_DEPOSIT:
                 case MSG_RETIRE:
                 case MSG_DEP_GOLD:
@@ -335,7 +336,15 @@ void ClientGUI::drawEnemies() {
 }
 
 void ClientGUI::drawItems() {
-    
+    if (world_map.empty() || !enemy_texture || !tilemap) return;
+    const int tileSize = tilemap->getTileSize();
+    for (int row = 0; row < static_cast<int>(world_map.size()); ++row) {
+        for (int col = 0; col < static_cast<int>(world_map[row].size()); ++col) {
+            if (world_map[row][col] == elements::objects) {
+                NpcSprite(renderer, item_texture, col, row, tileSize).draw(camera);
+            }
+        }
+    }
 }
 
 #define TILESIZE 64
@@ -357,6 +366,8 @@ void ClientGUI::draw() {
     if (tilemap) {
         tilemap->render(camera.get_x(), camera.get_y());
     }
+
+    drawItems();
     if (player) {
         player->draw(camera);
     }
@@ -408,7 +419,13 @@ void ClientGUI::init_draw() {
         SDL_DestroySurface(frame_surf);
     }
 
-    item_texture = create_solid_texture(renderer, 32, 32, 255, 215, 0);
+    SDL_Surface* item_surf = IMG_Load("imagenes/es_boton-espada-off.png");
+    if (!item_surf) { item_surf = IMG_Load("es_boton-espada-off.png"); }
+    if (item_surf) {
+        item_texture = SDL_CreateTextureFromSurface(renderer, item_surf);
+        SDL_DestroySurface(item_surf);
+    }
+
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
 
     // tile_size viene del TOML
