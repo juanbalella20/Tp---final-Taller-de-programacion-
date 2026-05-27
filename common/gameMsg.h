@@ -17,6 +17,9 @@ class GameMsg {
     int coord_x;
     int coord_y;
     std::vector<ItemInfo> items;
+    int hp;
+    int xp;
+    int mana;
 
     public:
     GameMsg(uint8_t type, Direction direction = DIR_NORTH)
@@ -42,6 +45,15 @@ class GameMsg {
     int get_coord_y() const;
     void set_items(const std::vector<ItemInfo>& items);
     const std::vector<ItemInfo>& get_items() const;
+
+    void set_hp(int hp);
+    int get_hp() const;
+
+    void set_xp(int xp);
+    int get_xp() const;
+
+    void set_mana(int mana);
+    int get_mana() const;
 };
 
 

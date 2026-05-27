@@ -21,3 +21,12 @@ void GameMsg::set_coord_y(int y) { this->coord_y = y; }
 int GameMsg::get_coord_y() const { return coord_y; }
 void GameMsg::set_items(const std::vector<ItemInfo>& new_items) { this->items = new_items; }
 const std::vector<ItemInfo>& GameMsg::get_items() const { return items; }
+
+void GameMsg::set_hp(int hp) { this->hp = hp; }
+int GameMsg::get_hp() const { return this->hp; }
+
+void GameMsg::set_xp(int xp) { this->xp = xp; }
+int GameMsg::get_xp() const { return this->xp; }
+
+void GameMsg::set_mana(int mana) { this->mana = mana; }
+int GameMsg::get_mana() const { return this->mana; }
