@@ -4,7 +4,7 @@
 #include "npcFriendly.h"
 #include "npc.h"
 
-#include "item_info.h"
+#include "../common/item_info.h"
 #include "item.h"
 
 #include <vector>
@@ -23,9 +23,16 @@ private:
  
 public:
     NPCseller(int x, int y);
+
+    NPCseller(NPCseller&&) = default;
+    NPCseller& operator=(NPCseller&&) = default;
  
-    int get_coord_x() const;
-    int get_coord_y() const;
+    NPCseller(const NPCseller&) = delete;
+    NPCseller& operator=(const NPCseller&) = delete;
+
+ 
+    int get_coord_x() const { return pos_x; }
+    int get_coord_y() const { return pos_y; }
  
     std::vector<ItemInfo> list_items() const;
     // interact = vender: saca el item del inventario del player y le da el oro

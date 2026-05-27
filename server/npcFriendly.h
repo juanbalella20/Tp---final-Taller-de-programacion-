@@ -3,12 +3,13 @@
 
 #include "npc.h"
 
+class Player;
+
 class NPCfriendly : public NPC {
     public:
-        // an npc_id is generated and a name
-        NPCfriendly();
+        NPCfriendly() : NPC() {}
         virtual void interact(Player& player, Command cmd) = 0;
-        
+        virtual ~NPCfriendly() = default;
 };
 
-#endif 
+#endif
