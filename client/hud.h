@@ -25,6 +25,7 @@ private:
     bool show_attack_button;
 
     uint32_t gold_amount;
+    int player_hp;
 
     float game_width;
     float panel_width;
@@ -47,6 +48,7 @@ public:
     const SDL_FRect& get_attack_button_rect() const { return attack_btn; }
 
     void set_gold(uint32_t amount);
+    void set_hp(uint32_t hp);
 
     void drawInventoryPanel();
     void drawAttackButton();

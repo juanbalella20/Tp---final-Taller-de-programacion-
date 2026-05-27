@@ -38,6 +38,10 @@ void HUD::set_gold(uint32_t amount) {
     gold_amount = amount;
 }
 
+void HUD::set_hp(uint32_t hp) {
+    player_hp = hp;
+}
+
 void HUD::drawAttackButton() {
     if (!show_attack_button) return;
 
@@ -121,6 +125,29 @@ void HUD::draw_gold() {
         if (tex) {
             float pos_x = game_width + 15.0f;
             float pos_y = 400.0f;
+
+            SDL_FRect dest = { pos_x, pos_y, static_cast<float>(surf->w), static_cast<float>(surf->h)};
+            SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);
+            SDL_DestroyTexture(tex);
+        }
+        SDL_DestroySurface(surf);
+    }
+}
+
+void HUD::draw_hp() {
+    if (!font) return;
+
+    std::string hp_text = "Vidas: " + std::to_string(player_hp);
+
+    SDL_Color color = {255, 255, 255, 255};
+    SDL_Surface* surf = TTF_RenderText_Solid(font, hp_text.c_str(), 0, color);
+
+    if (surf) {
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
+
+        if (tex) {
+            float pos_x = game_width + 15.0f;
+            float pos_y = 420.0f;
 
             SDL_FRect dest = { pos_x, pos_y, static_cast<float>(surf->w), static_cast<float>(surf->h)};
             SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);

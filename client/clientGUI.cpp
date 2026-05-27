@@ -321,6 +321,9 @@ void ClientGUI::update() {
                 case MSG_GOLD:
                     if (hud) hud->set_gold(msg.get_gold());
                     break;
+                case MSG_HP:
+                    if (hud) hud->set_hp(msg.get_hp());
+                    break;
                 default:
                     break;
             }
@@ -398,6 +401,7 @@ void ClientGUI::draw() {
         hud->drawAttackButton();
 
         hud->draw_gold();
+        hud->draw_hp();
         /* TODO:
         hud->draw_hp();
         hud->draw_mana();
