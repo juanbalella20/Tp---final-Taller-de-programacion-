@@ -105,6 +105,35 @@ void GameLoop::run() {
                     }
                     break;
                 }
+                case MSG_SELL: {
+                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+                    int x = cmd.get_coord_x();
+                    int y = cmd.get_coord_y();
+                    std::string item_id = cmd.get_item_id();
+                    try {
+                        game_map.player_sell_item(name, x, y, item_id);
+ 
+                        const Player& p = game_map.get_player(name);
+                        std::vector<ItemInfo> item_infos;
+                        for (Item* item : p.get_inventory().get_items()) {
+                            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
+                        }
+                        GameMsg inv_msg(MSG_INVENTORY);
+                        inv_msg.set_items(item_infos);
+                        client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
+ 
+                        GameMsg gold_msg(MSG_CHAT);
+                        gold_msg.set_chat_content("Vendiste el item. Oro actual: " +
+                                                  std::to_string(p.get_gold()));
+                        client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
+ 
+                    } catch (const std::runtime_error& e) {
+                        GameMsg msg(MSG_CHAT);
+                        msg.set_chat_content(e.what());
+                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    }
+                    break;
+                }
                 case MSG_EQUIP:{
                     std::string name =
                         client_registry_monitor.get_name(cmd.get_client_id());

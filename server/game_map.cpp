@@ -110,6 +110,8 @@ void GameMap::read_desert() {
 
     // NPC de prueba hardcodeado: posicion (7,5), cerca del player_start (5,5)
     spawn_npc(7, 5);
+    // NPC comerciante de prueba hardcodeado
+    spawn_seller(6, 5);
 
     // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
     spawns = md.get_spawns();
