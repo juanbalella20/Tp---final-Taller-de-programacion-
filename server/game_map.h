@@ -23,6 +23,7 @@ private:
     std::vector<NPChostile> npcs;
     std::map<std::string, positionCoord> spawns;
     std::vector<groundItem> ground_items;
+    std::vector<groundGold> ground_gold;
 
     Player* find_player_by_name(const std::string& name);
     bool look_for_entity(int x, int y);
@@ -85,6 +86,8 @@ public:
     std::unique_ptr<Item> pick_up_item(const std::string& player_name);
     void give_item_to_player(const std::string& player_name, std::unique_ptr<Item> item);
     void spawn_item(int x, int y, std::unique_ptr<Item> item);
+
+    void spawn_gold(int x, int y, int amount);
     
     //Player* get_player(const std::string& name);
 };

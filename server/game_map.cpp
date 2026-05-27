@@ -157,6 +157,15 @@ Entity* GameMap::find_entity_at(int x, int y) {
     return nullptr;
 }
 
+void GameMap::spawn_gold(int x, int y, int amount) {
+    if (y >= 0 && y < height && x >= 0 && x < width) {
+        positionCoord coord{x, y};
+        ground_gold.push_back({coord, amount});
+        map[y][x] = elements::gold;
+        std::cout << "[DEBUG: spawn_gold] at (" << x << "," << y << ")" << std::endl;
+    }
+}
+
 GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, int y) {
     if (!look_for_entity(x, y)) throw NoEntityException();
 
@@ -169,7 +178,8 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
     attacker->attack(*target, x, y);
 
     if (target->is_dead()) {
-        map[y][x] = elements::empty;
+        //map[y][x] = elements::empty;
+        spawn_gold(x, y, 1);
         return {true, true, target->get_name()};
     }
     return {true, false, target->get_name()};
