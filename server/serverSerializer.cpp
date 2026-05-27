@@ -24,6 +24,7 @@ ServerSerializer::ServerSerializer() {
     };
     handlers[MSG_PRIVATE] = [this](const GameMsg& msg) { return serialize_private(msg); };
     handlers[MSG_GOLD] = [this](const GameMsg& msg) { return serialize_gold(msg); };
+    handlers[MSG_HP] = [this](const GameMsg& msg) { return serialize_hp(msg); };
 }
 
 void ServerSerializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {
@@ -124,18 +125,40 @@ std::vector<uint8_t> ServerSerializer::serialize_private(const GameMsg& msg) {
     return buf;
 }
 
-std::vector<uint8_t> ServerSerializer::serialize_gold(const GameMsg& msg) {
-    uint32_t gold = msg.get_gold();
+std::vector<uint8_t> ServerSerializer::serialize_value(const GameMsg& msg, uint32_t value) {
     std::vector<uint8_t> buf;
     uint16_t payload_len = sizeof(uint32_t);
 
     buf.reserve(LEN_HEADER + payload_len);
     write_header(buf, static_cast<uint8_t>(msg.get_type()), payload_len);
-    uint32_t gold_be = htonl(gold);
-    uint8_t gold_bytes[sizeof(uint32_t)];
-    std::memcpy(gold_bytes, &gold_be, sizeof(uint32_t));
-    buf.insert(buf.end(), gold_bytes, gold_bytes + sizeof(uint32_t));
+    uint32_t value_be = htonl(value);
+    uint8_t value_bytes[sizeof(uint32_t)];
+    std::memcpy(value_bytes, &value_be, sizeof(uint32_t));
+    buf.insert(buf.end(), value_bytes, value_bytes + sizeof(uint32_t));
 
     return buf;
 }
 
+std::vector<uint8_t> ServerSerializer::serialize_gold(const GameMsg& msg) {
+    uint32_t gold = msg.get_gold();
+
+    return serialize_value(msg, gold);
+}
+
+std::vector<uint8_t> ServerSerializer::serialize_hp(const GameMsg& msg) {
+    uint32_t hp = msg.get_hp();
+
+    return serialize_value(msg, hp);
+}
+
+std::vector<uint8_t> ServerSerializer::serialize_xp(const GameMsg& msg) {
+    uint32_t xp = msg.get_xp();
+
+    return serialize_value(msg, xp);
+}
+
+std::vector<uint8_t> ServerSerializer::serialize_mana(const GameMsg& msg) {
+    uint32_t mana = msg.get_mana();
+
+    return serialize_value(msg, mana);
+}
