@@ -26,6 +26,7 @@ ServerDeserializer::ServerDeserializer() {
     handlers[MSG_RETIRE]   = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
     handlers[MSG_DEP_GOLD] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_gold(payload, cmd); };
     handlers[MSG_RET_GOLD] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_gold(payload, cmd); };
+    handlers[MSG_GOLD] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_gold(payload, cmd); };
     handlers[MSG_MEDITATE] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_no_payload(payload, cmd);
     };

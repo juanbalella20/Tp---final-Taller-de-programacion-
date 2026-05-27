@@ -29,6 +29,7 @@ Serializer::Serializer() {
     handlers[MSG_CLAN_KICK] = [this](const ClientCmd& cmd) { return serialize_name(MSG_CLAN_KICK, cmd); };
     handlers[MSG_DEP_GOLD]  = [this](const ClientCmd& cmd) { return serialize_gold(MSG_DEP_GOLD, cmd); };
     handlers[MSG_RET_GOLD] = [this](const ClientCmd& cmd) { return serialize_gold(MSG_RET_GOLD, cmd); };
+    handlers[MSG_GOLD] = [this](const ClientCmd& cmd) { return serialize_gold(MSG_GOLD, cmd); };
     handlers[MSG_CHEAT_KILL] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CHEAT_KILL); };
     handlers[MSG_CHEAT_INF_HP] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CHEAT_INF_HP); };
     handlers[MSG_CHEAT_INF_MANA] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CHEAT_INF_MANA); };

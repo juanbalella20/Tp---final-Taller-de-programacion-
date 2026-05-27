@@ -4,6 +4,9 @@
 #include "../common/item_info.h"
 
 #include <stdexcept>
+#include <arpa/inet.h>
+#include <cstring>
+#include <iostream>
 
 ClientDeserializer::ClientDeserializer() {
     handlers[MSG_MOVE] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
@@ -33,6 +36,9 @@ ClientDeserializer::ClientDeserializer() {
         deserialize_gold(payload, msg);
     };
     handlers[MSG_RET_GOLD] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_gold(payload, msg);
+    };
+    handlers[MSG_GOLD] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_gold(payload, msg);
     };
     for (uint8_t type : {
@@ -141,8 +147,18 @@ void ClientDeserializer::deserialize_gold(const std::vector<uint8_t>& payload, G
         throw std::invalid_argument("Payload inválido para mensaje de oro");
     }
 
-    uint32_t amount = (payload[0] << 24) | (payload[1] << 16) | (payload[2] << 8) | payload[3];
-    msg.set_gold(amount);
+    // std::cout << "[DEBUG] Bytes (oro) recibidos: ";
+    // for (int i = 0; i < 4; i++) {
+    //     std::cout << static_cast<int>(payload[i]) << " ";
+    // }
+    // std::cout << std::endl;
+
+    uint32_t amount;
+    std::memcpy(&amount, payload.data(), sizeof(uint32_t));
+    uint32_t gold = ntohl(amount);
+    msg.set_gold(gold);
+
+    //std::cout << "[DEBUG] Oro final: " << msg.get_gold() << std::endl;
 }
 
 void ClientDeserializer::deserialize_item(const std::vector<uint8_t>& payload, GameMsg& msg) {

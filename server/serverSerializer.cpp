@@ -3,6 +3,7 @@
 #include "../common/item_info.h"
 #include <arpa/inet.h>
 #include <cstring>
+#include <iostream>
 
 ServerSerializer::ServerSerializer() {
     handlers[MSG_MOVE] = [this](const GameMsg& msg) { return serialize_move(msg); };
@@ -22,6 +23,7 @@ ServerSerializer::ServerSerializer() {
         handlers[type] = [this](const GameMsg& msg) { return serialize_text(msg); };
     };
     handlers[MSG_PRIVATE] = [this](const GameMsg& msg) { return serialize_private(msg); };
+    handlers[MSG_GOLD] = [this](const GameMsg& msg) { return serialize_gold(msg); };
 }
 
 void ServerSerializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {
@@ -119,6 +121,22 @@ std::vector<uint8_t> ServerSerializer::serialize_private(const GameMsg& msg) {
     buf.insert(buf.end(), sender.begin(), sender.end());
     buf.push_back(static_cast<uint8_t>(content.size()));
     buf.insert(buf.end(), content.begin(), content.end());
+    return buf;
+}
+
+std::vector<uint8_t> ServerSerializer::serialize_gold(const GameMsg& msg) {
+    uint32_t gold = msg.get_gold();
+    //std::cout << "[DEBUG] Serializando oro. Valor: " << gold << std::endl;
+    std::vector<uint8_t> buf;
+    uint16_t payload_len = sizeof(uint32_t);
+
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, static_cast<uint8_t>(msg.get_type()), payload_len);
+    uint32_t gold_be = htonl(gold);
+    uint8_t gold_bytes[sizeof(uint32_t)];
+    std::memcpy(gold_bytes, &gold_be, sizeof(uint32_t));
+    buf.insert(buf.end(), gold_bytes, gold_bytes + sizeof(uint32_t));
+
     return buf;
 }
 
