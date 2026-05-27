@@ -105,11 +105,38 @@ void GameLoop::run() {
                     }
                     break;
                 }
-                case MSG_SELL: {
+                case MSG_LIST: {
                     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
                     int x = cmd.get_coord_x();
                     int y = cmd.get_coord_y();
+                    try {
+                        std::vector<ItemInfo> items = game_map.list_seller_items(x, y);
+                        GameMsg msg(MSG_INVENTORY);
+                        msg.set_items(items);
+                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    } catch (const std::runtime_error& e) {
+                        GameMsg msg(MSG_CHAT);
+                        msg.set_chat_content(e.what());
+                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                    }
+                    break;
+                }
+                case MSG_SELL: {
+                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
                     std::string item_id = cmd.get_item_id();
+ 
+                    auto it = selected_npc.find(cmd.get_client_id());
+                    if (it == selected_npc.end()) {
+                        GameMsg msg(MSG_CHAT);
+                        msg.set_chat_content("Selecciona un comerciante primero.");
+                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                        break;
+                    }
+                    int x = it->second.first;
+                    int y = it->second.second;
+                    std::cout << "[DEBUG: MSG_SELL] player=" << name
+                              << " x=" << x << " y=" << y
+                              << " item=" << item_id << std::endl;
                     try {
                         game_map.player_sell_item(name, x, y, item_id);
  
@@ -147,6 +174,7 @@ void GameLoop::run() {
                     uint16_t coor_y = cmd.get_coord_y();
                     std::cout << "[DEBUG: MSG_SELECT] col=" << coor_x
                               << " fila=" << coor_y << std::endl;
+                    selected_npc[cmd.get_client_id()] = {coor_x, coor_y};
                     //std::string sector = game_map.sector_of_position(coor_x, coor_y);
                     break;
                 }

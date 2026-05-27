@@ -18,6 +18,9 @@ class GameLoop : public Thread {
     GameMap game_map;
     void load_maps();
     void load_world();
+   // Guarda el ultimo NPC seleccionado por cada cliente (client_id -> {x, y})
+    std::unordered_map<uint32_t, std::pair<int,int>> selected_npc;
+
 
     void handle_attack(const ClientCmd& cmd);
     void handle_meditate(const ClientCmd& cmd);
