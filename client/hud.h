@@ -24,14 +24,18 @@ private:
     SDL_FRect attack_btn;
     bool show_attack_button;
 
-    uint32_t gold_amount;
+    uint32_t player_gold;
     int player_hp;
+    int player_xp;
+    int player_mana;
 
     float game_width;
     float panel_width;
     float canvas_height;
 
     void load_textures();
+
+    void draw_stat(const std::string& text, float pos_y);
 
 public:
     HUD(SDL_Renderer* gui_renderer,
@@ -49,6 +53,8 @@ public:
 
     void set_gold(uint32_t amount);
     void set_hp(uint32_t hp);
+    void set_xp(uint32_t xp);
+    void set_mana(uint32_t mana);
 
     void drawInventoryPanel();
     void drawAttackButton();

@@ -324,6 +324,12 @@ void ClientGUI::update() {
                 case MSG_HP:
                     if (hud) hud->set_hp(msg.get_hp());
                     break;
+                case MSG_XP:
+                    if (hud) hud->set_xp(msg.get_xp());
+                    break;
+                case MSG_MANA:
+                    if (hud) hud->set_mana(msg.get_mana());
+                    break;
                 default:
                     break;
             }
@@ -399,15 +405,10 @@ void ClientGUI::draw() {
     if (hud) {
         hud->drawInventoryPanel();
         hud->drawAttackButton();
-
-        hud->draw_gold();
-        hud->draw_hp();
-        /* TODO:
         hud->draw_hp();
         hud->draw_mana();
         hud->draw_gold();
         hud->draw_xp();
-        */
     }
     mini_chat->render(GAME_WIDTH, CANVAS_HEIGHT);
     SDL_RenderPresent(renderer);

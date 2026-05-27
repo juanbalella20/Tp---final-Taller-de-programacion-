@@ -35,11 +35,19 @@ void HUD::set_attack_button_visible(bool visible) {
 }
 
 void HUD::set_gold(uint32_t amount) {
-    gold_amount = amount;
+    player_gold = amount;
 }
 
 void HUD::set_hp(uint32_t hp) {
     player_hp = hp;
+}
+
+void HUD::set_xp(uint32_t xp) {
+    player_xp = xp;
+}
+
+void HUD::set_mana(uint32_t mana) {
+    player_mana = mana;
 }
 
 void HUD::drawAttackButton() {
@@ -111,20 +119,15 @@ void HUD::drawInventoryPanel() {
     }
 }
 
-void HUD::draw_gold() {
-    if (!font) return;
-
-    std::string gold_text = "Oro: " + std::to_string(gold_amount);
-
+void HUD::draw_stat(const std::string& text, float pos_y) {
     SDL_Color color = {255, 255, 255, 255};
-    SDL_Surface* surf = TTF_RenderText_Solid(font, gold_text.c_str(), 0, color);
+    SDL_Surface* surf = TTF_RenderText_Solid(font, text.c_str(), 0, color);
 
     if (surf) {
         SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
 
         if (tex) {
             float pos_x = game_width + 15.0f;
-            float pos_y = 400.0f;
 
             SDL_FRect dest = { pos_x, pos_y, static_cast<float>(surf->w), static_cast<float>(surf->h)};
             SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);
@@ -134,27 +137,36 @@ void HUD::draw_gold() {
     }
 }
 
+void HUD::draw_gold() {
+    if (!font) return;
+
+    std::string gold_text = "Oro: " + std::to_string(player_gold);
+
+    draw_stat(gold_text, 400.0f);
+}
+
 void HUD::draw_hp() {
     if (!font) return;
 
     std::string hp_text = "Vidas: " + std::to_string(player_hp);
 
-    SDL_Color color = {255, 255, 255, 255};
-    SDL_Surface* surf = TTF_RenderText_Solid(font, hp_text.c_str(), 0, color);
+    draw_stat(hp_text, 420.0f);
+}
 
-    if (surf) {
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
+void HUD::draw_xp() {
+    if (!font) return;
 
-        if (tex) {
-            float pos_x = game_width + 15.0f;
-            float pos_y = 420.0f;
+    std::string xp_text = "Experiencia: " + std::to_string(player_xp);
 
-            SDL_FRect dest = { pos_x, pos_y, static_cast<float>(surf->w), static_cast<float>(surf->h)};
-            SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);
-            SDL_DestroyTexture(tex);
-        }
-        SDL_DestroySurface(surf);
-    }
+    draw_stat(xp_text, 440.0f);
+}
+
+void HUD::draw_mana() {
+    if (!font) return;
+
+    std::string mana_text = "Mana: " + std::to_string(player_mana);
+
+    draw_stat(mana_text, 460.0f);
 }
 
 void HUD::load_textures() {
