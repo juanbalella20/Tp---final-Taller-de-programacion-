@@ -53,6 +53,7 @@ private:
     SDL_Texture* enemy_texture;
     SDL_Texture* frame_texture;
     SDL_Texture* item_texture;
+    SDL_Texture* gold_texture;
     Camera camera;
 
     // tile seleccionado con NPC; {-1,-1} = ninguno
