@@ -89,7 +89,8 @@ enum ELEMENT_TYPE : uint8_t {
     ELEMENT_NPC    = 0x01,
     ELEMENT_OBJECT = 0x02,
     ELEMENT_BUILDING = 0x03,
-    ELEMENT_EMPTY = 0x04,
+    ELEMENT_GOLD = 0x04,
+    ELEMENT_EMPTY = 0x05,
 };
 
 const std::unordered_map<elements, ELEMENT_TYPE> ELEMENT_TYPE_MAP = {
@@ -97,6 +98,7 @@ const std::unordered_map<elements, ELEMENT_TYPE> ELEMENT_TYPE_MAP = {
     {elements::npcs, ELEMENT_NPC},
     {elements::objects, ELEMENT_OBJECT},
     {elements::buildings, ELEMENT_BUILDING},
+    {elements::gold, ELEMENT_GOLD},
     {elements::empty, ELEMENT_EMPTY},
 };
 

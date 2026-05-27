@@ -102,6 +102,9 @@ void ClientDeserializer::deserialize_map(const std::vector<uint8_t>& payload, Ga
                 case ELEMENT_EMPTY:
                     map[row][col] = elements::empty;
                     break;
+                case ELEMENT_GOLD:
+                    map[row][col] = elements::gold;
+                    break;
                 default:
                     throw std::invalid_argument("Celda invalida en MSG_SEND_MAP");
             }
