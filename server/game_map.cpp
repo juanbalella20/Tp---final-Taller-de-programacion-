@@ -71,6 +71,8 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     if (map[new_y][new_x] != elements::empty) {
         return {false, player_name, 0, 0};
     }
+    map[player->get_coord_y()][player->get_coord_x()] = elements::empty;
+    map[new_y][new_x] = elements::players;
 
     player->update_position(new_x, new_y);
     return {true, player_name, new_x, new_y};
@@ -82,10 +84,17 @@ void GameMap::load_players() {
 }
 
 void GameMap::spawn_player(const std::string& name) {
+    auto [x, y] = find_random_empty_cell();
+    /*
     auto it = spawns.find("player_start");
     int start_x = (it != spawns.end()) ? it->second.x : 1;
     int start_y = (it != spawns.end()) ? it->second.y : 1;
+    */
+    int start_x = x != -1 ? x : 1;
+    int start_y = y != -1 ? y : 1;
     Player p(name, PlayerRace(), PlayerClass());
+    map[start_y][start_x] = elements::players;
+
     p.update_position(start_x, start_y);
     p.add_item(std::make_unique<Arma>("espada", "Espada", 100, 2, 10));
     players.push_back(std::move(p));
@@ -145,7 +154,7 @@ std::pair<int,int> GameMap::find_random_empty_cell() {
         }
     }
     if (empty_cells.empty()) return {-1, -1};
-    return empty_cells[rand() % empty_cells.size()];
+    return empty_cells[rand() % empty_cells.size()];//mejorar random
 }
 
 bool GameMap::update_npcs() {
