@@ -129,7 +129,7 @@ add_executable(server
     server/npcHostile.cpp
     # server/npcBanker.cpp
     # server/npcPriest.cpp
-    # server/npcSeller.cpp
+    server/npcSeller.cpp
 )
 target_include_directories(server PRIVATE server)
 target_link_libraries(server PRIVATE common)
