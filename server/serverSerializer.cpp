@@ -12,7 +12,7 @@ ServerSerializer::ServerSerializer() {
     (uint8_t)MSG_MEDITATE, (uint8_t)MSG_RESURRECT, (uint8_t)MSG_CURE, (uint8_t)MSG_LIST,
     (uint8_t)MSG_FOUND_CLAN, (uint8_t)MSG_JOIN_CLAN, (uint8_t)MSG_LEFT_CLAN, (uint8_t)MSG_CLAN_ACEP,
     (uint8_t)MSG_CLAN_BAN, (uint8_t)MSG_CLAN_KICK, (uint8_t)MSG_CLAN_RECH, (uint8_t)MSG_REV_CLAN,
-    (uint8_t)MSG_CHAT,
+    (uint8_t)MSG_CHAT, (uint8_t)MSG_TAKE
     }) {
         handlers[type] = [this](const GameMsg& msg) { return serialize_text(msg); };
     };
