@@ -254,6 +254,11 @@ uint32_t GameMap::get_player_gold(const std::string& name) {
     return player->get_gold();
 }
 
+uint32_t GameMap::get_player_hp(const std::string& name) {
+    Player* player = find_player_by_name(name);
+    return player->get_lives();
+}
+
 // TODO
 void GameMap::read_city() {}
 // TODO
