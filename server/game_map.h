@@ -5,13 +5,18 @@
 #include "player.h"
 #include "npcHostile.h"
 #include "../common/game_constants.h"
+#include "../common/item_info.h"
+#include "../common/mapLoader.h"
 
 #include <vector>
 #include <map>
 #include <string>
 #include <utility>
 
-
+struct InitialState {
+    std::vector<NPChostile> npcs;
+    std::vector<Item> items;
+};
 
 class GameMap {
 
@@ -21,7 +26,10 @@ private:
     std::vector<std::vector<elements>> map;
     std::vector<Player> players;
     std::vector<NPChostile> npcs;
+    std::vector<ItemInfo> items;
     std::map<std::string, position_coord> spawns;
+    std::map<std::string, position_coord> player_position;
+    //TileGrid tiles;
 
     Player* find_player_by_name(const std::string& name);
     bool look_for_entity(int x, int y);
@@ -67,11 +75,12 @@ public:
     // Ataca la celda (x,y). Si hay un NPC lo mata (hardcodeado: muere de un golpe).
     AttackResult attack(const std::string& atacker_name, int x, int y);
 
-    void spawn_npc(NPChostile npc);
+    void spawn_npc(NPChostile&& npc);
     bool update_npcs();
 
     std::string sector_of_position(int x, int y);
-    void read_desert();
+    // Lee el archivo (TOML) de desierto y devuelve un tipo MapLoader
+    MapLoader read_desert();
     void read_city();
     void read_forest();
     void read_town();
@@ -85,6 +94,15 @@ public:
     position_coord get_spawn_position();           
 
     //Player* get_player(const std::string& name);
+    
+    /*
+     * Lee todos los mapas, setea en la matriz map:
+     * - los elementos de tipo construccion 
+     * - los elementos vacios
+     * Recibe el estado inicial del juego (posiciones de players, npcs & items)
+     * Setea en sus respectivos vectores la posicion de cada uno
+     */
+    void init_world(const InitialState& state);
 };
 
 

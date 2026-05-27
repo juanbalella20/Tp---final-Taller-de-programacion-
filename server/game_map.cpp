@@ -8,12 +8,35 @@
 #include <vector>
 #include <cstdlib>
 
-#include "../common/mapLoader.h"
 
 GameMap::GameMap() : width(0), height(0), map() {}
 
 std::vector<std::vector<elements>> GameMap::get_map() {
     return map;
+}
+
+void GameMap::init_world(const InitialState& state) {
+    MapLoader md = read_desert();
+
+    width  = md.get_width();
+    height = md.get_height();
+    map.assign(height, std::vector<elements>(width, elements::empty));
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            if (md.is_collidable(x, y)) {
+                map[y][x] = elements::buildings;
+            }
+        }
+    }
+    // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
+    spawns = md.get_spawns();
+
+    // itera sobre las posiciones de los actores
+    for (auto& npc : state.npcs) {
+        spawn_npc(NPChostile(npc));
+    }
+    // Los players se crean en MSG_REGISTER, no desde el InitialState.
 }
 
 void GameMap::add_player(Player player) {
@@ -85,54 +108,31 @@ void GameMap::load_players() {
 
 void GameMap::spawn_player(const std::string& name) {
     auto [x, y] = find_random_empty_cell();
-    /*
-    auto it = spawns.find("player_start");
-    int start_x = (it != spawns.end()) ? it->second.x : 1;
-    int start_y = (it != spawns.end()) ? it->second.y : 1;
-    */
+    
     int start_x = x != -1 ? x : 1;
     int start_y = y != -1 ? y : 1;
-    Player p(name, PlayerRace(), PlayerClass());
+    // valores hardcodeados para testear!
+    // revisar client_GUI line 403! -> estos valores no se envian esta hardocdeado tambien
+    start_x = 29;
+    start_y = 15;
     map[start_y][start_x] = elements::players;
 
-    p.update_position(start_x, start_y);
-    p.add_item(std::make_unique<Arma>("espada", "Espada", 100, 2, 10));
-    players.push_back(std::move(p));
+    Player player(name, PlayerRace(), PlayerClass());
+    player.update_position(start_x, start_y);
+    player.add_item(std::make_unique<Arma>("espada", "Espada", 100, 2, 10));
+    players.push_back(std::move(player));
     std::cout << "[DEBUG: spawn_player] " << name << " at ("
               << start_x << "," << start_y << ")" << std::endl;
 }
 
-void GameMap::read_desert() {
+MapLoader GameMap::read_desert() {
     MapLoader md;
     md.load("data/maps/desert/map.toml");
-
-    width  = md.get_width();
-    height = md.get_height();
-    map.assign(height, std::vector<elements>(width, elements::empty));
-
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            if (md.is_collidable(x, y)) {
-                map[y][x] = elements::buildings;
-            }
-        }
-    }
-
-    // NPCs de prueba: goblin respawnea en 5s, spider en 2s
-    NPChostile goblin("Goblin", 30, 5, 100);
-    goblin.set_position(7, 5);
-    spawn_npc(goblin);
-
-    NPChostile spider("Spider", 20, 4, 40);
-    spider.set_position(9, 5);
-    spawn_npc(spider);
-
-    // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
-    spawns = md.get_spawns();
+    return md;
 }
 
 
-void GameMap::spawn_npc(NPChostile npc) {
+void GameMap::spawn_npc(NPChostile&& npc) {
     int x = npc.get_coord_x();
     int y = npc.get_coord_y();
     if (y >= 0 && y < height && x >= 0 && x < width) {

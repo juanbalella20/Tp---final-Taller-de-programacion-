@@ -400,27 +400,10 @@ void ClientGUI::init_draw() {
     } catch (const std::runtime_error& e) {
         std::cout << "[DEBUG] imagenes/player.png failed: " << e.what() << std::endl;
     }
+    // valor hardcodeado para testing!
+    // revisar game_map.cpp
+    player->setTilePosition(29, 15);
 
-    // Posicionar al player en el spawn "player_start" del TOML.
-    // (posicionar al player en el spawn que indica el server!)
-    if (tilemap) {
-        const auto& spawns = tilemap->getSpawns();
-        std::cout << "[DEBUG] spawns count=" << spawns.size() << std::endl;
-        // hardcodeado desde el .toml
-        auto it = spawns.find("player_start");
-        if (it != spawns.end()) {
-            player->setTilePosition(it->second.x, it->second.y);
-            // debug print!
-            std::cout << "[DEBUG] player positioned at ("
-                      << it->second.x << "," << it->second.y << ")" << std::endl;
-        } else {
-            // debug print!
-            std::cout << "[DEBUG] player_start NOT FOUND, defaulting to (1,1)" << std::endl;
-            player->setTilePosition(1, 1);
-        }
-    } else {
-        std::cout << "[DEBUG] no tilemap, player at default (0,0)" << std::endl;
-    }
 
     is_running = true;
     SDL_Delay(100);

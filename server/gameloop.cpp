@@ -17,17 +17,33 @@ GameLoop::GameLoop(Queue<ClientCmd>& receiving_queue,
 
 void GameLoop::load_world() {
     load_maps();
-    game_map.load_players();
-    //load_npcs();
 
 }
 
+InitialState load_initial_state_hardcoded() {
+    InitialState is;
+
+    // NPCs de prueba: goblin respawnea en 5s, spider en 2s (a 50ms/tick).
+    NPChostile goblin("Goblin", 30, 5, 100);
+    goblin.set_position(7, 5);
+    is.npcs.push_back(std::move(goblin));
+
+    NPChostile spider("Spider", 20, 4, 40);
+    spider.set_position(9, 5);
+    is.npcs.push_back(std::move(spider));
+
+    // TODO: items hardcodeados en el piso
+    return is;
+}
+
 void GameLoop::load_maps() {
-    game_map.read_desert();
-    game_map.read_city();
-    game_map.read_forest();
-    // TODO: cargar posiciones desde persistencia
-    game_map.set_positions();
+    // TODO:
+    // funcion para persistencia
+    // InitialState load_initial_state_from_file(path);
+    
+    // harcoded:
+    InitialState hardocded_state = load_initial_state_hardcoded();
+    game_map.init_world(hardocded_state);
 }
 
 void GameLoop::process_cmd(const ClientCmd& cmd) {
@@ -35,6 +51,7 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                     case MSG_REGISTER: {
                         client_registry_monitor.assign_name(cmd.get_client_id(), cmd.get_player_name());
                         game_map.spawn_player(cmd.get_player_name());
+                        //game_map.spawn_player(cmd.get_player_name(), cmd.klass, cmd.race);
                         GameMsg msg(MSG_SEND_MAP);
                         msg.set_map(game_map.get_map());
                         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
@@ -101,6 +118,7 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                             client_registry_monitor.get_name(cmd.get_client_id());
                             std::string item_id = cmd.get_item_id();
                             game_map.player_equip_item(name, item_id);
+                        break;
                     }
                     case MSG_SELECT: {
                         std::string name =
