@@ -21,11 +21,17 @@ struct groundItem {
     std::unique_ptr<Item> item;
 };
 
+struct groundGold {
+    positionCoord pos;
+    int amount;
+};
+
 enum class elements {
     players,
     npcs,
     objects,
     buildings,
+    gold,
     empty
 };
 
