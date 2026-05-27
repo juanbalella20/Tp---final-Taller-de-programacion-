@@ -59,6 +59,9 @@ void GameLoop::run() {
                     GameMsg inv_msg(MSG_INVENTORY);
                     inv_msg.set_items(item_infos);
                     client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
+                    GameMsg gold_msg(MSG_GOLD);
+                    gold_msg.set_gold(game_map.get_player_gold(cmd.get_player_name()));
+                    client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
                     break;
                 }
                 case MSG_MOVE: {
@@ -194,6 +197,9 @@ void GameLoop::run() {
                         client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
                     } else {
                         msg.set_chat_content("Sumaste oro.");
+                        GameMsg gold_msg(MSG_GOLD);
+                        gold_msg.set_gold(game_map.get_player_gold(name));
+                        client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
                     }
                     client_registry_monitor.notify_client(cmd.get_client_id(), msg);
                     
