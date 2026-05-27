@@ -91,11 +91,9 @@ void HUD::drawInventoryPanel() {
     for (const auto& item : inventory.items) {
         auto it = inventory.items_textures.find(item.get_id());
         SDL_Texture* icon = (it != inventory.items_textures.end()) ? it->second : nullptr;
-
-        if (icon) {
-            SDL_FRect icon_dst = {slot_x, slot_y, SLOT_SIZE, SLOT_SIZE};
-            SDL_RenderTexture(gui_renderer, icon, nullptr, &icon_dst);
-        }
+        SDL_FRect src_rect = { 465.0f, 447.0f, 30.0f, 65.0f };
+        SDL_FRect icon_dst = {slot_x, slot_y, SLOT_SIZE, SLOT_SIZE};
+        SDL_RenderTexture(gui_renderer, icon, &src_rect, &icon_dst);
 
         slot_x += SLOT_SIZE + SLOT_MARGIN;
         if (slot_x + SLOT_SIZE > game_width + panel_width - SLOT_MARGIN) {
@@ -112,7 +110,7 @@ void HUD::load_textures() {
         SDL_DestroySurface(inv_bg_surf);
     }
 
-    SDL_Surface* sword_surf = IMG_Load("imagenes/es_boton-espada-off.bmp");
+    SDL_Surface* sword_surf = IMG_Load("imagenes/Recursos/Graficos/3.png");
     if (sword_surf) {
         SDL_SetSurfaceColorKey(sword_surf, true,
             SDL_MapRGB(SDL_GetPixelFormatDetails(sword_surf->format), nullptr, 0, 0, 0));
