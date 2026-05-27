@@ -112,7 +112,7 @@ void GameMap::read_desert() {
     // NPC de prueba hardcodeado: posicion (7,5), cerca del player_start (5,5)
     spawn_npc(7, 5);
     // Item de prueba hardcodeado: posicion (7, 7)
-    spawn_item(7, 7, std::make_unique<Arma>("1", "espada", 50, 2, 2));
+    spawn_item(7, 7, std::make_unique<Arma>("espada", "espada", 50, 2, 2));
 
     // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
     spawns = md.get_spawns();
