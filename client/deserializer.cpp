@@ -56,6 +56,12 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_HP] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_hp(payload, msg);
     };
+    handlers[MSG_XP] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_xp(payload, msg);
+    };
+    handlers[MSG_MANA] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_mana(payload, msg);
+    };
 }
 
 void ClientDeserializer::deserialize_move(const std::vector<uint8_t>& payload, GameMsg& msg) {

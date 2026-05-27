@@ -25,6 +25,8 @@ ServerSerializer::ServerSerializer() {
     handlers[MSG_PRIVATE] = [this](const GameMsg& msg) { return serialize_private(msg); };
     handlers[MSG_GOLD] = [this](const GameMsg& msg) { return serialize_gold(msg); };
     handlers[MSG_HP] = [this](const GameMsg& msg) { return serialize_hp(msg); };
+    handlers[MSG_XP] = [this](const GameMsg& msg) { return serialize_xp(msg); };
+    handlers[MSG_MANA] = [this](const GameMsg& msg) { return serialize_mana(msg); };
 }
 
 void ServerSerializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {

@@ -51,6 +51,8 @@ enum MessageType : uint8_t {
     MSG_CHEAT_INF_MANA = 0x21, // Cheat para maná infinito
     MSG_GOLD = 0x22,          // Actualizar oro del jugador
     MSG_HP = 0x23,            // Actualizar hp del jugador
+    MSG_XP = 0x24,            // Actualizar xp del jugador
+    MSG_MANA = 0x25,            // Actualizar mana del jugador
 };
 
 enum Direction : uint8_t {
