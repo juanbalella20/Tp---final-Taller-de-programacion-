@@ -193,7 +193,7 @@ void GameLoop::run() {
                         inv_msg.set_items(item_infos);
                         client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
                     } else {
-                        msg.set_chat_content("No hay objetos acá");
+                        msg.set_chat_content("Sumaste oro.");
                     }
                     client_registry_monitor.notify_client(cmd.get_client_id(), msg);
                     

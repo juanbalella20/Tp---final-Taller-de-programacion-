@@ -68,7 +68,7 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     if (new_x < 0 || new_y < 0 || new_x >= width || new_y >= height) {
         return {false, player_name, 0, 0};
     }
-    if (map[new_y][new_x] != elements::empty && map[new_y][new_x] != elements::objects) {
+    if (map[new_y][new_x] != elements::empty && map[new_y][new_x] != elements::objects && map[new_y][new_x] != elements::gold) {
         return {false, player_name, 0, 0};
     }
 
@@ -208,15 +208,28 @@ std::unique_ptr<Item> GameMap::pick_up_item(const std::string& player_name) {
     int x = player->get_coord_x();
     int y = player->get_coord_y();
 
-    auto item_at_pos = std::find_if(ground_items.begin(), ground_items.end(),
-        [x, y](const groundItem& g_item) { return g_item.pos.x == x && g_item.pos.y == y;});
-    
-    if (item_at_pos == ground_items.end()) return nullptr;
+    if (map[y][x] == elements::objects) {
+        auto item_at_pos = std::find_if(ground_items.begin(), ground_items.end(),
+            [x, y](const groundItem& g_item) { return g_item.pos.x == x && g_item.pos.y == y;});
+        
+        if (item_at_pos == ground_items.end()) return nullptr;
 
-    auto item = std::move(item_at_pos->item);
-    ground_items.erase(item_at_pos);
-    map[y][x] = elements::empty;
-    return item;
+        auto item = std::move(item_at_pos->item);
+        ground_items.erase(item_at_pos);
+        map[y][x] = elements::empty;
+        return item;
+    }
+
+    if (map[y][x] == elements::gold) {
+        auto gold_at_pos = std::find_if(ground_gold.begin(), ground_gold.end(),
+            [x, y](const groundGold& g_gold) { return g_gold.pos.x == x && g_gold.pos.y == y;});
+
+        if (gold_at_pos == ground_gold.end()) return nullptr;
+
+        ground_gold.erase(gold_at_pos);
+        map[y][x] = elements::empty;
+    }
+    return nullptr;
 }
 
 void GameMap::give_item_to_player(const std::string& player_name, std::unique_ptr<Item> item) {
