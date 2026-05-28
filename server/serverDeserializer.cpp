@@ -20,11 +20,13 @@ ServerDeserializer::ServerDeserializer() {
     handlers[MSG_BUY]     = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
     handlers[MSG_SELL]    = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
     handlers[MSG_EQUIP]   = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
+    handlers[MSG_TAKE]   = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
     handlers[MSG_THROW]   = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
     handlers[MSG_DEPOSIT]  = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
     handlers[MSG_RETIRE]   = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_item_id(payload, cmd); };
     handlers[MSG_DEP_GOLD] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_gold(payload, cmd); };
     handlers[MSG_RET_GOLD] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_gold(payload, cmd); };
+    handlers[MSG_GOLD] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) { read_gold(payload, cmd); };
     handlers[MSG_MEDITATE] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_no_payload(payload, cmd);
     };

@@ -62,7 +62,8 @@ void GameMap::init_world(const InitialState& state) {
 void GameMap::add_player(Player player) {
     players.push_back(std::move(player));
 }
- Player* GameMap::find_player_by_name(const std::string& name)  {
+
+Player* GameMap::find_player_by_name(const std::string& name)  {
     auto it = std::find_if(players.begin(), players.end(),
                            [&name](const Player& p) { return p.get_name() == name; });
     if (it == players.end()) return nullptr;
@@ -124,6 +125,8 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     }
     // Terreno bloqueado (edificio).
     if (map[new_y][new_x] != elements::empty) {
+    // VER
+    //if (map[new_y][new_x] != elements::empty && map[new_y][new_x] != elements::objects && map[new_y][new_x] != elements::gold) {
         return {false, player_name, 0, 0};
     }
     // Actor en la celda destino.
@@ -140,7 +143,8 @@ void GameMap::spawn_player(const std::string& name) {
     auto [x, y] = find_random_empty_cell();
     int start_x = x != -1 ? x : 1;
     int start_y = y != -1 ? y : 1;
-
+    start_x = 29;
+    start_y = 15;
     Player player(name, PlayerRace(), PlayerClass());
     player.update_position(start_x, start_y);
     player.add_item(std::make_unique<Arma>("espada", "Espada", 100, 2, 10));
@@ -157,6 +161,13 @@ void GameMap::spawn_npc(NPChostile&& npc) {
         std::cout << "[DEBUG: spawn_npc] " << npcs.back().get_name()
                   << " at (" << x << "," << y << ")" << std::endl;
     }
+
+    // NPC de prueba hardcodeado: posicion (7,5), cerca del player_start (5,5)
+    //spawn_npc(7, 5);
+    // Item de prueba hardcodeado: posicion (7, 7)
+    // esto se tiene q enviar en un msg
+    spawn_item(7, 7, std::make_unique<Arma>("espada", "espada", 50, 2, 2));
+
 }
 
 
@@ -171,6 +182,19 @@ std::pair<int,int> GameMap::find_random_empty_cell() {
     }
     if (empty_cells.empty()) return {-1, -1};
     return empty_cells[rand() % empty_cells.size()];//mejorar random
+}
+
+std::vector<ItemFloorInfo> GameMap::build_items_snapshot() const {
+    std::vector<ItemFloorInfo> snapshot;
+    snapshot.reserve(ground_items.size() + ground_gold.size());
+    for (const auto& gi : ground_items) {
+        if (!gi.item) continue;
+        snapshot.emplace_back(gi.item->get_id(), gi.pos.x, gi.pos.y);
+    }
+    for (const auto& gg : ground_gold) {
+        snapshot.emplace_back("gold", gg.pos.x, gg.pos.y);
+    }
+    return snapshot;
 }
 
 std::vector<NpcInfo> GameMap::build_npcs_snapshot() const {
@@ -227,6 +251,15 @@ Entity* GameMap::find_entity_at(int x, int y) {
     return nullptr;
 }
 
+void GameMap::spawn_gold(int x, int y, int amount) {
+    if (y >= 0 && y < height && x >= 0 && x < width) {
+        positionCoord coord{x, y};
+        ground_gold.push_back({coord, amount});
+        map[y][x] = elements::gold;
+        std::cout << "[DEBUG: spawn_gold] at (" << x << "," << y << ")" << std::endl;
+    }
+}
+
 GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, int y) {
     Player* attacker = find_player_by_name(attacker_name);
     if (attacker == nullptr) throw AttackerNotFoundException();
@@ -237,6 +270,8 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
     attacker->attack(*target, x, y);
 
     if (target->is_dead()) {
+        
+        spawn_gold(x, y, 1);
         return {true, true, target->get_name()};
     }
     return {true, false, target->get_name()};
@@ -257,3 +292,72 @@ const Player& GameMap::get_player(const std::string& name) {
 bool GameMap::player_exists(const std::string& name) {
     return find_player_by_name(name) != nullptr;
 }
+
+std::unique_ptr<Item> GameMap::pick_up_item(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (!player) throw std::runtime_error("Player not found: " + player_name);
+
+    int x = player->get_coord_x();
+    int y = player->get_coord_y();
+
+    if (map[y][x] == elements::objects) {
+        auto item_at_pos = std::find_if(ground_items.begin(), ground_items.end(),
+            [x, y](const groundItem& g_item) { return g_item.pos.x == x && g_item.pos.y == y;});
+        
+        if (item_at_pos == ground_items.end()) return nullptr;
+
+        auto item = std::move(item_at_pos->item);
+        ground_items.erase(item_at_pos);
+        map[y][x] = elements::empty;
+        return item;
+    }
+
+    if (map[y][x] == elements::gold) {
+        auto gold_at_pos = std::find_if(ground_gold.begin(), ground_gold.end(),
+            [x, y](const groundGold& g_gold) { return g_gold.pos.x == x && g_gold.pos.y == y;});
+
+        if (gold_at_pos == ground_gold.end()) return nullptr;
+
+        player->add_gold(gold_at_pos->amount);
+        ground_gold.erase(gold_at_pos);
+        map[y][x] = elements::empty;
+    }
+    return nullptr;
+}
+
+void GameMap::give_item_to_player(const std::string& player_name, std::unique_ptr<Item> item) {
+    Player* player = find_player_by_name(player_name);
+    if (!player) throw std::runtime_error("Player not found: " + player_name);
+    player->add_item(std::move(item));
+}
+
+void GameMap::spawn_item(int x, int y, std::unique_ptr<Item> item) {
+    if (y >= 0 && y < height && x >= 0 && x < width) {
+        std::string id = item->get_id();
+        positionCoord coord{x, y};
+        ground_items.push_back({coord, std::move(item)});
+        map[y][x] = elements::objects;
+        std::cout << "[DEBUG: spawn_item] " << id << " at (" << x << "," << y << ")" << std::endl;
+    }
+}
+
+uint32_t GameMap::get_player_gold(const std::string& name) {
+    Player* player = find_player_by_name(name);
+    return player->get_gold();
+}
+
+uint32_t GameMap::get_player_hp(const std::string& name) {
+    Player* player = find_player_by_name(name);
+    return player->get_lives();
+}
+
+uint32_t GameMap::get_player_xp(const std::string& name) {
+    Player* player = find_player_by_name(name);
+    return player->get_xp();
+}
+
+uint32_t GameMap::get_player_mana(const std::string& name) {
+    Player* player = find_player_by_name(name);
+    return player->get_mana();
+}
+

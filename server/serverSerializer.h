@@ -19,6 +19,12 @@ private:
     std::vector<uint8_t> serialize_private(const GameMsg& msg);
     std::vector<uint8_t> serialize_npcs_snapshot(const GameMsg& msg);
 
+    std::vector<uint8_t> serialize_value(const GameMsg& msg, uint32_t value);
+    std::vector<uint8_t> serialize_gold(const GameMsg& msg);
+    std::vector<uint8_t> serialize_mana(const GameMsg& msg);
+    std::vector<uint8_t> serialize_hp(const GameMsg& msg);
+    std::vector<uint8_t> serialize_xp(const GameMsg& msg);
+
  public:
     ServerSerializer();
     std::vector<uint8_t> serialize_cmd(const GameMsg& msg);

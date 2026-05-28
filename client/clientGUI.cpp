@@ -1,5 +1,6 @@
 #include "clientGUI.h"
 #include "npcSprite.h"
+#include "itemSprite.h"
 #include <SDL3_image/SDL_image.h>
 #include <iostream>
 #include <stdexcept>
@@ -8,7 +9,7 @@ ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
     : window(nullptr), renderer(nullptr), event{}, chat_font(nullptr),
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
       hud(nullptr),
-      enemy_texture(nullptr), frame_texture(nullptr),
+      enemy_texture(nullptr), frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
       camera((float)GAME_WIDTH, (float)CANVAS_HEIGHT),
       selected_npc_tile_x(-1), selected_npc_tile_y(-1) {}
     
@@ -74,6 +75,16 @@ void ClientGUI::freeSDL() {
     if (frame_texture) {
         SDL_DestroyTexture(frame_texture);
         frame_texture = nullptr;
+    }
+
+    if (item_texture) {
+        SDL_DestroyTexture(item_texture);
+        item_texture = nullptr;
+    }
+
+    if (gold_texture) {
+        SDL_DestroyTexture(gold_texture);
+        gold_texture = nullptr;
     }
 
     if (renderer) {
@@ -293,6 +304,7 @@ void ClientGUI::update() {
                 case MSG_LIST:
                 case MSG_BUY:
                 case MSG_SELL:
+                case MSG_TAKE:
                 case MSG_DEPOSIT:
                 case MSG_RETIRE:
                 case MSG_DEP_GOLD:
@@ -311,6 +323,19 @@ void ClientGUI::update() {
                 case MSG_CHEAT_INF_MANA:
                     chat_inbox.push(msg.get_chat_content());
                     break;
+
+                case MSG_GOLD:
+                    if (hud) hud->set_gold(msg.get_gold());
+                    break;
+                case MSG_HP:
+                    if (hud) hud->set_hp(msg.get_hp());
+                    break;
+                case MSG_XP:
+                    if (hud) hud->set_xp(msg.get_xp());
+                    break;
+                case MSG_MANA:
+                    if (hud) hud->set_mana(msg.get_mana());
+                    break;
                 default:
                     break;
             }
@@ -328,6 +353,24 @@ void ClientGUI::drawEnemies() {
     const int tileSize = tilemap->getTileSize();
     for (const auto& npc : npcs) {
         NpcSprite(renderer, enemy_texture, npc.x, npc.y, tileSize).draw(camera);
+    }
+}
+
+void ClientGUI::drawItems() {
+    if (world_map.empty() || !enemy_texture || !tilemap) return;
+    const int tileSize = tilemap->getTileSize();
+    for (int row = 0; row < static_cast<int>(world_map.size()); ++row) {
+        for (int col = 0; col < static_cast<int>(world_map[row].size()); ++col) {
+            if (world_map[row][col] == elements::objects) {
+                SDL_FRect item_coutout = { 465.0f, 447.0f, 30.0f, 65.0f };
+                ItemSprite(renderer, item_texture, col, row, tileSize, item_coutout).draw(camera);
+            }
+
+            if (world_map[row][col] == elements::gold) {
+                SDL_FRect gold_coutout = { 0.0f, 320.0f, 30.0f, 27.0f };
+                ItemSprite(renderer, gold_texture, col, row, tileSize, gold_coutout).draw(camera);
+            }
+        }
     }
 }
 
@@ -350,6 +393,8 @@ void ClientGUI::draw() {
     if (tilemap) {
         tilemap->render(camera.get_x(), camera.get_y());
     }
+
+    drawItems();
     if (player) {
         player->draw(camera);
     }
@@ -362,12 +407,10 @@ void ClientGUI::draw() {
     if (hud) {
         hud->drawInventoryPanel();
         hud->drawAttackButton();
-        /* TODO:
         hud->draw_hp();
         hud->draw_mana();
         hud->draw_gold();
         hud->draw_xp();
-        */
     }
     mini_chat->render(GAME_WIDTH, CANVAS_HEIGHT);
     SDL_RenderPresent(renderer);
@@ -392,6 +435,21 @@ void ClientGUI::init_draw() {
         frame_texture = SDL_CreateTextureFromSurface(renderer, frame_surf);
         SDL_DestroySurface(frame_surf);
     }
+
+    SDL_Surface* sheet_surf = IMG_Load("imagenes/Recursos/Graficos/3.png");
+    if (!sheet_surf) { sheet_surf = IMG_Load("3.png"); }
+    if (sheet_surf) {
+        item_texture = SDL_CreateTextureFromSurface(renderer, sheet_surf);
+        SDL_DestroySurface(sheet_surf);
+    }
+
+    SDL_Surface* elem_surf = IMG_Load("imagenes/Recursos/Graficos/100.png");
+    if (!elem_surf) { elem_surf = IMG_Load("100.png"); }
+    if (elem_surf) {
+        gold_texture = SDL_CreateTextureFromSurface(renderer, elem_surf);
+        SDL_DestroySurface(elem_surf);
+    }
+
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
 
     // tile_size viene del TOML

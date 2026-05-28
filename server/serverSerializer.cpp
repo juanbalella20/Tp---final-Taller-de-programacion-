@@ -3,6 +3,7 @@
 #include "../common/item_info.h"
 #include <arpa/inet.h>
 #include <cstring>
+#include <iostream>
 
 ServerSerializer::ServerSerializer() {
     handlers[MSG_MOVE] = [this](const GameMsg& msg) { return serialize_move(msg); };
@@ -12,7 +13,7 @@ ServerSerializer::ServerSerializer() {
     (uint8_t)MSG_MEDITATE, (uint8_t)MSG_RESURRECT, (uint8_t)MSG_CURE, (uint8_t)MSG_LIST,
     (uint8_t)MSG_FOUND_CLAN, (uint8_t)MSG_JOIN_CLAN, (uint8_t)MSG_LEFT_CLAN, (uint8_t)MSG_CLAN_ACEP,
     (uint8_t)MSG_CLAN_BAN, (uint8_t)MSG_CLAN_KICK, (uint8_t)MSG_CLAN_RECH, (uint8_t)MSG_REV_CLAN,
-    (uint8_t)MSG_CHAT,
+    (uint8_t)MSG_CHAT, (uint8_t)MSG_TAKE
     }) {
         handlers[type] = [this](const GameMsg& msg) { return serialize_text(msg); };
     };
@@ -23,6 +24,11 @@ ServerSerializer::ServerSerializer() {
     };
     handlers[MSG_PRIVATE] = [this](const GameMsg& msg) { return serialize_private(msg); };
     handlers[MSG_NPCS_SNAPSHOT] = [this](const GameMsg& msg) { return serialize_npcs_snapshot(msg); };
+    handlers[MSG_ITEMS_SNAPSHOT] = [this](const GameMsg& msg) { return serialize_items_snapshot(msg); };
+    handlers[MSG_GOLD] = [this](const GameMsg& msg) { return serialize_gold(msg); };
+    handlers[MSG_HP] = [this](const GameMsg& msg) { return serialize_hp(msg); };
+    handlers[MSG_XP] = [this](const GameMsg& msg) { return serialize_xp(msg); };
+    handlers[MSG_MANA] = [this](const GameMsg& msg) { return serialize_mana(msg); };
 }
 
 void ServerSerializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {
@@ -152,6 +158,37 @@ std::vector<uint8_t> ServerSerializer::serialize_npcs_snapshot(const GameMsg& ms
     return buf;
 }
 
+// Formato MSG_ITEMS_SNAPSHOT:
+//   [count          : LEN_ITEM_COUNT bytes BE]
+//   foreach item:
+//     [type_size : LEN_ITEM_TYPE_SIZE byte][type bytes]
+//     [x         : LEN_COORD bytes BE]
+//     [y         : LEN_COORD bytes BE]
+std::vector<uint8_t> ServerSerializer::serialize_items_snapshot(const GameMsg& msg) {
+    const auto& items = msg.get_items_on_floor();
+
+    uint16_t payload_len = LEN_ITEM_COUNT;
+    for (const auto& i : items) {
+        payload_len += LEN_ITEM_TYPE_SIZE + static_cast<uint16_t>(i.type.size());
+        payload_len += 2 * LEN_COORD;
+    }
+
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, MSG_ITEMS_SNAPSHOT, payload_len);
+
+    append_uint16_be(buf, static_cast<uint16_t>(items.size()));
+
+    for (const auto& i : items) {
+        buf.push_back(static_cast<uint8_t>(i.type.size()));
+        buf.insert(buf.end(), i.type.begin(), i.type.end());
+        append_uint16_be(buf, static_cast<uint16_t>(i.x));
+        append_uint16_be(buf, static_cast<uint16_t>(i.y));
+    }
+
+    return buf;
+}
+
 std::vector<uint8_t> ServerSerializer::serialize_private(const GameMsg& msg) {
     const std::string& sender = msg.get_player_name();
     const std::string& content = msg.get_chat_content();
@@ -166,3 +203,40 @@ std::vector<uint8_t> ServerSerializer::serialize_private(const GameMsg& msg) {
     return buf;
 }
 
+std::vector<uint8_t> ServerSerializer::serialize_value(const GameMsg& msg, uint32_t value) {
+    std::vector<uint8_t> buf;
+    uint16_t payload_len = sizeof(uint32_t);
+
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, static_cast<uint8_t>(msg.get_type()), payload_len);
+    uint32_t value_be = htonl(value);
+    uint8_t value_bytes[sizeof(uint32_t)];
+    std::memcpy(value_bytes, &value_be, sizeof(uint32_t));
+    buf.insert(buf.end(), value_bytes, value_bytes + sizeof(uint32_t));
+
+    return buf;
+}
+
+std::vector<uint8_t> ServerSerializer::serialize_gold(const GameMsg& msg) {
+    uint32_t gold = msg.get_gold();
+
+    return serialize_value(msg, gold);
+}
+
+std::vector<uint8_t> ServerSerializer::serialize_hp(const GameMsg& msg) {
+    uint32_t hp = msg.get_hp();
+
+    return serialize_value(msg, hp);
+}
+
+std::vector<uint8_t> ServerSerializer::serialize_xp(const GameMsg& msg) {
+    uint32_t xp = msg.get_xp();
+
+    return serialize_value(msg, xp);
+}
+
+std::vector<uint8_t> ServerSerializer::serialize_mana(const GameMsg& msg) {
+    uint32_t mana = msg.get_mana();
+
+    return serialize_value(msg, mana);
+}

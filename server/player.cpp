@@ -172,6 +172,14 @@ bool Player::can_meditate() const {
 int Player::get_lives() const {
     return lives;
 }
+
+int Player::get_xp() const {
+    return experience;
+}
+
+int Player::get_mana() const {
+    return mana;
+}
  
 int Player::get_level() const {
     return level;

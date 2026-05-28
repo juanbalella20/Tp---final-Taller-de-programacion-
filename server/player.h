@@ -102,6 +102,10 @@ public:
     void add_experience(int exp);
 
     void check_level_up();
+
+    int get_xp() const;
+
+    int get_mana() const;
 };
 
 #endif

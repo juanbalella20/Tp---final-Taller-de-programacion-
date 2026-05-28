@@ -3,6 +3,7 @@
 #include "protocol_constants.h"
 #include "item_info.h"
 #include "npc_info.h"
+#include "item_floor_info.h"
 #include <string>
 #include <vector>
 
@@ -19,6 +20,10 @@ class GameMsg {
     int coord_y;
     std::vector<ItemInfo> items;
     std::vector<NpcInfo> npcs;
+    std::vector<ItemFloorInfo> items_on_floor;
+    int hp;
+    int xp;
+    int mana;
 
     public:
     GameMsg(uint8_t type, Direction direction = DIR_NORTH)
@@ -46,6 +51,17 @@ class GameMsg {
     const std::vector<ItemInfo>& get_items() const;
     void set_npcs(const std::vector<NpcInfo>& npcs);
     const std::vector<NpcInfo>& get_npcs() const;
+    void set_items_on_floor(const std::vector<ItemFloorInfo>& items);
+    const std::vector<ItemFloorInfo>& get_items_on_floor() const;
+
+    void set_hp(int hp);
+    int get_hp() const;
+
+    void set_xp(int xp);
+    int get_xp() const;
+
+    void set_mana(int mana);
+    int get_mana() const;
 };
 
 

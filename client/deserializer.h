@@ -16,10 +16,15 @@ class ClientDeserializer {
     void deserialize_map(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_text(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_gold(const std::vector<uint8_t>& payload, GameMsg& msg);
+    void deserialize_hp(const std::vector<uint8_t>& payload, GameMsg& msg);
+    void deserialize_xp(const std::vector<uint8_t>& payload, GameMsg& msg);
+    void deserialize_mana(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_item(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_inventory(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_private(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_npcs_snapshot(const std::vector<uint8_t>& payload, GameMsg& msg);
+    void deserialize_items_snapshot(const std::vector<uint8_t>& payload, GameMsg& msg);
+    uint32_t deserialize_value(const std::vector<uint8_t>& payload, GameMsg& msg);
 
  public:
     ClientDeserializer();

@@ -34,6 +34,22 @@ void HUD::set_attack_button_visible(bool visible) {
     show_attack_button = visible;
 }
 
+void HUD::set_gold(uint32_t amount) {
+    player_gold = amount;
+}
+
+void HUD::set_hp(uint32_t hp) {
+    player_hp = hp;
+}
+
+void HUD::set_xp(uint32_t xp) {
+    player_xp = xp;
+}
+
+void HUD::set_mana(uint32_t mana) {
+    player_mana = mana;
+}
+
 void HUD::drawAttackButton() {
     if (!show_attack_button) return;
 
@@ -91,11 +107,9 @@ void HUD::drawInventoryPanel() {
     for (const auto& item : inventory.items) {
         auto it = inventory.items_textures.find(item.get_id());
         SDL_Texture* icon = (it != inventory.items_textures.end()) ? it->second : nullptr;
-
-        if (icon) {
-            SDL_FRect icon_dst = {slot_x, slot_y, SLOT_SIZE, SLOT_SIZE};
-            SDL_RenderTexture(gui_renderer, icon, nullptr, &icon_dst);
-        }
+        SDL_FRect src_rect = { 465.0f, 447.0f, 30.0f, 65.0f };
+        SDL_FRect icon_dst = {slot_x, slot_y, SLOT_SIZE, SLOT_SIZE};
+        SDL_RenderTexture(gui_renderer, icon, &src_rect, &icon_dst);
 
         slot_x += SLOT_SIZE + SLOT_MARGIN;
         if (slot_x + SLOT_SIZE > game_width + panel_width - SLOT_MARGIN) {
@@ -105,6 +119,56 @@ void HUD::drawInventoryPanel() {
     }
 }
 
+void HUD::draw_stat(const std::string& text, float pos_y) {
+    SDL_Color color = {255, 255, 255, 255};
+    SDL_Surface* surf = TTF_RenderText_Solid(font, text.c_str(), 0, color);
+
+    if (surf) {
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
+
+        if (tex) {
+            float pos_x = game_width + 15.0f;
+
+            SDL_FRect dest = { pos_x, pos_y, static_cast<float>(surf->w), static_cast<float>(surf->h)};
+            SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);
+            SDL_DestroyTexture(tex);
+        }
+        SDL_DestroySurface(surf);
+    }
+}
+
+void HUD::draw_gold() {
+    if (!font) return;
+
+    std::string gold_text = "Oro: " + std::to_string(player_gold);
+
+    draw_stat(gold_text, 400.0f);
+}
+
+void HUD::draw_hp() {
+    if (!font) return;
+
+    std::string hp_text = "Vidas: " + std::to_string(player_hp);
+
+    draw_stat(hp_text, 420.0f);
+}
+
+void HUD::draw_xp() {
+    if (!font) return;
+
+    std::string xp_text = "Experiencia: " + std::to_string(player_xp);
+
+    draw_stat(xp_text, 440.0f);
+}
+
+void HUD::draw_mana() {
+    if (!font) return;
+
+    std::string mana_text = "Mana: " + std::to_string(player_mana);
+
+    draw_stat(mana_text, 460.0f);
+}
+
 void HUD::load_textures() {
     SDL_Surface* inv_bg_surf = IMG_Load("imagenes/inventory-bg..png");
     if (inv_bg_surf) {
@@ -112,7 +176,7 @@ void HUD::load_textures() {
         SDL_DestroySurface(inv_bg_surf);
     }
 
-    SDL_Surface* sword_surf = IMG_Load("imagenes/es_boton-espada-off.bmp");
+    SDL_Surface* sword_surf = IMG_Load("imagenes/Recursos/Graficos/3.png");
     if (sword_surf) {
         SDL_SetSurfaceColorKey(sword_surf, true,
             SDL_MapRGB(SDL_GetPixelFormatDetails(sword_surf->format), nullptr, 0, 0, 0));

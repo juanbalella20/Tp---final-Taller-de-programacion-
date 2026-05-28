@@ -6,6 +6,9 @@
 #include <arpa/inet.h>
 #include <cstring>
 #include <stdexcept>
+#include <arpa/inet.h>
+#include <cstring>
+#include <iostream>
 
 ClientDeserializer::ClientDeserializer() {
     handlers[MSG_MOVE] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
@@ -18,14 +21,14 @@ ClientDeserializer::ClientDeserializer() {
         (uint8_t)MSG_MEDITATE, (uint8_t)MSG_RESURRECT, (uint8_t)MSG_CURE, (uint8_t)MSG_LIST,
         (uint8_t)MSG_FOUND_CLAN, (uint8_t)MSG_JOIN_CLAN, (uint8_t)MSG_LEFT_CLAN, (uint8_t)MSG_CLAN_ACEP,
         (uint8_t)MSG_CLAN_BAN, (uint8_t)MSG_CLAN_KICK, (uint8_t)MSG_CLAN_RECH, (uint8_t)MSG_REV_CLAN,
-        (uint8_t)MSG_CHAT,
+        (uint8_t)MSG_CHAT, (uint8_t)MSG_TAKE
     }) {
         handlers[type] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
             deserialize_text(payload, msg);
         };
     };
     for (uint8_t type : {
-        (uint8_t)MSG_BUY, (uint8_t)MSG_SELL, (uint8_t)MSG_DEPOSIT, (uint8_t)MSG_RETIRE, (uint8_t)MSG_TAKE, (uint8_t)MSG_THROW
+        (uint8_t)MSG_BUY, (uint8_t)MSG_SELL, (uint8_t)MSG_DEPOSIT, (uint8_t)MSG_RETIRE
     }) {
         handlers[type] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
             deserialize_item(payload, msg);
@@ -37,6 +40,10 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_RET_GOLD] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_gold(payload, msg);
     };
+    handlers[MSG_GOLD] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_gold(payload, msg);
+    };
+    
     for (uint8_t type : {
         (uint8_t)MSG_CHEAT_KILL, (uint8_t)MSG_CHEAT_INF_HP, (uint8_t)MSG_CHEAT_INF_MANA
     }) {
@@ -51,7 +58,20 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_NPCS_SNAPSHOT] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_npcs_snapshot(payload, msg);
     };
+    handlers[MSG_ITEMS_SNAPSHOT] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_items_snapshot(payload, msg);
+    };
+    handlers[MSG_HP] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_hp(payload, msg);
+    };
+    handlers[MSG_XP] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_xp(payload, msg);
+    };
+    handlers[MSG_MANA] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_mana(payload, msg);
+    };
 }
+
 
 void ClientDeserializer::deserialize_move(const std::vector<uint8_t>& payload, GameMsg& msg) {
     if (payload.size() != LEN_DIRECTION) {
@@ -107,6 +127,9 @@ void ClientDeserializer::deserialize_map(const std::vector<uint8_t>& payload, Ga
                 case ELEMENT_EMPTY:
                     map[row][col] = elements::empty;
                     break;
+                case ELEMENT_GOLD:
+                    map[row][col] = elements::gold;
+                    break;
                 default:
                     throw std::invalid_argument("Celda invalida en MSG_SEND_MAP");
             }
@@ -138,13 +161,36 @@ void ClientDeserializer::deserialize_text(const std::vector<uint8_t>& payload, G
     msg.set_chat_content(read_string(payload, offset));
 }
 
-void ClientDeserializer::deserialize_gold(const std::vector<uint8_t>& payload, GameMsg& msg) {
+uint32_t ClientDeserializer::deserialize_value(const std::vector<uint8_t>& payload, GameMsg& msg) {
     if (payload.size() != 4) {
         throw std::invalid_argument("Payload inválido para mensaje de oro");
     }
 
-    uint32_t amount = (payload[0] << 24) | (payload[1] << 16) | (payload[2] << 8) | payload[3];
-    msg.set_gold(amount);
+    uint32_t amount;
+    std::memcpy(&amount, payload.data(), sizeof(uint32_t));
+    uint32_t value = ntohl(amount);
+
+    return value;
+}
+
+void ClientDeserializer::deserialize_gold(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    uint32_t gold = deserialize_value(payload, msg);
+    msg.set_gold(gold);
+}
+
+void ClientDeserializer::deserialize_hp(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    uint32_t hp = deserialize_value(payload, msg);
+    msg.set_hp(hp);
+}
+
+void ClientDeserializer::deserialize_xp(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    uint32_t xp = deserialize_value(payload, msg);
+    msg.set_xp(xp);
+}
+
+void ClientDeserializer::deserialize_mana(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    uint32_t mana = deserialize_value(payload, msg);
+    msg.set_mana(mana);
 }
 
 void ClientDeserializer::deserialize_item(const std::vector<uint8_t>& payload, GameMsg& msg) {
@@ -200,4 +246,24 @@ void ClientDeserializer::deserialize_npcs_snapshot(const std::vector<uint8_t>& p
     }
 
     msg.set_npcs(npcs);
+}
+
+// Ver formato en serializer.
+void ClientDeserializer::deserialize_items_snapshot(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    if (payload.size() < LEN_ITEM_COUNT) {
+        throw std::invalid_argument("Payload invalido para MSG_ITEMS_SNAPSHOT");
+    }
+    size_t offset = 0;
+    uint16_t count = read_uint16_be(payload, offset);
+
+    std::vector<ItemFloorInfo> items;
+    items.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        std::string type = read_string(payload, offset);
+        int x = static_cast<int>(read_uint16_be(payload, offset));
+        int y = static_cast<int>(read_uint16_be(payload, offset));
+        items.emplace_back(std::move(type), x, y);
+    }
+
+    msg.set_items_on_floor(items);
 }

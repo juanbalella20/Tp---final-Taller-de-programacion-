@@ -43,6 +43,18 @@ void GameLoop::send_npcs_snapshot_to(uint32_t client_id) {
     client_registry_monitor.notify_client(client_id, msg);
 }
 
+void GameLoop::broadcast_items_snapshot() {
+    GameMsg msg(MSG_ITEMS_SNAPSHOT);
+    msg.set_items_on_floor(game_map.build_items_snapshot());
+    client_registry_monitor.notify_clients(msg);
+}
+
+void GameLoop::send_items_snapshot_to(uint32_t client_id) {
+    GameMsg msg(MSG_ITEMS_SNAPSHOT);
+    msg.set_items_on_floor(game_map.build_items_snapshot());
+    client_registry_monitor.notify_client(client_id, msg);
+}
+
 void GameLoop::load_maps() {
     // TODO:
     // funcion para persistencia
@@ -74,11 +86,51 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                         GameMsg inv_msg(MSG_INVENTORY);
                         inv_msg.set_items(item_infos);
                         client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
+                        GameMsg gold_msg(MSG_GOLD);
+                        gold_msg.set_gold(game_map.get_player_gold(cmd.get_player_name()));
+                        client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
+                        GameMsg hp_msg(MSG_HP);
+                        hp_msg.set_hp(game_map.get_player_hp(cmd.get_player_name()));
+                        client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
+                        GameMsg xp_msg(MSG_XP);
+                        xp_msg.set_hp(game_map.get_player_xp(cmd.get_player_name()));
+                        client_registry_monitor.notify_client(cmd.get_client_id(), xp_msg);
+                        GameMsg mana_msg(MSG_MANA);
+                        mana_msg.set_hp(game_map.get_player_mana(cmd.get_player_name()));
+                        client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
 
-                        // Mando al cliente recien registrado el estado de los NPCs vivos.
+                        // Estado del mundo dinamico para el cliente recien registrado.
                         send_npcs_snapshot_to(cmd.get_client_id());
+                        send_items_snapshot_to(cmd.get_client_id());
                         break;
                     }
+                    case MSG_TAKE: {
+                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+                    auto item = game_map.pick_up_item(name);
+                    GameMsg msg(MSG_TAKE);
+                    if (item) {
+                        game_map.give_item_to_player(name, std::move(item));
+                        msg.set_chat_content("Recogiste un objeto.");
+                        const Player& p = game_map.get_player(name);
+                        std::vector<ItemInfo> item_infos;
+                        for (Item* item : p.get_inventory().get_items()) {
+                            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
+                        }
+                        GameMsg inv_msg(MSG_INVENTORY);
+                        inv_msg.set_items(item_infos);
+                        client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
+                    } else {
+                        msg.set_chat_content("Sumaste oro.");
+                        GameMsg gold_msg(MSG_GOLD);
+                        gold_msg.set_gold(game_map.get_player_gold(name));
+                        client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
+                    }
+                    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+
+                    // El piso cambio: el item/oro recogido ya no esta en el mundo.
+                    broadcast_items_snapshot();
+                    break;
+                }
                     case MSG_MOVE: {
                         std::string name =
                             client_registry_monitor.get_name(cmd.get_client_id());
@@ -101,6 +153,8 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                             auto result = game_map.attack(attacker_name, x, y);
                             if (result.entity_died) {
                                 broadcast_npcs_snapshot();
+                                // Al morir el NPC, attack() spawnea oro en su celda.
+                                broadcast_items_snapshot();
                             }
                         } catch (const NoEntityException& e) {
                             GameMsg msg(MSG_CHAT);
@@ -236,15 +290,11 @@ void GameLoop::run() {
             while (receiving_queue.try_pop(cmd)) {
                 process_cmd(cmd);
             }
-
             update_npcs_in_map();
-
-        } catch (const ClosedQueue&) {
-            break;
-        } catch (...) {
-            // Ignore malformed/unexpected commands.
         }
-
+        catch (... ) {
+            //  
+        }
         std::this_thread::sleep_until(next_tick);
     }
 }

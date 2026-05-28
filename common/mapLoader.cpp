@@ -15,7 +15,7 @@ int MapLoader::get_height() const {
     return height;
 }
 
-const std::map<std::string, position_coord>& MapLoader::get_spawns() const {
+const std::map<std::string, positionCoord>& MapLoader::get_spawns() const {
     return spawns;
 }
 
@@ -174,7 +174,7 @@ void MapLoader::parse_spawns(const toml::table& tbl) {
 
         std::string name = (*t)["name"].value_or<std::string>("");
         if (name.empty()) continue;
-        position_coord p{
+        positionCoord p{
             (*t)["x"].value_or(0),
             (*t)["y"].value_or(0),
         };

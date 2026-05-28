@@ -7,6 +7,7 @@
 #include "../common/game_constants.h"
 #include "../common/item_info.h"
 #include "../common/npc_info.h"
+#include "../common/item_floor_info.h"
 #include "../common/mapLoader.h"
 
 #include <vector>
@@ -43,9 +44,11 @@ private:
     std::vector<Player> players;
     std::vector<NPChostile> npcs;
     std::vector<ItemInfo> items;
-    std::map<std::string, position_coord> spawns;
-    std::map<std::string, position_coord> player_position;
+    std::map<std::string, positionCoord> spawns;
+    std::map<std::string, positionCoord> player_position;
     //TileGrid tiles;
+    std::vector<groundItem> ground_items;
+    std::vector<groundGold> ground_gold;
 
     Player* find_player_by_name(const std::string& name);
     bool look_for_entity(int x, int y);
@@ -61,7 +64,7 @@ public:
     int get_width()  const { return width; }
     int get_height() const { return height; }
 
-    const std::map<std::string, position_coord>& get_spawns() const { return spawns; }
+    const std::map<std::string, positionCoord>& get_spawns() const { return spawns; }
 
     void add_player(Player player);
 
@@ -92,13 +95,27 @@ public:
     // Snapshot de los NPCs vivos para mandar al cliente via MSG_NPCS_SNAPSHOT
     std::vector<NpcInfo> build_npcs_snapshot() const;
 
+    // Snapshot de los items y oro tirados en el piso, para mandar al cliente
+    // via MSG_ITEMS_SNAPSHOT. type = id del item, o "gold" para oro.
+    std::vector<ItemFloorInfo> build_items_snapshot() const;
+
     std::string sector_of_position(int x, int y);
     void player_equip_item(const std::string& player_name, const std::string& item_id);
     void spawn_player(const std::string& name);
     const Player& get_player(const std::string& name);
     bool player_exists(const std::string& name);  
-    position_coord get_spawn_position();           
+    positionCoord get_spawn_position();       
+    
+    std::unique_ptr<Item> pick_up_item(const std::string& player_name);
+    void give_item_to_player(const std::string& player_name, std::unique_ptr<Item> item);
+    void spawn_item(int x, int y, std::unique_ptr<Item> item);
 
+    void spawn_gold(int x, int y, int amount);
+    uint32_t get_player_gold(const std::string& name);
+    uint32_t get_player_hp(const std::string& name);
+    uint32_t get_player_xp(const std::string& name);
+    uint32_t get_player_mana(const std::string& name);
+    
     //Player* get_player(const std::string& name);
     
     /*
