@@ -119,11 +119,6 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                         GameMsg inv_msg(MSG_INVENTORY);
                         inv_msg.set_items(item_infos);
                         client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
-                    } else {
-                        msg.set_chat_content("Sumaste oro.");
-                        GameMsg gold_msg(MSG_GOLD);
-                        gold_msg.set_gold(game_map.get_player_gold(name));
-                        client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
                     }
                     client_registry_monitor.notify_client(cmd.get_client_id(), msg);
 
@@ -136,6 +131,14 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                             client_registry_monitor.get_name(cmd.get_client_id());
                         auto result = game_map.try_move(cmd.get_direction(), name);
                         if (result.moved) {
+                            if (game_map.pick_up_gold(name)) {
+                                std::cout << "oro" << std::endl;
+                                broadcast_items_snapshot();
+                                GameMsg msg_gold(MSG_GOLD);
+                                msg_gold.set_gold(game_map.get_player_gold(name));
+                                client_registry_monitor.notify_clients(msg_gold);
+                            }
+
                             GameMsg msg(MSG_MOVE, cmd.get_direction());
                             msg.set_player_name(result.player_name);
                             msg.set_coord_x(result.new_x);

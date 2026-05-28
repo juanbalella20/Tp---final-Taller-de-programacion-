@@ -126,6 +126,7 @@ public:
      * Setea en sus respectivos vectores la posicion de cada uno
      */
     void init_world(const InitialState& state);
+    bool pick_up_gold(const std::string& player_name);
 };
 
 

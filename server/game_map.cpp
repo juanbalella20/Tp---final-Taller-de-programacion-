@@ -57,6 +57,9 @@ void GameMap::init_world(const InitialState& state) {
         spawn_npc(make_npc_from_spawn(spawn));
     }
     // Los players se crean en MSG_REGISTER, no desde el InitialState.
+
+    // Item de prueba hardcodeado. TODO: moverlo a state.items cuando este listo.
+    spawn_item(7, 7, std::make_unique<Arma>("espada", "espada", 50, 2, 2));
 }
 
 void GameMap::add_player(Player player) {
@@ -126,7 +129,6 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     // Terreno bloqueado (edificio).
     if (map[new_y][new_x] != elements::empty) {
     // VER
-    //if (map[new_y][new_x] != elements::empty && map[new_y][new_x] != elements::objects && map[new_y][new_x] != elements::gold) {
         return {false, player_name, 0, 0};
     }
     // Actor en la celda destino.
@@ -161,13 +163,6 @@ void GameMap::spawn_npc(NPChostile&& npc) {
         std::cout << "[DEBUG: spawn_npc] " << npcs.back().get_name()
                   << " at (" << x << "," << y << ")" << std::endl;
     }
-
-    // NPC de prueba hardcodeado: posicion (7,5), cerca del player_start (5,5)
-    //spawn_npc(7, 5);
-    // Item de prueba hardcodeado: posicion (7, 7)
-    // esto se tiene q enviar en un msg
-    spawn_item(7, 7, std::make_unique<Arma>("espada", "espada", 50, 2, 2));
-
 }
 
 
@@ -255,7 +250,6 @@ void GameMap::spawn_gold(int x, int y, int amount) {
     if (y >= 0 && y < height && x >= 0 && x < width) {
         positionCoord coord{x, y};
         ground_gold.push_back({coord, amount});
-        map[y][x] = elements::gold;
         std::cout << "[DEBUG: spawn_gold] at (" << x << "," << y << ")" << std::endl;
     }
 }
@@ -270,7 +264,8 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
     attacker->attack(*target, x, y);
 
     if (target->is_dead()) {
-        
+        // este "1" tiene que cambiar por el oro real
+        // que deja el npc/jugador atacado !
         spawn_gold(x, y, 1);
         return {true, true, target->get_name()};
     }
@@ -292,37 +287,47 @@ const Player& GameMap::get_player(const std::string& name) {
 bool GameMap::player_exists(const std::string& name) {
     return find_player_by_name(name) != nullptr;
 }
+static bool is_adyacent(const positionCoord& a, const positionCoord& b) {
+    return std::abs(a.x - b.x) + std::abs(a.y - b.y) <= 1;
+}
 
 std::unique_ptr<Item> GameMap::pick_up_item(const std::string& player_name) {
     Player* player = find_player_by_name(player_name);
     if (!player) throw std::runtime_error("Player not found: " + player_name);
 
-    int x = player->get_coord_x();
-    int y = player->get_coord_y();
+    positionCoord player_pos{player->get_coord_x(), player->get_coord_y()};
 
-    if (map[y][x] == elements::objects) {
-        auto item_at_pos = std::find_if(ground_items.begin(), ground_items.end(),
-            [x, y](const groundItem& g_item) { return g_item.pos.x == x && g_item.pos.y == y;});
-        
-        if (item_at_pos == ground_items.end()) return nullptr;
+    // Items: cualquiera adyacente (incluyendo mismo tile).
+    auto item_it = std::find_if(ground_items.begin(), ground_items.end(),
+        [&player_pos](const groundItem& g_item) {
+            return is_adyacent(g_item.pos, player_pos);
+        });
 
-        auto item = std::move(item_at_pos->item);
-        ground_items.erase(item_at_pos);
-        map[y][x] = elements::empty;
+    if (item_it != ground_items.end()) {
+        auto item = std::move(item_it->item);
+        ground_items.erase(item_it);
         return item;
     }
-
-    if (map[y][x] == elements::gold) {
-        auto gold_at_pos = std::find_if(ground_gold.begin(), ground_gold.end(),
-            [x, y](const groundGold& g_gold) { return g_gold.pos.x == x && g_gold.pos.y == y;});
-
-        if (gold_at_pos == ground_gold.end()) return nullptr;
-
-        player->add_gold(gold_at_pos->amount);
-        ground_gold.erase(gold_at_pos);
-        map[y][x] = elements::empty;
-    }
     return nullptr;
+}
+
+bool GameMap::pick_up_gold(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (!player) throw std::runtime_error("Player not found: " + player_name);
+    positionCoord player_pos{player->get_coord_x(), player->get_coord_y()};
+
+    // Oro: solo si esta exactamente debajo del player.
+    auto gold_it = std::find_if(ground_gold.begin(), ground_gold.end(),
+        [&player_pos](const groundGold& g_gold) {
+            return g_gold.pos.x == player_pos.x && g_gold.pos.y == player_pos.y;
+        });
+
+    if (gold_it != ground_gold.end()) {
+        player->add_gold(gold_it->amount);
+        ground_gold.erase(gold_it);
+        return true;
+    }
+    return false;
 }
 
 void GameMap::give_item_to_player(const std::string& player_name, std::unique_ptr<Item> item) {
@@ -336,7 +341,6 @@ void GameMap::spawn_item(int x, int y, std::unique_ptr<Item> item) {
         std::string id = item->get_id();
         positionCoord coord{x, y};
         ground_items.push_back({coord, std::move(item)});
-        map[y][x] = elements::objects;
         std::cout << "[DEBUG: spawn_item] " << id << " at (" << x << "," << y << ")" << std::endl;
     }
 }
