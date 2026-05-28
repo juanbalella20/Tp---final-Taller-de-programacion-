@@ -22,6 +22,8 @@ class GameLoop : public Thread {
 
     void broadcast_npcs_snapshot();
     void send_npcs_snapshot_to(uint32_t client_id);
+    void broadcast_items_snapshot();
+    void send_items_snapshot_to(uint32_t client_id);
 
     void process_cmd(const ClientCmd& cmd);
 };

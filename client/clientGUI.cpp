@@ -284,6 +284,9 @@ void ClientGUI::update() {
                 case MSG_NPCS_SNAPSHOT:
                     npcs = msg.get_npcs();
                     break;
+                case MSG_ITEMS_SNAPSHOT:
+                    items_on_floor = msg.get_items_on_floor();
+                    break;
                 case MSG_MOVE: {
                     int x = player->getTileX();
                     int y = player->getTileY();
@@ -357,19 +360,17 @@ void ClientGUI::drawEnemies() {
 }
 
 void ClientGUI::drawItems() {
-    if (world_map.empty() || !enemy_texture || !tilemap) return;
+    if (!tilemap) return;
     const int tileSize = tilemap->getTileSize();
-    for (int row = 0; row < static_cast<int>(world_map.size()); ++row) {
-        for (int col = 0; col < static_cast<int>(world_map[row].size()); ++col) {
-            if (world_map[row][col] == elements::objects) {
-                SDL_FRect item_coutout = { 465.0f, 447.0f, 30.0f, 65.0f };
-                ItemSprite(renderer, item_texture, col, row, tileSize, item_coutout).draw(camera);
-            }
-
-            if (world_map[row][col] == elements::gold) {
-                SDL_FRect gold_coutout = { 0.0f, 320.0f, 30.0f, 27.0f };
-                ItemSprite(renderer, gold_texture, col, row, tileSize, gold_coutout).draw(camera);
-            }
+    for (const auto& item : items_on_floor) {
+        if (item.type == "gold") {
+            if (!gold_texture) continue;
+            SDL_FRect gold_cutout = { 0.0f, 320.0f, 30.0f, 27.0f };
+            ItemSprite(renderer, gold_texture, item.x, item.y, tileSize, gold_cutout).draw(camera);
+        } else {
+            if (!item_texture) continue;
+            SDL_FRect item_cutout = { 465.0f, 447.0f, 30.0f, 65.0f };
+            ItemSprite(renderer, item_texture, item.x, item.y, tileSize, item_cutout).draw(camera);
         }
     }
 }
@@ -436,14 +437,14 @@ void ClientGUI::init_draw() {
         SDL_DestroySurface(frame_surf);
     }
 
-    SDL_Surface* sheet_surf = IMG_Load("imagenes/Recursos/Graficos/3.png");
+    SDL_Surface* sheet_surf = IMG_Load("imagenes/3.png");
     if (!sheet_surf) { sheet_surf = IMG_Load("3.png"); }
     if (sheet_surf) {
         item_texture = SDL_CreateTextureFromSurface(renderer, sheet_surf);
         SDL_DestroySurface(sheet_surf);
     }
 
-    SDL_Surface* elem_surf = IMG_Load("imagenes/Recursos/Graficos/100.png");
+    SDL_Surface* elem_surf = IMG_Load("imagenes/100.png");
     if (!elem_surf) { elem_surf = IMG_Load("100.png"); }
     if (elem_surf) {
         gold_texture = SDL_CreateTextureFromSurface(renderer, elem_surf);
