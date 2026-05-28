@@ -86,6 +86,10 @@ int PlayerDisplay::getTileY() const {
     return static_cast<int>(rect.y) / tileSize;
 }
 
+SDL_FRect PlayerDisplay::back_pov() const {
+    return {339.0f, 50.0f, 23.0f, 44.0f};
+}
+
 void PlayerDisplay::draw(const Camera& camera) const {
     SDL_FRect dst{
         camera.world_to_screen_x(rect.x),
@@ -93,7 +97,8 @@ void PlayerDisplay::draw(const Camera& camera) const {
         rect.w,
         rect.h
     };
-    SDL_RenderTexture(renderer, image, nullptr, &dst);
+    SDL_FRect crop = back_pov();
+    SDL_RenderTexture(renderer, image, &crop, &dst);
 }
 
 int PlayerDisplay::get_x() {

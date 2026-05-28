@@ -457,7 +457,7 @@ void ClientGUI::init_draw() {
     // el player se escala con el mismo tamano de celda
     int tileSize = tilemap->getTileSize();
     try {
-        player = std::make_unique<PlayerDisplay>(renderer, "imagenes/player.png", tileSize);
+        player = std::make_unique<PlayerDisplay>(renderer, "imagenes/1005.png", tileSize);
     } catch (const std::runtime_error& e) {
         std::cout << "[DEBUG] imagenes/player.png failed: " << e.what() << std::endl;
     }
