@@ -175,7 +175,7 @@ void ClientDeserializer::deserialize_hp(const std::vector<uint8_t>& payload, Gam
 
 void ClientDeserializer::deserialize_xp(const std::vector<uint8_t>& payload, GameMsg& msg) {
     uint32_t xp = deserialize_value(payload, msg);
-    msg.set_xp(xp);
+    msg.set_xp(xp); 
 }
 
 void ClientDeserializer::deserialize_mana(const std::vector<uint8_t>& payload, GameMsg& msg) {

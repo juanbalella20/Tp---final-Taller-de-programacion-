@@ -237,6 +237,6 @@ std::vector<uint8_t> ServerSerializer::serialize_xp(const GameMsg& msg) {
 
 std::vector<uint8_t> ServerSerializer::serialize_mana(const GameMsg& msg) {
     uint32_t mana = msg.get_mana();
-
+    
     return serialize_value(msg, mana);
 }
