@@ -244,7 +244,10 @@ void ClientGUI::sendChatCmd(const std::string& msg) {
         std::cout << "[DEBUG: sendChatCmd] selected_npc=(" 
                   << selected_npc_tile_x << "," << selected_npc_tile_y << ")" << std::endl;
         // Si es vender o listar, agregar coordenadas del NPC seleccionado
-        if ((cmd.get_message_type() == MSG_SELL || cmd.get_message_type() == MSG_LIST) && selected_npc_tile_x != -1) {
+        if ((cmd.get_message_type() == MSG_SELL || 
+             cmd.get_message_type() == MSG_BUY  ||
+             cmd.get_message_type() == MSG_LIST)
+            && selected_npc_tile_x != -1) {
             ClientCmd select_cmd;
             select_cmd.set_message_type(MSG_SELECT);
             select_cmd.set_coord_x(selected_npc_tile_x);
