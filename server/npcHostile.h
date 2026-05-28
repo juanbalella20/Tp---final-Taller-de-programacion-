@@ -15,7 +15,7 @@ enum class State { DEAD, ALIVE };
 
 class NPChostile : public NPC, public Entity {
     private:
-        int type;
+        std::string type_id;
         int lifepoints;
         int attack_dmg;
         State state;
@@ -30,8 +30,10 @@ class NPChostile : public NPC, public Entity {
         void drop();
 
     public:
-        NPChostile(const std::string& name, int lifepoints, int attack_dmg, int ticks_to_spawn);
+        NPChostile(const std::string& type_id, const std::string& name,
+                   int lifepoints, int attack_dmg, int ticks_to_spawn);
         std::string get_name() const override;
+        const std::string& get_type_id() const;
         void receive_damage(int damage) override;
         bool is_dead() const override;
         bool can_spawn() const;

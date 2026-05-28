@@ -1,13 +1,16 @@
 #include "npcHostile.h"
 
-NPChostile::NPChostile(const std::string& name, int lifepoints, int attack_dmg, int ticks_to_spawn)
-    : lifepoints(lifepoints), max_lifepoints(lifepoints), attack_dmg(attack_dmg),
-      type(0), state(State::ALIVE), coord_x(0), coord_y(0),
+NPChostile::NPChostile(const std::string& type_id, const std::string& name,
+                       int lifepoints, int attack_dmg, int ticks_to_spawn)
+    : type_id(type_id),
+      lifepoints(lifepoints), max_lifepoints(lifepoints), attack_dmg(attack_dmg),
+      state(State::ALIVE), coord_x(0), coord_y(0),
       remaining_ticks_to_spawn(0), ticks_to_spawn(ticks_to_spawn) {
     this->name = name;
 }
 
 std::string NPChostile::get_name() const { return this->name; }
+const std::string& NPChostile::get_type_id() const { return type_id; }
 
 void NPChostile::set_position(int x, int y) { coord_x = x; coord_y = y; }
 int NPChostile::get_coord_x() const { return coord_x; }
