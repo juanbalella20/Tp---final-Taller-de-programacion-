@@ -93,10 +93,10 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                         hp_msg.set_hp(game_map.get_player_hp(cmd.get_player_name()));
                         client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
                         GameMsg xp_msg(MSG_XP);
-                        xp_msg.set_hp(game_map.get_player_xp(cmd.get_player_name()));
+                        xp_msg.set_xp(game_map.get_player_xp(cmd.get_player_name()));
                         client_registry_monitor.notify_client(cmd.get_client_id(), xp_msg);
                         GameMsg mana_msg(MSG_MANA);
-                        mana_msg.set_hp(game_map.get_player_mana(cmd.get_player_name()));
+                        mana_msg.set_mana(game_map.get_player_mana(cmd.get_player_name()));
                         client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
 
                         // Estado del mundo dinamico para el cliente recien registrado.
