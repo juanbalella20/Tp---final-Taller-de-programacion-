@@ -156,6 +156,28 @@ bool GameMap::player_sell_item(const std::string& player_name, int x, int y, con
  
     return true;
 }
+
+bool GameMap::player_buy_item(const std::string& player_name, int x, int y, const std::string& item_id) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found: " + player_name);
+ 
+    NPCseller* seller = nullptr;
+    for (auto& s : sellers) {
+        if (s.get_coord_x() == x && s.get_coord_y() == y) {
+            seller = &s;
+            break;
+        }
+    }
+    if (seller == nullptr) throw std::runtime_error("No hay un comerciante en esa posicion.");
+ 
+    Command cmd;
+    cmd.action = ACTION_BUY;
+    cmd.item_id = item_id;
+    seller->interact(*player, cmd);
+ 
+    return true;
+}
+
  
 std::vector<ItemInfo> GameMap::list_seller_items(int x, int y) {
     NPCseller* seller = nullptr;

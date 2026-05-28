@@ -74,7 +74,8 @@ public:
     // Vender: el player vende item_id al seller adyacente.
     // Devuelve true si la operacion fue exitosa.
     bool player_sell_item(const std::string& player_name, int x, int y,const std::string& item_id);
- 
+    // Comprar: el player compra item_id al seller adyacente.
+    bool player_buy_item(const std::string& player_name, int x, int y, const std::string& item_id);
     // Lista los items del seller adyacente al player
     std::vector<ItemInfo> list_seller_items(int x, int y);
 
