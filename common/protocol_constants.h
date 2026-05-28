@@ -104,12 +104,11 @@ enum ELEMENT_TYPE : uint8_t {
     ELEMENT_EMPTY = 0x05,
 };
 
+// Solo buildings/empty viven en la matriz (terreno estatico).
+// Actores (players/npcs) y objetos del piso (objects/gold) viajan en
+// snapshots dedicados: MSG_NPCS_SNAPSHOT y MSG_ITEMS_SNAPSHOT.
 const std::unordered_map<elements, ELEMENT_TYPE> ELEMENT_TYPE_MAP = {
-    {elements::players, ELEMENT_PLAYER},
-    {elements::npcs, ELEMENT_NPC},
-    {elements::objects, ELEMENT_OBJECT},
     {elements::buildings, ELEMENT_BUILDING},
-    {elements::gold, ELEMENT_GOLD},
     {elements::empty, ELEMENT_EMPTY},
 };
 

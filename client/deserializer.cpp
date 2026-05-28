@@ -107,28 +107,18 @@ void ClientDeserializer::deserialize_map(const std::vector<uint8_t>& payload, Ga
     std::vector<std::vector<elements>> map(
         HEIGHT, std::vector<elements>(WIDTH, elements::empty));
 
+    // La matriz solo lleva terreno (buildings/empty). Actores e items viven en
+    // snapshots dedicados (MSG_NPCS_SNAPSHOT / MSG_ITEMS_SNAPSHOT).
     size_t index = 0;
     for (int row = 0; row < HEIGHT; ++row) {
         for (int col = 0; col < WIDTH; ++col) {
             const uint8_t cell = payload[index++];
             switch (cell) {
-                case ELEMENT_PLAYER:
-                    map[row][col] = elements::players;
-                    break;
-                case ELEMENT_NPC:
-                    map[row][col] = elements::npcs;
-                    break;
-                case ELEMENT_OBJECT:
-                    map[row][col] = elements::objects;
-                    break;
                 case ELEMENT_BUILDING:
                     map[row][col] = elements::buildings;
                     break;
                 case ELEMENT_EMPTY:
                     map[row][col] = elements::empty;
-                    break;
-                case ELEMENT_GOLD:
-                    map[row][col] = elements::gold;
                     break;
                 default:
                     throw std::invalid_argument("Celda invalida en MSG_SEND_MAP");
