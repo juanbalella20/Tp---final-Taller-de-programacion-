@@ -19,6 +19,7 @@ class ClientDeserializer {
     void deserialize_item(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_inventory(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_private(const std::vector<uint8_t>& payload, GameMsg& msg);
+    void deserialize_npcs_snapshot(const std::vector<uint8_t>& payload, GameMsg& msg);
 
  public:
     ClientDeserializer();

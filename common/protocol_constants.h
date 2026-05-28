@@ -14,6 +14,9 @@ const uint16_t LEN_ENTITY = 1;  // 1 byte para el tipo de entidad (player/npc)
 const uint16_t LEN_DIRECTION = 1;
 const uint16_t LEN_COORD = 2;  // 2 bytes para cada coordenada (x e y)
 const uint16_t LEN_ITEM_ID = 1;  // 1 byte para largo del id del item
+const uint16_t LEN_NPC_COUNT = 2;  // 2 bytes para la cantidad de NPCs en el snapshot
+const uint16_t LEN_NPC_TYPE_SIZE = 1;  // 1 byte para largo del tipo del NPC
+const uint16_t LEN_NPC_NAME_SIZE = 1;  // 1 byte para largo del nombre del NPC
 
 enum MessageType : uint8_t {
     MSG_REGISTER     = 0x01,  // Crear personaje nuevo            [cliente OK] [servidor OK]
@@ -49,6 +52,7 @@ enum MessageType : uint8_t {
     MSG_CHEAT_KILL   = 0x1F,  // Cheat para morir automáticamente
     MSG_CHEAT_INF_HP = 0x20,  // Cheat para vida infinita
     MSG_CHEAT_INF_MANA = 0x21, // Cheat para maná infinito
+    MSG_NPCS_SNAPSHOT  = 0x22, // Snapshot de NPCs vivos: vector<NpcInfo>
 };
 
 enum Direction : uint8_t {

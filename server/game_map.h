@@ -6,6 +6,7 @@
 #include "npcHostile.h"
 #include "../common/game_constants.h"
 #include "../common/item_info.h"
+#include "../common/npc_info.h"
 #include "../common/mapLoader.h"
 
 #include <vector>
@@ -13,10 +14,25 @@
 #include <string>
 #include <utility>
 
-struct InitialState {
-    std::vector<NPChostile> npcs;
-    std::vector<Item> items;
+struct NpcSpawn {
+    std::string type;
+    int x;
+    int y;
 };
+
+struct ItemSpawn {
+    std::string type;
+    int x;
+    int y;
+};
+
+struct InitialState {
+    std::vector<NpcSpawn> npcs;
+    std::vector<ItemSpawn> items;
+};
+
+// Factory: construye un NPChostile a partir de un NpcSpawn
+NPChostile make_npc_from_spawn(const NpcSpawn& spawn);
 
 class GameMap {
 
@@ -35,12 +51,7 @@ private:
     bool look_for_entity(int x, int y);
     Entity* find_entity_at(int x, int y);
     std::pair<int,int> find_random_empty_cell();
-    
-
-    sectorPerimiter forest_perimiter;
-    sectorPerimiter town_perimiter;
-    sectorPerimiter city_perimiter;
-    sectorPerimiter desert_perimiter;
+    bool has_actor_at(int x, int y);
 
 public:
     GameMap();
@@ -78,16 +89,11 @@ public:
     void spawn_npc(NPChostile&& npc);
     bool update_npcs();
 
+    // Snapshot de los NPCs vivos para mandar al cliente via MSG_NPCS_SNAPSHOT
+    std::vector<NpcInfo> build_npcs_snapshot() const;
+
     std::string sector_of_position(int x, int y);
-    // Lee el archivo (TOML) de desierto y devuelve un tipo MapLoader
-    MapLoader read_desert();
-    void read_city();
-    void read_forest();
-    void read_town();
     void player_equip_item(const std::string& player_name, const std::string& item_id);
-    // Lee archivo de persistencia
-    void set_positions();
-    void load_players();
     void spawn_player(const std::string& name);
     const Player& get_player(const std::string& name);
     bool player_exists(const std::string& name);  

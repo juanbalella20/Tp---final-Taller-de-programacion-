@@ -22,6 +22,7 @@ ServerSerializer::ServerSerializer() {
         handlers[type] = [this](const GameMsg& msg) { return serialize_text(msg); };
     };
     handlers[MSG_PRIVATE] = [this](const GameMsg& msg) { return serialize_private(msg); };
+    handlers[MSG_NPCS_SNAPSHOT] = [this](const GameMsg& msg) { return serialize_npcs_snapshot(msg); };
 }
 
 void ServerSerializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {
@@ -105,6 +106,49 @@ std::vector<uint8_t> ServerSerializer::serialize_text(const GameMsg& msg) {
     write_header(buf, static_cast<uint8_t>(msg.get_type()), payload_len);
     buf.push_back(static_cast<uint8_t>(content.size()));
     buf.insert(buf.end(), content.begin(), content.end());
+    return buf;
+}
+
+// Helper: appendea un uint16_t en big-endian al buffer.
+static void append_uint16_be(std::vector<uint8_t>& buf, uint16_t value) {
+    uint16_t be = htons(value);
+    uint8_t bytes[LEN_COORD];
+    std::memcpy(bytes, &be, LEN_COORD);
+    buf.insert(buf.end(), bytes, bytes + LEN_COORD);
+}
+
+// Formato MSG_NPCS_SNAPSHOT:
+//   [count          : LEN_NPC_COUNT bytes BE]
+//   foreach npc:
+//     [type_size : LEN_NPC_TYPE_SIZE byte][type bytes]
+//     [name_size : LEN_NPC_NAME_SIZE byte][name bytes]
+//     [x         : LEN_COORD bytes BE]
+//     [y         : LEN_COORD bytes BE]
+std::vector<uint8_t> ServerSerializer::serialize_npcs_snapshot(const GameMsg& msg) {
+    const auto& npcs = msg.get_npcs();
+
+    uint16_t payload_len = LEN_NPC_COUNT;
+    for (const auto& n : npcs) {
+        payload_len += LEN_NPC_TYPE_SIZE + static_cast<uint16_t>(n.type.size());
+        payload_len += LEN_NPC_NAME_SIZE + static_cast<uint16_t>(n.name.size());
+        payload_len += 2 * LEN_COORD;
+    }
+
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, MSG_NPCS_SNAPSHOT, payload_len);
+
+    append_uint16_be(buf, static_cast<uint16_t>(npcs.size()));
+
+    for (const auto& n : npcs) {
+        buf.push_back(static_cast<uint8_t>(n.type.size()));
+        buf.insert(buf.end(), n.type.begin(), n.type.end());
+        buf.push_back(static_cast<uint8_t>(n.name.size()));
+        buf.insert(buf.end(), n.name.begin(), n.name.end());
+        append_uint16_be(buf, static_cast<uint16_t>(n.x));
+        append_uint16_be(buf, static_cast<uint16_t>(n.y));
+    }
+
     return buf;
 }
 

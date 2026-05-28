@@ -118,19 +118,22 @@ void ClientGUI::sendCoord(int tile_x, int tile_y) {
 }
 
 void ClientGUI::selectCoord(int tile_x, int tile_y) {
+    bool npc_clicked = false;
+    for (const auto& npc : npcs) {
+        if (npc.x == tile_x && npc.y == tile_y) {
+            npc_clicked = true;
+            break;
+        }
+    }
 
-
-    if (!world_map.empty() &&
-        tile_y >= 0 && tile_y < static_cast<int>(world_map.size()) &&
-        tile_x >= 0 && tile_x < static_cast<int>(world_map[tile_y].size()) &&
-        world_map[tile_y][tile_x] == elements::npcs) {
+    if (npc_clicked) {
         selected_npc_tile_x = tile_x;
         selected_npc_tile_y = tile_y;
         if (hud) hud->set_attack_button_visible(true);
     } else {
         if (hud) hud->set_attack_button_visible(false);
-        selected_npc_tile_x = -1;
-        selected_npc_tile_y = -1;
+        selected_npc_tile_x = -1; // revisar
+        selected_npc_tile_y = -1; // revisar
         sendCoord(tile_x, tile_y);
     }
 }
@@ -267,6 +270,9 @@ void ClientGUI::update() {
                 case MSG_INVENTORY:
                     if (hud) hud->set_inventory(msg.get_items());
                     break;
+                case MSG_NPCS_SNAPSHOT:
+                    npcs = msg.get_npcs();
+                    break;
                 case MSG_MOVE: {
                     int x = player->getTileX();
                     int y = player->getTileY();
@@ -318,14 +324,10 @@ void ClientGUI::update() {
 }
 
 void ClientGUI::drawEnemies() {
-    if (world_map.empty() || !enemy_texture || !tilemap) return;
+    if (!enemy_texture || !tilemap) return;
     const int tileSize = tilemap->getTileSize();
-    for (int row = 0; row < static_cast<int>(world_map.size()); ++row) {
-        for (int col = 0; col < static_cast<int>(world_map[row].size()); ++col) {
-            if (world_map[row][col] == elements::npcs) {
-                NpcSprite(renderer, enemy_texture, col, row, tileSize).draw(camera);
-            }
-        }
+    for (const auto& npc : npcs) {
+        NpcSprite(renderer, enemy_texture, npc.x, npc.y, tileSize).draw(camera);
     }
 }
 

@@ -23,17 +23,24 @@ void GameLoop::load_world() {
 InitialState load_initial_state_hardcoded() {
     InitialState is;
 
-    // NPCs de prueba: goblin respawnea en 5s, spider en 2s (a 50ms/tick).
-    NPChostile goblin("Goblin", 30, 5, 100);
-    goblin.set_position(7, 5);
-    is.npcs.push_back(std::move(goblin));
-
-    NPChostile spider("Spider", 20, 4, 40);
-    spider.set_position(9, 5);
-    is.npcs.push_back(std::move(spider));
+    // NPCs de prueba (stats reales viven en make_npc_from_spawn).
+    is.npcs.push_back({"goblin", 7, 5});
+    is.npcs.push_back({"spider", 9, 5});
 
     // TODO: items hardcodeados en el piso
     return is;
+}
+
+void GameLoop::broadcast_npcs_snapshot() {
+    GameMsg msg(MSG_NPCS_SNAPSHOT);
+    msg.set_npcs(game_map.build_npcs_snapshot());
+    client_registry_monitor.notify_clients(msg);
+}
+
+void GameLoop::send_npcs_snapshot_to(uint32_t client_id) {
+    GameMsg msg(MSG_NPCS_SNAPSHOT);
+    msg.set_npcs(game_map.build_npcs_snapshot());
+    client_registry_monitor.notify_client(client_id, msg);
 }
 
 void GameLoop::load_maps() {
@@ -67,6 +74,9 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                         GameMsg inv_msg(MSG_INVENTORY);
                         inv_msg.set_items(item_infos);
                         client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
+
+                        // Mando al cliente recien registrado el estado de los NPCs vivos.
+                        send_npcs_snapshot_to(cmd.get_client_id());
                         break;
                     }
                     case MSG_MOVE: {
@@ -90,9 +100,7 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                         try {
                             auto result = game_map.attack(attacker_name, x, y);
                             if (result.entity_died) {
-                                GameMsg map_msg(MSG_SEND_MAP);
-                                map_msg.set_map(game_map.get_map());
-                                client_registry_monitor.notify_clients(map_msg);
+                                broadcast_npcs_snapshot();
                             }
                         } catch (const NoEntityException& e) {
                             GameMsg msg(MSG_CHAT);
@@ -197,9 +205,7 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
 
 void GameLoop::update_npcs_in_map(){
     if (game_map.update_npcs()) {
-        GameMsg map_msg(MSG_SEND_MAP);
-        map_msg.set_map(game_map.get_map());
-        client_registry_monitor.notify_clients(map_msg);
+        broadcast_npcs_snapshot();
     }
 }
 

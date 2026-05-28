@@ -15,6 +15,7 @@
 #include "../common/gameMsg.h"
 #include "../common/game_constants.h"
 #include "../common/item_info.h"
+#include "../common/npc_info.h"
 #include "tileMap.h"
 #include "camera.h"
 #include "hud.h"
@@ -50,6 +51,7 @@ private:
     std::unique_ptr<TileMap> tilemap;
 
     std::vector<std::vector<elements>> world_map;
+    std::vector<NpcInfo> npcs;
     SDL_Texture* enemy_texture;
     SDL_Texture* frame_texture;
     Camera camera;

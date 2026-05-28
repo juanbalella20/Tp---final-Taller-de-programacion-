@@ -8,6 +8,25 @@
 #include <vector>
 #include <cstdlib>
 
+// Esto tienen que ser posiciones aleatorias
+NPChostile make_npc_from_spawn(const NpcSpawn& spawn) {
+    // Catalogo de tipos de NPC hostiles. Mas adelante esto puede vivir
+    // en un archivo de configuracion o base de datos.
+    if (spawn.type == "goblin") {
+        NPChostile npc("goblin", "Goblin", 30, 5, 100);
+        npc.set_position(spawn.x, spawn.y);
+        return npc;
+    }
+    if (spawn.type == "spider") {
+        NPChostile npc("spider", "Spider", 20, 4, 40);
+        npc.set_position(spawn.x, spawn.y);
+        return npc;
+    }
+    // Fallback para tipos desconocidos.
+    NPChostile npc(spawn.type, spawn.type, 10, 1, 50);
+    npc.set_position(spawn.x, spawn.y);
+    return npc;
+}
 
 GameMap::GameMap() : width(0), height(0), map() {}
 
@@ -16,7 +35,8 @@ std::vector<std::vector<elements>> GameMap::get_map() {
 }
 
 void GameMap::init_world(const InitialState& state) {
-    MapLoader md = read_desert();
+    MapLoader md;
+    md.load("data/maps/desert/map.toml");
 
     width  = md.get_width();
     height = md.get_height();
@@ -33,8 +53,8 @@ void GameMap::init_world(const InitialState& state) {
     spawns = md.get_spawns();
 
     // itera sobre las posiciones de los actores
-    for (auto& npc : state.npcs) {
-        spawn_npc(NPChostile(npc));
+    for (const auto& spawn : state.npcs) {
+        spawn_npc(make_npc_from_spawn(spawn));
     }
     // Los players se crean en MSG_REGISTER, no desde el InitialState.
 }
@@ -75,6 +95,17 @@ static int dir_to_dy(Direction dir) {
     }
 }
 
+// Devuelve true si hay un actor (player o NPC vivo) en (x,y).
+bool GameMap::has_actor_at(int x, int y) {
+    for (const auto& p : players) {
+        if (p.get_coord_x() == x && p.get_coord_y() == y) return true;
+    }
+    for (const auto& n : npcs) {
+        if (!n.is_dead() && n.get_coord_x() == x && n.get_coord_y() == y) return true;
+    }
+    return false;
+}
+
 GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_name) {
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) {
@@ -87,35 +118,28 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     std::cout << "[DEBUG: try_move " << player_name
               << "] (" << new_x << "," << new_y << ")" << std::endl;
 
-    // x es columna (width), y es fila (height). map se indexa [y][x].
+    // Limites del mapa.
     if (new_x < 0 || new_y < 0 || new_x >= width || new_y >= height) {
         return {false, player_name, 0, 0};
     }
+    // Terreno bloqueado (edificio).
     if (map[new_y][new_x] != elements::empty) {
         return {false, player_name, 0, 0};
     }
-    map[player->get_coord_y()][player->get_coord_x()] = elements::empty;
-    map[new_y][new_x] = elements::players;
+    // Actor en la celda destino.
+    if (has_actor_at(new_x, new_y)) {
+        return {false, player_name, 0, 0};
+    }
 
     player->update_position(new_x, new_y);
     return {true, player_name, new_x, new_y};
 }
 
 
-void GameMap::load_players() {
-    // Players are added dynamically via add_player() when clients register.
-}
-
 void GameMap::spawn_player(const std::string& name) {
     auto [x, y] = find_random_empty_cell();
-    
     int start_x = x != -1 ? x : 1;
     int start_y = y != -1 ? y : 1;
-    // valores hardcodeados para testear!
-    // revisar client_GUI line 403! -> estos valores no se envian esta hardocdeado tambien
-    start_x = 29;
-    start_y = 15;
-    map[start_y][start_x] = elements::players;
 
     Player player(name, PlayerRace(), PlayerClass());
     player.update_position(start_x, start_y);
@@ -125,18 +149,10 @@ void GameMap::spawn_player(const std::string& name) {
               << start_x << "," << start_y << ")" << std::endl;
 }
 
-MapLoader GameMap::read_desert() {
-    MapLoader md;
-    md.load("data/maps/desert/map.toml");
-    return md;
-}
-
-
 void GameMap::spawn_npc(NPChostile&& npc) {
     int x = npc.get_coord_x();
     int y = npc.get_coord_y();
     if (y >= 0 && y < height && x >= 0 && x < width) {
-        map[y][x] = elements::npcs;
         npcs.push_back(std::move(npc));
         std::cout << "[DEBUG: spawn_npc] " << npcs.back().get_name()
                   << " at (" << x << "," << y << ")" << std::endl;
@@ -148,13 +164,28 @@ std::pair<int,int> GameMap::find_random_empty_cell() {
     std::vector<std::pair<int,int>> empty_cells;
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            if (map[y][x] == elements::empty) {
+            if (map[y][x] == elements::empty && !has_actor_at(x, y)) {
                 empty_cells.emplace_back(x, y);
             }
         }
     }
     if (empty_cells.empty()) return {-1, -1};
     return empty_cells[rand() % empty_cells.size()];//mejorar random
+}
+
+std::vector<NpcInfo> GameMap::build_npcs_snapshot() const {
+    std::vector<NpcInfo> snapshot;
+    snapshot.reserve(npcs.size());
+    for (const auto& npc : npcs) {
+        if (npc.is_dead()) continue;
+        NpcInfo npcinfo;
+        npcinfo.name = npc.get_name();
+        npcinfo.type = npc.get_type_id();
+        npcinfo.x = npc.get_coord_x();
+        npcinfo.y = npc.get_coord_y();
+        snapshot.push_back(npcinfo);
+    }
+    return snapshot;
 }
 
 bool GameMap::update_npcs() {
@@ -168,7 +199,6 @@ bool GameMap::update_npcs() {
         if (rx == -1) continue;
 
         npc.revive(rx, ry);
-        map[ry][rx] = elements::npcs;
         std::cout << "[DEBUG: update_npcs] " << npc.get_name()
                   << " respawned at (" << rx << "," << ry << ")" << std::endl;
         respawned = true;
@@ -178,34 +208,26 @@ bool GameMap::update_npcs() {
 
 bool GameMap::look_for_entity(int x, int y) {
     if (x < 0 || x >= width || y < 0 || y >= height) return false;
-    return map[y][x] == elements::npcs || map[y][x] == elements::players;
+    return find_entity_at(x, y) != nullptr;
 }
 
 Entity* GameMap::find_entity_at(int x, int y) {
     if (x < 0 || x >= width || y < 0 || y >= height) return nullptr;
 
-    if (map[y][x] == elements::players) {
-        for (auto& player : players) {
-            if (player.get_coord_x() == x && player.get_coord_y() == y) {
-                return &player;
-            }
+    for (auto& player : players) {
+        if (player.get_coord_x() == x && player.get_coord_y() == y) {
+            return &player;
         }
     }
-
-    if (map[y][x] == elements::npcs) {
-        for (auto& npc : npcs) {
-            if (npc.get_coord_x() == x && npc.get_coord_y() == y) {
-                return &npc;
-            }
+    for (auto& npc : npcs) {
+        if (!npc.is_dead() && npc.get_coord_x() == x && npc.get_coord_y() == y) {
+            return &npc;
         }
     }
-
     return nullptr;
 }
 
 GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, int y) {
-    if (!look_for_entity(x, y)) throw NoEntityException();
-
     Player* attacker = find_player_by_name(attacker_name);
     if (attacker == nullptr) throw AttackerNotFoundException();
 
@@ -215,7 +237,6 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
     attacker->attack(*target, x, y);
 
     if (target->is_dead()) {
-        map[y][x] = elements::empty;
         return {true, true, target->get_name()};
     }
     return {true, false, target->get_name()};
@@ -236,35 +257,3 @@ const Player& GameMap::get_player(const std::string& name) {
 bool GameMap::player_exists(const std::string& name) {
     return find_player_by_name(name) != nullptr;
 }
-// TODO
-void GameMap::read_city() {}
-// TODO
-void GameMap::read_forest() {}
-// TODO
-void GameMap::read_town() {}
-//TODO
-void GameMap::set_positions() {}
-
-/*Player* GameMap::get_player(const std::string& name) {
-    for (auto& player : players) {
-        if (player.get_name() == name) return &player;
-    }
-    return nullptr;
-}
-
-bool GameMap::player_exists(const std::string& name) {
-    return get_player(name) != nullptr;
-}
-
-position_coord GameMap::get_spawn_position() {
-    auto it = spawns.find("player_start");
-    if (it != spawns.end()) return it->second;
-    // Fallback: primera celda libre del mapa
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            if (map[y][x] == elements::empty) return {x, y};
-        }
-    }
-    return {1, 1};
-}
-*/

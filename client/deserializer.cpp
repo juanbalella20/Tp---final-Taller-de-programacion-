@@ -3,6 +3,8 @@
 #include "../common/game_constants.h"
 #include "../common/item_info.h"
 
+#include <arpa/inet.h>
+#include <cstring>
 #include <stdexcept>
 
 ClientDeserializer::ClientDeserializer() {
@@ -45,6 +47,9 @@ ClientDeserializer::ClientDeserializer() {
     };
     handlers[MSG_INVENTORY] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_inventory(payload, msg);
+    };
+    handlers[MSG_NPCS_SNAPSHOT] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_npcs_snapshot(payload, msg);
     };
 }
 
@@ -163,4 +168,36 @@ void ClientDeserializer::deserialize_private(const std::vector<uint8_t>& payload
     size_t offset = 0;
     msg.set_player_name(read_string(payload, offset));
     msg.set_chat_content(read_string(payload, offset));
+}
+
+// Lee un uint16_t en big-endian del payload usando ntohs.
+static uint16_t read_uint16_be(const std::vector<uint8_t>& payload, size_t& offset) {
+    if (offset + LEN_COORD > payload.size()) {
+        throw std::invalid_argument("Payload demasiado corto para leer uint16");
+    }
+    uint16_t be_value;
+    std::memcpy(&be_value, payload.data() + offset, LEN_COORD);
+    offset += LEN_COORD;
+    return ntohs(be_value);
+}
+
+// Ver formato en serializer.
+void ClientDeserializer::deserialize_npcs_snapshot(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    if (payload.size() < LEN_NPC_COUNT) {
+        throw std::invalid_argument("Payload invalido para MSG_NPCS_SNAPSHOT");
+    }
+    size_t offset = 0;
+    uint16_t count = read_uint16_be(payload, offset);
+
+    std::vector<NpcInfo> npcs;
+    npcs.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        std::string type = read_string(payload, offset);
+        std::string name = read_string(payload, offset);
+        int x = static_cast<int>(read_uint16_be(payload, offset));
+        int y = static_cast<int>(read_uint16_be(payload, offset));
+        npcs.emplace_back(std::move(type), std::move(name), x, y);
+    }
+
+    msg.set_npcs(npcs);
 }

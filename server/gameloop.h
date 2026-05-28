@@ -20,6 +20,9 @@ class GameLoop : public Thread {
     void load_world();
     void update_npcs_in_map();
 
+    void broadcast_npcs_snapshot();
+    void send_npcs_snapshot_to(uint32_t client_id);
+
     void process_cmd(const ClientCmd& cmd);
 };
 
