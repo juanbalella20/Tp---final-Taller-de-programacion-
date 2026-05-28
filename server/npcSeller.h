@@ -30,12 +30,11 @@ public:
     NPCseller(const NPCseller&) = delete;
     NPCseller& operator=(const NPCseller&) = delete;
 
- 
-    int get_coord_x() const { return pos_x; }
-    int get_coord_y() const { return pos_y; }
+    int get_coord_x() const;
+    int get_coord_y() const;
  
     std::vector<ItemInfo> list_items() const;
-    // interact = vender: saca el item del inventario del player y le da el oro
+    // interact maneja ACTION_SELL, ACTION_BUY segun cmd.action
     void interact(Player& player, Command cmd) override;
 
 };

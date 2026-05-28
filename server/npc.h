@@ -3,6 +3,12 @@
 
 #include <string>
 
+enum SellerAction {
+    ACTION_SELL = 0,
+    ACTION_BUY  = 1,
+    ACTION_LIST = 2,
+};
+
 
 struct Command {
     int action;       // ex: comprar, vender
@@ -10,8 +16,6 @@ struct Command {
     int cantidad;
     int actual_gold;
 };
-
-
 
 class NPC {
     protected:
