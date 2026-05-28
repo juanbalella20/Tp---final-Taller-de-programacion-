@@ -135,6 +135,11 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     if (has_actor_at(new_x, new_y)) {
         return {false, player_name, 0, 0};
     }
+     for (const auto& gi : ground_items) {
+        if (gi.pos.x == new_x && gi.pos.y == new_y) {
+            return {false, player_name, 0, 0};
+        }
+    }
 
     player->update_position(new_x, new_y);
     return {true, player_name, new_x, new_y};

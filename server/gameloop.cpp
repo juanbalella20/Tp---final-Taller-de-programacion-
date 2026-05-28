@@ -65,6 +65,20 @@ void GameLoop::load_maps() {
     game_map.init_world(hardocded_state);
 }
 
+
+// registrarse
+//                spawn del jugador con la klass y la race
+//                enviar mapa al cliente
+//                 mandamos inventario
+//                 mandamos oro
+//                 mandamos hp/xp/mana
+// mandamos snapshot de npcs e items
+// mandar snaphot de players
+
+
+
+
+
 void GameLoop::process_cmd(const ClientCmd& cmd) {
     switch (cmd.get_message_type()) {
                     case MSG_REGISTER: {
@@ -102,6 +116,11 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                         // Estado del mundo dinamico para el cliente recien registrado.
                         send_npcs_snapshot_to(cmd.get_client_id());
                         send_items_snapshot_to(cmd.get_client_id());
+                        
+                        
+
+                        //avisamos a los demás clientes que hay un nuevo jugador en el mapa, para que lo rendericen.
+                        //client_registry_monitor.notify_clients_about_new_player(name,raza,klass,client_id);
                         break;
                     }
                     case MSG_TAKE: {
@@ -126,6 +145,11 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                     broadcast_items_snapshot();
                     break;
                 }
+
+
+                    //para cuando se quiera mover un jugador x tendremos qu mostrar los demas jugadores
+                    //pero siempre el game map le mostrara los jugadores que comparten mapa con el jugador x
+                    // ya que no nos interesa recibir movimientos de jugadores que no comparten mapa con el jugador x
                     case MSG_MOVE: {
                         std::string name =
                             client_registry_monitor.get_name(cmd.get_client_id());
@@ -146,6 +170,8 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                             client_registry_monitor.notify_clients(msg);
                             std::cout << "[DBUG]: sended" << std::endl;
                         }
+                        
+
                         break;
                     }
                     case MSG_ATTACK: {
