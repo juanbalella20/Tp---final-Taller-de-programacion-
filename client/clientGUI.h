@@ -59,6 +59,7 @@ private:
     SDL_Texture* item_texture;
     SDL_Texture* gold_texture;
     Camera camera;
+    SDL_FRect player_pov;
 
     // tile seleccionado con NPC; {-1,-1} = ninguno
     int selected_npc_tile_x;
