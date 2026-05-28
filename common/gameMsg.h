@@ -21,9 +21,9 @@ class GameMsg {
     std::vector<ItemInfo> items;
     std::vector<NpcInfo> npcs;
     std::vector<ItemFloorInfo> items_on_floor;
-    int hp;
-    int xp;
-    int mana;
+    uint32_t hp;
+    uint32_t xp;
+    uint32_t mana;
 
     public:
     GameMsg(uint8_t type, Direction direction = DIR_NORTH)
@@ -54,14 +54,14 @@ class GameMsg {
     void set_items_on_floor(const std::vector<ItemFloorInfo>& items);
     const std::vector<ItemFloorInfo>& get_items_on_floor() const;
 
-    void set_hp(int hp);
-    int get_hp() const;
+    void set_hp(uint32_t hp);
+    uint32_t get_hp() const;
 
-    void set_xp(int xp);
-    int get_xp() const;
+    void set_xp(uint32_t xp);
+    uint32_t get_xp() const;
 
-    void set_mana(int mana);
-    int get_mana() const;
+    void set_mana(uint32_t mana);
+    uint32_t get_mana() const;
 };
 
 

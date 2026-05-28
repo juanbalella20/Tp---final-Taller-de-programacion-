@@ -21,12 +21,13 @@ Player::Player(const std::string name, PlayerRace player_race, PlayerClass playe
 const Inventory& Player::get_inventory() const {
     return player_inventory;
 }
-int Player::max_life() {
+
+uint32_t Player::max_life() {
     // VidaMax = Constitución * FClaseVida * FRazaVida * Nivel
     return player_race.race_constitution() * player_class.class_constitution() * player_class.class_life_factor() * player_race.race_life_factor() * level;
 }
 
-int Player::max_mana() {
+uint32_t Player::max_mana() {
     // ManaMax = Inteligencia * FClaseMana * FRazaMana * Nivel
     return player_race.race_inteligence() * player_class.class_inteligence() * player_class.class_mana_factor() * player_race.race_mana_factor() * level;
 }
@@ -119,7 +120,7 @@ bool Player::give_gold(const int amount) {
     return false;
 }
 
-int Player::get_gold() {
+uint32_t Player::get_gold() {
     return gold;
 }
 
@@ -169,15 +170,15 @@ bool Player::can_meditate() const {
 }
 */
 
-int Player::get_lives() const {
+uint32_t Player::get_lives() const {
     return lives;
 }
 
-int Player::get_xp() const {
+uint32_t Player::get_xp() const {
     return experience;
 }
 
-int Player::get_mana() const {
+uint32_t Player::get_mana() const {
     return mana;
 }
  

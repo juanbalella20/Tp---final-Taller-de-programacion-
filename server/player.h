@@ -16,10 +16,10 @@ class Player : public Entity {
 
 private:
     std::string name;
-    int gold;
-    int lives;
-    int experience;
-    int mana;
+    uint32_t gold;
+    uint32_t lives;
+    uint32_t experience;
+    uint32_t mana;
     int id_clan;
     int level;
     int coord_x;
@@ -32,9 +32,9 @@ private:
     PlayerClass player_class;
     Inventory player_inventory;
 
-    int max_life();
+    uint32_t max_life();
 
-    int max_mana();
+    uint32_t max_mana();
 
     void level_up();
 
@@ -65,7 +65,7 @@ public:
 
     bool give_gold(const int amount);
 
-    int get_gold();
+    uint32_t get_gold();
 
     std::string get_name() const override;
 
@@ -89,7 +89,7 @@ public:
 
     bool can_meditate() const;
 
-    int get_lives() const;
+    uint32_t get_lives() const;
 
     int get_level() const;
 
@@ -103,9 +103,9 @@ public:
 
     void check_level_up();
 
-    int get_xp() const;
+    uint32_t get_xp() const;
 
-    int get_mana() const;
+    uint32_t get_mana() const;
 };
 
 #endif

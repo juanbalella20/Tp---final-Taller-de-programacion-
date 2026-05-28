@@ -26,11 +26,11 @@ const std::vector<NpcInfo>& GameMsg::get_npcs() const { return npcs; }
 void GameMsg::set_items_on_floor(const std::vector<ItemFloorInfo>& new_items) { this->items_on_floor = new_items; }
 const std::vector<ItemFloorInfo>& GameMsg::get_items_on_floor() const { return items_on_floor; }
 
-void GameMsg::set_hp(int hp) { this->hp = hp; }
-int GameMsg::get_hp() const { return this->hp; }
+void GameMsg::set_hp(uint32_t hp) { this->hp = hp; }
+uint32_t GameMsg::get_hp() const { return this->hp; }
 
-void GameMsg::set_xp(int xp) { this->xp = xp; }
-int GameMsg::get_xp() const { return this->xp; }
+void GameMsg::set_xp(uint32_t xp) { this->xp = xp; }
+uint32_t GameMsg::get_xp() const { return this->xp; }
 
-void GameMsg::set_mana(int mana) { this->mana = mana; }
-int GameMsg::get_mana() const { return this->mana; }
+void GameMsg::set_mana(uint32_t mana) { this->mana = mana; }
+uint32_t GameMsg::get_mana() const { return this->mana; }
