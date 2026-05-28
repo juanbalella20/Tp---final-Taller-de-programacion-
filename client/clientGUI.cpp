@@ -129,19 +129,22 @@ void ClientGUI::sendCoord(int tile_x, int tile_y) {
 }
 
 void ClientGUI::selectCoord(int tile_x, int tile_y) {
+    bool npc_clicked = false;
+    for (const auto& npc : npcs) {
+        if (npc.x == tile_x && npc.y == tile_y) {
+            npc_clicked = true;
+            break;
+        }
+    }
 
-
-    if (!world_map.empty() &&
-        tile_y >= 0 && tile_y < static_cast<int>(world_map.size()) &&
-        tile_x >= 0 && tile_x < static_cast<int>(world_map[tile_y].size()) &&
-        world_map[tile_y][tile_x] == elements::npcs) {
+    if (npc_clicked) {
         selected_npc_tile_x = tile_x;
         selected_npc_tile_y = tile_y;
         if (hud) hud->set_attack_button_visible(true);
     } else {
         if (hud) hud->set_attack_button_visible(false);
-        selected_npc_tile_x = -1;
-        selected_npc_tile_y = -1;
+        selected_npc_tile_x = -1; // revisar
+        selected_npc_tile_y = -1; // revisar
         sendCoord(tile_x, tile_y);
     }
 }
@@ -278,6 +281,12 @@ void ClientGUI::update() {
                 case MSG_INVENTORY:
                     if (hud) hud->set_inventory(msg.get_items());
                     break;
+                case MSG_NPCS_SNAPSHOT:
+                    npcs = msg.get_npcs();
+                    break;
+                case MSG_ITEMS_SNAPSHOT:
+                    items_on_floor = msg.get_items_on_floor();
+                    break;
                 case MSG_MOVE: {
                     int x = player->getTileX();
                     int y = player->getTileY();
@@ -343,31 +352,25 @@ void ClientGUI::update() {
 }
 
 void ClientGUI::drawEnemies() {
-    if (world_map.empty() || !enemy_texture || !tilemap) return;
+    if (!enemy_texture || !tilemap) return;
     const int tileSize = tilemap->getTileSize();
-    for (int row = 0; row < static_cast<int>(world_map.size()); ++row) {
-        for (int col = 0; col < static_cast<int>(world_map[row].size()); ++col) {
-            if (world_map[row][col] == elements::npcs) {
-                NpcSprite(renderer, enemy_texture, col, row, tileSize).draw(camera);
-            }
-        }
+    for (const auto& npc : npcs) {
+        NpcSprite(renderer, enemy_texture, npc.x, npc.y, tileSize).draw(camera);
     }
 }
 
 void ClientGUI::drawItems() {
-    if (world_map.empty() || !enemy_texture || !tilemap) return;
+    if (!tilemap) return;
     const int tileSize = tilemap->getTileSize();
-    for (int row = 0; row < static_cast<int>(world_map.size()); ++row) {
-        for (int col = 0; col < static_cast<int>(world_map[row].size()); ++col) {
-            if (world_map[row][col] == elements::objects) {
-                SDL_FRect item_coutout = { 465.0f, 447.0f, 30.0f, 65.0f };
-                ItemSprite(renderer, item_texture, col, row, tileSize, item_coutout).draw(camera);
-            }
-
-            if (world_map[row][col] == elements::gold) {
-                SDL_FRect gold_coutout = { 0.0f, 320.0f, 30.0f, 27.0f };
-                ItemSprite(renderer, gold_texture, col, row, tileSize, gold_coutout).draw(camera);
-            }
+    for (const auto& item : items_on_floor) {
+        if (item.type == "gold") {
+            if (!gold_texture) continue;
+            SDL_FRect gold_cutout = { 0.0f, 320.0f, 30.0f, 27.0f };
+            ItemSprite(renderer, gold_texture, item.x, item.y, tileSize, gold_cutout).draw(camera);
+        } else {
+            if (!item_texture) continue;
+            SDL_FRect item_cutout = { 465.0f, 447.0f, 30.0f, 65.0f };
+            ItemSprite(renderer, item_texture, item.x, item.y, tileSize, item_cutout).draw(camera);
         }
     }
 }
@@ -434,14 +437,14 @@ void ClientGUI::init_draw() {
         SDL_DestroySurface(frame_surf);
     }
 
-    SDL_Surface* sheet_surf = IMG_Load("imagenes/Recursos/Graficos/3.png");
+    SDL_Surface* sheet_surf = IMG_Load("imagenes/3.png");
     if (!sheet_surf) { sheet_surf = IMG_Load("3.png"); }
     if (sheet_surf) {
         item_texture = SDL_CreateTextureFromSurface(renderer, sheet_surf);
         SDL_DestroySurface(sheet_surf);
     }
 
-    SDL_Surface* elem_surf = IMG_Load("imagenes/Recursos/Graficos/100.png");
+    SDL_Surface* elem_surf = IMG_Load("imagenes/100.png");
     if (!elem_surf) { elem_surf = IMG_Load("100.png"); }
     if (elem_surf) {
         gold_texture = SDL_CreateTextureFromSurface(renderer, elem_surf);
@@ -458,27 +461,10 @@ void ClientGUI::init_draw() {
     } catch (const std::runtime_error& e) {
         std::cout << "[DEBUG] imagenes/player.png failed: " << e.what() << std::endl;
     }
+    // valor hardcodeado para testing!
+    // revisar game_map.cpp
+    player->setTilePosition(29, 15);
 
-    // Posicionar al player en el spawn "player_start" del TOML.
-    // (posicionar al player en el spawn que indica el server!)
-    if (tilemap) {
-        const auto& spawns = tilemap->getSpawns();
-        std::cout << "[DEBUG] spawns count=" << spawns.size() << std::endl;
-        // hardcodeado desde el .toml
-        auto it = spawns.find("player_start");
-        if (it != spawns.end()) {
-            player->setTilePosition(it->second.x, it->second.y);
-            // debug print!
-            std::cout << "[DEBUG] player positioned at ("
-                      << it->second.x << "," << it->second.y << ")" << std::endl;
-        } else {
-            // debug print!
-            std::cout << "[DEBUG] player_start NOT FOUND, defaulting to (1,1)" << std::endl;
-            player->setTilePosition(1, 1);
-        }
-    } else {
-        std::cout << "[DEBUG] no tilemap, player at default (0,0)" << std::endl;
-    }
 
     is_running = true;
     SDL_Delay(100);

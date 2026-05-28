@@ -176,7 +176,7 @@ void HUD::load_textures() {
         SDL_DestroySurface(inv_bg_surf);
     }
 
-    SDL_Surface* sword_surf = IMG_Load("imagenes/Recursos/Graficos/3.png");
+    SDL_Surface* sword_surf = IMG_Load("imagenes/3.png");
     if (sword_surf) {
         SDL_SetSurfaceColorKey(sword_surf, true,
             SDL_MapRGB(SDL_GetPixelFormatDetails(sword_surf->format), nullptr, 0, 0, 0));

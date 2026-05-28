@@ -18,10 +18,14 @@ class GameLoop : public Thread {
     GameMap game_map;
     void load_maps();
     void load_world();
+    void update_npcs_in_map();
 
-    void handle_attack(const ClientCmd& cmd);
-    void handle_meditate(const ClientCmd& cmd);
-    //void handle_resurrect(const ClientCmd& cmd);
+    void broadcast_npcs_snapshot();
+    void send_npcs_snapshot_to(uint32_t client_id);
+    void broadcast_items_snapshot();
+    void send_items_snapshot_to(uint32_t client_id);
+
+    void process_cmd(const ClientCmd& cmd);
 };
 
 #endif  // SERVER_SRC_GAMELOOP_H_

@@ -27,11 +27,7 @@ struct groundGold {
 };
 
 enum class elements {
-    players,
-    npcs,
-    objects,
     buildings,
-    gold,
     empty
 };
 

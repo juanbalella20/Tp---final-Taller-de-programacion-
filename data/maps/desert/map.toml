@@ -111,7 +111,9 @@ data = [
 ]
 
 # ── Spawns / puntos de interes ──────────────────────────────────────────────
+# Deberían ir los friendly NPCs
 [[spawn]]
-name = "player_start"
-x = 5
-y = 5
+# ejemplo:
+# name = "sacerdote"
+# x = 5
+# y = 5

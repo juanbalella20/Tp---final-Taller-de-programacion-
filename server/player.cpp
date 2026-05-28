@@ -127,11 +127,11 @@ std::string Player::get_name() const {
     return name;
 }
 
-int Player::get_coord_x() {
+int Player::get_coord_x() const {
     return coord_x;
 }
 
-int Player::get_coord_y() {
+int Player::get_coord_y() const {
     return coord_y;
 }
 

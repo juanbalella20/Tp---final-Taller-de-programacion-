@@ -21,6 +21,10 @@ void GameMsg::set_coord_y(int y) { this->coord_y = y; }
 int GameMsg::get_coord_y() const { return coord_y; }
 void GameMsg::set_items(const std::vector<ItemInfo>& new_items) { this->items = new_items; }
 const std::vector<ItemInfo>& GameMsg::get_items() const { return items; }
+void GameMsg::set_npcs(const std::vector<NpcInfo>& new_npcs) { this->npcs = new_npcs; }
+const std::vector<NpcInfo>& GameMsg::get_npcs() const { return npcs; }
+void GameMsg::set_items_on_floor(const std::vector<ItemFloorInfo>& new_items) { this->items_on_floor = new_items; }
+const std::vector<ItemFloorInfo>& GameMsg::get_items_on_floor() const { return items_on_floor; }
 
 void GameMsg::set_hp(int hp) { this->hp = hp; }
 int GameMsg::get_hp() const { return this->hp; }

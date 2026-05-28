@@ -69,9 +69,9 @@ public:
 
     std::string get_name() const override;
 
-    int get_coord_x();
+    int get_coord_x() const;
 
-    int get_coord_y();
+    int get_coord_y() const;
 
     void update_position(const int x, const int y);
 

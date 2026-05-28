@@ -14,6 +14,11 @@ const uint16_t LEN_ENTITY = 1;  // 1 byte para el tipo de entidad (player/npc)
 const uint16_t LEN_DIRECTION = 1;
 const uint16_t LEN_COORD = 2;  // 2 bytes para cada coordenada (x e y)
 const uint16_t LEN_ITEM_ID = 1;  // 1 byte para largo del id del item
+const uint16_t LEN_NPC_COUNT = 2;  // 2 bytes para la cantidad de NPCs en el snapshot
+const uint16_t LEN_NPC_TYPE_SIZE = 1;  // 1 byte para largo del tipo del NPC
+const uint16_t LEN_NPC_NAME_SIZE = 1;  // 1 byte para largo del nombre del NPC
+const uint16_t LEN_ITEM_COUNT = 2;  // 2 bytes para la cantidad de items en el snapshot
+const uint16_t LEN_ITEM_TYPE_SIZE = 1;  // 1 byte para largo del tipo del item
 
 enum MessageType : uint8_t {
     MSG_REGISTER     = 0x01,  // Crear personaje nuevo            [cliente OK] [servidor OK]
@@ -53,6 +58,8 @@ enum MessageType : uint8_t {
     MSG_HP = 0x23,            // Actualizar hp del jugador
     MSG_XP = 0x24,            // Actualizar xp del jugador
     MSG_MANA = 0x25,            // Actualizar mana del jugador
+    MSG_NPCS_SNAPSHOT  = 0x26, // Snapshot de NPCs vivos: vector<NpcInfo>
+    MSG_ITEMS_SNAPSHOT = 0x27, // Snapshot de items en el piso: vector<ItemFloorInfo>
 };
 
 enum Direction : uint8_t {
@@ -97,12 +104,11 @@ enum ELEMENT_TYPE : uint8_t {
     ELEMENT_EMPTY = 0x05,
 };
 
+// Solo buildings/empty viven en la matriz (terreno estatico).
+// Actores (players/npcs) y objetos del piso (objects/gold) viajan en
+// snapshots dedicados: MSG_NPCS_SNAPSHOT y MSG_ITEMS_SNAPSHOT.
 const std::unordered_map<elements, ELEMENT_TYPE> ELEMENT_TYPE_MAP = {
-    {elements::players, ELEMENT_PLAYER},
-    {elements::npcs, ELEMENT_NPC},
-    {elements::objects, ELEMENT_OBJECT},
     {elements::buildings, ELEMENT_BUILDING},
-    {elements::gold, ELEMENT_GOLD},
     {elements::empty, ELEMENT_EMPTY},
 };
 

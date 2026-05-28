@@ -3,6 +3,8 @@
 #include "../common/game_constants.h"
 #include "../common/item_info.h"
 
+#include <arpa/inet.h>
+#include <cstring>
 #include <stdexcept>
 #include <arpa/inet.h>
 #include <cstring>
@@ -53,6 +55,12 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_INVENTORY] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_inventory(payload, msg);
     };
+    handlers[MSG_NPCS_SNAPSHOT] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_npcs_snapshot(payload, msg);
+    };
+    handlers[MSG_ITEMS_SNAPSHOT] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_items_snapshot(payload, msg);
+    };
     handlers[MSG_HP] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_hp(payload, msg);
     };
@@ -63,6 +71,7 @@ ClientDeserializer::ClientDeserializer() {
         deserialize_mana(payload, msg);
     };
 }
+
 
 void ClientDeserializer::deserialize_move(const std::vector<uint8_t>& payload, GameMsg& msg) {
     if (payload.size() != LEN_DIRECTION) {
@@ -98,28 +107,18 @@ void ClientDeserializer::deserialize_map(const std::vector<uint8_t>& payload, Ga
     std::vector<std::vector<elements>> map(
         HEIGHT, std::vector<elements>(WIDTH, elements::empty));
 
+    // La matriz solo lleva terreno (buildings/empty). Actores e items viven en
+    // snapshots dedicados (MSG_NPCS_SNAPSHOT / MSG_ITEMS_SNAPSHOT).
     size_t index = 0;
     for (int row = 0; row < HEIGHT; ++row) {
         for (int col = 0; col < WIDTH; ++col) {
             const uint8_t cell = payload[index++];
             switch (cell) {
-                case ELEMENT_PLAYER:
-                    map[row][col] = elements::players;
-                    break;
-                case ELEMENT_NPC:
-                    map[row][col] = elements::npcs;
-                    break;
-                case ELEMENT_OBJECT:
-                    map[row][col] = elements::objects;
-                    break;
                 case ELEMENT_BUILDING:
                     map[row][col] = elements::buildings;
                     break;
                 case ELEMENT_EMPTY:
                     map[row][col] = elements::empty;
-                    break;
-                case ELEMENT_GOLD:
-                    map[row][col] = elements::gold;
                     break;
                 default:
                     throw std::invalid_argument("Celda invalida en MSG_SEND_MAP");
@@ -205,4 +204,56 @@ void ClientDeserializer::deserialize_private(const std::vector<uint8_t>& payload
     size_t offset = 0;
     msg.set_player_name(read_string(payload, offset));
     msg.set_chat_content(read_string(payload, offset));
+}
+
+// Lee un uint16_t en big-endian del payload usando ntohs.
+static uint16_t read_uint16_be(const std::vector<uint8_t>& payload, size_t& offset) {
+    if (offset + LEN_COORD > payload.size()) {
+        throw std::invalid_argument("Payload demasiado corto para leer uint16");
+    }
+    uint16_t be_value;
+    std::memcpy(&be_value, payload.data() + offset, LEN_COORD);
+    offset += LEN_COORD;
+    return ntohs(be_value);
+}
+
+// Ver formato en serializer.
+void ClientDeserializer::deserialize_npcs_snapshot(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    if (payload.size() < LEN_NPC_COUNT) {
+        throw std::invalid_argument("Payload invalido para MSG_NPCS_SNAPSHOT");
+    }
+    size_t offset = 0;
+    uint16_t count = read_uint16_be(payload, offset);
+
+    std::vector<NpcInfo> npcs;
+    npcs.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        std::string type = read_string(payload, offset);
+        std::string name = read_string(payload, offset);
+        int x = static_cast<int>(read_uint16_be(payload, offset));
+        int y = static_cast<int>(read_uint16_be(payload, offset));
+        npcs.emplace_back(std::move(type), std::move(name), x, y);
+    }
+
+    msg.set_npcs(npcs);
+}
+
+// Ver formato en serializer.
+void ClientDeserializer::deserialize_items_snapshot(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    if (payload.size() < LEN_ITEM_COUNT) {
+        throw std::invalid_argument("Payload invalido para MSG_ITEMS_SNAPSHOT");
+    }
+    size_t offset = 0;
+    uint16_t count = read_uint16_be(payload, offset);
+
+    std::vector<ItemFloorInfo> items;
+    items.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        std::string type = read_string(payload, offset);
+        int x = static_cast<int>(read_uint16_be(payload, offset));
+        int y = static_cast<int>(read_uint16_be(payload, offset));
+        items.emplace_back(std::move(type), x, y);
+    }
+
+    msg.set_items_on_floor(items);
 }
