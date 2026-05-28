@@ -291,10 +291,22 @@ void ClientGUI::update() {
                     int x = player->getTileX();
                     int y = player->getTileY();
                     switch (msg.get_direction()) {
-                        case DIR_NORTH: --y; break;
-                        case DIR_SOUTH: ++y; break;
-                        case DIR_EAST:  ++x; break;
-                        case DIR_WEST:  --x; break;
+                        case DIR_NORTH: 
+                            --y;
+                            player_pov = player->back_pov();
+                            break;
+                        case DIR_SOUTH: 
+                            ++y;
+                            player_pov = player->front_pov(); 
+                            break;
+                        case DIR_EAST:  
+                            ++x; 
+                            player_pov = player->right_pov();
+                            break;
+                        case DIR_WEST:  
+                            --x; 
+                            player_pov = player->left_pov();
+                            break;
                         default: break;
                     }
                     player->setTilePosition(x, y);
@@ -355,7 +367,7 @@ void ClientGUI::drawEnemies() {
     if (!enemy_texture || !tilemap) return;
     const int tileSize = tilemap->getTileSize();
     for (const auto& npc : npcs) {
-        NpcSprite(renderer, enemy_texture, npc.x, npc.y, tileSize).draw(camera);
+        NpcSprite(renderer, enemy_texture, npc.x, npc.y, tileSize).draw(camera, {});
     }
 }
 
@@ -366,11 +378,11 @@ void ClientGUI::drawItems() {
         if (item.type == "gold") {
             if (!gold_texture) continue;
             SDL_FRect gold_cutout = { 0.0f, 320.0f, 30.0f, 27.0f };
-            ItemSprite(renderer, gold_texture, item.x, item.y, tileSize, gold_cutout).draw(camera);
+            ItemSprite(renderer, gold_texture, item.x, item.y, tileSize).draw(camera, gold_cutout);
         } else {
             if (!item_texture) continue;
             SDL_FRect item_cutout = { 465.0f, 447.0f, 30.0f, 65.0f };
-            ItemSprite(renderer, item_texture, item.x, item.y, tileSize, item_cutout).draw(camera);
+            ItemSprite(renderer, item_texture, item.x, item.y, tileSize).draw(camera, item_cutout);
         }
     }
 }
@@ -396,8 +408,8 @@ void ClientGUI::draw() {
     }
 
     drawItems();
-    if (player) {
-        player->draw(camera);
+    if (player) { 
+        player->draw(camera, player_pov);
     }
     drawEnemies();
     
@@ -457,9 +469,10 @@ void ClientGUI::init_draw() {
     // el player se escala con el mismo tamano de celda
     int tileSize = tilemap->getTileSize();
     try {
-        player = std::make_unique<PlayerDisplay>(renderer, "imagenes/player.png", tileSize);
+        player = std::make_unique<PlayerDisplay>(renderer, "imagenes/1005.png", tileSize);
+        player_pov = player->back_pov();
     } catch (const std::runtime_error& e) {
-        std::cout << "[DEBUG] imagenes/player.png failed: " << e.what() << std::endl;
+        std::cout << "[DEBUG] imagenes/1005.png failed: " << e.what() << std::endl;
     }
     // valor hardcodeado para testing!
     // revisar game_map.cpp

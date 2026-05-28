@@ -36,7 +36,11 @@ public:
     int getTileY() const;
     // Setea la posicion en pixels (legacy; preferir setTilePosition).
     void setPosition(float x, float y);
-    void draw(const Camera& camera) const override;
+    void draw(const Camera& camera, SDL_FRect crop_pov) const override;
+    SDL_FRect right_pov() const;
+    SDL_FRect left_pov() const;
+    SDL_FRect front_pov() const;
+    SDL_FRect back_pov() const;
 
     void move_up();
     void move_down();

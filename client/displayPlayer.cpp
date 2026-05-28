@@ -86,14 +86,30 @@ int PlayerDisplay::getTileY() const {
     return static_cast<int>(rect.y) / tileSize;
 }
 
-void PlayerDisplay::draw(const Camera& camera) const {
+SDL_FRect PlayerDisplay::back_pov() const {
+    return {339.0f, 50.0f, 23.0f, 44.0f};
+}
+
+SDL_FRect PlayerDisplay::front_pov() const {
+    return {367.0f, 3.0f, 21.0f, 43.0f};
+}
+
+SDL_FRect PlayerDisplay::right_pov() const {
+    return {316.0f, 147.0f, 22.0f, 38.0f};
+}
+
+SDL_FRect PlayerDisplay::left_pov() const {
+    return {311.0f, 100.0f, 21.0f, 38.0f};
+}
+
+void PlayerDisplay::draw(const Camera& camera, SDL_FRect crop_pov) const {
     SDL_FRect dst{
         camera.world_to_screen_x(rect.x),
         camera.world_to_screen_y(rect.y),
         rect.w,
         rect.h
     };
-    SDL_RenderTexture(renderer, image, nullptr, &dst);
+    SDL_RenderTexture(renderer, image, &crop_pov, &dst);
 }
 
 int PlayerDisplay::get_x() {
