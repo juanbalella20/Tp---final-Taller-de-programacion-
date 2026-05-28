@@ -106,13 +106,27 @@ void GameLoop::run() {
                     break;
                 }
                 case MSG_LIST: {
-                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-                    int x = cmd.get_coord_x();
-                    int y = cmd.get_coord_y();
+                    auto it = selected_npc.find(cmd.get_client_id());
+                    std::cout << "[DEBUG: MSG_LIST] client_id=" << cmd.get_client_id() 
+                            << " found=" << (it != selected_npc.end())
+                            << (it != selected_npc.end() ? " x=" + std::to_string(it->second.first) + " y=" + std::to_string(it->second.second) : "")
+                            << std::endl;
+                    if (it == selected_npc.end()) {
+                        GameMsg msg(MSG_CHAT);
+                        msg.set_chat_content("Selecciona un comerciante primero.");
+                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                        break;
+                    }
+                    int x = it->second.first;
+                    int y = it->second.second;
                     try {
                         std::vector<ItemInfo> items = game_map.list_seller_items(x, y);
-                        GameMsg msg(MSG_INVENTORY);
-                        msg.set_items(items);
+                        GameMsg msg(MSG_CHAT);
+                        std::string lista = "Items disponibles: ";
+                        for (const auto& item : items) {
+                            lista += item.get_name() + " ($" + std::to_string(item.get_price()) + ") ";
+                        }
+                        msg.set_chat_content(lista);
                         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
                     } catch (const std::runtime_error& e) {
                         GameMsg msg(MSG_CHAT);
@@ -257,23 +271,6 @@ void GameLoop::run() {
                     //client_registry_monitor.notify_client_by_name(target, msg);
                     break;
                 }
-                //case MSG_BUY:{
-                    //recibis coordedas de donde tocaste 
-                    //recibis el item-> cmd
-                    // el player que toco-> cmd
-                    //game_map.buy_item(player_name, item_id,coordenadas); -> lista de npc
-                        //player.buy_item(item_id, npc);
-                            //aca tenes info de ORO, NPC, ITEM_ID, 
-                            //caso de npc con lista
-                            //RESTAR EL ORO
-
-                            //inventario.add(*item);
-                    break;
-
-
-
-                    
-                //}
                 //case MSG_RESURRECT: handle_resurrect(cmd); break;
                 default:
                     break;

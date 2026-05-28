@@ -151,6 +151,7 @@ bool GameMap::player_sell_item(const std::string& player_name, int x, int y, con
     if (seller == nullptr) throw std::runtime_error("No hay un comerciante en esa posicion.");
  
     Command cmd;
+    cmd.action = ACTION_SELL;
     cmd.item_id = item_id;
     seller->interact(*player, cmd);
  
