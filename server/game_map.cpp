@@ -350,6 +350,15 @@ void GameMap::spawn_item(int x, int y, std::unique_ptr<Item> item) {
     }
 }
 
+std::vector<PlayerInfo> GameMap::build_player_snapshot(const std::string& player_name) {
+    std::vector<PlayerInfo> snapshot;
+    for (const auto& p : players) {
+        if (p.get_name() == player_name) continue;
+        snapshot.push_back({p.get_name(), 0, 0, p.get_coord_x(), p.get_coord_y()});
+    }
+    return snapshot;
+}
+
 uint32_t GameMap::get_player_gold(const std::string& name) {
     Player* player = find_player_by_name(name);
     return player->get_gold();

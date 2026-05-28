@@ -75,10 +75,13 @@ void GameLoop::load_maps() {
 // mandamos snapshot de npcs e items
 // mandar snaphot de players
 
-
-
-
-
+/*
+void send_players_snapshot_to(uint32_t client_id, const std::string& player_name) {
+    GameMsg msg(MSG_PLAYERS_SNAPSHOT);
+    msg.set_players(game_map.build_players_snapshot(player_name));
+    client_registry_monitor.notify_client(client_id, msg);
+}
+*/
 void GameLoop::process_cmd(const ClientCmd& cmd) {
     switch (cmd.get_message_type()) {
                     case MSG_REGISTER: {
@@ -116,7 +119,8 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                         // Estado del mundo dinamico para el cliente recien registrado.
                         send_npcs_snapshot_to(cmd.get_client_id());
                         send_items_snapshot_to(cmd.get_client_id());
-                        
+                        //send_players_snapshot_to(cmd.get_client_id(), cmd.get_player_name());
+
                         
 
                         //avisamos a los demás clientes que hay un nuevo jugador en el mapa, para que lo rendericen.

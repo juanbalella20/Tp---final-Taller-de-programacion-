@@ -14,6 +14,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include "playerinfo.h"
 
 struct NpcSpawn {
     std::string type;
@@ -67,7 +68,7 @@ public:
     const std::map<std::string, positionCoord>& get_spawns() const { return spawns; }
 
     void add_player(Player player);
-
+    std::vector<PlayerInfo> build_player_snapshot(const std::string& player_name);
     struct MoveResult {
         bool moved;
         std::string player_name;
