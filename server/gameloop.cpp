@@ -87,10 +87,9 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                     case MSG_REGISTER: {
                         client_registry_monitor.assign_name(cmd.get_client_id(), cmd.get_player_name());
                         game_map.spawn_player(cmd.get_player_name());
-                        //game_map.spawn_player(cmd.get_player_name(), cmd.klass, cmd.race);
-                        GameMsg msg(MSG_SEND_MAP);
-                        msg.set_map(game_map.get_map());
-                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+                        GameMsg registerMsg(MSG_REGISTER);
+                        registerMsg.set_map(game_map.get_map());
+                
                         std::cout << "[DEBUG: MSG_REGISTER] received cmd type="
                         << static_cast<int>(cmd.get_message_type())
                         << "client_id" << cmd.get_client_id()
@@ -100,28 +99,20 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
                         for (Item* item : p.get_inventory().get_items()) {
                             item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
                         }
-                        GameMsg inv_msg(MSG_INVENTORY);
-                        inv_msg.set_items(item_infos);
-                        client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
-                        GameMsg gold_msg(MSG_GOLD);
-                        gold_msg.set_gold(game_map.get_player_gold(cmd.get_player_name()));
-                        client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
-                        GameMsg hp_msg(MSG_HP);
-                        hp_msg.set_hp(game_map.get_player_hp(cmd.get_player_name()));
-                        client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
-                        GameMsg xp_msg(MSG_XP);
-                        xp_msg.set_xp(game_map.get_player_xp(cmd.get_player_name()));
-                        client_registry_monitor.notify_client(cmd.get_client_id(), xp_msg);
-                        GameMsg mana_msg(MSG_MANA);
-                        mana_msg.set_mana(game_map.get_player_mana(cmd.get_player_name()));
-                        client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
+                        registerMsg.set_items(item_infos);
+                        registerMsg.set_gold(game_map.get_player_gold(cmd.get_player_name()));
+                        registerMsg.set_hp(game_map.get_player_hp(cmd.get_player_name()));
+                        
+                        registerMsg.set_xp(game_map.get_player_xp(cmd.get_player_name()));
+                    
+                        registerMsg.set_mana(game_map.get_player_mana(cmd.get_player_name()));
+                        client_registry_monitor.notify_client(cmd.get_client_id(), registerMsg);
 
                         // Estado del mundo dinamico para el cliente recien registrado.
                         send_npcs_snapshot_to(cmd.get_client_id());
                         send_items_snapshot_to(cmd.get_client_id());
                         //send_players_snapshot_to(cmd.get_client_id(), cmd.get_player_name());
 
-                        
 
                         //avisamos a los demás clientes que hay un nuevo jugador en el mapa, para que lo rendericen.
                         //client_registry_monitor.notify_clients_about_new_player(name,raza,klass,client_id);

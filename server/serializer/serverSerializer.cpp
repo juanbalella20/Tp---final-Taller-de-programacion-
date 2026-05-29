@@ -6,6 +6,7 @@
 #include <iostream>
 
 ServerSerializer::ServerSerializer() {
+    handlers[MSG_REGISTER] = [this](const GameMsg& msg) { return serialize_register(msg); };
     handlers[MSG_MOVE] = [this](const GameMsg& msg) { return serialize_move(msg); };
     handlers[MSG_SEND_MAP] = [this](const GameMsg& msg) { return serialize_map(msg); };
     handlers[MSG_INVENTORY] = [this](const GameMsg& msg) { return serialize_inventory(msg); };
@@ -237,6 +238,75 @@ std::vector<uint8_t> ServerSerializer::serialize_xp(const GameMsg& msg) {
 
 std::vector<uint8_t> ServerSerializer::serialize_mana(const GameMsg& msg) {
     uint32_t mana = msg.get_mana();
-    
+
     return serialize_value(msg, mana);
+}
+
+// Formato MSG_REGISTER payload:
+//   [map_rows        : 2 bytes BE]
+//   [map_cols        : 2 bytes BE]
+//   foreach row, col:
+//     [cell           : 1 byte]
+//   [item_count      : 1 byte]
+//   foreach item:
+//     [id_size        : 1 byte][id bytes]
+//     [name_size      : 1 byte][name bytes]
+//   [gold            : 4 bytes BE]
+//   [hp              : 4 bytes BE]
+//   [xp              : 4 bytes BE]
+//   [mana            : 4 bytes BE]
+std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
+    const auto& map = msg.get_map();
+    const auto& items = msg.get_items();
+
+    uint16_t rows = static_cast<uint16_t>(map.size());
+    uint16_t cols = (rows > 0) ? static_cast<uint16_t>(map[0].size()) : 0;
+
+    uint16_t payload_len = 0;
+    payload_len += 2 * LEN_COORD;           // rows + cols
+    payload_len += rows * cols;             // celdas del mapa
+    payload_len += 1;                       // item_count
+    for (const auto& item : items) {
+        payload_len += 1 + static_cast<uint16_t>(item.get_id().size());
+        payload_len += 1 + static_cast<uint16_t>(item.get_name().size());
+    }
+    payload_len += 4 * sizeof(uint32_t);    // gold + hp + xp + mana
+
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, MSG_REGISTER, payload_len);
+
+    append_uint16_be(buf, rows);
+    append_uint16_be(buf, cols);
+    for (const auto& row : map) {
+        for (elements cell : row) {
+            auto it = ELEMENT_TYPE_MAP.find(cell);
+            uint8_t encoded = (it != ELEMENT_TYPE_MAP.end()) ? static_cast<uint8_t>(it->second)
+                                                              : static_cast<uint8_t>(ELEMENT_EMPTY);
+            buf.push_back(encoded);
+        }
+    }
+
+    buf.push_back(static_cast<uint8_t>(items.size()));
+    for (const auto& item : items) {
+        const std::string& id = item.get_id();
+        buf.push_back(static_cast<uint8_t>(id.size()));
+        buf.insert(buf.end(), id.begin(), id.end());
+        const std::string& name = item.get_name();
+        buf.push_back(static_cast<uint8_t>(name.size()));
+        buf.insert(buf.end(), name.begin(), name.end());
+    }
+
+    auto append_u32 = [&](uint32_t value) {
+        uint32_t be = htonl(value);
+        uint8_t bytes[sizeof(uint32_t)];
+        std::memcpy(bytes, &be, sizeof(uint32_t));
+        buf.insert(buf.end(), bytes, bytes + sizeof(uint32_t));
+    };
+    append_u32(msg.get_gold());
+    append_u32(msg.get_hp());
+    append_u32(msg.get_xp());
+    append_u32(msg.get_mana());
+
+    return buf;
 }

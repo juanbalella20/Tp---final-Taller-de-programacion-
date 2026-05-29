@@ -288,6 +288,17 @@ void ClientGUI::update() {
         while (receiving.try_pop(msg)) {
             std::cout << "Mesaje recibido tipo: " << (int)msg.get_type() << std::endl;
             switch (msg.get_type()) {
+                case MSG_REGISTER: {
+                    world_map = msg.get_map();
+                    if (hud) {
+                        hud->set_inventory(msg.get_items());
+                        hud->set_gold(msg.get_gold());
+                        hud->set_hp(msg.get_hp());
+                        hud->set_xp(msg.get_xp());
+                        hud->set_mana(msg.get_mana());
+                    }
+                    break;
+                }
                 case MSG_SEND_MAP:
                     world_map = msg.get_map();
                     break;

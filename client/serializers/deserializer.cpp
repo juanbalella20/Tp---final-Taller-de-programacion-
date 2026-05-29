@@ -11,6 +11,9 @@
 #include <iostream>
 
 ClientDeserializer::ClientDeserializer() {
+    handlers[MSG_REGISTER] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_register(payload, msg);
+    };
     handlers[MSG_MOVE] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_move(payload, msg);
     };
@@ -239,6 +242,58 @@ void ClientDeserializer::deserialize_npcs_snapshot(const std::vector<uint8_t>& p
     }
 
     msg.set_npcs(npcs);
+}
+
+// Ver formato en serverSerializer::serialize_register.
+void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    size_t offset = 0;
+
+    uint16_t rows = read_uint16_be(payload, offset);
+    uint16_t cols = read_uint16_be(payload, offset);
+
+    std::vector<std::vector<elements>> map(rows, std::vector<elements>(cols, elements::empty));
+    for (uint16_t r = 0; r < rows; ++r) {
+        for (uint16_t c = 0; c < cols; ++c) {
+            if (offset >= payload.size()) {
+                throw std::invalid_argument("Payload demasiado corto leyendo mapa en MSG_REGISTER");
+            }
+            uint8_t cell = payload[offset++];
+            switch (cell) {
+                case ELEMENT_BUILDING: map[r][c] = elements::buildings; break;
+                case ELEMENT_NPC:      map[r][c] = elements::npcs;      break;
+                case ELEMENT_EMPTY:    map[r][c] = elements::empty;     break;
+                default: throw std::invalid_argument("Celda invalida en MSG_REGISTER");
+            }
+        }
+    }
+    msg.set_map(map);
+
+    if (offset >= payload.size()) {
+        throw std::invalid_argument("Payload demasiado corto leyendo item_count en MSG_REGISTER");
+    }
+    uint8_t item_count = payload[offset++];
+    std::vector<ItemInfo> items;
+    items.reserve(item_count);
+    for (uint8_t i = 0; i < item_count; ++i) {
+        std::string id   = read_string(payload, offset);
+        std::string name = read_string(payload, offset);
+        items.emplace_back(id, name, 0);
+    }
+    msg.set_items(items);
+
+    uint32_t gold_be, hp_be, xp_be, mana_be;
+    if (offset + 4 * sizeof(uint32_t) > payload.size()) {
+        throw std::invalid_argument("Payload demasiado corto leyendo stats en MSG_REGISTER");
+    }
+    std::memcpy(&gold_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
+    std::memcpy(&hp_be,   payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
+    std::memcpy(&xp_be,   payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
+    std::memcpy(&mana_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
+
+    msg.set_gold(ntohl(gold_be));
+    msg.set_hp(ntohl(hp_be));
+    msg.set_xp(ntohl(xp_be));
+    msg.set_mana(ntohl(mana_be));
 }
 
 // Ver formato en serializer.

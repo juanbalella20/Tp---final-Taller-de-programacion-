@@ -20,6 +20,7 @@
 #include "tileMap.h"
 #include "camera.h"
 #include "hud.h"
+#include "../../common/utility/thread.h"
 
 #define WIN_NAME "Argentum"
 #define WINDOW_WIDTH 1280
