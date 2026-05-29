@@ -86,6 +86,10 @@ int PlayerDisplay::getTileY() const {
     return static_cast<int>(rect.y) / tileSize;
 }
 
+void PlayerDisplay::reset_frame() {
+    walk_frame = 0;
+}
+
 SDL_FRect PlayerDisplay::back_pov() {
     static const SDL_FRect frames[] = {
         {255.0f, 51.0f, 30.0f, 40.0f},

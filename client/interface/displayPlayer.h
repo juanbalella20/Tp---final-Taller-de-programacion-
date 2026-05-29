@@ -51,6 +51,7 @@ public:
     int get_x();
     int get_y();
 
+    void reset_frame();
 };
 
 #endif
