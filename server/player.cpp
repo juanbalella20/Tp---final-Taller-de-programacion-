@@ -45,10 +45,12 @@ void Player::add_item(std::unique_ptr<Item> item) {
 
 /* TODO: implement ITEM */
 
-/*
-void Player::drop_item(Item item) {
+
+void Player::drop_item(Item* item) {
     player_inventory.drop_item(item);
 }
+
+/*
 
 void Player::equip_item(Item item) {
     if (equipped_item == nullptr) {
@@ -120,7 +122,7 @@ bool Player::give_gold(const int amount) {
     return false;
 }
 
-uint32_t Player::get_gold() {
+uint32_t Player::get_gold() const {
     return gold;
 }
 

@@ -1,49 +1,71 @@
 #include "npcSeller.h"
+#include "player.h"
+#include "item.h"
+#include "arma.h"
 
-NPCseller::NPCseller() {
-    set_npc_name("Seller");
+NPCseller::NPCseller(int x, int y) : pos_x(x), pos_y(y) {
+    name = "Comerciante";
+    init_store();
+}
+ 
+// TODO: cargar desde ItemDataBase cuando este implementada (pociones, armaduras, etc)
+void NPCseller::init_store() {
+    store_items.push_back(std::make_unique<Arma>("espada",   "Espada",   100, 1, 5));
+    store_items.push_back(std::make_unique<Arma>("hacha",    "Hacha",    150, 1, 7));
+    store_items.push_back(std::make_unique<Arma>("martillo", "Martillo", 120, 1, 6));
 }
 
-Store NPCseller::get_store() {
-    // solo debe devoler los items con stock > 1
-    return store.get_store();
-}
-
-void NPCseller::add_item_store(Item item) {
-    store.add_item();
-}
-
-void NPCseller::delete_item_store(Item item) {
-    store.delete_item(Item item);
-}
-
-Item NPCseller::sell_item(Item item, Player player) {
-    if (player.get_gold() >= item.getprice*cantidad) {
-        player.add_item(Item item);
-        delete_item_store(Item item);
+int NPCseller::get_coord_x() const { return pos_x; }
+int NPCseller::get_coord_y() const { return pos_y; }
+ 
+std::vector<ItemInfo> NPCseller::list_items() const {
+    std::vector<ItemInfo> result;
+    for (const auto& item : store_items) {
+        result.emplace_back(item->get_id(), item->getName(), item->getPrice());
     }
-    else {
-    // send "not enough money" message to player
+    return result;
+}
+ 
+void NPCseller::interact(Player& player, Command cmd) {
+    if (cmd.action == ACTION_SELL) {
+        // Player vende un item al seller
+        Item* item_to_sell = nullptr;
+        for (Item* item : player.get_inventory().get_items()) {
+            if (item->get_id() == cmd.item_id) {
+                item_to_sell = item;
+                break;
+            }
+        }
+        if (item_to_sell == nullptr) return;
+ 
+        int price = item_to_sell->getPrice();
+        player.drop_item(item_to_sell);
+        player.add_gold(price);
+ 
+    } else if (cmd.action == ACTION_BUY) {
+        // Player compra un item del seller
+        Item* store_item = nullptr;
+        for (const auto& item : store_items) {
+            if (item->get_id() == cmd.item_id) {
+                store_item = item.get();
+                break;
+            }
+        }
+        if (store_item == nullptr) return;
+ 
+        int price = store_item->getPrice();
+        if (player.get_gold() < price) return;
+ 
+        player.give_gold(price);
+ 
+        // TODO: usar factory de items cuando este implementada
+        auto new_item = std::make_unique<Arma>(
+            store_item->get_id(),
+            store_item->getName(),
+            store_item->getPrice(),
+            1, 5
+        );
+        player.add_item(std::move(new_item));
     }
 }
 
-void NPCseller::buy_item(Item item, Player player) {
-    player.add_gold(item.price);
-    add_item_store(item);
-}
-
-void NPCseller::interact(Player player, Command cmd) {
-    switch (cmd.type) {
-        case SELL :
-            sell_item(cmd.item, player);
-            break;
-        case BUY :
-            buy_item(cmd.item, player);
-            break;
-        case GET_STORE :
-            get_store();
-            break;
-        default:
-            break;
-    }
-}

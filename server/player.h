@@ -43,7 +43,7 @@ public:
 
     void add_item(std::unique_ptr<Item> item);
 
-    void drop_item(Item item);
+    void drop_item(Item* item);
 
     void equip_item(std::string item_id);
 
@@ -65,7 +65,7 @@ public:
 
     bool give_gold(const int amount);
 
-    uint32_t get_gold();
+    uint32_t get_gold() const;
 
     std::string get_name() const override;
 

@@ -9,6 +9,7 @@
 #include "../common/npc_info.h"
 #include "../common/item_floor_info.h"
 #include "../common/mapLoader.h"
+#include "npcSeller.h"
 
 #include <vector>
 #include <map>
@@ -50,6 +51,7 @@ private:
     //TileGrid tiles;
     std::vector<groundItem> ground_items;
     std::vector<groundGold> ground_gold;
+    std::vector<NPCseller> sellers;
 
     Player* find_player_by_name(const std::string& name);
     bool look_for_entity(int x, int y);
@@ -99,6 +101,16 @@ public:
     // Snapshot de los items y oro tirados en el piso, para mandar al cliente
     // via MSG_ITEMS_SNAPSHOT. type = id del item, o "gold" para oro.
     std::vector<ItemFloorInfo> build_items_snapshot() const;
+    void spawn_seller(int x, int y);
+
+    // Vender: el player vende item_id al seller adyacente.
+    // Devuelve true si la operacion fue exitosa.
+    bool player_sell_item(const std::string& player_name, int x, int y,const std::string& item_id);
+    // Comprar: el player compra item_id al seller adyacente.
+    bool player_buy_item(const std::string& player_name, int x, int y, const std::string& item_id);
+    // Lista los items del seller adyacente al player
+    std::vector<ItemInfo> list_seller_items(int x, int y);
+
 
     std::string sector_of_position(int x, int y);
     void player_equip_item(const std::string& player_name, const std::string& item_id);

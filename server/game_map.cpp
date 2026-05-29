@@ -56,6 +56,8 @@ void GameMap::init_world(const InitialState& state) {
     for (const auto& spawn : state.npcs) {
         spawn_npc(make_npc_from_spawn(spawn));
     }
+    spawn_seller(1,1);
+
     // Los players se crean en MSG_REGISTER, no desde el InitialState.
 
     // Item de prueba hardcodeado. TODO: moverlo a state.items cuando este listo.
@@ -228,6 +230,69 @@ bool GameMap::update_npcs() {
         respawned = true;
     }
     return respawned;
+}
+
+void GameMap::spawn_seller(int x, int y) {
+    if (y >= 0 && y < height && x >= 0 && x < width) {
+        sellers.emplace_back(x, y);
+        map[y][x] = elements::npcs;
+        std::cout << "[DEBUG: spawn_seller] NPCseller at (" << x << "," << y << ")" << std::endl;
+    }
+}
+ 
+bool GameMap::player_sell_item(const std::string& player_name, int x, int y, const std::string& item_id) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found: " + player_name);
+ 
+    NPCseller* seller = nullptr;
+    for (auto& s : sellers) {
+        if (s.get_coord_x() == x && s.get_coord_y() == y) {
+            seller = &s;
+            break;
+        }
+    }
+    if (seller == nullptr) throw std::runtime_error("No hay un comerciante en esa posicion.");
+ 
+    Command cmd;
+    cmd.action = ACTION_SELL;
+    cmd.item_id = item_id;
+    seller->interact(*player, cmd);
+ 
+    return true;
+}
+
+bool GameMap::player_buy_item(const std::string& player_name, int x, int y, const std::string& item_id) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found: " + player_name);
+ 
+    NPCseller* seller = nullptr;
+    for (auto& s : sellers) {
+        if (s.get_coord_x() == x && s.get_coord_y() == y) {
+            seller = &s;
+            break;
+        }
+    }
+    if (seller == nullptr) throw std::runtime_error("No hay un comerciante en esa posicion.");
+ 
+    Command cmd;
+    cmd.action = ACTION_BUY;
+    cmd.item_id = item_id;
+    seller->interact(*player, cmd);
+ 
+    return true;
+}
+
+ 
+std::vector<ItemInfo> GameMap::list_seller_items(int x, int y) {
+    NPCseller* seller = nullptr;
+    for (auto& s : sellers) {
+        if (s.get_coord_x() == x && s.get_coord_y() == y) {
+            seller = &s;
+            break;
+        }
+    }
+    if (seller == nullptr) throw std::runtime_error("No hay un comerciante en esa posicion.");
+    return seller->list_items();
 }
 
 bool GameMap::look_for_entity(int x, int y) {
