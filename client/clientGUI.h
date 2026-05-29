@@ -114,6 +114,7 @@ private:
 
     void set_logical_width(int logical_width);
     void set_logical_height(int logical_height);
+    void draw_npc_friends();
 
 public:
     ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving);

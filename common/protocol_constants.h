@@ -110,6 +110,7 @@ enum ELEMENT_TYPE : uint8_t {
 const std::unordered_map<elements, ELEMENT_TYPE> ELEMENT_TYPE_MAP = {
     {elements::buildings, ELEMENT_BUILDING},
     {elements::empty, ELEMENT_EMPTY},
+    {elements::npcs, ELEMENT_NPC},
 };
 
 const std::unordered_map<std::string, Race> RACE_MAP = {

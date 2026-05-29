@@ -117,6 +117,9 @@ void ClientDeserializer::deserialize_map(const std::vector<uint8_t>& payload, Ga
                 case ELEMENT_BUILDING:
                     map[row][col] = elements::buildings;
                     break;
+                case ELEMENT_NPC:
+                    map[row][col] = elements::npcs;
+                    break;
                 case ELEMENT_EMPTY:
                     map[row][col] = elements::empty;
                     break;

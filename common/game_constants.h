@@ -28,7 +28,8 @@ struct groundGold {
 
 enum class elements {
     buildings,
-    empty
+    empty,
+    npcs
 };
 
 #define HEIGHT 16

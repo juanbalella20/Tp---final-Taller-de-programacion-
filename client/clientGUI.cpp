@@ -384,6 +384,21 @@ void ClientGUI::drawEnemies() {
     }
 }
 
+void ClientGUI::draw_npc_friends() {
+    if (!enemy_texture || !tilemap) return;
+    const int tileSize = tilemap->getTileSize();
+
+    for (size_t y = 0; y < world_map.size(); ++y) {
+        const auto& row = world_map[y];
+        for (size_t x = 0; x < row.size(); ++x) {
+            if (row[x] != elements::npcs) continue;
+            NpcSprite(renderer, enemy_texture,
+                      static_cast<int>(x), static_cast<int>(y), tileSize)
+                .draw(camera, {});
+        }
+    }
+}
+
 void ClientGUI::drawItems() {
     if (!tilemap) return;
     const int tileSize = tilemap->getTileSize();
@@ -425,7 +440,7 @@ void ClientGUI::draw() {
         player->draw(camera, player_pov);
     }
     drawEnemies();
-    
+    draw_npc_friends();
 
     // Levanta el clip para dibujar el panel y el chat encima
     SDL_SetRenderClipRect(renderer, nullptr);
@@ -490,7 +505,7 @@ void ClientGUI::init_draw() {
     // valor hardcodeado para testing!
     // revisar game_map.cpp
     player->setTilePosition(29, 15);
-
+    draw_npc_friends();
 
     is_running = true;
     SDL_Delay(100);
