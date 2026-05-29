@@ -88,12 +88,12 @@ int PlayerDisplay::getTileY() const {
 
 SDL_FRect PlayerDisplay::back_pov() {
     static const SDL_FRect frames[] = {
-        {261.0f, 51.0f, 17.0f, 39.0f},
-        {288.0f, 51.0f, 17.0f, 39.0f},
-        {314.0f, 51.0f, 17.0f, 39.0f},
-        {341.0f, 51.0f, 17.0f, 39.0f},
-        {368.0f, 51.0f, 17.0f, 39.0f},
-        {394.0f, 51.0f, 17.0f, 39.0f}
+        {255.0f, 51.0f, 30.0f, 40.0f},
+        {285.0f, 51.0f, 30.0f, 40.0f},
+        {310.0f, 51.0f, 30.0f, 40.0f},
+        {335.0f, 51.0f, 30.0f, 40.0f},
+        {365.0f, 51.0f, 30.0f, 40.0f},
+        {394.0f, 51.0f, 30.0f, 40.0f}
     };
     SDL_FRect frame = frames[walk_frame % 6];
     walk_frame = (walk_frame + 1) % 6;
