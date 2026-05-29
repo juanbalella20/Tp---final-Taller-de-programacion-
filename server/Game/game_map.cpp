@@ -118,28 +118,32 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
         return {false, player_name, 0, 0};
     }
 
-    int new_x = player->get_coord_x() + dir_to_dx(dir);
-    int new_y = player->get_coord_y() + dir_to_dy(dir);
+    int current_x = player->get_coord_x();
+    int current_y = player->get_coord_y();
+
+    int new_x = current_x + dir_to_dx(dir);
+    int new_y = current_y + dir_to_dy(dir);
 
     std::cout << "[DEBUG: try_move " << player_name
               << "] (" << new_x << "," << new_y << ")" << std::endl;
 
     // Limites del mapa.
     if (new_x < 0 || new_y < 0 || new_x >= width || new_y >= height) {
-        return {false, player_name, 0, 0};
+        return {false, player_name, current_x, current_y};
     }
     // Terreno bloqueado (edificio).
     if (map[new_y][new_x] != elements::empty) {
     // VER
-        return {false, player_name, 0, 0};
+        return {false, player_name, current_x, current_y};
     }
     // Actor en la celda destino.
     if (has_actor_at(new_x, new_y)) {
-        return {false, player_name, 0, 0};
+        return {false, player_name, current_x, current_y};
     }
-     for (const auto& gi : ground_items) {
+
+    for (const auto& gi : ground_items) {
         if (gi.pos.x == new_x && gi.pos.y == new_y) {
-            return {false, player_name, 0, 0};
+            return {false, player_name, current_x, current_y};
         }
     }
 
