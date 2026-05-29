@@ -1,9 +1,9 @@
 #ifndef SERVER_SRC_GAMELOOP_H_
 #define SERVER_SRC_GAMELOOP_H_
 
-#include "../common/clientCmd.h"
-#include "../common/queue.h"
-#include "../common/thread.h"
+#include "../common/commands/clientCmd.h"
+#include "../common/utility/queue.h"
+#include "../common/utility/thread.h"
 #include "clientRegistryMonitor.h"
 #include "game_map.h"
 

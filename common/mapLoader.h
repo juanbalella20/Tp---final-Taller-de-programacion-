@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "game_constants.h"
+#include "constants/game_constants.h"
 #include "../vendored/tomlplusplus/toml.hpp"
 #include <filesystem>
 

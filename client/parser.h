@@ -1,7 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
-#include "../common/clientCmd.h"
-#include "../common/protocol_constants.h"
+#include "../common/commands/clientCmd.h"
+#include "../common/constants/protocol_constants.h"
 
 class Parser {
  private:

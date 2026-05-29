@@ -6,9 +6,9 @@
 #include <chrono>
 #include <thread>
 
-#include "../common/gameMsg.h"
-#include "../common/item_info.h"
-#include "item.h"
+#include "../common/commands/gameMsg.h"
+#include "../common/info/item_info.h"
+#include "Game/item/item.h"
 
 GameLoop::GameLoop(Queue<ClientCmd>& receiving_queue,
                    ClientRegistryMonitor& client_registry_monitor):

@@ -2,7 +2,7 @@
 #define SERVER_SRC_SERVER_APP_H_
 
 
-#include "../common/queue.h"
+#include "../common/utility/queue.h"
 #include "acceptor.h"
 #include "clientRegistryMonitor.h"
 #include "gameloop.h"

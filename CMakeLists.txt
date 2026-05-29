@@ -62,38 +62,48 @@ add_subdirectory(vendored/SDL_ttf EXCLUDE_FROM_ALL)
 
 # ── Common library (shared by client and server) ────────────────────────────
 add_library(common STATIC
-    common/socket.cpp
-    common/resolver.cpp
-    common/resolvererror.cpp
-    common/liberror.cpp
-    common/clientCmd.cpp
-    common/gameMsg.cpp
+    common/socket/socket.cpp
+    common/socket/resolver.cpp
+    common/socket/resolvererror.cpp
+    common/socket/liberror.cpp
+    common/commands/clientCmd.cpp
+    common/commands/gameMsg.cpp
     common/mapLoader.cpp
-    # TODO: add when Item type exists:
-    # common/inventory.cpp common/player_class.cpp common/player_race.cpp
 )
-target_include_directories(common PUBLIC common)
+target_include_directories(common PUBLIC
+    common
+    common/socket
+    common/commands
+    common/constants
+    common/info
+    common/utility
+)
 
 # ── Client ──────────────────────────────────────────────────────────────────
 add_executable(client
     client/clientmain.cpp
     client/clientApp.cpp
-    client/minichat.cpp
-    client/clientProtocol.cpp
-    client/deserializer.cpp
-    client/serialze.cpp
+    client/interface/minichat.cpp
+    client/comunication/clientProtocol.cpp
+    client/serializers/deserializer.cpp
+    client/serializers/serializer.cpp
     client/parser.cpp
-    client/clientGUI.cpp
-    client/tileMap.cpp
-    client/displayPlayer.cpp
-    client/camera.cpp
-    client/networkSenderThread.cpp
-    client/networkReceiverThread.cpp
-    client/npcSprite.cpp
-    client/itemSprite.cpp
-    client/hud.cpp
+    client/interface/clientGUI.cpp
+    client/interface/tileMap.cpp
+    client/interface/displayPlayer.cpp
+    client/interface/camera.cpp
+    client/comunication/networkSenderThread.cpp
+    client/comunication/networkReceiverThread.cpp
+    client/interface/npcSprite.cpp
+    client/interface/itemSprite.cpp
+    client/interface/hud.cpp
 )
-target_include_directories(client PRIVATE client)
+target_include_directories(client PRIVATE
+    client
+    client/interface
+    client/comunication
+    client/serializers
+)
 target_link_libraries(client PRIVATE common SDL3::SDL3 SDL3_image::SDL3_image)
 # find_package(SDL3_ttf REQUIRED)
 target_link_libraries(client PRIVATE SDL3_ttf::SDL3_ttf)
@@ -110,27 +120,35 @@ target_link_libraries(client PRIVATE SDL3_ttf::SDL3_ttf)
 add_executable(server
     server/server.cpp
     server/serverApp.cpp
-    server/acceptor.cpp
-    server/clientHandler.cpp
-    server/clientRegistryMonitor.cpp
-    server/receiverThread.cpp
-    server/senderThread.cpp
-    server/serverProtocol.cpp
-    server/serverDeserializer.cpp
-    server/serverSerializer.cpp
+    server/communication/acceptor.cpp
+    server/communication/clientHandler.cpp
+    server/communication/clientRegistryMonitor.cpp
+    server/communication/receiverThread.cpp
+    server/communication/senderThread.cpp
+    server/communication/serverProtocol.cpp
+    server/serializer/serverDeserializer.cpp
+    server/serializer/serverSerializer.cpp
     server/gameloop.cpp
-    server/game_map.cpp
-    server/player.cpp
-    server/player_class.cpp
-    server/player_race.cpp
-    server/inventory.cpp
-    server/item.cpp
-    server/arma.cpp
-    server/npc.cpp
-    server/npcHostile.cpp
-    # server/npcBanker.cpp
-    # server/npcPriest.cpp
-    server/npcSeller.cpp
+    server/Game/game_map.cpp
+    server/Game/player/player.cpp
+    server/Game/player/player_class.cpp
+    server/Game/player/player_race.cpp
+    server/Game/inventory.cpp
+    server/Game/item/item.cpp
+    server/Game/item/arma.cpp
+    server/Game/npc/npc.cpp
+    server/Game/npc/npcHostile.cpp
+    # server/Game/npc/npcBanker.cpp
+    # server/Game/npc/npcPriest.cpp
+    server/Game/npc/npcSeller.cpp
 )
-target_include_directories(server PRIVATE server)
+target_include_directories(server PRIVATE
+    server
+    server/communication
+    server/serializer
+    server/Game
+    server/Game/item
+    server/Game/npc
+    server/Game/player
+)
 target_link_libraries(server PRIVATE common)

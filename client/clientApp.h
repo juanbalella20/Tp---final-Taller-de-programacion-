@@ -2,9 +2,9 @@
 #define CLIENT_APP_H
 #include <string>
 #include "clientProtocol.h"
-#include "../common/clientCmd.h"
-#include "../common/gameMsg.h"
-#include "../common/queue.h"
+#include "clientCmd.h"
+#include "gameMsg.h"
+#include "queue.h"
 #include "networkSenderThread.h"
 #include "networkReceiverThread.h"
 #include "clientGUI.h"
