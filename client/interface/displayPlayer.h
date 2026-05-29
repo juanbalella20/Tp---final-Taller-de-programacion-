@@ -17,6 +17,8 @@ private:
     int tileSize;
     const bool* keystate;  
 
+    int walk_frame = 0;
+
 public:
     // Carga la imagen. La posicion inicial es (0, 0). Tile size en pixels.
     PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize);
@@ -37,10 +39,10 @@ public:
     // Setea la posicion en pixels (legacy; preferir setTilePosition).
     void setPosition(float x, float y);
     void draw(const Camera& camera, SDL_FRect crop_pov) const override;
-    SDL_FRect right_pov() const;
-    SDL_FRect left_pov() const;
-    SDL_FRect front_pov() const;
-    SDL_FRect back_pov() const;
+    SDL_FRect right_pov();
+    SDL_FRect left_pov();
+    SDL_FRect front_pov();
+    SDL_FRect back_pov();
 
     void move_up();
     void move_down();

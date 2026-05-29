@@ -86,20 +86,58 @@ int PlayerDisplay::getTileY() const {
     return static_cast<int>(rect.y) / tileSize;
 }
 
-SDL_FRect PlayerDisplay::back_pov() const {
-    return {339.0f, 50.0f, 23.0f, 44.0f};
+SDL_FRect PlayerDisplay::back_pov() {
+    static const SDL_FRect frames[] = {
+        {261.0f, 51.0f, 17.0f, 39.0f},
+        {288.0f, 51.0f, 17.0f, 39.0f},
+        {314.0f, 51.0f, 17.0f, 39.0f},
+        {341.0f, 51.0f, 17.0f, 39.0f},
+        {368.0f, 51.0f, 17.0f, 39.0f},
+        {394.0f, 51.0f, 17.0f, 39.0f}
+    };
+    SDL_FRect frame = frames[walk_frame % 6];
+    walk_frame = (walk_frame + 1) % 6;
+    return frame;
 }
 
-SDL_FRect PlayerDisplay::front_pov() const {
-    return {367.0f, 3.0f, 21.0f, 43.0f};
+SDL_FRect PlayerDisplay::front_pov() {
+    static const SDL_FRect frames[] = {
+        {261.0f, 5.0f, 17.0f, 39.0f},
+        {288.0f, 5.0f, 17.0f, 39.0f},
+        {314.0f, 5.0f, 17.0f, 39.0f},
+        {341.0f, 5.0f, 17.0f, 39.0f},
+        {368.0f, 5.0f, 17.0f, 39.0f},
+        {394.0f, 5.0f, 17.0f, 39.0f}
+    };
+    SDL_FRect frame = frames[walk_frame % 6];
+    walk_frame = (walk_frame + 1) % 6;
+    return frame;
 }
 
-SDL_FRect PlayerDisplay::right_pov() const {
-    return {316.0f, 147.0f, 22.0f, 38.0f};
+SDL_FRect PlayerDisplay::right_pov() {
+    static const SDL_FRect frames[] = {
+        {261.0f, 147.0f, 15.0f, 37.0f},
+        {283.0f, 147.0f, 28.0f, 37.0f},
+        {316.0f, 147.0f, 22.0f, 37.0f},
+        {343.0f, 147.0f, 19.0f, 37.0f},
+        {370.0f, 147.0f, 17.0f, 37.0f}
+    };
+    SDL_FRect frame = frames[walk_frame % 5];
+    walk_frame = (walk_frame + 1) % 5;
+    return frame;
 }
 
-SDL_FRect PlayerDisplay::left_pov() const {
-    return {311.0f, 100.0f, 21.0f, 38.0f};
+SDL_FRect PlayerDisplay::left_pov() {
+    static const SDL_FRect frames[] = {
+        {261.0f, 100.0f, 17.0f, 39.0f},
+        {283.0f, 100.0f, 17.0f, 39.0f},
+        {311.0f, 100.0f, 17.0f, 39.0f},
+        {340.0f, 100.0f, 17.0f, 39.0f},
+        {368.0f, 100.0f, 17.0f, 39.0f}
+    };
+    SDL_FRect frame = frames[walk_frame % 5];
+    walk_frame = (walk_frame + 1) % 5;
+    return frame;
 }
 
 void PlayerDisplay::draw(const Camera& camera, SDL_FRect crop_pov) const {
