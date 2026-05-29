@@ -266,7 +266,7 @@ void GameLoop::handle_take(const ClientCmd& cmd) {
 void GameLoop::handle_move(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     auto result = game_map.try_move(cmd.get_direction(), name);
-    if (result.moved) {
+    // if (result.moved) {
         if (game_map.pick_up_gold(name)) {
             std::cout << "oro" << std::endl;
             broadcast_items_snapshot();
@@ -280,7 +280,7 @@ void GameLoop::handle_move(const ClientCmd& cmd) {
         msg.set_coord_y(result.new_y);
         client_registry_monitor.notify_clients(msg);
         std::cout << "[DBUG]: sended" << std::endl;
-    }
+    // }
 }
 
 void GameLoop::handle_attack(const ClientCmd& cmd) {
