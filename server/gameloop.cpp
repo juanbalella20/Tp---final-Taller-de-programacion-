@@ -12,7 +12,26 @@
 
 GameLoop::GameLoop(Queue<ClientCmd>& receiving_queue,
                    ClientRegistryMonitor& client_registry_monitor):
-        receiving_queue(receiving_queue), client_registry_monitor(client_registry_monitor) {}
+        receiving_queue(receiving_queue), client_registry_monitor(client_registry_monitor) {
+    register_handlers();
+}
+
+void GameLoop::register_handlers() {
+    handlers[MSG_REGISTER]       = [this](const ClientCmd& cmd) { handle_register(cmd); };
+    handlers[MSG_LIST]           = [this](const ClientCmd& cmd) { handle_list(cmd); };
+    handlers[MSG_SELL]           = [this](const ClientCmd& cmd) { handle_sell(cmd); };
+    handlers[MSG_BUY]            = [this](const ClientCmd& cmd) { handle_buy(cmd); };
+    handlers[MSG_EQUIP]          = [this](const ClientCmd& cmd) { handle_equip(cmd); };
+    handlers[MSG_SELECT]         = [this](const ClientCmd& cmd) { handle_select(cmd); };
+    handlers[MSG_TAKE]           = [this](const ClientCmd& cmd) { handle_take(cmd); };
+    handlers[MSG_MOVE]           = [this](const ClientCmd& cmd) { handle_move(cmd); };
+    handlers[MSG_ATTACK]         = [this](const ClientCmd& cmd) { handle_attack(cmd); };
+    handlers[MSG_MEDITATE]       = [this](const ClientCmd& cmd) { handle_meditate(cmd); };
+    handlers[MSG_PRIVATE]        = [this](const ClientCmd& cmd) { handle_private(cmd); };
+    handlers[MSG_CHEAT_KILL]     = [this](const ClientCmd& cmd) { handle_cheat_kill(cmd); };
+    handlers[MSG_CHEAT_INF_HP]   = [this](const ClientCmd& cmd) { handle_cheat_inf_hp(cmd); };
+    handlers[MSG_CHEAT_INF_MANA] = [this](const ClientCmd& cmd) { handle_cheat_inf_mana(cmd); };
+}
 
 
 void GameLoop::load_world() {
@@ -83,294 +102,253 @@ void send_players_snapshot_to(uint32_t client_id, const std::string& player_name
 }
 */
 void GameLoop::process_cmd(const ClientCmd& cmd) {
-    switch (cmd.get_message_type()) {
-                    case MSG_REGISTER: {
-                        client_registry_monitor.assign_name(cmd.get_client_id(), cmd.get_player_name());
-                        game_map.spawn_player(cmd.get_player_name());
-                        GameMsg registerMsg(MSG_REGISTER);
-                        registerMsg.set_map(game_map.get_map());
-                
-                        std::cout << "[DEBUG: MSG_REGISTER] received cmd type="
-                        << static_cast<int>(cmd.get_message_type())
-                        << "client_id" << cmd.get_client_id()
-                        << std::endl;
-                        const Player& p = game_map.get_player(cmd.get_player_name());
-                        std::vector<ItemInfo> item_infos;
-                        for (Item* item : p.get_inventory().get_items()) {
-                            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
-                        }
-                        registerMsg.set_items(item_infos);
-                        registerMsg.set_gold(game_map.get_player_gold(cmd.get_player_name()));
-                        registerMsg.set_hp(game_map.get_player_hp(cmd.get_player_name()));
-                        
-                        registerMsg.set_xp(game_map.get_player_xp(cmd.get_player_name()));
-                    
-                        registerMsg.set_mana(game_map.get_player_mana(cmd.get_player_name()));
-                        client_registry_monitor.notify_client(cmd.get_client_id(), registerMsg);
+    auto it = handlers.find(static_cast<uint8_t>(cmd.get_message_type()));
+    if (it != handlers.end()) it->second(cmd);
+}
 
-                        // Estado del mundo dinamico para el cliente recien registrado.
-                        send_npcs_snapshot_to(cmd.get_client_id());
-                        send_items_snapshot_to(cmd.get_client_id());
-                        //send_players_snapshot_to(cmd.get_client_id(), cmd.get_player_name());
+void GameLoop::handle_register(const ClientCmd& cmd) {
+    client_registry_monitor.assign_name(cmd.get_client_id(), cmd.get_player_name());
+    game_map.spawn_player(cmd.get_player_name());
+    GameMsg registerMsg(MSG_REGISTER);
+    registerMsg.set_map(game_map.get_map());
 
+    std::cout << "[DEBUG: MSG_REGISTER] received cmd type="
+              << static_cast<int>(cmd.get_message_type())
+              << " client_id=" << cmd.get_client_id() << std::endl;
 
-                        //avisamos a los demás clientes que hay un nuevo jugador en el mapa, para que lo rendericen.
-                        //client_registry_monitor.notify_clients_about_new_player(name,raza,klass,client_id);
-                        break;
-                    }
-                    
-                case MSG_LIST: {
-                    auto it = selected_npc.find(cmd.get_client_id());
-                    std::cout << "[DEBUG: MSG_LIST] client_id=" << cmd.get_client_id() 
-                            << " found=" << (it != selected_npc.end())
-                            << (it != selected_npc.end() ? " x=" + std::to_string(it->second.first) + " y=" + std::to_string(it->second.second) : "")
-                            << std::endl;
-                    if (it == selected_npc.end()) {
-                        GameMsg msg(MSG_CHAT);
-                        msg.set_chat_content("Selecciona un comerciante primero.");
-                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                        break;
-                    }
-                    int x = it->second.first;
-                    int y = it->second.second;
-                    try {
-                        std::vector<ItemInfo> items = game_map.list_seller_items(x, y);
-                        GameMsg msg(MSG_CHAT);
-                        std::string lista = "Items disponibles: ";
-                        for (const auto& item : items) {
-                            lista += item.get_name() + " ($" + std::to_string(item.get_price()) + ") ";
-                        }
-                        msg.set_chat_content(lista);
-                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                    } catch (const std::runtime_error& e) {
-                        GameMsg msg(MSG_CHAT);
-                        msg.set_chat_content(e.what());
-                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                    }
-                    break;
-                }
-                case MSG_SELL: {
-                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-                    std::string item_id = cmd.get_item_id();
- 
-                    auto it = selected_npc.find(cmd.get_client_id());
-                    if (it == selected_npc.end()) {
-                        GameMsg msg(MSG_CHAT);
-                        msg.set_chat_content("Selecciona un comerciante primero.");
-                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                        break;
-                    }
-                    int x = it->second.first;
-                    int y = it->second.second;
-                    std::cout << "[DEBUG: MSG_SELL] player=" << name
-                              << " x=" << x << " y=" << y
-                              << " item=" << item_id << std::endl;
-                    try {
-                        game_map.player_sell_item(name, x, y, item_id);
- 
-                        const Player& p = game_map.get_player(name);
-                        std::vector<ItemInfo> item_infos;
-                        for (Item* item : p.get_inventory().get_items()) {
-                            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
-                        }
-                        GameMsg inv_msg(MSG_INVENTORY);
-                        inv_msg.set_items(item_infos);
-                        client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
- 
-                        GameMsg gold_msg(MSG_CHAT);
-                        gold_msg.set_chat_content("Vendiste el item. Oro actual: " +
-                                                  std::to_string(p.get_gold()));
-                        client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
- 
-                    } catch (const std::runtime_error& e) {
-                        GameMsg msg(MSG_CHAT);
-                        msg.set_chat_content(e.what());
-                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                    }
-                    break;
-                }
-                case MSG_BUY: {
-                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-                    std::string item_id = cmd.get_item_id();
- 
-                    auto it = selected_npc.find(cmd.get_client_id());
-                    if (it == selected_npc.end()) {
-                        GameMsg msg(MSG_CHAT);
-                        msg.set_chat_content("Selecciona un comerciante primero.");
-                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                        break;
-                    }
-                    int x = it->second.first;
-                    int y = it->second.second;
-                    try {
-                        game_map.player_buy_item(name, x, y, item_id);
- 
-                        const Player& p = game_map.get_player(name);
-                        std::vector<ItemInfo> item_infos;
-                        for (Item* item : p.get_inventory().get_items()) {
-                            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
-                        }
-                        GameMsg inv_msg(MSG_INVENTORY);
-                        inv_msg.set_items(item_infos);
-                        client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
- 
-                        GameMsg gold_msg(MSG_CHAT);
-                        gold_msg.set_chat_content("Compraste el item. Oro actual: " +
-                                                  std::to_string(static_cast<int>(p.get_gold())));
-                        client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
- 
-                    } catch (const std::runtime_error& e) {
-                        GameMsg msg(MSG_CHAT);
-                        msg.set_chat_content(e.what());
-                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                    }
-                    break;
-                }
-                case MSG_EQUIP:{
-                    std::string name =
-                        client_registry_monitor.get_name(cmd.get_client_id());
-                        std::string item_id = cmd.get_item_id();
-                        game_map.player_equip_item(name, item_id);
-                    break;
-                }
-                case MSG_SELECT: {
-                    std::string name =
-                        client_registry_monitor.get_name(cmd.get_client_id());
-                    uint16_t coor_x = cmd.get_coord_x();
-                    uint16_t coor_y = cmd.get_coord_y();
-                    std::cout << "[DEBUG: MSG_SELECT] col=" << coor_x
-                              << " fila=" << coor_y << std::endl;
-                    selected_npc[cmd.get_client_id()] = {coor_x, coor_y};
-                    //std::string sector = game_map.sector_of_position(coor_x, coor_y);
-                    break;
-                }
-                case MSG_TAKE: {
-                    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-                    auto item = game_map.pick_up_item(name);
-                    GameMsg msg(MSG_TAKE);
-                    if (item) {
-                        game_map.give_item_to_player(name, std::move(item));
-                        msg.set_chat_content("Recogiste un objeto.");
-                        const Player& p = game_map.get_player(name);
-                        std::vector<ItemInfo> item_infos;
-                        for (Item* item : p.get_inventory().get_items()) {
-                            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
-                        }
-                        GameMsg inv_msg(MSG_INVENTORY);
-                        inv_msg.set_items(item_infos);
-                        client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
-                    }
-                    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-
-                    // El piso cambio: el item/oro recogido ya no esta en el mundo.
-                    broadcast_items_snapshot();
-                    break;
-                }
-
-
-                    //para cuando se quiera mover un jugador x tendremos qu mostrar los demas jugadores
-                    //pero siempre el game map le mostrara los jugadores que comparten mapa con el jugador x
-                    // ya que no nos interesa recibir movimientos de jugadores que no comparten mapa con el jugador x
-                    case MSG_MOVE: {
-                        std::string name =
-                            client_registry_monitor.get_name(cmd.get_client_id());
-                        auto result = game_map.try_move(cmd.get_direction(), name);
-                        if (result.moved) {
-                            if (game_map.pick_up_gold(name)) {
-                                std::cout << "oro" << std::endl;
-                                broadcast_items_snapshot();
-                                GameMsg msg_gold(MSG_GOLD);
-                                msg_gold.set_gold(game_map.get_player_gold(name));
-                                client_registry_monitor.notify_clients(msg_gold);
-                            }
-
-                            GameMsg msg(MSG_MOVE, cmd.get_direction());
-                            msg.set_player_name(result.player_name);
-                            msg.set_coord_x(result.new_x);
-                            msg.set_coord_y(result.new_y);
-                            client_registry_monitor.notify_clients(msg);
-                            std::cout << "[DBUG]: sended" << std::endl;
-                        }
-                        
-
-                        break;
-                    }
-                    case MSG_ATTACK: {
-                        int x = cmd.get_coord_x();
-                        int y = cmd.get_coord_y();
-                        std::string attacker_name = client_registry_monitor.get_name(cmd.get_client_id());
-                        try {
-                            auto result = game_map.attack(attacker_name, x, y);
-                            if (result.entity_died) {
-                                broadcast_npcs_snapshot();
-                                // Al morir el NPC, attack() spawnea oro en su celda.
-                                broadcast_items_snapshot();
-                            }
-                        } catch (const NoEntityException& e) {
-                            GameMsg msg(MSG_CHAT);
-                            msg.set_chat_content(e.what());
-                            client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                        } catch (const AttackNotAllowedException& e) {
-                            GameMsg msg(MSG_CHAT);
-                            msg.set_chat_content(e.what());
-                            client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                        } catch (const NoWeaponEquippedException& e) {
-                            GameMsg msg(MSG_CHAT);
-                            msg.set_chat_content(e.what());
-                            client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                        } catch (const OutOfRangeException& e) {
-                            GameMsg msg(MSG_CHAT);
-                            msg.set_chat_content(e.what());
-                            client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                        }
-                        break;
-                    }
-                    case MSG_MEDITATE: {
-                        std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-                        // meditar al jugador : game_map.medidate_player(name) ?
-                        GameMsg msg(MSG_MEDITATE);
-                        msg.set_chat_content("Estás meditando...");
-                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                        break;
-                    }
-                    /* etc con los demás*/
-                    case MSG_CHEAT_KILL: {
-                        std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-                        // game_map.kill_player(name);
-                        GameMsg msg(MSG_CHAT);
-                        msg.set_chat_content("Moriste instantáneamente.");
-                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                        break;
-                    }
-                    case MSG_CHEAT_INF_HP: {
-                        std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-                        // game_map.set_infinite_hp(name);
-                        GameMsg msg(MSG_CHAT);
-                        msg.set_chat_content("Vida infinita activada.");
-                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                        break;
-                    }
-                    case MSG_CHEAT_INF_MANA: {
-                        std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-                        // game_map.set_infinite_mana(name);
-                        GameMsg msg(MSG_CHAT);
-                        msg.set_chat_content("Mana infinito activado.");
-                        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-                        break;
-                    }
-                    case MSG_PRIVATE: {
-                        std::string sender = client_registry_monitor.get_name(cmd.get_client_id());
-                        std::string target = cmd.get_target_name();
-                        GameMsg msg(MSG_PRIVATE);
-                        msg.set_player_name(sender);
-                        msg.set_chat_content(cmd.get_chat_content());
-                        //client_registry_monitor.notify_client_by_name(target, msg);
-                        break;
-                    }
-                //case MSG_RESURRECT: handle_resurrect(cmd); break;
-                default:
-                    break;
+    const Player& p = game_map.get_player(cmd.get_player_name());
+    std::vector<ItemInfo> item_infos;
+    for (Item* item : p.get_inventory().get_items()) {
+        item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
     }
+    registerMsg.set_items(item_infos);
+    registerMsg.set_gold(game_map.get_player_gold(cmd.get_player_name()));
+    registerMsg.set_hp(game_map.get_player_hp(cmd.get_player_name()));
+    registerMsg.set_xp(game_map.get_player_xp(cmd.get_player_name()));
+    registerMsg.set_mana(game_map.get_player_mana(cmd.get_player_name()));
+    client_registry_monitor.notify_client(cmd.get_client_id(), registerMsg);
+
+    send_npcs_snapshot_to(cmd.get_client_id());
+    send_items_snapshot_to(cmd.get_client_id());
+}
+
+void GameLoop::handle_list(const ClientCmd& cmd) {
+    auto it = selected_npc.find(cmd.get_client_id());
+    std::cout << "[DEBUG: MSG_LIST] client_id=" << cmd.get_client_id()
+              << " found=" << (it != selected_npc.end())
+              << (it != selected_npc.end() ? " x=" + std::to_string(it->second.first) + " y=" + std::to_string(it->second.second) : "")
+              << std::endl;
+    if (it == selected_npc.end()) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content("Selecciona un comerciante primero.");
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+        return;
+    }
+    int x = it->second.first;
+    int y = it->second.second;
+    try {
+        std::vector<ItemInfo> items = game_map.list_seller_items(x, y);
+        GameMsg msg(MSG_CHAT);
+        std::string lista = "Items disponibles: ";
+        for (const auto& item : items) {
+            lista += item.get_name() + " ($" + std::to_string(item.get_price()) + ") ";
+        }
+        msg.set_chat_content(lista);
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    } catch (const std::runtime_error& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    }
+}
+
+void GameLoop::handle_sell(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    std::string item_id = cmd.get_item_id();
+    auto it = selected_npc.find(cmd.get_client_id());
+    if (it == selected_npc.end()) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content("Selecciona un comerciante primero.");
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+        return;
+    }
+    int x = it->second.first;
+    int y = it->second.second;
+    std::cout << "[DEBUG: MSG_SELL] player=" << name
+              << " x=" << x << " y=" << y << " item=" << item_id << std::endl;
+    try {
+        game_map.player_sell_item(name, x, y, item_id);
+        const Player& p = game_map.get_player(name);
+        std::vector<ItemInfo> item_infos;
+        for (Item* item : p.get_inventory().get_items()) {
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
+        }
+        GameMsg inv_msg(MSG_INVENTORY);
+        inv_msg.set_items(item_infos);
+        client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
+
+        GameMsg gold_msg(MSG_CHAT);
+        gold_msg.set_chat_content("Vendiste el item. Oro actual: " + std::to_string(p.get_gold()));
+        client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
+    } catch (const std::runtime_error& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    }
+}
+
+void GameLoop::handle_buy(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    std::string item_id = cmd.get_item_id();
+    auto it = selected_npc.find(cmd.get_client_id());
+    if (it == selected_npc.end()) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content("Selecciona un comerciante primero.");
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+        return;
+    }
+    int x = it->second.first;
+    int y = it->second.second;
+    try {
+        game_map.player_buy_item(name, x, y, item_id);
+        const Player& p = game_map.get_player(name);
+        std::vector<ItemInfo> item_infos;
+        for (Item* item : p.get_inventory().get_items()) {
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
+        }
+        GameMsg inv_msg(MSG_INVENTORY);
+        inv_msg.set_items(item_infos);
+        client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
+
+        GameMsg gold_msg(MSG_CHAT);
+        gold_msg.set_chat_content("Compraste el item. Oro actual: " +
+                                  std::to_string(static_cast<int>(p.get_gold())));
+        client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
+    } catch (const std::runtime_error& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    }
+}
+
+void GameLoop::handle_equip(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    game_map.player_equip_item(name, cmd.get_item_id());
+}
+
+void GameLoop::handle_select(const ClientCmd& cmd) {
+    uint16_t coor_x = cmd.get_coord_x();
+    uint16_t coor_y = cmd.get_coord_y();
+    std::cout << "[DEBUG: MSG_SELECT] col=" << coor_x << " fila=" << coor_y << std::endl;
+    selected_npc[cmd.get_client_id()] = {coor_x, coor_y};
+}
+
+void GameLoop::handle_take(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    auto item = game_map.pick_up_item(name);
+    GameMsg msg(MSG_TAKE);
+    if (item) {
+        game_map.give_item_to_player(name, std::move(item));
+        msg.set_chat_content("Recogiste un objeto.");
+        const Player& p = game_map.get_player(name);
+        std::vector<ItemInfo> item_infos;
+        for (Item* item : p.get_inventory().get_items()) {
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
+        }
+        GameMsg inv_msg(MSG_INVENTORY);
+        inv_msg.set_items(item_infos);
+        client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
+    }
+    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    broadcast_items_snapshot();
+}
+
+void GameLoop::handle_move(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    auto result = game_map.try_move(cmd.get_direction(), name);
+    if (result.moved) {
+        if (game_map.pick_up_gold(name)) {
+            std::cout << "oro" << std::endl;
+            broadcast_items_snapshot();
+            GameMsg msg_gold(MSG_GOLD);
+            msg_gold.set_gold(game_map.get_player_gold(name));
+            client_registry_monitor.notify_clients(msg_gold);
+        }
+        GameMsg msg(MSG_MOVE, cmd.get_direction());
+        msg.set_player_name(result.player_name);
+        msg.set_coord_x(result.new_x);
+        msg.set_coord_y(result.new_y);
+        client_registry_monitor.notify_clients(msg);
+        std::cout << "[DBUG]: sended" << std::endl;
+    }
+}
+
+void GameLoop::handle_attack(const ClientCmd& cmd) {
+    int x = cmd.get_coord_x();
+    int y = cmd.get_coord_y();
+    std::string attacker_name = client_registry_monitor.get_name(cmd.get_client_id());
+    try {
+        auto result = game_map.attack(attacker_name, x, y);
+        if (result.entity_died) {
+            broadcast_npcs_snapshot();
+            broadcast_items_snapshot();
+        }
+    } catch (const NoEntityException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    } catch (const AttackNotAllowedException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    } catch (const NoWeaponEquippedException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    } catch (const OutOfRangeException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    }
+}
+
+void GameLoop::handle_meditate(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    GameMsg msg(MSG_MEDITATE);
+    msg.set_chat_content("Estás meditando...");
+    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+}
+
+void GameLoop::handle_private(const ClientCmd& cmd) {
+    std::string sender = client_registry_monitor.get_name(cmd.get_client_id());
+    GameMsg msg(MSG_PRIVATE);
+    msg.set_player_name(sender);
+    msg.set_chat_content(cmd.get_chat_content());
+    //client_registry_monitor.notify_client_by_name(cmd.get_target_name(), msg);
+}
+
+void GameLoop::handle_cheat_kill(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    // game_map.kill_player(name);
+    GameMsg msg(MSG_CHAT);
+    msg.set_chat_content("Moriste instantáneamente.");
+    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+}
+
+void GameLoop::handle_cheat_inf_hp(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    // game_map.set_infinite_hp(name);
+    GameMsg msg(MSG_CHAT);
+    msg.set_chat_content("Vida infinita activada.");
+    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+}
+
+void GameLoop::handle_cheat_inf_mana(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    // game_map.set_infinite_mana(name);
+    GameMsg msg(MSG_CHAT);
+    msg.set_chat_content("Mana infinito activado.");
+    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
 }
 
 void GameLoop::update_npcs_in_map(){
