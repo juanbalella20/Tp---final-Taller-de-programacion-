@@ -34,3 +34,6 @@ uint32_t GameMsg::get_xp() const { return this->xp; }
 
 void GameMsg::set_mana(uint32_t mana) { this->mana = mana; }
 uint32_t GameMsg::get_mana() const { return this->mana; }
+
+void GameMsg::set_zone(Zone z) { this->zone = z;}
+Zone GameMsg::get_zone() const { return this->zone; }

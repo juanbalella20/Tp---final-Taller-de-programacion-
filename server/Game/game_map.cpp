@@ -34,9 +34,10 @@ std::vector<std::vector<elements>> GameMap::get_map() {
     return map;
 }
 
-void GameMap::init_world(const InitialState& state) {
+void GameMap::init_world(const InitialState& state, std::string path) {
     MapLoader md;
-    md.load("data/maps/desert/map.toml");
+    //md.load("data/maps/desert/map.toml");
+    md.load(path);
 
     width  = md.get_width();
     height = md.get_height();

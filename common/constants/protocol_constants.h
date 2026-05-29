@@ -19,6 +19,7 @@ const uint16_t LEN_NPC_TYPE_SIZE = 1;  // 1 byte para largo del tipo del NPC
 const uint16_t LEN_NPC_NAME_SIZE = 1;  // 1 byte para largo del nombre del NPC
 const uint16_t LEN_ITEM_COUNT = 2;  // 2 bytes para la cantidad de items en el snapshot
 const uint16_t LEN_ITEM_TYPE_SIZE = 1;  // 1 byte para largo del tipo del item
+const uint16_t LEN_ZONE = 1;  // 1 byte para el valor de zona
 
 enum MessageType : uint8_t {
     MSG_REGISTER     = 0x01,  // Crear personaje nuevo            [cliente OK] [servidor OK]
@@ -60,6 +61,7 @@ enum MessageType : uint8_t {
     MSG_MANA = 0x25,            // Actualizar mana del jugador
     MSG_NPCS_SNAPSHOT  = 0x26, // Snapshot de NPCs vivos: vector<NpcInfo>
     MSG_ITEMS_SNAPSHOT = 0x27, // Snapshot de items en el piso: vector<ItemFloorInfo>
+    MSG_ZONE_CHANGE = 0x28, // Server -> cliente: zona a cargar
 };
 
 enum Direction : uint8_t {
@@ -102,6 +104,13 @@ enum ELEMENT_TYPE : uint8_t {
     ELEMENT_BUILDING = 0x03,
     ELEMENT_GOLD = 0x04,
     ELEMENT_EMPTY = 0x05,
+};
+
+enum Zone : uint8_t {
+    ZONE_DESERT = 0x00,
+    ZONE_CITY = 0x01,
+    ZONE_FOREST = 0x02,
+    ZONE_TOWN = 0x03,
 };
 
 // Solo buildings/empty viven en la matriz (terreno estatico).

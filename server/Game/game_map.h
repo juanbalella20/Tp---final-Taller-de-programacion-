@@ -144,7 +144,7 @@ public:
      * Recibe el estado inicial del juego (posiciones de players, npcs & items)
      * Setea en sus respectivos vectores la posicion de cada uno
      */
-    void init_world(const InitialState& state);
+    void init_world(const InitialState& state, std::string path);
     bool pick_up_gold(const std::string& player_name);
 };
 

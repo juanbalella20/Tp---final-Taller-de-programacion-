@@ -30,6 +30,7 @@ ServerSerializer::ServerSerializer() {
     handlers[MSG_HP] = [this](const GameMsg& msg) { return serialize_hp(msg); };
     handlers[MSG_XP] = [this](const GameMsg& msg) { return serialize_xp(msg); };
     handlers[MSG_MANA] = [this](const GameMsg& msg) { return serialize_mana(msg); };
+    handlers[MSG_ZONE_CHANGE] = [this](const GameMsg& msg) {return serialize_zone(msg); };
 }
 
 void ServerSerializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {
@@ -70,6 +71,14 @@ std::vector<uint8_t> ServerSerializer::serialize_move(const GameMsg& msg) {
     buf.reserve(LEN_HEADER + LEN_DIRECTION);
     write_header(buf, MSG_MOVE, LEN_DIRECTION);
     buf.push_back(static_cast<uint8_t>(msg.get_direction()));
+    return buf;
+}
+
+std::vector<uint8_t> ServerSerializer::serialize_zone(const GameMsg& msg) {
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + LEN_ZONE);
+    write_header(buf,MSG_ZONE_CHANGE, LEN_ZONE);
+    buf.push_back(static_cast<uint8_t>(msg.get_zone()));
     return buf;
 }
 

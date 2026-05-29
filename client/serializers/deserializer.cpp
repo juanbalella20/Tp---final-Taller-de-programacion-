@@ -73,8 +73,18 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_MANA] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_mana(payload, msg);
     };
+    handlers[MSG_ZONE_CHANGE] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_zone(payload, msg);
+    };
 }
 
+
+void ClientDeserializer::deserialize_zone(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    if (payload.size() != LEN_ZONE) {
+        throw std::invalid_argument("Payload invalido para MSG_ZONE_CHANGE");
+    }
+    msg.set_zone(static_cast<Zone>(payload[0]));
+}
 
 void ClientDeserializer::deserialize_move(const std::vector<uint8_t>& payload, GameMsg& msg) {
     if (payload.size() != LEN_DIRECTION) {

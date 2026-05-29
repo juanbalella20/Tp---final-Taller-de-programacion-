@@ -29,12 +29,6 @@
 #define LOGICAL_WIDTH  960
 #define LOGICAL_HEIGHT 576
 
-enum class zones {
-    DESERT,
-    FOREST,
-    CITY
-};
-
 class ClientGUI: public Thread {
 private:
     SDL_Window* window;
@@ -61,6 +55,7 @@ private:
     SDL_Texture* gold_texture;
     Camera camera;
     SDL_FRect player_pov;
+    Zone current_zone;
 
     // tile seleccionado con NPC; {-1,-1} = ninguno
     int selected_npc_tile_x;
@@ -71,7 +66,7 @@ private:
     static constexpr int CANVAS_HEIGHT = LOGICAL_HEIGHT;
 
     void initSDL();
-    void loadMedia(zones zone);
+    void loadMedia(Zone zone);
     void freeSDL();
 
     /*

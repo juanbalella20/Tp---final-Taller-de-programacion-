@@ -81,7 +81,8 @@ void GameLoop::load_maps() {
     
     // harcoded:
     InitialState hardocded_state = load_initial_state_hardcoded();
-    game_map.init_world(hardocded_state);
+    game_map.init_world(hardocded_state, "data/maps/desert/map.toml");
+    game_map.init_world(hardocded_state, "data/maps/city/map.toml");
 }
 
 
@@ -130,6 +131,12 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
 
     send_npcs_snapshot_to(cmd.get_client_id());
     send_items_snapshot_to(cmd.get_client_id());
+
+    // Envia zona inicial (hardcodeada de momento)
+    // TODO: derivar de la posición real de spawn cuando haya multi-mapa
+    GameMsg zoneMsg(MSG_ZONE_CHANGE);
+    zoneMsg.set_zone(ZONE_DESERT);  
+    client_registry_monitor.notify_client(cmd.get_client_id(), zoneMsg);
 }
 
 void GameLoop::handle_list(const ClientCmd& cmd) {

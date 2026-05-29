@@ -50,13 +50,17 @@ void ClientGUI::initSDL() {
 }
 
 // tiene que recibir los 4 sectorPerimiter y mostrar solo eso
-void ClientGUI::loadMedia(zones zone) {
+void ClientGUI::loadMedia(Zone zone) {
     switch (zone)
     {
-    case zones::DESERT : {
+    case ZONE_DESERT : {
         tilemap = std::make_unique<TileMap>(renderer);
         tilemap->load_map("data/maps/desert/map.toml");
         break;
+    }
+    case ZONE_CITY : {
+        tilemap = std::make_unique<TileMap>(renderer);
+        tilemap->load_map("data/maps/city/map.toml");
     }
     default:
         break;
@@ -288,6 +292,11 @@ void ClientGUI::update() {
         while (receiving.try_pop(msg)) {
             std::cout << "Mesaje recibido tipo: " << (int)msg.get_type() << std::endl;
             switch (msg.get_type()) {
+                case MSG_ZONE_CHANGE : {
+                    Zone z = msg.get_zone();
+                    if (z != current_zone) loadMedia(z);
+                    break;
+                }
                 case MSG_REGISTER: {
                     world_map = msg.get_map();
                     if (hud) {
@@ -469,12 +478,10 @@ void ClientGUI::draw() {
 }
 
 void ClientGUI::init_draw() {
-    // la info se la pasa el cliente desde config?
     initSDL();
-    // aca recibe del protocolo la zona
-    // hardocodeado para test
-    loadMedia(zones::DESERT);
-
+    // se carga una zona inicial por default
+    // siempre sera ZONA_CITY
+    loadMedia(ZONE_DESERT);
     SDL_Surface* enemy_surf = IMG_Load("imagenes/enemigo.png");
     if (!enemy_surf) enemy_surf = IMG_Load("enemigo.png");
     if (enemy_surf) {
