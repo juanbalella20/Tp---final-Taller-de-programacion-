@@ -77,10 +77,18 @@ ClientDeserializer::ClientDeserializer() {
 
 
 void ClientDeserializer::deserialize_move(const std::vector<uint8_t>& payload, GameMsg& msg) {
-    if (payload.size() != LEN_DIRECTION) {
+    if (payload.size() != 9) {
         throw std::invalid_argument("Payload invalido para MSG_MOVE");
     }
     msg.set_direction(static_cast<Direction>(payload[0]));
+
+    uint32_t x_be;
+    std::memcpy(&x_be, payload.data() + 1, sizeof(uint32_t));
+    msg.set_coord_x(static_cast<int>(ntohl(x_be)));
+
+    uint32_t y_be;
+    std::memcpy(&y_be, payload.data() + 5, sizeof(uint32_t));
+    msg.set_coord_y(static_cast<int>(ntohl(y_be)));
 }
 
 void ClientDeserializer::deserialize_cmd(uint8_t type, const std::vector<uint8_t>& payload, GameMsg& msg) {

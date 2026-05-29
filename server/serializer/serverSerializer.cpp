@@ -66,10 +66,28 @@ std::vector<uint8_t> ServerSerializer::serialize_inventory(const GameMsg& msg) {
 
 
 std::vector<uint8_t> ServerSerializer::serialize_move(const GameMsg& msg) {
+    // std::vector<uint8_t> buf;
+    // buf.reserve(LEN_HEADER + LEN_DIRECTION);
+    // write_header(buf, MSG_MOVE, LEN_DIRECTION);
+    // buf.push_back(static_cast<uint8_t>(msg.get_direction()));
+    // return buf;
+
+    uint16_t payload_len = 1 + sizeof(uint32_t) + sizeof(uint32_t);
     std::vector<uint8_t> buf;
-    buf.reserve(LEN_HEADER + LEN_DIRECTION);
-    write_header(buf, MSG_MOVE, LEN_DIRECTION);
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, MSG_MOVE, payload_len);
     buf.push_back(static_cast<uint8_t>(msg.get_direction()));
+
+    uint32_t x_be = htonl(static_cast<uint32_t>(msg.get_coord_x()));
+    uint8_t x_bytes[sizeof(uint32_t)];
+    std::memcpy(x_bytes, &x_be, sizeof(uint32_t));
+    buf.insert(buf.end(), x_bytes, x_bytes + sizeof(uint32_t));
+
+    uint32_t y_be = htonl(static_cast<uint32_t>(msg.get_coord_y()));
+    uint8_t y_bytes[sizeof(uint32_t)];
+    std::memcpy(y_bytes, &y_be, sizeof(uint32_t));
+    buf.insert(buf.end(), y_bytes, y_bytes + sizeof(uint32_t));
+
     return buf;
 }
 
