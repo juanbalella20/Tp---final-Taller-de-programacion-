@@ -312,28 +312,35 @@ void ClientGUI::update() {
                     items_on_floor = msg.get_items_on_floor();
                     break;
                 case MSG_MOVE: {
-                    int x = player->getTileX();
-                    int y = player->getTileY();
+                    int old_x = player->getTileX();
+                    int old_y = player->getTileY();
+                    int new_x = msg.get_coord_x();
+                    int new_y = msg.get_coord_y();
+
+                    bool moved = (old_x != new_x || old_y != new_y);
+                    
+                    if (!moved) player->reset_frame();
+
                     switch (msg.get_direction()) {
                         case DIR_NORTH: 
-                            --y;
+                            //--y;
                             player_pov = player->back_pov();
                             break;
                         case DIR_SOUTH: 
-                            ++y;
+                            //++y;
                             player_pov = player->front_pov(); 
                             break;
                         case DIR_EAST:  
-                            ++x; 
+                            //++x; 
                             player_pov = player->right_pov();
                             break;
                         case DIR_WEST:  
-                            --x; 
+                            //--x; 
                             player_pov = player->left_pov();
                             break;
                         default: break;
                     }
-                    player->setTilePosition(x, y);
+                    player->setTilePosition(new_x, new_y);
                     break;
                 }
                 case MSG_PRIVATE:
