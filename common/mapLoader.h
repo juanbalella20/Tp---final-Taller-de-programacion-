@@ -35,6 +35,15 @@ struct MapLayerData {
     std::vector<std::vector<int>> data; // array de arrays
 };
 
+// Tile de teletransporte: su celda (x,y) en ESTA zona (collidable) y la zona
+// destino (por nombre: "desert", "city", ...). El player aparece adyacente al
+// teleport de la zona destino.
+struct TeleportDef {
+    int x;
+    int y;
+    std::string dest_zone;
+};
+
 class MapLoader {
     private: 
         int tile_size = 0;
@@ -44,6 +53,7 @@ class MapLoader {
         std::unordered_map<int, TileDef> tiles;   // id global -> tiledef
         std::vector<MapLayerData> layers;
         std::map<std::string, positionCoord> spawns;
+        std::vector<TeleportDef> teleports;
 
         /*
          * Recorre la tabla (array) de tilesets del TOML.
@@ -64,6 +74,8 @@ class MapLoader {
         void parse_layers(const toml::table& tbl);
         // Traduce los spawns del TOML y los almacena el mapa de spawns
         void parse_spawns(const toml::table& tbl);
+        // Traduce los [[teleport]] del TOML al vector de teleports
+        void parse_teleports(const toml::table& tbl);
      
 
     public:
@@ -71,6 +83,7 @@ class MapLoader {
         int get_width() const;
         int get_height() const;
         const std::map<std::string, positionCoord>& get_spawns() const;
+        const std::vector<TeleportDef>& get_teleports() const { return teleports; }
         const std::vector<Tileset>& get_tilesets() const;
         const std::vector<MapLayerData>& get_layers() const;
 

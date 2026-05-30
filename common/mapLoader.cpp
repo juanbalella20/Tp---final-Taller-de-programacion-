@@ -182,6 +182,25 @@ void MapLoader::parse_spawns(const toml::table& tbl) {
     }
 }
 
+void MapLoader::parse_teleports(const toml::table& tbl) {
+    auto* arr = tbl["teleport"].as_array();
+    if (!arr) return;
+
+    for (auto& node : *arr) {
+        auto* t = node.as_table();
+        if (!t) continue;
+
+        std::string dest = (*t)["dest_zone"].value_or<std::string>("");
+        if (dest.empty()) continue;
+        TeleportDef tp{
+            (*t)["x"].value_or(0),
+            (*t)["y"].value_or(0),
+            dest,
+        };
+        teleports.push_back(tp);
+    }
+}
+
 
 void MapLoader::load(const std::string& tomlPath) {
     std::filesystem::path baseDir = std::filesystem::path(tomlPath).parent_path();
@@ -205,4 +224,5 @@ void MapLoader::load(const std::string& tomlPath) {
     build_tile_index();
     parse_layers(tbl);
     parse_spawns(tbl);
+    parse_teleports(tbl);
 }

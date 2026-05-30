@@ -13,13 +13,15 @@ const uint16_t LEN_CLASS = 1;  // 1 byte para la clase
 const uint16_t LEN_ENTITY = 1;  // 1 byte para el tipo de entidad (player/npc)
 const uint16_t LEN_DIRECTION = 1;
 const uint16_t LEN_COORD = 2;  // 2 bytes para cada coordenada (x e y)
+const uint16_t LEN_ZONE = 1;  // 1 byte para el valor de zona
+// MSG_ZONE_CHANGE: [zona:1B][x:2B BE][y:2B BE] -> zona destino + posicion de spawn
+const uint16_t LEN_ZONE_CHANGE_PAYLOAD = LEN_ZONE + 2 * LEN_COORD;
 const uint16_t LEN_ITEM_ID = 1;  // 1 byte para largo del id del item
 const uint16_t LEN_NPC_COUNT = 2;  // 2 bytes para la cantidad de NPCs en el snapshot
 const uint16_t LEN_NPC_TYPE_SIZE = 1;  // 1 byte para largo del tipo del NPC
 const uint16_t LEN_NPC_NAME_SIZE = 1;  // 1 byte para largo del nombre del NPC
 const uint16_t LEN_ITEM_COUNT = 2;  // 2 bytes para la cantidad de items en el snapshot
 const uint16_t LEN_ITEM_TYPE_SIZE = 1;  // 1 byte para largo del tipo del item
-const uint16_t LEN_ZONE = 1;  // 1 byte para el valor de zona
 
 enum MessageType : uint8_t {
     MSG_REGISTER     = 0x01,  // Crear personaje nuevo            [cliente OK] [servidor OK]
@@ -61,6 +63,7 @@ enum MessageType : uint8_t {
     MSG_MANA = 0x25,            // Actualizar mana del jugador
     MSG_NPCS_SNAPSHOT  = 0x26, // Snapshot de NPCs vivos: vector<NpcInfo>
     MSG_ITEMS_SNAPSHOT = 0x27, // Snapshot de items en el piso: vector<ItemFloorInfo>
+    MSG_TELEPORT       = 0x29, // Cliente->server: pedido de /tp (sin payload)
     MSG_ZONE_CHANGE = 0x28, // Server -> cliente: zona a cargar
 };
 
@@ -111,6 +114,21 @@ enum Zone : uint8_t {
     ZONE_CITY = 0x01,
     ZONE_FOREST = 0x02,
     ZONE_TOWN = 0x03,
+};
+
+// Nombre de zona (usado en el TOML para dest_zone y en el label del cliente).
+const std::unordered_map<std::string, Zone> ZONE_NAME_MAP = {
+    {"desert", ZONE_DESERT},
+    {"city",   ZONE_CITY},
+    {"forest", ZONE_FOREST},
+    {"town",   ZONE_TOWN},
+};
+
+const std::unordered_map<uint8_t, std::string> ZONE_NAME_MAP_INV = {
+    {ZONE_DESERT, "desert"},
+    {ZONE_CITY,   "city"},
+    {ZONE_FOREST, "forest"},
+    {ZONE_TOWN,   "town"},
 };
 
 // Solo buildings/empty viven en la matriz (terreno estatico).

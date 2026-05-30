@@ -79,11 +79,18 @@ ClientDeserializer::ClientDeserializer() {
 }
 
 
+// Lee un uint16_t en big-endian del payload
+static uint16_t read_uint16_be(const std::vector<uint8_t>& payload, size_t& offset);
+
+// Formato MSG_ZONE_CHANGE: [zona:1B][x:2B BE][y:2B BE]
 void ClientDeserializer::deserialize_zone(const std::vector<uint8_t>& payload, GameMsg& msg) {
-    if (payload.size() != LEN_ZONE) {
+    if (payload.size() != LEN_ZONE_CHANGE_PAYLOAD) {
         throw std::invalid_argument("Payload invalido para MSG_ZONE_CHANGE");
     }
     msg.set_zone(static_cast<Zone>(payload[0]));
+    size_t offset = LEN_ZONE;
+    msg.set_coord_x(static_cast<int>(read_uint16_be(payload, offset)));
+    msg.set_coord_y(static_cast<int>(read_uint16_be(payload, offset)));
 }
 
 void ClientDeserializer::deserialize_move(const std::vector<uint8_t>& payload, GameMsg& msg) {

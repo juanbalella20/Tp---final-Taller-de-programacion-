@@ -5,6 +5,8 @@
 #include <cstring>
 #include <iostream>
 
+static void append_uint16_be(std::vector<uint8_t>& buf, uint16_t value);
+
 ServerSerializer::ServerSerializer() {
     handlers[MSG_REGISTER] = [this](const GameMsg& msg) { return serialize_register(msg); };
     handlers[MSG_MOVE] = [this](const GameMsg& msg) { return serialize_move(msg); };
@@ -74,11 +76,14 @@ std::vector<uint8_t> ServerSerializer::serialize_move(const GameMsg& msg) {
     return buf;
 }
 
+// Formato MSG_ZONE_CHANGE: [zona:1B][x:2B BE][y:2B BE]
 std::vector<uint8_t> ServerSerializer::serialize_zone(const GameMsg& msg) {
     std::vector<uint8_t> buf;
-    buf.reserve(LEN_HEADER + LEN_ZONE);
-    write_header(buf,MSG_ZONE_CHANGE, LEN_ZONE);
+    buf.reserve(LEN_HEADER + LEN_ZONE_CHANGE_PAYLOAD);
+    write_header(buf, MSG_ZONE_CHANGE, LEN_ZONE_CHANGE_PAYLOAD);
     buf.push_back(static_cast<uint8_t>(msg.get_zone()));
+    append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_x()));
+    append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_y()));
     return buf;
 }
 
