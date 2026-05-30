@@ -28,6 +28,7 @@ private:
     int player_hp;
     int player_xp;
     int player_mana;
+    int equipped_slot = -1;
     std::string equipped_item_id;
 
     float game_width;
@@ -57,10 +58,11 @@ public:
     void set_xp(uint32_t xp);
     void set_mana(uint32_t mana);
     void set_equipped_item(const std::string& item_id);
+    void set_equipped_slot(int slot_index);
 
     void drawInventoryPanel();
     void drawAttackButton();
-    //TODO:
+
     void draw_hp();
     void draw_mana();
     void draw_gold();

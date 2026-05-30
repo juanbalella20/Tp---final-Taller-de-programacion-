@@ -32,6 +32,8 @@ HUD::~HUD() {
 
 void HUD::set_inventory(const std::vector<ItemInfo>& items) {
     inventory.items = items;
+    // inventory changed -> clear optimistic selected slot
+    equipped_slot = -1;
 }
 
 void HUD::set_attack_button_visible(bool visible) {
@@ -56,6 +58,10 @@ void HUD::set_mana(uint32_t mana) {
 
 void HUD::set_equipped_item(const std::string& id) {
     equipped_item_id = id;
+}
+
+void HUD::set_equipped_slot(int slot_index) {
+    equipped_slot = slot_index;
 }
 
 void HUD::drawAttackButton() {
@@ -112,12 +118,13 @@ void HUD::drawInventoryPanel() {
     float slot_x = game_width + SLOT_MARGIN;
     float slot_y = 40.0f;
 
+    int slot_index = 0;
     for (const auto& item : inventory.items) {
         SDL_FRect slot_rect = {slot_x, slot_y, SLOT_SIZE, SLOT_SIZE};
         SDL_SetRenderDrawBlendMode(gui_renderer, SDL_BLENDMODE_BLEND);
 
         // Si este item esta equipado, dibujar un halo amarillo detrás
-        if (!equipped_item_id.empty() && item.get_id() == equipped_item_id) {
+        if (equipped_slot >= 0 && slot_index == equipped_slot) {
             SDL_FRect halo = {slot_x - 3.0f, slot_y - 3.0f, SLOT_SIZE + 6.0f, SLOT_SIZE + 6.0f};
             SDL_SetRenderDrawColor(gui_renderer, 255, 215, 0, 120); // amarillo semi
             SDL_RenderFillRect(gui_renderer, &halo);
@@ -151,6 +158,7 @@ void HUD::drawInventoryPanel() {
         }
 
         slot_x += SLOT_SIZE + SLOT_MARGIN;
+        ++slot_index;
         if (slot_x + SLOT_SIZE > game_width + panel_width - SLOT_MARGIN) {
             slot_x = game_width + SLOT_MARGIN;
             slot_y += SLOT_SIZE + SLOT_MARGIN;

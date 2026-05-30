@@ -214,14 +214,17 @@ void ClientGUI::handleEvents() {
                     int slot_x = GAME_WIDTH + SLOT_MARGIN;
                     int slot_y = 40;
                     if (hud) {
-                        for (const auto& item : hud->get_inventory()) {
+                        const auto& inv = hud->get_inventory();
+                        int slot_index = 0;
+                        for (const auto& item : inv) {
                             if (mx >= slot_x && mx <= slot_x + SLOT_SIZE &&
                                 my >= slot_y && my <= slot_y + SLOT_SIZE) {
-                                if (hud) hud->set_equipped_item(item.get_id());
+                                hud->set_equipped_slot(slot_index);
                                 sendEquipCmd(item.get_id());
                                 break;
                             }
                             slot_x += SLOT_SIZE + SLOT_MARGIN;
+                            ++slot_index;
                             if (slot_x + SLOT_SIZE > GAME_WIDTH + PANEL_WIDTH - SLOT_MARGIN) {
                                 slot_x = GAME_WIDTH + SLOT_MARGIN;
                                 slot_y += SLOT_SIZE + SLOT_MARGIN;
