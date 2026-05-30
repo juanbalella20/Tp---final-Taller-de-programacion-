@@ -217,6 +217,7 @@ void ClientGUI::handleEvents() {
                         for (const auto& item : hud->get_inventory()) {
                             if (mx >= slot_x && mx <= slot_x + SLOT_SIZE &&
                                 my >= slot_y && my <= slot_y + SLOT_SIZE) {
+                                if (hud) hud->set_equipped_item(item.get_id());
                                 sendEquipCmd(item.get_id());
                                 break;
                             }

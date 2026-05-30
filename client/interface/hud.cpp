@@ -54,6 +54,10 @@ void HUD::set_mana(uint32_t mana) {
     player_mana = mana;
 }
 
+void HUD::set_equipped_item(const std::string& id) {
+    equipped_item_id = id;
+}
+
 void HUD::drawAttackButton() {
     if (!show_attack_button) return;
 
@@ -111,6 +115,14 @@ void HUD::drawInventoryPanel() {
     for (const auto& item : inventory.items) {
         SDL_FRect slot_rect = {slot_x, slot_y, SLOT_SIZE, SLOT_SIZE};
         SDL_SetRenderDrawBlendMode(gui_renderer, SDL_BLENDMODE_BLEND);
+
+        // Si este item esta equipado, dibujar un halo amarillo detrás
+        if (!equipped_item_id.empty() && item.get_id() == equipped_item_id) {
+            SDL_FRect halo = {slot_x - 3.0f, slot_y - 3.0f, SLOT_SIZE + 6.0f, SLOT_SIZE + 6.0f};
+            SDL_SetRenderDrawColor(gui_renderer, 255, 215, 0, 120); // amarillo semi
+            SDL_RenderFillRect(gui_renderer, &halo);
+        }
+
         SDL_SetRenderDrawColor(gui_renderer, 60, 60, 60, 120);
         SDL_RenderFillRect(gui_renderer, &slot_rect);
         SDL_SetRenderDrawColor(gui_renderer, 120, 120, 120, 180);
