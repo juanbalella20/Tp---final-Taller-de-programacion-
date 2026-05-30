@@ -13,13 +13,22 @@ height = 16
 
 # ── Tilesets ────────────────────────────────────────────────────────────────
 # IDs reservados:
-#   grass: 1 .. 256
+#   grass:  1 .. 256
+#   portal: 257  (collidable; reusa el mismo PNG, solo importa el flag)
 [[tileset]]
 name = "grass"
 file = "5108.png"
 columns = 16
 tile_count = 256
 firstgid = 1
+
+[[tileset]]
+name = "portal"
+file = "5108.png"
+columns = 16
+tile_count = 1
+firstgid = 257
+collidable = true
 
 # ── Capas (se dibujan en orden: la primera atras, la ultima adelante) ───────
 
@@ -45,11 +54,27 @@ data = [
     [215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228]
 ]
 
-# Edificios: por ahora rellenado con un tile placeholder (id=3) en los
-# rectangulos que antes eran [[collider]] manuales. Cambia el id de cada
-# celda al tile real de buildings.png que corresponda. Cualquier id en
-# 3..258 cuenta como solido por collidable del tileset.
-
+# Buildings: el tile de teleport (id=257, collidable) en la celda (2,2).
+[[layer]]
+name = "buildings"
+data = [
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,257,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+]
 
 # ── Spawns / puntos de interes ──────────────────────────────────────────────
 # Deberían ir los friendly NPCs
@@ -58,3 +83,11 @@ data = [
 # name = "sacerdote"
 # x = 5
 # y = 5
+
+# ── Teleports  ──────────────────────────────────────────────
+# Celda (2,2): tile de teleport (collidable). El player se para adyacente y /tp.
+[[teleport]]
+x = 2
+y = 2
+dest_zone = "desert"
+
