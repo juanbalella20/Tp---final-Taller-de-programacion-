@@ -109,11 +109,34 @@ void HUD::drawInventoryPanel() {
     float slot_y = 40.0f;
 
     for (const auto& item : inventory.items) {
+        SDL_FRect slot_rect = {slot_x, slot_y, SLOT_SIZE, SLOT_SIZE};
+        SDL_SetRenderDrawBlendMode(gui_renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(gui_renderer, 60, 60, 60, 120);
+        SDL_RenderFillRect(gui_renderer, &slot_rect);
+        SDL_SetRenderDrawColor(gui_renderer, 120, 120, 120, 180);
+        SDL_RenderRect(gui_renderer, &slot_rect);
+
         auto it = inventory.items_textures.find(item.get_id());
-        SDL_Texture* icon = (it != inventory.items_textures.end()) ? it->second : nullptr;
-        SDL_FRect src_rect = { 465.0f, 447.0f, 30.0f, 65.0f };
-        SDL_FRect icon_dst = {slot_x, slot_y, SLOT_SIZE, SLOT_SIZE};
-        SDL_RenderTexture(gui_renderer, icon, &src_rect, &icon_dst);
+        if (it != inventory.items_textures.end() && it->second != nullptr) {
+            SDL_Texture* icon = it->second;
+            
+            float tex_w, tex_h;
+            SDL_GetTextureSize(icon, &tex_w, &tex_h); 
+            const float PADDING = 4.0f;
+            float max_size = SLOT_SIZE - (PADDING * 2.0f);
+            float scale = SDL_min(max_size / tex_w, max_size / tex_h);
+            float final_w = tex_w * scale;
+            float final_h = tex_h * scale;
+            
+            SDL_FRect icon_dst = {
+                slot_x + (SLOT_SIZE - final_w) / 2.0f,
+                slot_y + (SLOT_SIZE - final_h) / 2.0f,
+                final_w,
+                final_h
+            };
+            
+            SDL_RenderTexture(gui_renderer, icon, nullptr, &icon_dst);
+        }
 
         slot_x += SLOT_SIZE + SLOT_MARGIN;
         if (slot_x + SLOT_SIZE > game_width + panel_width - SLOT_MARGIN) {
@@ -180,12 +203,11 @@ void HUD::load_textures() {
         SDL_DestroySurface(inv_bg_surf);
     }
 
-    SDL_Surface* sword_surf = IMG_Load("imagenes/3.png");
+    SDL_Surface* sword_surf = IMG_Load("imagenes/espada.png");
     if (sword_surf) {
-        SDL_SetSurfaceColorKey(sword_surf, true,
-            SDL_MapRGB(SDL_GetPixelFormatDetails(sword_surf->format), nullptr, 0, 0, 0));
-        inventory.items_textures["espada"] =
-            SDL_CreateTextureFromSurface(gui_renderer, sword_surf);
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, sword_surf);
+        SDL_SetTextureBlendMode(tex, SDL_SCALEMODE_LINEAR);
+        inventory.items_textures["espada"] = tex;
         SDL_DestroySurface(sword_surf);
     }
 }

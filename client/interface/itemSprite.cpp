@@ -19,5 +19,10 @@ void ItemSprite::draw(const Camera& camera, SDL_FRect src_crop) const {
         static_cast<float>(tile_size)
     };
 
-    SDL_RenderTexture(renderer, texture, &src_crop, &dest);
+    const SDL_FRect* src_rect = nullptr;
+    if (src_crop.w > 0.0f && src_crop.h > 0.0f) {
+        src_rect = &src_crop;
+    }
+
+    SDL_RenderTexture(renderer, texture, src_rect, &dest);
 }

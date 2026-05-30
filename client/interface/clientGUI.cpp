@@ -427,8 +427,8 @@ void ClientGUI::drawItems() {
             ItemSprite(renderer, gold_texture, item.x, item.y, tileSize).draw(camera, gold_cutout);
         } else {
             if (!item_texture) continue;
-            SDL_FRect item_cutout = { 465.0f, 447.0f, 30.0f, 65.0f };
-            ItemSprite(renderer, item_texture, item.x, item.y, tileSize).draw(camera, item_cutout);
+            // SDL_FRect item_cutout = { 465.0f, 447.0f, 30.0f, 65.0f };
+            ItemSprite(renderer, item_texture, item.x, item.y, tileSize).draw(camera, {0,0,0,0});
         }
     }
 }
@@ -495,11 +495,14 @@ void ClientGUI::init_draw() {
         SDL_DestroySurface(frame_surf);
     }
 
-    SDL_Surface* sheet_surf = IMG_Load("imagenes/3.png");
-    if (!sheet_surf) { sheet_surf = IMG_Load("3.png"); }
-    if (sheet_surf) {
-        item_texture = SDL_CreateTextureFromSurface(renderer, sheet_surf);
-        SDL_DestroySurface(sheet_surf);
+    SDL_Surface* item_surf = IMG_Load("imagenes/espada.png");
+    if (!item_surf) { 
+        item_surf = IMG_Load("espada.png");
+    }
+    if (item_surf) {
+        item_texture = SDL_CreateTextureFromSurface(renderer, item_surf);
+        SDL_SetTextureBlendMode(item_texture, SDL_BLENDMODE_BLEND);
+        SDL_DestroySurface(item_surf);
     }
 
     SDL_Surface* elem_surf = IMG_Load("imagenes/100.png");
