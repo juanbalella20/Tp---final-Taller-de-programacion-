@@ -330,7 +330,7 @@ void GameLoop::handle_private(const ClientCmd& cmd) {
 void GameLoop::handle_cheat_kill(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     // game_map.kill_player(name);
-    GameMsg msg(MSG_CHAT);
+    GameMsg msg(MSG_CHEAT_KILL);
     msg.set_chat_content("Moriste instantáneamente.");
     client_registry_monitor.notify_client(cmd.get_client_id(), msg);
 }
