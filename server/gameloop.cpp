@@ -94,13 +94,17 @@ void GameLoop::load_maps() {
 // mandamos snapshot de npcs e items
 // mandar snaphot de players
 
-/*
-void send_players_snapshot_to(uint32_t client_id, const std::string& player_name) {
+
+void GameLoop::send_player_snapshot_to_other_players(uint32_t client_id, const std::string& player_name) {
+    // Avisa a todos los demás clientes que un nuevo jugador apareció.
+    // Solo incluye al jugador recién registrado, no a todos.
+    const Player& p = game_map.get_player(player_name);
     GameMsg msg(MSG_PLAYERS_SNAPSHOT);
-    msg.set_players(game_map.build_players_snapshot(player_name));
-    client_registry_monitor.notify_client(client_id, msg);
+    msg.set_player({player_name, 0, 0, p.get_coord_x(), p.get_coord_y()});
+    std::cout << "[DEBUG: MSG_PLAYERS_SNAPSHOT] Notificando a otros jugadores sobre nuevo jugador " << msg.get_players().front().name << std::endl;
+    client_registry_monitor.notify_clients_less_client(client_id, msg);
 }
-*/
+
 void GameLoop::process_cmd(const ClientCmd& cmd) {
     auto it = handlers.find(static_cast<uint8_t>(cmd.get_message_type()));
     if (it != handlers.end()) it->second(cmd);
@@ -126,10 +130,14 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
     registerMsg.set_hp(game_map.get_player_hp(cmd.get_player_name()));
     registerMsg.set_xp(game_map.get_player_xp(cmd.get_player_name()));
     registerMsg.set_mana(game_map.get_player_mana(cmd.get_player_name()));
+    registerMsg.set_coord_x(p.get_coord_x());
+    registerMsg.set_coord_y(p.get_coord_y());
+    registerMsg.set_players(game_map.build_players_snapshot(cmd.get_player_name()));
     client_registry_monitor.notify_client(cmd.get_client_id(), registerMsg);
 
     send_npcs_snapshot_to(cmd.get_client_id());
     send_items_snapshot_to(cmd.get_client_id());
+    send_player_snapshot_to_other_players(cmd.get_client_id(), cmd.get_player_name());//le quiero avisar a toods que se conecto el cliente 1
 }
 
 void GameLoop::handle_list(const ClientCmd& cmd) {

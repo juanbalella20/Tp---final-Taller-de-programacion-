@@ -2,6 +2,7 @@
 #include "../common/constants/protocol_constants.h"
 #include "../common/constants/game_constants.h"
 #include "../common/info/item_info.h"
+#include "../common/info/playerinfo.h"
 
 #include <arpa/inet.h>
 #include <cstring>
@@ -73,14 +74,27 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_MANA] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_mana(payload, msg);
     };
+    handlers[MSG_PLAYERS_SNAPSHOT] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_players_snapshot(payload, msg);
+    };
 }
 
 
+// Ver formato en serverSerializer::serialize_move:
+//   [direction][name_size][name][x BE][y BE]
+// Helpers definidos mas abajo en este archivo.
+static std::string read_string(const std::vector<uint8_t>& payload, size_t& offset);
+static uint16_t read_uint16_be(const std::vector<uint8_t>& payload, size_t& offset);
+
 void ClientDeserializer::deserialize_move(const std::vector<uint8_t>& payload, GameMsg& msg) {
-    if (payload.size() != LEN_DIRECTION) {
+    if (payload.size() < LEN_DIRECTION) {
         throw std::invalid_argument("Payload invalido para MSG_MOVE");
     }
-    msg.set_direction(static_cast<Direction>(payload[0]));
+    size_t offset = 0;
+    msg.set_direction(static_cast<Direction>(payload[offset++]));
+    msg.set_player_name(read_string(payload, offset));
+    msg.set_coord_x(static_cast<int>(read_uint16_be(payload, offset)));
+    msg.set_coord_y(static_cast<int>(read_uint16_be(payload, offset)));
 }
 
 void ClientDeserializer::deserialize_cmd(uint8_t type, const std::vector<uint8_t>& payload, GameMsg& msg) {
@@ -294,6 +308,43 @@ void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
     msg.set_hp(ntohl(hp_be));
     msg.set_xp(ntohl(xp_be));
     msg.set_mana(ntohl(mana_be));
+
+    // Posicion de spawn calculada por el servidor.
+    msg.set_coord_x(static_cast<int>(read_uint16_be(payload, offset)));
+    msg.set_coord_y(static_cast<int>(read_uint16_be(payload, offset)));
+
+    // Jugadores ya presentes en el mapa al momento del registro.
+    uint16_t player_count = read_uint16_be(payload, offset);
+    std::vector<PlayerInfo> players;
+    players.reserve(player_count);
+    for (uint16_t i = 0; i < player_count; ++i) {
+        std::string name = read_string(payload, offset);
+        int x = static_cast<int>(read_uint16_be(payload, offset));
+        int y = static_cast<int>(read_uint16_be(payload, offset));
+        players.push_back({std::move(name), 0, 0, x, y});
+    }
+    msg.set_players(players);
+}
+
+// Ver formato en serverSerializer::serialize_players_snapshot.
+void ClientDeserializer::deserialize_players_snapshot(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    if (payload.size() < LEN_PLAYER_COUNT) {
+        throw std::invalid_argument("Payload invalido para MSG_PLAYERS_SNAPSHOT");
+    }
+    size_t offset = 0;
+    uint16_t count = read_uint16_be(payload, offset);
+
+    std::vector<PlayerInfo> players;
+    players.reserve(count);
+    for (uint16_t i = 0; i < count; ++i) {
+        std::string name = read_string(payload, offset);
+        int x = static_cast<int>(read_uint16_be(payload, offset));
+        int y = static_cast<int>(read_uint16_be(payload, offset));
+        // race y klass no viajan en este snapshot (solo posicion y nombre)
+        players.push_back({std::move(name), 0, 0, x, y});
+    }
+
+    msg.set_players(players);
 }
 
 // Ver formato en serializer.

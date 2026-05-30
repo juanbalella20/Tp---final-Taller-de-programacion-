@@ -2,13 +2,14 @@
 #include "npcSprite.h"
 #include "itemSprite.h"
 #include <SDL3_image/SDL_image.h>
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 
-ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving)
+ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name)
     : window(nullptr), renderer(nullptr), event{}, chat_font(nullptr),
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
-      hud(nullptr),
+      hud(nullptr), own_name(player_name), player(nullptr), tilemap(nullptr),
       enemy_texture(nullptr), frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
       camera((float)GAME_WIDTH, (float)CANVAS_HEIGHT),
       selected_npc_tile_x(-1), selected_npc_tile_y(-1) {}
@@ -152,6 +153,37 @@ void ClientGUI::selectCoord(int tile_x, int tile_y) {
 
 void ClientGUI::handleEvents() {
     while (SDL_PollEvent(&event)) {
+/*
+GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) {
+        return {false, player_name, 0, 0};
+    }
+
+    int new_x = player->get_coord_x() + dir_to_dx(dir);
+    int new_y = player->get_coord_y() + dir_to_dy(dir);
+
+    std::cout << "[DEBUG: try_move " << player_name
+              << "] (" << new_x << "," << new_y << ")" << std::endl;
+
+    // Limites del mapa.
+    if (new_x < 0 || new_y < 0 || new_x >= width || new_y >= height) {
+        return {false, player_name, 0, 0};
+    }
+    // Terreno bloqueado (edificio).
+    if (map[new_y][new_x] != elements::empty) {
+    // VER
+        return {false, player_name, 0, 0};
+    }
+    // Actor en la celda destino.
+    if (has_actor_at(new_x, new_y)) {
+        return {false, player_name, 0, 0};
+    }
+     for (const auto& gi : ground_items) {
+        if (gi.pos.x == new_x && gi.pos.y == new_y) {
+            return {false, player_name, 0, 0};
+        }
+    */
         
         if (mini_chat->handle_event(event)) {
             continue;
@@ -175,18 +207,22 @@ void ClientGUI::handleEvents() {
                     case SDL_SCANCODE_UP:
                     case SDL_SCANCODE_W:
                         sendMoveCmd(DIR_NORTH);
+   //                     if (player) { player->setTilePosition(player->getTileX(), player->getTileY() - 1); player_pov = player->back_pov(); }
                         break;
                     case SDL_SCANCODE_DOWN:
                     case SDL_SCANCODE_S:
                         sendMoveCmd(DIR_SOUTH);
+     //                   if (player) { player->setTilePosition(player->getTileX(), player->getTileY() + 1); player_pov = player->front_pov(); }
                         break;
                     case SDL_SCANCODE_RIGHT:
                     case SDL_SCANCODE_D:
                         sendMoveCmd(DIR_EAST);
+       //                 if (player) { player->setTilePosition(player->getTileX() + 1, player->getTileY()); player_pov = player->right_pov(); }
                         break;
                     case SDL_SCANCODE_LEFT:
                     case SDL_SCANCODE_A:
                         sendMoveCmd(DIR_WEST);
+         //               if (player) { player->setTilePosition(player->getTileX() - 1, player->getTileY()); player_pov = player->left_pov(); }
                         break;
                     default:
                         break;
@@ -297,6 +333,11 @@ void ClientGUI::update() {
                         hud->set_xp(msg.get_xp());
                         hud->set_mana(msg.get_mana());
                     }
+                    if (player) {//spawn
+                        player->setTilePosition(msg.get_coord_x(), msg.get_coord_y());
+                        std::cout << "Player registered at (" << msg.get_coord_x() << "," << msg.get_coord_y() << ")" << std::endl;
+                    }
+                    other_players = msg.get_players();
                     break;
                 }
                 case MSG_SEND_MAP:
@@ -311,29 +352,48 @@ void ClientGUI::update() {
                 case MSG_ITEMS_SNAPSHOT:
                     items_on_floor = msg.get_items_on_floor();
                     break;
-                case MSG_MOVE: {
-                    int x = player->getTileX();
-                    int y = player->getTileY();
-                    switch (msg.get_direction()) {
-                        case DIR_NORTH: 
-                            --y;
-                            player_pov = player->back_pov();
-                            break;
-                        case DIR_SOUTH: 
-                            ++y;
-                            player_pov = player->front_pov(); 
-                            break;
-                        case DIR_EAST:  
-                            ++x; 
-                            player_pov = player->right_pov();
-                            break;
-                        case DIR_WEST:  
-                            --x; 
-                            player_pov = player->left_pov();
-                            break;
-                        default: break;
+                case MSG_PLAYERS_SNAPSHOT:
+                    std::cout << "Received players snapshot with " << msg.get_players().size() << " players." << std::endl;
+                    for (const auto& incoming : msg.get_players()) {
+                        auto it = std::find_if(other_players.begin(), other_players.end(),
+                            [&incoming](const PlayerInfo& p) { return p.name == incoming.name; });
+                        if (it != other_players.end()) {
+                            *it = incoming;  // actualiza posicion si ya existe
+                        } else {
+                            other_players.push_back(incoming);  // nuevo jugador
+                        }
                     }
-                    player->setTilePosition(x, y);
+                    break;
+                case MSG_MOVE: {
+                    const std::string& mover = msg.get_player_name();
+                    int x = msg.get_coord_x();
+                    int y = msg.get_coord_y();
+
+                    // Nombre vacio = compatibilidad: tratar como jugador local.
+                    if (mover.empty() || mover == own_name) {
+                        // Jugador local: usar las coords absolutas del server.
+                        player->setTilePosition(x, y);
+                        switch (msg.get_direction()) {
+                            case DIR_NORTH: player_pov = player->back_pov();  break;
+                            case DIR_SOUTH: player_pov = player->front_pov(); break;
+                            case DIR_EAST:  player_pov = player->right_pov(); break;
+                            case DIR_WEST:  player_pov = player->left_pov();  break;
+                            default: break;
+                        }
+                    } else {
+                        // Otro jugador: actualizar (o agregar) su posicion.
+                        auto it = std::find_if(other_players.begin(), other_players.end(),
+                            [&mover](const PlayerInfo& p) { return p.name == mover; });
+                        Direction dir = static_cast<Direction>(msg.get_direction());
+                        if (it != other_players.end()) {
+                            it->x = x;
+                            it->y = y;
+                            it->direction = dir;
+                        } else {
+                            PlayerInfo pi{mover, 0, 0, x, y, dir};
+                            other_players.push_back(pi);
+                        }
+                    }
                     break;
                 }
                 case MSG_PRIVATE:
@@ -410,6 +470,29 @@ void ClientGUI::draw_npc_friends() {
     }
 }
 
+void ClientGUI::drawOtherPlayers() {
+    if (!tilemap) return;
+    const int tileSize = tilemap->getTileSize();
+
+    for (const auto& p : other_players) {
+        try {
+            PlayerDisplay pd(renderer, "imagenes/1005.png", tileSize);
+            pd.setTilePosition(p.x, p.y);
+            SDL_FRect pov;
+            switch (p.direction) {
+                case DIR_NORTH: pov = pd.back_pov();  break;
+                case DIR_SOUTH: pov = pd.front_pov(); break;
+                case DIR_EAST:  pov = pd.right_pov(); break;
+                case DIR_WEST:  pov = pd.left_pov();  break;
+                default:        pov = pd.front_pov(); break;
+            }
+            pd.draw(camera, pov);
+        } catch (const std::runtime_error& e) {
+            std::cout << "[DEBUG: drawOtherPlayers] textura fallida: " << e.what() << std::endl;
+        }
+    }
+}
+
 void ClientGUI::drawItems() {
     if (!tilemap) return;
     const int tileSize = tilemap->getTileSize();
@@ -447,10 +530,11 @@ void ClientGUI::draw() {
     }
 
     drawItems();
-    if (player) { 
+    if (player) {
         player->draw(camera, player_pov);
     }
     drawEnemies();
+    drawOtherPlayers();
     draw_npc_friends();
 
     // Levanta el clip para dibujar el panel y el chat encima
@@ -513,9 +597,9 @@ void ClientGUI::init_draw() {
     } catch (const std::runtime_error& e) {
         std::cout << "[DEBUG] imagenes/1005.png failed: " << e.what() << std::endl;
     }
-    // valor hardcodeado para testing!
-    // revisar game_map.cpp
-    player->setTilePosition(29, 15);
+    // La posicion real llega en MSG_REGISTER via update().
+    // Posicion temporal (0,0) hasta que llegue el mensaje del servidor.
+    player->setTilePosition(0, 0);
     draw_npc_friends();
 
     is_running = true;

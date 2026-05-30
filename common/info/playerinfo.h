@@ -3,6 +3,7 @@
 
 #include <string>
 #include "../../common/constants/game_constants.h"
+#include "../../common/constants/protocol_constants.h"
 
 
 struct PlayerInfo {
@@ -11,6 +12,7 @@ struct PlayerInfo {
     uint8_t klass;
     int x;
     int y;
+    Direction direction = DIR_SOUTH;
 };
 
 

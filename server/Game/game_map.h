@@ -76,7 +76,11 @@ public:
     const std::map<std::string, positionCoord>& get_spawns() const { return spawns; }
 
     void add_player(Player player);
-    std::vector<PlayerInfo> build_player_snapshot(const std::string& player_name);
+
+    // Devuelve un snapshot de todos los jugadores en el mismo mapa que player_name
+    // (excluyéndolo a él). Hoy todo está en "desert"; cuando haya múltiples mapas,
+    // filtrar por sector aquí.
+    std::vector<PlayerInfo> build_players_snapshot(const std::string& player_name);
     struct MoveResult {
         bool moved;
         std::string player_name;
