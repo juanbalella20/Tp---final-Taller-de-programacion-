@@ -51,26 +51,36 @@ InitialState load_initial_state_hardcoded() {
 }
 
 void GameLoop::broadcast_npcs_snapshot() {
-    GameMsg msg(MSG_NPCS_SNAPSHOT);
-    msg.set_npcs(game_map.build_npcs_snapshot());
-    client_registry_monitor.notify_clients(msg);
+    // Cada cliente ve los NPCs de SU zona
+    for (const auto& [client_id, name] : client_registry_monitor.get_active_clients()) {
+        if (name.empty() || !game_map.player_exists(name)) continue;
+        GameMsg msg(MSG_NPCS_SNAPSHOT);
+        msg.set_npcs(game_map.build_npcs_snapshot(name));
+        client_registry_monitor.notify_client(client_id, msg);
+    }
 }
 
 void GameLoop::send_npcs_snapshot_to(uint32_t client_id) {
+    std::string name = client_registry_monitor.get_name(client_id);
     GameMsg msg(MSG_NPCS_SNAPSHOT);
-    msg.set_npcs(game_map.build_npcs_snapshot());
+    msg.set_npcs(game_map.build_npcs_snapshot(name));
     client_registry_monitor.notify_client(client_id, msg);
 }
 
 void GameLoop::broadcast_items_snapshot() {
-    GameMsg msg(MSG_ITEMS_SNAPSHOT);
-    msg.set_items_on_floor(game_map.build_items_snapshot());
-    client_registry_monitor.notify_clients(msg);
+    // Cada cliente ve los items/oro del piso de SU zona
+    for (const auto& [client_id, name] : client_registry_monitor.get_active_clients()) {
+        if (name.empty() || !game_map.player_exists(name)) continue;
+        GameMsg msg(MSG_ITEMS_SNAPSHOT);
+        msg.set_items_on_floor(game_map.build_items_snapshot(name));
+        client_registry_monitor.notify_client(client_id, msg);
+    }
 }
 
 void GameLoop::send_items_snapshot_to(uint32_t client_id) {
+    std::string name = client_registry_monitor.get_name(client_id);
     GameMsg msg(MSG_ITEMS_SNAPSHOT);
-    msg.set_items_on_floor(game_map.build_items_snapshot());
+    msg.set_items_on_floor(game_map.build_items_snapshot(name));
     client_registry_monitor.notify_client(client_id, msg);
 }
 
@@ -78,11 +88,18 @@ void GameLoop::load_maps() {
     // TODO:
     // funcion para persistencia
     // InitialState load_initial_state_from_file(path);
-    
+
     // harcoded:
     InitialState hardocded_state = load_initial_state_hardcoded();
-    game_map.init_world(hardocded_state, "data/maps/desert/map.toml");
-    game_map.init_world(hardocded_state, "data/maps/city/map.toml");
+    std::map<Zone, std::string> zone_paths = {
+        {ZONE_DESERT, "data/maps/desert/map.toml"},
+        {ZONE_CITY,   "data/maps/city/map.toml"},
+    };
+    std::map<Zone, InitialState> initial_states = {
+        {ZONE_DESERT, hardocded_state},
+        {ZONE_CITY,   InitialState{}},  // city sin NPCs por ahora (testeo)
+    };
+    game_map.init_world(zone_paths, initial_states);
 }
 
 
@@ -111,7 +128,7 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
     client_registry_monitor.assign_name(cmd.get_client_id(), cmd.get_player_name());
     game_map.spawn_player(cmd.get_player_name());
     GameMsg registerMsg(MSG_REGISTER);
-    registerMsg.set_map(game_map.get_map());
+    registerMsg.set_map(game_map.get_map(cmd.get_player_name()));
 
     std::cout << "[DEBUG: MSG_REGISTER] received cmd type="
               << static_cast<int>(cmd.get_message_type())
@@ -132,10 +149,9 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
     send_npcs_snapshot_to(cmd.get_client_id());
     send_items_snapshot_to(cmd.get_client_id());
 
-    // Envia zona inicial (hardcodeada de momento)
-    // TODO: derivar de la posición real de spawn cuando haya multi-mapa
+    // Envia la zona real donde spawneo el player
     GameMsg zoneMsg(MSG_ZONE_CHANGE);
-    zoneMsg.set_zone(ZONE_DESERT);  
+    zoneMsg.set_zone(game_map.get_player_zone(cmd.get_player_name()));
     client_registry_monitor.notify_client(cmd.get_client_id(), zoneMsg);
 }
 
@@ -154,7 +170,8 @@ void GameLoop::handle_list(const ClientCmd& cmd) {
     int x = it->second.first;
     int y = it->second.second;
     try {
-        std::vector<ItemInfo> items = game_map.list_seller_items(x, y);
+        std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+        std::vector<ItemInfo> items = game_map.list_seller_items(name, x, y);
         GameMsg msg(MSG_CHAT);
         std::string lista = "Items disponibles: ";
         for (const auto& item : items) {
