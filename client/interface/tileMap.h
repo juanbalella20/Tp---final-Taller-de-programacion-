@@ -39,6 +39,7 @@ public:
     bool isBlocked(int cellX, int cellY) const { return mapData.is_collidable(cellX, cellY); }
 
     const std::map<std::string, positionCoord>& getSpawns() const { return mapData.get_spawns(); }
+    const std::vector<TeleportDef>& getTeleports() const { return mapData.get_teleports(); }
 };
 
 #endif

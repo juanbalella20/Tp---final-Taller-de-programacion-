@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
+#include <tuple>
 #include <vector>
 #include <cstdlib>
 
@@ -55,6 +56,48 @@ std::vector<const Player*> GameMap::players_in(Zone z) const {
 Zone GameMap::get_player_zone(const std::string& player_name) const {
     return zone_id_of(player_name);
 }
+
+std::pair<int, int> GameMap::find_arrival_cell(ZoneWorld& dst, Zone dest_zone) {
+    const std::vector<const Player*> dest_players = players_in(dest_zone);
+    // Si la zona destino tiene teleport, aparecer adyacente a el.
+    if (!dst.get_teleports().empty()) {
+        const TeleportDef& dest_tp = dst.get_teleports().front();
+        return dst.free_cell_adjacent_to(dest_tp.x, dest_tp.y, dest_players);
+    }
+    // Si no, cualquier celda libre.
+    return dst.find_random_empty_cell(dest_players);
+}
+
+TeleportResult GameMap::teleport_player(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) return {false, ZONE_DESERT, 0, 0};
+
+    // Chequea si el player esta adyacente a un teleport
+    ZoneWorld& src = zone_of(player_name);
+    const TeleportDef* tp = src.teleport_adjacent_to(player->get_coord_x(),
+                                                     player->get_coord_y());
+    if (tp == nullptr) return {false, ZONE_DESERT, 0, 0};
+
+    // Encuentra la zona por nombre
+    auto zit = ZONE_NAME_MAP.find(tp->dest_zone);
+    if (zit == ZONE_NAME_MAP.end()) return {false, ZONE_DESERT, 0, 0};
+    Zone dest_zone = zit->second;
+
+    auto dit = zones.find(dest_zone);
+    if (dit == zones.end()) return {false, ZONE_DESERT, 0, 0};  // zona no cargada
+    ZoneWorld& dst = dit->second;
+
+    // Ubica al player en una celda libre de la zona destino.
+    auto [nx, ny] = find_arrival_cell(dst, dest_zone);
+    if (nx == -1) return {false, ZONE_DESERT, 0, 0};  // sin lugar libre
+
+    // Aplica el cambio de zona y posicion.
+    player_zone[player_name] = dest_zone;
+    player->update_position(nx, ny);
+    std::cout << "[DEBUG: teleport] " << player_name << " -> zona "
+              << static_cast<int>(dest_zone) << " (" << nx << "," << ny << ")" << std::endl;
+    return {true, dest_zone, nx, ny};
+}
 void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
                          const std::map<Zone, InitialState>& initial_states) {
     for (const auto& [zone_id, path] : zone_paths) {
@@ -95,6 +138,7 @@ Player* GameMap::find_player_by_name(const std::string& name) {
 void GameMap::spawn_player(const std::string& name) {
     // Zona inicial de spawn
     // TODO: derivar de config / persistencia
+    //const Zone start_zone = ZONE_CITY;
     const Zone start_zone = ZONE_DESERT;
     player_zone[name] = start_zone;
 

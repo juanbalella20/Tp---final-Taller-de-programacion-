@@ -26,6 +26,8 @@ void ZoneWorld::load_terrain(const std::string& toml_path) {
     }
     // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
     spawns = md.get_spawns();
+    // [[teleport]] = tiles de teletransporte hacia otra zona.
+    teleports = md.get_teleports();
 }
 
 bool ZoneWorld::in_bounds(int x, int y) const {
@@ -205,4 +207,29 @@ NPChostile* ZoneWorld::hostile_at(int x, int y) {
         }
     }
     return nullptr;
+}
+
+const TeleportDef* ZoneWorld::teleport_adjacent_to(int x, int y) const {
+    positionCoord here{x, y};
+    for (const auto& tp : teleports) {
+        if (is_adyacent(positionCoord{tp.x, tp.y}, here)) return &tp;
+    }
+    return nullptr;
+}
+
+std::pair<int, int> ZoneWorld::free_cell_adjacent_to(
+    int tx, int ty, const std::vector<const Player*>& players_here) const {
+    // Las 4 celdas adyacentes (N, S, E, O) al teleport destino.
+    const int dx[] = {0, 0, 1, -1};
+    const int dy[] = {-1, 1, 0, 0};
+    for (int i = 0; i < 4; ++i) {
+        int nx = tx + dx[i];
+        int ny = ty + dy[i];
+        if (in_bounds(nx, ny) && map[ny][nx] == elements::empty &&
+            !has_actor_at(nx, ny, players_here) && !has_ground_item_at(nx, ny)) {
+            return {nx, ny};
+        }
+    }
+    // Fallback: cualquier celda libre de la zona.
+    return find_random_empty_cell(players_here);
 }

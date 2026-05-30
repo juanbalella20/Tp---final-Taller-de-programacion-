@@ -37,6 +37,13 @@ struct InitialState {
     std::vector<ItemSpawn> items;
 };
 
+struct TeleportResult {
+        bool adyacente;
+        Zone dest_zone;
+        int x;
+        int y;
+};
+
 // Factory: construye un NPChostile a partir de un NpcSpawn
 NPChostile make_npc_from_spawn(const NpcSpawn& spawn);
 
@@ -55,6 +62,10 @@ private:
     Zone zone_id_of(const std::string& player_name) const;
     // Punteros (const) a los players que estan en la zona z
     std::vector<const Player*> players_in(Zone z) const;
+
+    // Celda donde aparece un player que llega a la zona dst: adyacente al
+    // teleport de esa zona si tiene, o una celda libre random. {-1,-1} si nada.
+    std::pair<int, int> find_arrival_cell(ZoneWorld& dst, Zone dest_zone);
 
 public:
     GameMap();
@@ -99,6 +110,10 @@ public:
 
     // Zona actual del player (para MSG_ZONE_CHANGE)
     Zone get_player_zone(const std::string& player_name) const;
+
+
+    // Si el player esta adyacente a un teleport, lo mueve a la zona destino y actualiza su tag.
+    TeleportResult teleport_player(const std::string& player_name);
 
     void player_equip_item(const std::string& player_name, const std::string& item_id);
     void spawn_player(const std::string& name);

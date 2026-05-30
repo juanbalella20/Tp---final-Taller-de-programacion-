@@ -212,6 +212,14 @@ bool Parser::gold_related_command(const std::string& command, ClientCmd& cmd, st
     return false;
 }
 
+bool Parser::teleport_command(const std::string& command, ClientCmd& cmd) {
+    if (command == "/tp") {
+        cmd = parse_no_payload(MSG_TELEPORT);
+        return true;
+    }
+    return false;
+}
+
 ClientCmd Parser::parse_chat(const std::string& input) {
     std::istringstream ss(input);
     std::string command;
@@ -238,6 +246,9 @@ ClientCmd Parser::parse_chat(const std::string& input) {
     if (cheat_command(command, cmd)) {
         return cmd;
     }
-    
+    if (teleport_command(command, cmd)) {
+        return cmd;
+    }
+
     throw std::invalid_argument("Comando desconocido: " + command);
 }

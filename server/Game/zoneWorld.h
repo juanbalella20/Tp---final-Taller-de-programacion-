@@ -11,6 +11,7 @@
 #include "../../common/info/item_info.h"
 #include "../../common/info/item_floor_info.h"
 #include "../../common/info/npc_info.h"
+#include "../../common/mapLoader.h"
 #include "npc/npcHostile.h"
 #include "npc/npcSeller.h"
 
@@ -34,6 +35,7 @@ private:
     std::vector<NPCseller> sellers;
     std::vector<groundItem> ground_items;
     std::vector<groundGold> ground_gold;
+    std::vector<TeleportDef> teleports;
 
 public:
     ZoneWorld() = default;
@@ -89,6 +91,15 @@ public:
 
     // Busca un NPC hostile vivo en (x,y); nullptr si no hay.
     NPChostile* hostile_at(int x, int y);
+
+    // --- Teleports ---
+    const std::vector<TeleportDef>& get_teleports() const { return teleports; }
+    // Teleport cuya celda sea adyacente (Manhattan <= 1) a (x,y), o nullptr.
+    const TeleportDef* teleport_adjacent_to(int x, int y) const;
+    // Celda libre (terreno empty, sin actor) adyacente a (tx,ty); si no hay
+    // adyacente libre, cae a find_random_empty_cell. Devuelve {-1,-1} si nada.
+    std::pair<int, int> free_cell_adjacent_to(
+        int tx, int ty, const std::vector<const Player*>& players_here) const;
 };
 
 #endif

@@ -111,6 +111,8 @@ private:
     void set_logical_width(int logical_width);
     void set_logical_height(int logical_height);
     void draw_npc_friends();
+    // Dibuja "Transportarse a <zona>" sobre cada tile de teleport del mapa.
+    void draw_teleport_labels();
 
 public:
     ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving);
