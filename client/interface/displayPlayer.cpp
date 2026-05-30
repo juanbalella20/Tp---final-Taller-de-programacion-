@@ -20,6 +20,7 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
     if (!image) {
         throw std::runtime_error(std::string("Creating player texture: ") + SDL_GetError());
     }
+    SDL_SetTextureBlendMode(image, SDL_BLENDMODE_BLEND);
 }
 
 PlayerDisplay::~PlayerDisplay() {
@@ -90,6 +91,14 @@ void PlayerDisplay::reset_frame() {
     walk_frame = 0;
 }
 
+void PlayerDisplay::set_ghost(bool is_ghost) {
+    ghost = is_ghost;
+}
+
+bool PlayerDisplay::is_ghost() const {
+    return ghost;
+}
+
 SDL_FRect PlayerDisplay::back_pov() {
     static const SDL_FRect frames[] = {
         {255.0f, 51.0f, 30.0f, 40.0f},
@@ -145,6 +154,13 @@ SDL_FRect PlayerDisplay::left_pov() {
 }
 
 void PlayerDisplay::draw(const Camera& camera, SDL_FRect crop_pov) const {
+    if (ghost) {
+        // Más translucidez: menor valor = más transparente
+        SDL_SetTextureAlphaMod(image, 140);
+    } else {
+        SDL_SetTextureAlphaMod(image, 255);
+    }
+
     SDL_FRect dst{
         camera.world_to_screen_x(rect.x),
         camera.world_to_screen_y(rect.y),

@@ -15,7 +15,8 @@ private:
     SDL_Texture* image;
     SDL_FRect rect;
     int tileSize;
-    const bool* keystate;  
+    const bool* keystate;
+    bool ghost = false;
 
     int walk_frame = 0;
 
@@ -38,6 +39,8 @@ public:
     int getTileY() const;
     // Setea la posicion en pixels (legacy; preferir setTilePosition).
     void setPosition(float x, float y);
+    void set_ghost(bool ghost);
+    bool is_ghost() const;
     void draw(const Camera& camera, SDL_FRect crop_pov) const override;
     SDL_FRect right_pov();
     SDL_FRect left_pov();
