@@ -202,7 +202,6 @@ SDL_FRect PlayerDisplay::left_pov() {
 
 void PlayerDisplay::draw(const Camera& camera, SDL_FRect crop_pov) const {
     if (ghost) {
-        // Más translucidez: menor valor = más transparente
         SDL_SetTextureAlphaMod(image, 140);
     } else {
         SDL_SetTextureAlphaMod(image, 255);
@@ -216,6 +215,11 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect crop_pov) const {
     };
     SDL_RenderTexture(renderer, image, &crop_pov, &dst);
     if (has_equipped_weapon) {
+        if (ghost) {
+            SDL_SetTextureAlphaMod(weapon_image, 140);
+        } else {
+            SDL_SetTextureAlphaMod(weapon_image, 255);
+        }
         SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};
         float weapon_size = rect.w * 0.5f;
         SDL_FRect weapon_dst = {
