@@ -11,10 +11,12 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       player_hp(0),
       max_hp(100),
       max_xp(100),
+      max_mana(100),
       player_xp(0),
       player_mana(0),
       hp_bar_texture(nullptr),
       xp_bar_texture(nullptr),
+      mana_bar_texture(nullptr),
       game_width(game_width),
       panel_width(panel_width),
       canvas_height(canvas_height) {
@@ -265,11 +267,22 @@ void HUD::draw_xp() {
 }
 
 void HUD::draw_mana() {
-    if (!font) return;
+    if (mana_bar_texture) {
+        float tex_w, tex_h;
+        SDL_GetTextureSize(mana_bar_texture, &tex_w, &tex_h);
+        const float max_width = panel_width - 30.0f;
+        const float scale = SDL_min(1.0f, max_width / tex_w);
 
-    std::string mana_text = "Mana: " + std::to_string(player_mana);
+        SDL_FRect dest = {
+            game_width + 15.0f,
+            490.0f,
+            tex_w * scale,
+            tex_h * scale
+        };
+        SDL_RenderTexture(gui_renderer, mana_bar_texture, nullptr, &dest);
 
-    draw_stat(mana_text, 460.0f);
+        display_value(player_mana, max_mana, dest);
+    }
 }
 
 void HUD::load_textures() {
@@ -303,6 +316,15 @@ void HUD::load_textures() {
     if (xp_bar_surf) {
         xp_bar_texture = SDL_CreateTextureFromSurface(gui_renderer, xp_bar_surf);
         SDL_DestroySurface(xp_bar_surf);
+    }
+
+    SDL_Surface* mana_bar_surf = IMG_Load("imagenes/en_barrademana.bmp");
+    if (!mana_bar_surf) {
+        mana_bar_surf = IMG_Load("en_barrademana.bmp");
+    }
+    if (mana_bar_surf) {
+        mana_bar_texture = SDL_CreateTextureFromSurface(gui_renderer, mana_bar_surf);
+        SDL_DestroySurface(mana_bar_surf);
     }
 
 }
