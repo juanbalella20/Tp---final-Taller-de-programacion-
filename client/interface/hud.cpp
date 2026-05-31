@@ -1,4 +1,5 @@
 #include "hud.h"
+#include <stdexcept>
 
 HUD::HUD(SDL_Renderer* gui_renderer,
          float game_width, float panel_width, float canvas_height)
@@ -259,6 +260,18 @@ void HUD::draw_mana() {
     }
 }
 
+void HUD::load_stat_texture(const std::string& path, SDL_Texture** texture) {
+    SDL_Surface* bar_surf = IMG_Load(path.c_str());
+    if (!bar_surf) {
+        throw std::runtime_error(std::string("Failed to load texture: ") + path + " - " + SDL_GetError());
+    }
+    *texture = SDL_CreateTextureFromSurface(gui_renderer, bar_surf);
+    SDL_DestroySurface(bar_surf);
+    if (!*texture) {
+        throw std::runtime_error(std::string("Failed to create texture from surface: ") + SDL_GetError());
+    }
+}
+
 void HUD::load_textures() {
     SDL_Surface* inv_bg_surf = IMG_Load("imagenes/inventory-bg..png");
     if (inv_bg_surf) {
@@ -274,31 +287,7 @@ void HUD::load_textures() {
         SDL_DestroySurface(sword_surf);
     }
 
-    SDL_Surface* hp_bar_surf = IMG_Load("imagenes/en_barradevida.bmp");
-    if (!hp_bar_surf) {
-        hp_bar_surf = IMG_Load("en_barradevida.bmp");
-    }
-    if (hp_bar_surf) {
-        hp_bar_texture = SDL_CreateTextureFromSurface(gui_renderer, hp_bar_surf);
-        SDL_DestroySurface(hp_bar_surf);
-    }
-
-    SDL_Surface* xp_bar_surf = IMG_Load("imagenes/en_barraexperiencia.bmp");
-    if (!xp_bar_surf) {
-        xp_bar_surf = IMG_Load("en_barraexperiencia.bmp");
-    }
-    if (xp_bar_surf) {
-        xp_bar_texture = SDL_CreateTextureFromSurface(gui_renderer, xp_bar_surf);
-        SDL_DestroySurface(xp_bar_surf);
-    }
-
-    SDL_Surface* mana_bar_surf = IMG_Load("imagenes/en_barrademana.bmp");
-    if (!mana_bar_surf) {
-        mana_bar_surf = IMG_Load("en_barrademana.bmp");
-    }
-    if (mana_bar_surf) {
-        mana_bar_texture = SDL_CreateTextureFromSurface(gui_renderer, mana_bar_surf);
-        SDL_DestroySurface(mana_bar_surf);
-    }
-
+    load_stat_texture("imagenes/en_barradevida.bmp", &hp_bar_texture);
+    load_stat_texture("imagenes/en_barraexperiencia.bmp", &xp_bar_texture);
+    load_stat_texture("imagenes/en_barrademana.bmp", &mana_bar_texture);
 }

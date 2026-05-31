@@ -42,7 +42,7 @@ private:
     float canvas_height;
 
     void load_textures();
-
+    void load_stat_texture(const std::string& path, SDL_Texture** texture);
     void draw_stat(SDL_Texture* tex, float pos_y, int current, int max);
     void display_value(int current, int max, SDL_FRect& dest);
 
