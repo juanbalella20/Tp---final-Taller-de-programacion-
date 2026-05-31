@@ -13,11 +13,14 @@ class PlayerDisplay : public WorldEntity {
 private:
     SDL_Renderer* renderer;
     SDL_Texture* image;
+    SDL_Texture* weapon_image;
     SDL_FRect rect;
     int tileSize;
     const bool* keystate;
     bool ghost = false;
 
+    float weapon_dx = 0.0f;
+    float weapon_dy = 0.0f;
     int walk_frame = 0;
 
 public:

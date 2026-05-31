@@ -21,11 +21,24 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
         throw std::runtime_error(std::string("Creating player texture: ") + SDL_GetError());
     }
     SDL_SetTextureBlendMode(image, SDL_BLENDMODE_BLEND);
+    
+    SDL_Surface* item_surf = IMG_Load("Recursos/Graficos/101.png");
+    if (!item_surf) {
+        throw std::runtime_error(std::string("Loading weapon surface: ") + SDL_GetError());
+    }
+    weapon_image = SDL_CreateTextureFromSurface(renderer, item_surf);
+    SDL_DestroySurface(item_surf);
+    if (!weapon_image) {
+        throw std::runtime_error(std::string("Creating weapon texture: ") + SDL_GetError());
+    }
 }
 
 PlayerDisplay::~PlayerDisplay() {
     if (image) {
         SDL_DestroyTexture(image);
+    }
+    if (weapon_image) {
+        SDL_DestroyTexture(weapon_image);
     }
 }
 
@@ -148,7 +161,12 @@ SDL_FRect PlayerDisplay::left_pov() {
         {336.0f, 100.0f, 30.0f, 40.0},
         {370.0f, 100.0f, 30.0f, 40.0}
     };
+    static const float dx[] = { 0.5f, 0.5f, 0.4f, 0.4f, 0.1f };
+    static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
+
     SDL_FRect frame = frames[walk_frame % 5];
+    weapon_dx = dx[walk_frame % 5];
+    weapon_dy = dy[walk_frame % 5];
     walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
@@ -168,6 +186,18 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect crop_pov) const {
         rect.h
     };
     SDL_RenderTexture(renderer, image, &crop_pov, &dst);
+    if (weapon_image != nullptr) {
+        SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};;
+        float weapon_size = rect.w * 0.5f;
+        SDL_FRect weapon_dst = {
+            camera.world_to_screen_x(rect.x) + rect.w * weapon_dx,  // hacia la derecha del sprite
+            camera.world_to_screen_y(rect.y) + rect.h * weapon_dy,  // mitad vertical
+            weapon_size,
+            weapon_size
+        };
+        std::cout << "[DEBUG] rect.w=" << rect.w << " weapon_size=" << rect.w * 0.2f << std::endl;
+        SDL_RenderTexture(renderer, weapon_image, &crop, &weapon_dst);
+    }
 }
 
 int PlayerDisplay::get_x() {
