@@ -114,16 +114,7 @@ void HUD::drawInventoryPanel() {
 
     // Titulo "Inventario"
     if (font) {
-        SDL_Color white = {255, 255, 255, 255};
-        SDL_Surface* surf = TTF_RenderText_Solid(font, "Inventario", 0, white);
-        if (surf) {
-            SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
-            SDL_FRect dst = {game_width + 10.0f, 10.0f,
-                             static_cast<float>(surf->w), static_cast<float>(surf->h)};
-            SDL_RenderTexture(gui_renderer, tex, nullptr, &dst);
-            SDL_DestroyTexture(tex);
-            SDL_DestroySurface(surf);
-        }
+        draw_text("Inventario", game_width + 10.0f, 10.0f);
     }
 
     // Items del inventario en slots
@@ -198,26 +189,27 @@ void HUD::draw_stat(SDL_Texture* tex, float pos_y, int current, int max) {
     display_value(current, max, dest);
 }
 
-void HUD::draw_gold() {
-    if (!font) return;
-
-    std::string gold_text = "Oro: " + std::to_string(player_gold);
-
+void HUD::draw_text(const std::string& text, float x, float y) {
     SDL_Color color = {255, 255, 255, 255};
-    SDL_Surface* surf = TTF_RenderText_Solid(font, gold_text.c_str(), 0, color);
-
+    SDL_Surface* surf = TTF_RenderText_Solid(font, text.c_str(), 0, color);
     if (surf) {
         SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
 
         if (tex) {
-            float pos_x = game_width + 15.0f;
-
-            SDL_FRect dest = { pos_x, 530.0f, static_cast<float>(surf->w), static_cast<float>(surf->h)};
+            SDL_FRect dest = { x, y, static_cast<float>(surf->w), static_cast<float>(surf->h)};
             SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);
             SDL_DestroyTexture(tex);
         }
         SDL_DestroySurface(surf);
     }
+}
+
+void HUD::draw_gold() {
+    if (!font) return;
+
+    std::string gold_text = "Oro: " + std::to_string(player_gold);
+
+    draw_text(gold_text, game_width + 15.0f, 530.0f);
 }
 
 void HUD::display_value(int current, int max, SDL_FRect& dest) {
