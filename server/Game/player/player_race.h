@@ -7,7 +7,7 @@ private:
     int inteligence;
     int agility;
     int strength;
-    int endurance;
+    float endurance;
     float life_factor;
     float mana_factor;
 
@@ -22,7 +22,7 @@ public:
 
     void set_gnome();
 
-    int race_constitution();
+    float race_constitution();
 
     int race_inteligence();
 
