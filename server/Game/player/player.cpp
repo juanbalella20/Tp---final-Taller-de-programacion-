@@ -3,19 +3,19 @@
 
 #include <cmath>
 
-Player::Player(const std::string name, PlayerRace player_race, PlayerClass player_class):
+Player::Player(const std::string name, PlayerRace& player_race, PlayerClass& player_class):
     name(name),
     status(PlayerStatus::ALIVE),
     equipped_item(nullptr),
     player_race(player_race), 
     player_class(player_class), 
-    player_inventory() {
+    player_inventory(),
+    level(1) {
 
     lives = max_life();
     gold = 0;
     experience = 0;
     mana = max_mana();
-    level = 1;
 }
 
 const Inventory& Player::get_inventory() const {
