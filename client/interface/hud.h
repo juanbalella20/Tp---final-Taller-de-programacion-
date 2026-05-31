@@ -25,9 +25,11 @@ private:
     bool show_attack_button;
 
     uint32_t player_gold;
-    int player_hp;
-    int player_xp;
-    int player_mana;
+    uint32_t player_hp;
+    uint32_t max_hp;
+    uint32_t player_xp;
+    uint32_t player_mana;
+    SDL_Texture* hp_bar_texture;
     int equipped_slot = -1;
     std::string equipped_item_id;
 
@@ -55,11 +57,12 @@ public:
 
     void set_gold(uint32_t amount);
     void set_hp(uint32_t hp);
+    void set_max_hp(uint32_t max_hp);
     void set_xp(uint32_t xp);
     void set_mana(uint32_t mana);
     void set_equipped_item(const std::string& item_id);
     void set_equipped_slot(int slot_index);
-
+    void display_value(int current, int max, SDL_FRect& dest);
     void drawInventoryPanel();
     void drawAttackButton();
 
