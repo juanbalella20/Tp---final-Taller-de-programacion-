@@ -1,18 +1,34 @@
-@startuml
-title Diagrama de clases - Editor gráfico de mapas
+@startuml editor-mapa
+title Diagrama de clases - Editor grafico de mapas (V1 simplificada)
 
 skinparam classAttributeIconSize 0
+
+' ============================================================================
+' V1 SIMPLIFICADA:
+'  - Mapa de tamano FIJO 30x16, tile 64x64 (constantes WIDTH/HEIGHT/TILE_SIZE).
+'  - DOS capas fijas: Ground (0) y Buildings (1). Sin agregar/quitar/renombrar.
+'  - Paleta por carga manual de PNGs (modelo firstgid).
+'  - Herramientas: Pencil + Eraser + Fill.
+'  - .bin guarda META + TILESETS + LAYERS (sin spawns/teleports todavia).
+'  - Canvas QWidget + paintEvent (sin culling/zoom; el mapa entra entero).
+' ============================================================================
 
 class EditorWindow {
   - EditorDocument* document
   - MapCanvasWidget* canvas
   - TilePalette* tilePalette
-  - LayerPanel* layerPanel
   + newMap()
   + openMap()
   + saveMap()
   + saveMapAs()
+  + selectActiveLayer(index)
 }
+
+note right of EditorWindow
+  El selector de capa activa (Ground/Buildings)
+  son 2 opciones en la toolbar; no hay
+  LayerPanel ni NewMapDialog en V1.
+end note
 
 class EditorDocument {
   - Map map
@@ -28,24 +44,23 @@ class EditorDocument {
   + setActiveLayer()
   + applyToolPress(x, y)
   + applyToolDrag(x, y)
+  + applyToolRelease(x, y)
   + undo()
   + redo()
   + save(path)
   + open(path)
-  + newMap(w, h, tileSize)
+  + newMap()
 }
 
 class Map {
-  - int width
-  - int height
-  - int tileSize
   - vector<Tileset> tilesets
-  - vector<MapLayerData> layers
-  - map<string, positionCoord> spawns
-  - vector<TeleportDef> teleports
+  - vector<MapLayerData> layers   ' siempre 2: Ground, Buildings
   - unordered_map<int, TileDef> tileIndex
+  + width()        ' WIDTH (30)
+  + height()       ' HEIGHT (16)
+  + tileSize()     ' TILE_SIZE (64)
   + addTileset()
-  + addLayer()
+  + nextFirstgid()
   + getCell(layer, x, y)
   + setCell(layer, x, y, gid)
   + isCollidable(x, y)
@@ -55,25 +70,23 @@ class Map {
 class MapCanvasWidget {
   - EditorDocument* document
   - TilesetPixmapCache cache
-  + drawBackground()
-  + drawForeground()
+  + paintEvent()
   + mousePressEvent()
   + mouseMoveEvent()
   + mouseReleaseEvent()
-  + wheelEvent()
 }
+
+note bottom of MapCanvasWidget
+  QWidget con setFixedSize(30*64, 16*64).
+  paintEvent recorre 16x30 por capa
+  (Ground luego Buildings). Sin culling
+  ni zoom: el mapa entra entero.
+end note
 
 class TilePalette {
   - EditorDocument* document
   + loadPng()
   + tileSelected(gid)
-}
-
-class LayerPanel {
-  - EditorDocument* document
-  + selectLayer(index)
-  + addLayer()
-  + renameLayer()
 }
 
 interface Tool {
@@ -99,45 +112,56 @@ class SetTilesCommand {
   + undo()
 }
 
+' --- Persistencia: vive en common/. NO depende de Map (la usa tambien el server). ---
 class BinaryMapSaver {
-  + save(path, mapData)
+  + {static} save(path, tileSize, width, height, tilesets, layers)
 }
 
 class BinaryMapLoader {
   + load(path)
+  + getTileSize()
   + getWidth()
   + getHeight()
-  + isCollidable()
-  + getSpawns()
-  + getTeleports()
+  + isCollidable(x, y)
+  + getSpawns()      ' vacio en V1
+  + getTeleports()   ' vacio en V1
   + getTilesets()
   + getLayers()
+  + findTile(gid)
 }
+
+note bottom of BinaryMapLoader
+  Espeja la superficie publica de MapLoader.
+  El server (ZoneWorld::load_terrain) puede
+  consumir .bin con cambio minimo.
+end note
+
+N_FMT .. BinaryMapSaver
+N_FMT .. BinaryMapLoader
 
 class TilesetPixmapCache {
   + pixmapFor(gid)
   + sourceRectFor(gid)
 }
 
-class NewMapDialog
 class LoadTilesetDialog
 
+' --- Relaciones -------------------------------------------------------------
 EditorWindow --> EditorDocument
 EditorWindow --> MapCanvasWidget
 EditorWindow --> TilePalette
-EditorWindow --> LayerPanel
-EditorWindow --> NewMapDialog
 EditorWindow --> LoadTilesetDialog
 
 MapCanvasWidget --> EditorDocument
 TilePalette --> EditorDocument
-LayerPanel --> EditorDocument
 
 EditorDocument *-- Map
 EditorDocument --> Tool
 EditorDocument --> Command
-EditorDocument --> BinaryMapSaver
-EditorDocument --> BinaryMapLoader
+' El EditorDocument hace de puente: extrae los datos del Map para el Saver
+' y reconstruye el Map desde el Loader. La persistencia NO conoce a Map.
+EditorDocument ..> BinaryMapSaver : usa
+EditorDocument ..> BinaryMapLoader : usa
 
 Tool <|.. PencilTool
 Tool <|.. EraserTool
@@ -148,8 +172,5 @@ SetTilesCommand --> Map
 
 MapCanvasWidget --> TilesetPixmapCache
 TilesetPixmapCache --> Map
-
-BinaryMapSaver --> Map
-BinaryMapLoader --> Map
 
 @enduml
