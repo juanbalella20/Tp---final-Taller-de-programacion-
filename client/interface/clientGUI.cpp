@@ -435,7 +435,7 @@ void ClientGUI::drawItems() {
             ItemSprite(renderer, gold_texture, item.x, item.y, tileSize).draw(camera, gold_cutout);
         } else {
             if (!item_texture) continue;
-            SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};;
+            SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};
             ItemSprite(renderer, item_texture, item.x, item.y, tileSize).draw(camera, crop);
         }
     }
