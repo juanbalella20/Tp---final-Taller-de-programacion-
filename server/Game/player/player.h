@@ -39,7 +39,7 @@ private:
     void level_up();
 
 public:
-    Player(const std::string name, PlayerRace player_race, PlayerClass player_class);
+    Player(const std::string name, PlayerRace& player_race, PlayerClass& player_class);
 
     void add_item(std::unique_ptr<Item> item);
 
