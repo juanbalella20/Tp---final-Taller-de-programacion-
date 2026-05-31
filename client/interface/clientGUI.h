@@ -17,6 +17,7 @@
 #include "item_info.h"
 #include "npc_info.h"
 #include "item_floor_info.h"
+#include "playerinfo.h"
 #include "tileMap.h"
 #include "camera.h"
 #include "hud.h"
@@ -48,6 +49,7 @@ private:
     Queue<GameMsg>& receiving;
     Queue<std::string> chat_inbox;
     std::unique_ptr<HUD> hud;
+    std::string own_name;  // nombre del jugador local
 
     std::unique_ptr<PlayerDisplay> player;
     std::unique_ptr<TileMap> tilemap;
@@ -55,6 +57,7 @@ private:
     std::vector<std::vector<elements>> world_map;
     std::vector<NpcInfo> npcs;
     std::vector<ItemFloorInfo> items_on_floor;
+    std::vector<PlayerInfo> other_players;
     SDL_Texture* enemy_texture;
     SDL_Texture* frame_texture;
     SDL_Texture* item_texture;
@@ -96,6 +99,7 @@ private:
     void draw();
     void drawEnemies();
     void drawItems();
+    void drawOtherPlayers();
 
     void sendMoveCmd(Direction dir);
     void sendAttackCmd(int tile_x, int tile_y);
@@ -118,7 +122,7 @@ private:
     void draw_npc_friends();
 
 public:
-    ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving);
+    ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name);
     ~ClientGUI();
 
     ClientGUI(const ClientGUI&) = delete;

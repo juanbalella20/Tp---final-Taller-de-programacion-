@@ -34,3 +34,7 @@ uint32_t GameMsg::get_xp() const { return this->xp; }
 
 void GameMsg::set_mana(uint32_t mana) { this->mana = mana; }
 uint32_t GameMsg::get_mana() const { return this->mana; }
+
+void GameMsg::set_players(const std::vector<PlayerInfo>& new_players) { this->players = new_players; }
+const std::vector<PlayerInfo>& GameMsg::get_players() const { return players; }
+void GameMsg::set_player(const PlayerInfo& player) { this->players = {player}; }

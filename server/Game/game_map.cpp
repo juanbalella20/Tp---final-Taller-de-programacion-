@@ -156,8 +156,6 @@ void GameMap::spawn_player(const std::string& name) {
     auto [x, y] = find_random_empty_cell();
     int start_x = x != -1 ? x : 1;
     int start_y = y != -1 ? y : 1;
-    start_x = 29;
-    start_y = 15;
     Player player(name, PlayerRace(), PlayerClass());
     player.update_position(start_x, start_y);
     player.add_item(std::make_unique<Arma>("espada", "Espada", 100, 2, 10));
@@ -419,14 +417,7 @@ void GameMap::spawn_item(int x, int y, std::unique_ptr<Item> item) {
     }
 }
 
-std::vector<PlayerInfo> GameMap::build_player_snapshot(const std::string& player_name) {
-    std::vector<PlayerInfo> snapshot;
-    for (const auto& p : players) {
-        if (p.get_name() == player_name) continue;
-        snapshot.push_back({p.get_name(), 0, 0, p.get_coord_x(), p.get_coord_y()});
-    }
-    return snapshot;
-}
+
 
 uint32_t GameMap::get_player_gold(const std::string& name) {
     Player* player = find_player_by_name(name);
@@ -448,3 +439,14 @@ uint32_t GameMap::get_player_mana(const std::string& name) {
     return player->get_mana();
 }
 
+std::vector<PlayerInfo> GameMap::build_players_snapshot(const std::string& player_name) {
+    // Hoy todos los jugadores están en el mismo mapa ("desert").
+    // Cuando haya múltiples mapas, obtener el sector del jugador solicitante
+    // y filtrar por: sector_of_position(p.get_coord_x(), p.get_coord_y()) == my_sector.
+    std::vector<PlayerInfo> snapshot;
+    for (const auto& p : players) {
+        if (p.get_name() == player_name) continue;
+        snapshot.push_back({p.get_name(), 0, 0, p.get_coord_x(), p.get_coord_y()});
+    }
+    return snapshot;
+}

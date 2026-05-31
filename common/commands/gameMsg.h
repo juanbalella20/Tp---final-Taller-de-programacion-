@@ -6,6 +6,7 @@
 #include "item_floor_info.h"
 #include <string>
 #include <vector>
+#include "playerinfo.h"
 
 class GameMsg {
     private:
@@ -24,6 +25,7 @@ class GameMsg {
     uint32_t hp;
     uint32_t xp;
     uint32_t mana;
+    std::vector<PlayerInfo> players;
 
     public:
     GameMsg(uint8_t type, Direction direction = DIR_NORTH)
@@ -41,6 +43,9 @@ class GameMsg {
     void set_gold(uint32_t gold);
     uint32_t get_gold() const;
 
+    void set_players(const std::vector<PlayerInfo>& players);
+    const std::vector<PlayerInfo>& get_players() const;
+    void set_player(const PlayerInfo& player);  // notificar un solo jugador nuevo 
     void set_player_name(const std::string& name);
     const std::string& get_player_name() const;
     void set_coord_x(int x);

@@ -30,7 +30,11 @@ ServerSerializer::ServerSerializer() {
     handlers[MSG_HP] = [this](const GameMsg& msg) { return serialize_hp(msg); };
     handlers[MSG_XP] = [this](const GameMsg& msg) { return serialize_xp(msg); };
     handlers[MSG_MANA] = [this](const GameMsg& msg) { return serialize_mana(msg); };
+    handlers[MSG_PLAYERS_SNAPSHOT] = [this](const GameMsg& msg) { return serialize_players_snapshot(msg); };
 }
+
+// Appendea un uint16_t en big-endian al buffer (definido mas abajo).
+static void append_uint16_be(std::vector<uint8_t>& buf, uint16_t value);
 
 void ServerSerializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {
     buf.push_back(type);
@@ -65,29 +69,27 @@ std::vector<uint8_t> ServerSerializer::serialize_inventory(const GameMsg& msg) {
 }
 
 
+// Formato MSG_MOVE (server -> client):
+//   [direction   : LEN_DIRECTION byte]
+//   [name_size   : LEN_PLAYER_NAME_SIZE byte][name bytes]
+//   [x           : LEN_COORD bytes BE]
+//   [y           : LEN_COORD bytes BE]
+// El nombre + coords permiten al cliente distinguir su propio jugador de los
+// demas y ubicarlos en la posicion correcta.
 std::vector<uint8_t> ServerSerializer::serialize_move(const GameMsg& msg) {
-    // std::vector<uint8_t> buf;
-    // buf.reserve(LEN_HEADER + LEN_DIRECTION);
-    // write_header(buf, MSG_MOVE, LEN_DIRECTION);
-    // buf.push_back(static_cast<uint8_t>(msg.get_direction()));
-    // return buf;
+    const std::string& name = msg.get_player_name();
+    uint16_t payload_len = LEN_DIRECTION
+                         + LEN_PLAYER_NAME_SIZE + static_cast<uint16_t>(name.size())
+                         + 2 * LEN_COORD;
 
-    uint16_t payload_len = 1 + sizeof(uint32_t) + sizeof(uint32_t);
     std::vector<uint8_t> buf;
     buf.reserve(LEN_HEADER + payload_len);
     write_header(buf, MSG_MOVE, payload_len);
     buf.push_back(static_cast<uint8_t>(msg.get_direction()));
-
-    uint32_t x_be = htonl(static_cast<uint32_t>(msg.get_coord_x()));
-    uint8_t x_bytes[sizeof(uint32_t)];
-    std::memcpy(x_bytes, &x_be, sizeof(uint32_t));
-    buf.insert(buf.end(), x_bytes, x_bytes + sizeof(uint32_t));
-
-    uint32_t y_be = htonl(static_cast<uint32_t>(msg.get_coord_y()));
-    uint8_t y_bytes[sizeof(uint32_t)];
-    std::memcpy(y_bytes, &y_be, sizeof(uint32_t));
-    buf.insert(buf.end(), y_bytes, y_bytes + sizeof(uint32_t));
-
+    buf.push_back(static_cast<uint8_t>(name.size()));
+    buf.insert(buf.end(), name.begin(), name.end());
+    append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_x()));
+    append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_y()));
     return buf;
 }
 
@@ -273,6 +275,13 @@ std::vector<uint8_t> ServerSerializer::serialize_mana(const GameMsg& msg) {
 //   [hp              : 4 bytes BE]
 //   [xp              : 4 bytes BE]
 //   [mana            : 4 bytes BE]
+//   [spawn_x         : 2 bytes BE]   posicion inicial del jugador en el mapa
+//   [spawn_y         : 2 bytes BE]
+//   [player_count    : 2 bytes BE]   jugadores ya en el mapa al momento del registro
+//   foreach player:
+//     [name_size     : 1 byte][name bytes]
+//     [x             : 2 bytes BE]
+//     [y             : 2 bytes BE]
 std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
     const auto& map = msg.get_map();
     const auto& items = msg.get_items();
@@ -289,6 +298,13 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
         payload_len += 1 + static_cast<uint16_t>(item.get_name().size());
     }
     payload_len += 4 * sizeof(uint32_t);    // gold + hp + xp + mana
+    payload_len += 2 * LEN_COORD;           // spawn_x + spawn_y
+    const auto& players = msg.get_players();
+    payload_len += LEN_PLAYER_COUNT;
+    for (const auto& pl : players) {
+        payload_len += LEN_PLAYER_NAME_SIZE + static_cast<uint16_t>(pl.name.size());
+        payload_len += 2 * LEN_COORD;       // x + y
+    }
 
     std::vector<uint8_t> buf;
     buf.reserve(LEN_HEADER + payload_len);
@@ -325,6 +341,50 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
     append_u32(msg.get_hp());
     append_u32(msg.get_xp());
     append_u32(msg.get_mana());
+    append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_x()));
+    append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_y()));
+
+    append_uint16_be(buf, static_cast<uint16_t>(players.size()));
+    for (const auto& pl : players) {
+        buf.push_back(static_cast<uint8_t>(pl.name.size()));
+        buf.insert(buf.end(), pl.name.begin(), pl.name.end());
+        append_uint16_be(buf, static_cast<uint16_t>(pl.x));
+        append_uint16_be(buf, static_cast<uint16_t>(pl.y));
+    }
+
+    return buf;
+}
+
+// Formato MSG_PLAYERS_SNAPSHOT:
+//   [count     : LEN_PLAYER_COUNT bytes BE]   cantidad de otros jugadores en el mapa
+//   foreach player:
+//     [name_size : LEN_PLAYER_NAME_SIZE byte]  largo del nombre
+//     [name bytes]                             nombre del jugador
+//     [x         : LEN_COORD bytes BE]         columna en el mapa
+//     [y         : LEN_COORD bytes BE]         fila en el mapa
+std::vector<uint8_t> ServerSerializer::serialize_players_snapshot(const GameMsg& msg) {
+    const auto& players = msg.get_players();
+
+    // Calculamos el payload total antes de reservar para evitar reallocations.
+    uint16_t payload_len = LEN_PLAYER_COUNT;
+    for (const auto& p : players) {
+        payload_len += LEN_PLAYER_NAME_SIZE + static_cast<uint16_t>(p.name.size());
+        payload_len += 2 * LEN_COORD;  // x + y
+    }
+
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, MSG_PLAYERS_SNAPSHOT, payload_len);
+
+    // Cantidad de jugadores en el snapshot (big-endian).
+    append_uint16_be(buf, static_cast<uint16_t>(players.size()));
+
+    for (const auto& p : players) {
+        buf.push_back(static_cast<uint8_t>(p.name.size()));
+        buf.insert(buf.end(), p.name.begin(), p.name.end());
+        append_uint16_be(buf, static_cast<uint16_t>(p.x));
+        append_uint16_be(buf, static_cast<uint16_t>(p.y));
+    }
 
     return buf;
 }

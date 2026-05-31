@@ -19,6 +19,8 @@ const uint16_t LEN_NPC_TYPE_SIZE = 1;  // 1 byte para largo del tipo del NPC
 const uint16_t LEN_NPC_NAME_SIZE = 1;  // 1 byte para largo del nombre del NPC
 const uint16_t LEN_ITEM_COUNT = 2;  // 2 bytes para la cantidad de items en el snapshot
 const uint16_t LEN_ITEM_TYPE_SIZE = 1;  // 1 byte para largo del tipo del item
+const uint16_t LEN_PLAYER_COUNT = 2;      // 2 bytes para la cantidad de players en el snapshot
+const uint16_t LEN_PLAYER_NAME_SIZE = 1;  // 1 byte para largo del nombre del player
 
 enum MessageType : uint8_t {
     MSG_REGISTER     = 0x01,  // Crear personaje nuevo            [cliente OK] [servidor OK]
@@ -60,6 +62,7 @@ enum MessageType : uint8_t {
     MSG_MANA = 0x25,            // Actualizar mana del jugador
     MSG_NPCS_SNAPSHOT  = 0x26, // Snapshot de NPCs vivos: vector<NpcInfo>
     MSG_ITEMS_SNAPSHOT = 0x27, // Snapshot de items en el piso: vector<ItemFloorInfo>
+    MSG_PLAYERS_SNAPSHOT = 0x28, // Snapshot de players vivos: vector<PlayerInfo>
 };
 
 enum Direction : uint8_t {

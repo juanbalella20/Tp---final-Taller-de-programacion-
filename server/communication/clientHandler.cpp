@@ -17,32 +17,18 @@ ClientHandler::ClientHandler(uint32_t client_id,
       sender(protocol, sending_queue) {}
 
 ClientHandler::~ClientHandler() {
-    try {
-        receiver.stop();
-    } catch (...) {}
-    try {
-        sender.stop();
-    } catch (...) {}
-    try {
-        sending_queue.close();
-    } catch (...) {}
-    try {
-        protocol.disconnect();
-    } catch (...) {}
-    try {
-        receiver.join();
-    } catch (...) {}
-    try {
-        sender.join();
-    } catch (...) {}
+    // Fuerza el cierre para que run() termine.
+    try { receiver.stop(); } catch (...) {}
+    try { sender.stop(); } catch (...) {}
+    try { sending_queue.close(); } catch (...) {}
+    try { protocol.disconnect(); } catch (...) {}
+    // Espera que el thread propio (run) termine antes de destruir miembros.
+    try { Thread::join(); } catch (...) {}
+    try { receiver.join(); } catch (...) {}
+    try { sender.join(); } catch (...) {}
 }
 
-bool ClientHandler::is_alive() const {
-    return receiver.is_alive() || sender.is_alive();
-}
-
-
-void ClientHandler::start() {
+void ClientHandler::run() {
     bool registrated = false;
     try {
         client_registry_monitor.add_client(client_id, sending_queue);
@@ -57,19 +43,7 @@ void ClientHandler::start() {
             sending_queue.close();
         } catch (...) {}
         sender.join();
-    } catch (...) {
-        receiver.stop();
-        sender.stop();
-        try {
-            sending_queue.close();
-        } catch (...) {}
-        if (registrated) {
-            try {
-                client_registry_monitor.remove_client(client_id);
-            } catch (...) {}
-        }
-        throw;
-    }
+    } catch (...) {}
 
     if (registrated) {
         try {

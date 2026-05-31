@@ -56,3 +56,15 @@ void ClientRegistryMonitor::notify_clients(const GameMsg& msg) {
         }
     }
 }
+
+void ClientRegistryMonitor::notify_clients_less_client(uint32_t client_id, const GameMsg& msg) {
+    std::lock_guard<std::mutex> lock(mtx);
+    for (auto& entry: registers) {
+        if (entry.first == client_id) continue;
+        try {
+            entry.second.sending_queue.get().push(msg);
+        } catch (const ClosedQueue&) {
+            // Cliente desconectado: se ignora.
+        }
+    }
+}

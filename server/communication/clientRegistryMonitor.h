@@ -21,6 +21,7 @@ class ClientRegistryMonitor {
     void remove_client(uint32_t client_id);
     void notify_client(uint32_t client_id, const GameMsg& msg);
     void notify_clients(const GameMsg& msg);
+    void notify_clients_less_client(uint32_t client_id, const GameMsg& msg);
 };
 
 #endif  // SERVER_MONITOR_REGISTRAR_CLIENT_H_
