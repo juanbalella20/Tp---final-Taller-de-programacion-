@@ -9,8 +9,10 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       show_attack_button(false),
       player_gold(0),
       player_hp(0),
+      max_hp(100),
       player_xp(0),
       player_mana(0),
+      hp_bar_texture(nullptr),
       game_width(game_width),
       panel_width(panel_width),
       canvas_height(canvas_height) {
@@ -24,6 +26,9 @@ HUD::~HUD() {
     }
     for (auto& kv : inventory.items_textures) {
         if (kv.second) SDL_DestroyTexture(kv.second);
+    }
+    if (hp_bar_texture) {
+        SDL_DestroyTexture(hp_bar_texture);
     }
     if (font) {
         TTF_CloseFont(font);
@@ -46,6 +51,10 @@ void HUD::set_gold(uint32_t amount) {
 
 void HUD::set_hp(uint32_t hp) {
     player_hp = hp;
+}
+
+void HUD::set_max_hp(uint32_t max_hp_value) {
+    max_hp = max_hp_value;
 }
 
 void HUD::set_xp(uint32_t xp) {
@@ -193,12 +202,45 @@ void HUD::draw_gold() {
     draw_stat(gold_text, 400.0f);
 }
 
+void HUD::display_value(int current, int max, SDL_FRect& dest) {
+    if (font) {
+        std::string text = std::to_string(current) + "/" + std::to_string(max);
+        SDL_Color white = {255, 255, 255, 255};
+        SDL_Surface* surf = TTF_RenderText_Solid(font, text.c_str(), 0, white);
+        if (surf) {
+            SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
+            if (tex) {
+                float text_scale = 0.75f;
+                float scaled_w = surf->w * text_scale;
+                float scaled_h = surf->h * text_scale;
+                float text_x = dest.x + (dest.w - scaled_w) / 2.0f;
+                float text_y = dest.y + (dest.h - scaled_h) / 2.0f;
+                SDL_FRect text_dest = {text_x, text_y, scaled_w, scaled_h};
+                SDL_RenderTexture(gui_renderer, tex, nullptr, &text_dest);
+                SDL_DestroyTexture(tex);
+            }
+            SDL_DestroySurface(surf);
+        }
+    }
+}
+
 void HUD::draw_hp() {
-    if (!font) return;
+    if (hp_bar_texture) {
+        float tex_w, tex_h;
+        SDL_GetTextureSize(hp_bar_texture, &tex_w, &tex_h);
+        const float max_width = panel_width - 30.0f;
+        const float scale = SDL_min(1.0f, max_width / tex_w);
 
-    std::string hp_text = "Vidas: " + std::to_string(player_hp);
+        SDL_FRect dest = {
+            game_width + 15.0f,
+            430.0f,
+            tex_w * scale,
+            tex_h * scale
+        };
+        SDL_RenderTexture(gui_renderer, hp_bar_texture, nullptr, &dest);
 
-    draw_stat(hp_text, 420.0f);
+        display_value(player_hp, max_hp, dest);
+    }
 }
 
 void HUD::draw_xp() {
@@ -230,5 +272,14 @@ void HUD::load_textures() {
         SDL_SetTextureBlendMode(tex, SDL_SCALEMODE_LINEAR);
         inventory.items_textures["espada"] = tex;
         SDL_DestroySurface(sword_surf);
+    }
+
+    SDL_Surface* hp_bar_surf = IMG_Load("imagenes/en_barradevida.bmp");
+    if (!hp_bar_surf) {
+        hp_bar_surf = IMG_Load("en_barradevida.bmp");
+    }
+    if (hp_bar_surf) {
+        hp_bar_texture = SDL_CreateTextureFromSurface(gui_renderer, hp_bar_surf);
+        SDL_DestroySurface(hp_bar_surf);
     }
 }
