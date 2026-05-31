@@ -43,7 +43,7 @@ private:
 
     void load_textures();
 
-    void draw_stat(const std::string& text, float pos_y);
+    void draw_stat(SDL_Texture* tex, float pos_y, int current, int max);
 
 public:
     HUD(SDL_Renderer* gui_renderer,

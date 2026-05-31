@@ -180,30 +180,29 @@ void HUD::drawInventoryPanel() {
     }
 }
 
-void HUD::draw_stat(const std::string& text, float pos_y) {
-    SDL_Color color = {255, 255, 255, 255};
-    SDL_Surface* surf = TTF_RenderText_Solid(font, text.c_str(), 0, color);
+void HUD::draw_stat(SDL_Texture* tex, float pos_y, int current, int max) {
+    float tex_w, tex_h;
+    SDL_GetTextureSize(tex, &tex_w, &tex_h);
+    const float max_width = panel_width - 30.0f;
+    const float scale = SDL_min(1.0f, max_width / tex_w);
 
-    if (surf) {
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
+    SDL_FRect dest = {
+        game_width + 15.0f,
+        pos_y,
+        tex_w * scale,
+        tex_h * scale
+    };
+    SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);
 
-        if (tex) {
-            float pos_x = game_width + 15.0f;
-
-            SDL_FRect dest = { pos_x, pos_y, static_cast<float>(surf->w), static_cast<float>(surf->h)};
-            SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);
-            SDL_DestroyTexture(tex);
-        }
-        SDL_DestroySurface(surf);
-    }
+    display_value(current, max, dest);
 }
 
 void HUD::draw_gold() {
-    if (!font) return;
+    // if (!font) return;
 
-    std::string gold_text = "Oro: " + std::to_string(player_gold);
+    // std::string gold_text = "Oro: " + std::to_string(player_gold);
 
-    draw_stat(gold_text, 400.0f);
+    // draw_stat(gold_text, 400.0f, player_gold, 0);
 }
 
 void HUD::display_value(int current, int max, SDL_FRect& dest) {
@@ -230,58 +229,19 @@ void HUD::display_value(int current, int max, SDL_FRect& dest) {
 
 void HUD::draw_hp() {
     if (hp_bar_texture) {
-        float tex_w, tex_h;
-        SDL_GetTextureSize(hp_bar_texture, &tex_w, &tex_h);
-        const float max_width = panel_width - 30.0f;
-        const float scale = SDL_min(1.0f, max_width / tex_w);
-
-        SDL_FRect dest = {
-            game_width + 15.0f,
-            430.0f,
-            tex_w * scale,
-            tex_h * scale
-        };
-        SDL_RenderTexture(gui_renderer, hp_bar_texture, nullptr, &dest);
-
-        display_value(player_hp, max_hp, dest);
+        draw_stat(hp_bar_texture, 430.0f, player_hp, max_hp);
     }
 }
 
 void HUD::draw_xp() {
     if (xp_bar_texture) {
-        float tex_w, tex_h;
-        SDL_GetTextureSize(xp_bar_texture, &tex_w, &tex_h);
-        const float max_width = panel_width - 30.0f;
-        const float scale = SDL_min(1.0f, max_width / tex_w);
-
-        SDL_FRect dest = {
-            game_width + 15.0f,
-            460.0f,
-            tex_w * scale,
-            tex_h * scale
-        };
-        SDL_RenderTexture(gui_renderer, xp_bar_texture, nullptr, &dest);
-
-        display_value(player_xp, max_xp, dest);
+        draw_stat(xp_bar_texture, 460.0f, player_xp, max_xp);
     }
 }
 
 void HUD::draw_mana() {
     if (mana_bar_texture) {
-        float tex_w, tex_h;
-        SDL_GetTextureSize(mana_bar_texture, &tex_w, &tex_h);
-        const float max_width = panel_width - 30.0f;
-        const float scale = SDL_min(1.0f, max_width / tex_w);
-
-        SDL_FRect dest = {
-            game_width + 15.0f,
-            490.0f,
-            tex_w * scale,
-            tex_h * scale
-        };
-        SDL_RenderTexture(gui_renderer, mana_bar_texture, nullptr, &dest);
-
-        display_value(player_mana, max_mana, dest);
+        draw_stat(mana_bar_texture, 490.0f, player_mana, max_mana);
     }
 }
 
