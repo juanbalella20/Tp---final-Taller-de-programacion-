@@ -198,11 +198,25 @@ void HUD::draw_stat(SDL_Texture* tex, float pos_y, int current, int max) {
 }
 
 void HUD::draw_gold() {
-    // if (!font) return;
+    if (!font) return;
 
-    // std::string gold_text = "Oro: " + std::to_string(player_gold);
+    std::string gold_text = "Oro: " + std::to_string(player_gold);
 
-    // draw_stat(gold_text, 400.0f, player_gold, 0);
+    SDL_Color color = {255, 255, 255, 255};
+    SDL_Surface* surf = TTF_RenderText_Solid(font, gold_text.c_str(), 0, color);
+
+    if (surf) {
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
+
+        if (tex) {
+            float pos_x = game_width + 15.0f;
+
+            SDL_FRect dest = { pos_x, 530.0f, static_cast<float>(surf->w), static_cast<float>(surf->h)};
+            SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);
+            SDL_DestroyTexture(tex);
+        }
+        SDL_DestroySurface(surf);
+    }
 }
 
 void HUD::display_value(int current, int max, SDL_FRect& dest) {
