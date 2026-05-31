@@ -44,6 +44,7 @@ private:
     void load_textures();
 
     void draw_stat(SDL_Texture* tex, float pos_y, int current, int max);
+    void display_value(int current, int max, SDL_FRect& dest);
 
 public:
     HUD(SDL_Renderer* gui_renderer,
@@ -66,7 +67,6 @@ public:
     void set_mana(uint32_t mana);
     void set_equipped_item(const std::string& item_id);
     void set_equipped_slot(int slot_index);
-    void display_value(int current, int max, SDL_FRect& dest);
     void drawInventoryPanel();
     void drawAttackButton();
 
