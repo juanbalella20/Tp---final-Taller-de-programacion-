@@ -1,0 +1,155 @@
+@startuml
+title Diagrama de clases - Editor gráfico de mapas
+
+skinparam classAttributeIconSize 0
+
+class EditorWindow {
+  - EditorDocument* document
+  - MapCanvasWidget* canvas
+  - TilePalette* tilePalette
+  - LayerPanel* layerPanel
+  + newMap()
+  + openMap()
+  + saveMap()
+  + saveMapAs()
+}
+
+class EditorDocument {
+  - Map map
+  - ToolType activeTool
+  - int activeGid
+  - int activeLayer
+  - bool dirty
+  - QString path
+  - vector<Command> undoStack
+  - vector<Command> redoStack
+  + setActiveTool()
+  + setActiveGid()
+  + setActiveLayer()
+  + applyToolPress(x, y)
+  + applyToolDrag(x, y)
+  + undo()
+  + redo()
+  + save(path)
+  + open(path)
+  + newMap(w, h, tileSize)
+}
+
+class Map {
+  - int width
+  - int height
+  - int tileSize
+  - vector<Tileset> tilesets
+  - vector<MapLayerData> layers
+  - map<string, positionCoord> spawns
+  - vector<TeleportDef> teleports
+  - unordered_map<int, TileDef> tileIndex
+  + addTileset()
+  + addLayer()
+  + getCell(layer, x, y)
+  + setCell(layer, x, y, gid)
+  + isCollidable(x, y)
+  + findTile(gid)
+}
+
+class MapCanvasWidget {
+  - EditorDocument* document
+  - TilesetPixmapCache cache
+  + drawBackground()
+  + drawForeground()
+  + mousePressEvent()
+  + mouseMoveEvent()
+  + mouseReleaseEvent()
+  + wheelEvent()
+}
+
+class TilePalette {
+  - EditorDocument* document
+  + loadPng()
+  + tileSelected(gid)
+}
+
+class LayerPanel {
+  - EditorDocument* document
+  + selectLayer(index)
+  + addLayer()
+  + renameLayer()
+}
+
+interface Tool {
+  + onPress(map, layer, x, y, gid)
+  + onDrag(map, layer, x, y, gid)
+  + paintsOnDrag()
+}
+
+class PencilTool
+class EraserTool
+class FillTool
+
+interface Command {
+  + execute()
+  + undo()
+}
+
+class SetTilesCommand {
+  - Map* map
+  - int layer
+  - vector<CellChange> changes
+  + execute()
+  + undo()
+}
+
+class BinaryMapSaver {
+  + save(path, mapData)
+}
+
+class BinaryMapLoader {
+  + load(path)
+  + getWidth()
+  + getHeight()
+  + isCollidable()
+  + getSpawns()
+  + getTeleports()
+  + getTilesets()
+  + getLayers()
+}
+
+class TilesetPixmapCache {
+  + pixmapFor(gid)
+  + sourceRectFor(gid)
+}
+
+class NewMapDialog
+class LoadTilesetDialog
+
+EditorWindow --> EditorDocument
+EditorWindow --> MapCanvasWidget
+EditorWindow --> TilePalette
+EditorWindow --> LayerPanel
+EditorWindow --> NewMapDialog
+EditorWindow --> LoadTilesetDialog
+
+MapCanvasWidget --> EditorDocument
+TilePalette --> EditorDocument
+LayerPanel --> EditorDocument
+
+EditorDocument *-- Map
+EditorDocument --> Tool
+EditorDocument --> Command
+EditorDocument --> BinaryMapSaver
+EditorDocument --> BinaryMapLoader
+
+Tool <|.. PencilTool
+Tool <|.. EraserTool
+Tool <|.. FillTool
+
+Command <|.. SetTilesCommand
+SetTilesCommand --> Map
+
+MapCanvasWidget --> TilesetPixmapCache
+TilesetPixmapCache --> Map
+
+BinaryMapSaver --> Map
+BinaryMapLoader --> Map
+
+@enduml
