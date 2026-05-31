@@ -46,6 +46,8 @@ private:
     void draw_stat(SDL_Texture* tex, float pos_y, int current, int max);
     void display_value(int current, int max, SDL_FRect& dest);
     void draw_text(const std::string& text, float x, float y);
+    void drawItems();
+    void drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float SLOT_SIZE);
 
 public:
     HUD(SDL_Renderer* gui_renderer,

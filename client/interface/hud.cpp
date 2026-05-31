@@ -101,6 +101,65 @@ void HUD::drawAttackButton() {
     }
 }
 
+void HUD::drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float SLOT_SIZE) {
+    auto it = inventory.items_textures.find(item.get_id());
+    if (it != inventory.items_textures.end() && it->second != nullptr) {
+        SDL_Texture* icon = it->second;
+        
+        float tex_w, tex_h;
+        SDL_GetTextureSize(icon, &tex_w, &tex_h); 
+        const float PADDING = 4.0f;
+        float max_size = SLOT_SIZE - (PADDING * 2.0f);
+        float scale = SDL_min(max_size / tex_w, max_size / tex_h);
+        float final_w = tex_w * scale;
+        float final_h = tex_h * scale;
+        
+        SDL_FRect icon_dst = {
+            slot_x + (SLOT_SIZE - final_w) / 2.0f,
+            slot_y + (SLOT_SIZE - final_h) / 2.0f,
+            final_w,
+            final_h
+        };
+        
+        SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};;
+        SDL_RenderTexture(gui_renderer, icon, &crop, &icon_dst);
+    }
+}
+
+void HUD::drawItems() {
+    const float SLOT_SIZE = 48.0f;
+    const float SLOT_MARGIN = 8.0f;
+    float slot_x = game_width + SLOT_MARGIN;
+    float slot_y = 40.0f;
+
+    int slot_index = 0;
+    for (const auto& item : inventory.items) {
+        SDL_FRect slot_rect = {slot_x, slot_y, SLOT_SIZE, SLOT_SIZE};
+        SDL_SetRenderDrawBlendMode(gui_renderer, SDL_BLENDMODE_BLEND);
+
+        // Si este item esta equipado, dibujar un halo amarillo detrás
+        if (equipped_slot >= 0 && slot_index == equipped_slot) {
+            SDL_FRect halo = {slot_x - 3.0f, slot_y - 3.0f, SLOT_SIZE + 6.0f, SLOT_SIZE + 6.0f};
+            SDL_SetRenderDrawColor(gui_renderer, 255, 215, 0, 120);
+            SDL_RenderFillRect(gui_renderer, &halo);
+        }
+
+        SDL_SetRenderDrawColor(gui_renderer, 60, 60, 60, 120);
+        SDL_RenderFillRect(gui_renderer, &slot_rect);
+        SDL_SetRenderDrawColor(gui_renderer, 120, 120, 120, 180);
+        SDL_RenderRect(gui_renderer, &slot_rect);
+
+        drawIconItem(item, slot_x, slot_y, SLOT_SIZE);
+
+        slot_x += SLOT_SIZE + SLOT_MARGIN;
+        ++slot_index;
+        if (slot_x + SLOT_SIZE > game_width + panel_width - SLOT_MARGIN) {
+            slot_x = game_width + SLOT_MARGIN;
+            slot_y += SLOT_SIZE + SLOT_MARGIN;
+        }
+    }
+}
+
 void HUD::drawInventoryPanel() {
     // Fondo del panel: textura si esta disponible, color solido como fallback
     if (inventory.bg_texture) {
@@ -118,58 +177,7 @@ void HUD::drawInventoryPanel() {
     }
 
     // Items del inventario en slots
-    const float SLOT_SIZE = 48.0f;
-    const float SLOT_MARGIN = 8.0f;
-    float slot_x = game_width + SLOT_MARGIN;
-    float slot_y = 40.0f;
-
-    int slot_index = 0;
-    for (const auto& item : inventory.items) {
-        SDL_FRect slot_rect = {slot_x, slot_y, SLOT_SIZE, SLOT_SIZE};
-        SDL_SetRenderDrawBlendMode(gui_renderer, SDL_BLENDMODE_BLEND);
-
-        // Si este item esta equipado, dibujar un halo amarillo detrás
-        if (equipped_slot >= 0 && slot_index == equipped_slot) {
-            SDL_FRect halo = {slot_x - 3.0f, slot_y - 3.0f, SLOT_SIZE + 6.0f, SLOT_SIZE + 6.0f};
-            SDL_SetRenderDrawColor(gui_renderer, 255, 215, 0, 120); // amarillo semi
-            SDL_RenderFillRect(gui_renderer, &halo);
-        }
-
-        SDL_SetRenderDrawColor(gui_renderer, 60, 60, 60, 120);
-        SDL_RenderFillRect(gui_renderer, &slot_rect);
-        SDL_SetRenderDrawColor(gui_renderer, 120, 120, 120, 180);
-        SDL_RenderRect(gui_renderer, &slot_rect);
-
-        auto it = inventory.items_textures.find(item.get_id());
-        if (it != inventory.items_textures.end() && it->second != nullptr) {
-            SDL_Texture* icon = it->second;
-            
-            float tex_w, tex_h;
-            SDL_GetTextureSize(icon, &tex_w, &tex_h); 
-            const float PADDING = 4.0f;
-            float max_size = SLOT_SIZE - (PADDING * 2.0f);
-            float scale = SDL_min(max_size / tex_w, max_size / tex_h);
-            float final_w = tex_w * scale;
-            float final_h = tex_h * scale;
-            
-            SDL_FRect icon_dst = {
-                slot_x + (SLOT_SIZE - final_w) / 2.0f,
-                slot_y + (SLOT_SIZE - final_h) / 2.0f,
-                final_w,
-                final_h
-            };
-            
-            SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};;
-            SDL_RenderTexture(gui_renderer, icon, &crop, &icon_dst);
-        }
-
-        slot_x += SLOT_SIZE + SLOT_MARGIN;
-        ++slot_index;
-        if (slot_x + SLOT_SIZE > game_width + panel_width - SLOT_MARGIN) {
-            slot_x = game_width + SLOT_MARGIN;
-            slot_y += SLOT_SIZE + SLOT_MARGIN;
-        }
-    }
+    drawItems();
 }
 
 void HUD::draw_stat(SDL_Texture* tex, float pos_y, int current, int max) {
