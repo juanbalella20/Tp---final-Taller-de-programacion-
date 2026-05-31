@@ -131,7 +131,7 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
 
 void GameLoop::handle_register(const ClientCmd& cmd) {
     client_registry_monitor.assign_name(cmd.get_client_id(), cmd.get_player_name());
-    game_map.spawn_player(cmd.get_player_name());
+    game_map.spawn_player(cmd.get_player_name(), cmd.get_race(), cmd.get_class());
     GameMsg registerMsg(MSG_REGISTER);
     registerMsg.set_map(game_map.get_map(cmd.get_player_name()));
 
@@ -147,6 +147,8 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
     registerMsg.set_items(item_infos);
     registerMsg.set_gold(game_map.get_player_gold(cmd.get_player_name()));
     registerMsg.set_hp(game_map.get_player_hp(cmd.get_player_name()));
+    std::cout << "[DEBUG: handle_register] player " << cmd.get_player_name()
+              << " hp=" << registerMsg.get_hp() << std::endl;
     registerMsg.set_xp(game_map.get_player_xp(cmd.get_player_name()));
     registerMsg.set_mana(game_map.get_player_mana(cmd.get_player_name()));
     registerMsg.set_coord_x(p.get_coord_x());

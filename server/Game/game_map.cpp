@@ -135,7 +135,7 @@ Player* GameMap::find_player_by_name(const std::string& name) {
     return &(*it);
 }
 
-void GameMap::spawn_player(const std::string& name) {
+void GameMap::spawn_player(const std::string& name, const std::string& race, const std::string& pclass) {
     // Zona inicial de spawn
     // TODO: derivar de config / persistencia
     //const Zone start_zone = ZONE_CITY;
@@ -146,7 +146,30 @@ void GameMap::spawn_player(const std::string& name) {
     int start_x = 29;
     int start_y = 15;
 
-    Player player(name, PlayerRace(), PlayerClass());
+    PlayerRace player_race;
+    PlayerClass player_class;
+
+    if (race == "human") {
+        player_race.set_human();
+    } else if (race == "elf") {
+        player_race.set_elf();
+    } else if (race == "dwarf") {
+        player_race.set_dwarf();
+    } else if (race == "gnome") {
+        player_race.set_gnome();
+    }
+
+    if (pclass == "wizard") {
+        player_class.set_wizard();
+    } else if (pclass == "cleric") {
+        player_class.set_cleric();
+    } else if (pclass == "paladin") {
+        player_class.set_paladin();
+    } else if (pclass == "warrior") {
+        player_class.set_warrior();
+    }
+
+    Player player(name, player_race, player_class);
     player.update_position(start_x, start_y);
     player.add_item(std::make_unique<Arma>("espada", "Espada", 100, 2, 10));
     players.push_back(std::move(player));
