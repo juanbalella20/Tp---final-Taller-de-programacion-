@@ -69,6 +69,8 @@ add_library(common STATIC
     common/commands/clientCmd.cpp
     common/commands/gameMsg.cpp
     common/mapLoader.cpp
+    common/binaryMap/binaryMapLoader.cpp
+    common/binaryMap/binaryMapSaver.cpp
 )
 target_include_directories(common PUBLIC
     common
@@ -77,6 +79,7 @@ target_include_directories(common PUBLIC
     common/constants
     common/info
     common/utility
+    common/binaryMap
 )
 
 # ── Client ──────────────────────────────────────────────────────────────────
@@ -153,3 +156,14 @@ target_include_directories(server PRIVATE
     server/Game/player
 )
 target_link_libraries(server PRIVATE common)
+
+# ── Editor grafico de mapas (Qt6) ────────────────────────────────────────────
+# Se construye solo si Qt6 Widgets esta disponible, para no romper el build de
+# client/server en entornos sin qt6-base-dev. Instalar con: apt install qt6-base-dev
+find_package(Qt6 QUIET COMPONENTS Widgets)
+if(Qt6_FOUND)
+    add_subdirectory(editor)
+else()
+    message(WARNING "Qt6 Widgets no encontrado: se omite el target map_editor. "
+                    "Instalar con: sudo apt install qt6-base-dev")
+endif()
