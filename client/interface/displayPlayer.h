@@ -22,6 +22,7 @@ private:
     float weapon_dx = 0.0f;
     float weapon_dy = 0.0f;
     int walk_frame = 0;
+    bool has_equipped_weapon = false;
 
 public:
     // Carga la imagen. La posicion inicial es (0, 0). Tile size en pixels.
@@ -44,6 +45,7 @@ public:
     void setPosition(float x, float y);
     void set_ghost(bool ghost);
     bool is_ghost() const;
+    void set_equipped_weapon(bool has_weapon);
     void draw(const Camera& camera, SDL_FRect crop_pov) const override;
     SDL_FRect right_pov();
     SDL_FRect left_pov();

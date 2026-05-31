@@ -220,6 +220,7 @@ void ClientGUI::handleEvents() {
                             if (mx >= slot_x && mx <= slot_x + SLOT_SIZE &&
                                 my >= slot_y && my <= slot_y + SLOT_SIZE) {
                                 hud->set_equipped_slot(slot_index);
+                                player->set_equipped_weapon(true);
                                 sendEquipCmd(item.get_id());
                                 break;
                             }

@@ -112,6 +112,10 @@ bool PlayerDisplay::is_ghost() const {
     return ghost;
 }
 
+void PlayerDisplay::set_equipped_weapon(bool has_weapon) {
+    has_equipped_weapon = has_weapon;
+}
+
 SDL_FRect PlayerDisplay::back_pov() {
     static const SDL_FRect frames[] = {
         {255.0f, 51.0f, 30.0f, 40.0f},
@@ -121,12 +125,15 @@ SDL_FRect PlayerDisplay::back_pov() {
         {365.0f, 51.0f, 30.0f, 40.0f},
         {394.0f, 51.0f, 30.0f, 40.0f}
     };
-    static const float dx[] = { 0.1f, 0.2f, 0.1f, 0.2f, 0.1f, 0.1f };
-    static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f, 0.0f };
+
+    if(has_equipped_weapon) {
+        static const float dx[] = { 0.1f, 0.2f, 0.1f, 0.2f, 0.1f, 0.1f };
+        static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f, 0.0f };
+        weapon_dx = dx[walk_frame % 5];
+        weapon_dy = dy[walk_frame % 5];
+    }
 
     SDL_FRect frame = frames[walk_frame % 5];
-    weapon_dx = dx[walk_frame % 5];
-    weapon_dy = dy[walk_frame % 5];
     walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
@@ -140,12 +147,14 @@ SDL_FRect PlayerDisplay::front_pov() {
         {365.0f, 5.0f, 30.0f, 40.0f},
         {394.0f, 5.0f, 30.0f, 40.0f}
     };
-    static const float dx[] = { 0.1f, 0.1f, 0.2f, 0.2f, 0.1f, 0.1f };
-    static const float dy[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    if(has_equipped_weapon) {
+        static const float dx[] = { 0.1f, 0.1f, 0.2f, 0.2f, 0.1f, 0.1f };
+        static const float dy[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+        weapon_dx = dx[walk_frame % 5];
+        weapon_dy = dy[walk_frame % 5];
+    }
 
     SDL_FRect frame = frames[walk_frame % 5];
-    weapon_dx = dx[walk_frame % 5];
-    weapon_dy = dy[walk_frame % 5];
     walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
@@ -158,12 +167,15 @@ SDL_FRect PlayerDisplay::right_pov() {
         {340.0f, 147.0f, 30.0f, 40.0},
         {370.0f, 147.0f, 30.0f, 40.0}
     };
-    static const float dx[] = { 0.2f, 0.5f, 0.2f, 0.2f, 0.2f };
-    static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
+
+    if(has_equipped_weapon) {
+        static const float dx[] = { 0.2f, 0.5f, 0.2f, 0.2f, 0.2f };
+        static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
+        weapon_dx = dx[walk_frame % 5];
+        weapon_dy = dy[walk_frame % 5];
+    }
 
     SDL_FRect frame = frames[walk_frame % 5];
-    weapon_dx = dx[walk_frame % 5];
-    weapon_dy = dy[walk_frame % 5];
     walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
@@ -176,12 +188,14 @@ SDL_FRect PlayerDisplay::left_pov() {
         {336.0f, 100.0f, 30.0f, 40.0},
         {370.0f, 100.0f, 30.0f, 40.0}
     };
-    static const float dx[] = { 0.5f, 0.5f, 0.4f, 0.4f, 0.1f };
-    static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
+    if(has_equipped_weapon) {
+        static const float dx[] = { 0.5f, 0.5f, 0.4f, 0.4f, 0.1f };
+        static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
+        weapon_dx = dx[walk_frame % 5];
+        weapon_dy = dy[walk_frame % 5];
+    }
 
     SDL_FRect frame = frames[walk_frame % 5];
-    weapon_dx = dx[walk_frame % 5];
-    weapon_dy = dy[walk_frame % 5];
     walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
@@ -201,16 +215,15 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect crop_pov) const {
         rect.h
     };
     SDL_RenderTexture(renderer, image, &crop_pov, &dst);
-    if (weapon_image != nullptr) {
+    if (has_equipped_weapon) {
         SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};;
         float weapon_size = rect.w * 0.5f;
         SDL_FRect weapon_dst = {
-            camera.world_to_screen_x(rect.x) + rect.w * weapon_dx,  // hacia la derecha del sprite
-            camera.world_to_screen_y(rect.y) + rect.h * weapon_dy,  // mitad vertical
+            camera.world_to_screen_x(rect.x) + rect.w * weapon_dx,
+            camera.world_to_screen_y(rect.y) + rect.h * weapon_dy,
             weapon_size,
             weapon_size
         };
-        std::cout << "[DEBUG] rect.w=" << rect.w << " weapon_size=" << rect.w * 0.2f << std::endl;
         SDL_RenderTexture(renderer, weapon_image, &crop, &weapon_dst);
     }
 }
