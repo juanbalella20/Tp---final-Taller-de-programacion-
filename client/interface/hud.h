@@ -28,10 +28,12 @@ private:
     uint32_t player_hp;
     uint32_t max_hp;
     uint32_t max_xp;
+    uint32_t max_mana;
     uint32_t player_xp;
     uint32_t player_mana;
     SDL_Texture* hp_bar_texture;
     SDL_Texture* xp_bar_texture;
+    SDL_Texture* mana_bar_texture;
     int equipped_slot = -1;
     std::string equipped_item_id;
 
