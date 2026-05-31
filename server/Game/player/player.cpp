@@ -15,7 +15,7 @@ Player::Player(const std::string name, PlayerRace player_race, PlayerClass playe
     gold = 0;
     experience = 0;
     mana = max_mana();
-    level = 0;
+    level = 1;
 }
 
 const Inventory& Player::get_inventory() const {
