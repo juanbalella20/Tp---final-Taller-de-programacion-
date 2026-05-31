@@ -50,6 +50,7 @@ class GameLoop : public Thread {
     void handle_move(const ClientCmd& cmd);
     void handle_attack(const ClientCmd& cmd);
     void handle_meditate(const ClientCmd& cmd);
+    void handle_teleport(const ClientCmd& cmd);
     void handle_private(const ClientCmd& cmd);
     void handle_cheat_kill(const ClientCmd& cmd);
     void handle_cheat_inf_hp(const ClientCmd& cmd);

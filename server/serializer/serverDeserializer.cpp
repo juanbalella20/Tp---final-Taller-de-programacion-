@@ -57,6 +57,9 @@ ServerDeserializer::ServerDeserializer() {
     handlers[MSG_PRIVATE] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_private(payload, cmd);
     };
+    handlers[MSG_TELEPORT] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
 }
 
 

@@ -38,3 +38,5 @@ uint32_t GameMsg::get_mana() const { return this->mana; }
 void GameMsg::set_players(const std::vector<PlayerInfo>& new_players) { this->players = new_players; }
 const std::vector<PlayerInfo>& GameMsg::get_players() const { return players; }
 void GameMsg::set_player(const PlayerInfo& player) { this->players = {player}; }
+void GameMsg::set_zone(Zone z) { this->zone = z;}
+Zone GameMsg::get_zone() const { return this->zone; }

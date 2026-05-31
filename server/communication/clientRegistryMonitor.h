@@ -7,6 +7,8 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 class ClientRegistryMonitor {
  private:
@@ -22,6 +24,11 @@ class ClientRegistryMonitor {
     void notify_client(uint32_t client_id, const GameMsg& msg);
     void notify_clients(const GameMsg& msg);
     void notify_clients_less_client(uint32_t client_id, const GameMsg& msg);
+
+    // Copia (client_id, player_name) de todos los clientes registrados. Permite
+    // al gameloop mandar a cada cliente un mensaje distinto (p. ej. snapshot de
+    // SU zona)
+    std::vector<std::pair<uint32_t, std::string>> get_active_clients();
 };
 
 #endif  // SERVER_MONITOR_REGISTRAR_CLIENT_H_

@@ -13,6 +13,9 @@ const uint16_t LEN_CLASS = 1;  // 1 byte para la clase
 const uint16_t LEN_ENTITY = 1;  // 1 byte para el tipo de entidad (player/npc)
 const uint16_t LEN_DIRECTION = 1;
 const uint16_t LEN_COORD = 2;  // 2 bytes para cada coordenada (x e y)
+const uint16_t LEN_ZONE = 1;  // 1 byte para el valor de zona
+// MSG_ZONE_CHANGE: [zona:1B][x:2B BE][y:2B BE] -> zona destino + posicion de spawn
+const uint16_t LEN_ZONE_CHANGE_PAYLOAD = LEN_ZONE + 2 * LEN_COORD;
 const uint16_t LEN_ITEM_ID = 1;  // 1 byte para largo del id del item
 const uint16_t LEN_NPC_COUNT = 2;  // 2 bytes para la cantidad de NPCs en el snapshot
 const uint16_t LEN_NPC_TYPE_SIZE = 1;  // 1 byte para largo del tipo del NPC
@@ -63,6 +66,8 @@ enum MessageType : uint8_t {
     MSG_NPCS_SNAPSHOT  = 0x26, // Snapshot de NPCs vivos: vector<NpcInfo>
     MSG_ITEMS_SNAPSHOT = 0x27, // Snapshot de items en el piso: vector<ItemFloorInfo>
     MSG_PLAYERS_SNAPSHOT = 0x28, // Snapshot de players vivos: vector<PlayerInfo>
+    MSG_TELEPORT       = 0x29, // Cliente->server: pedido de /tp (sin payload)
+    MSG_ZONE_CHANGE = 0x30, // Server -> cliente: zona a cargar
 };
 
 enum Direction : uint8_t {
@@ -105,6 +110,28 @@ enum ELEMENT_TYPE : uint8_t {
     ELEMENT_BUILDING = 0x03,
     ELEMENT_GOLD = 0x04,
     ELEMENT_EMPTY = 0x05,
+};
+
+enum Zone : uint8_t {
+    ZONE_DESERT = 0x00,
+    ZONE_CITY = 0x01,
+    ZONE_FOREST = 0x02,
+    ZONE_TOWN = 0x03,
+};
+
+// Nombre de zona (usado en el TOML para dest_zone y en el label del cliente).
+const std::unordered_map<std::string, Zone> ZONE_NAME_MAP = {
+    {"desert", ZONE_DESERT},
+    {"city",   ZONE_CITY},
+    {"forest", ZONE_FOREST},
+    {"town",   ZONE_TOWN},
+};
+
+const std::unordered_map<uint8_t, std::string> ZONE_NAME_MAP_INV = {
+    {ZONE_DESERT, "desert"},
+    {ZONE_CITY,   "city"},
+    {ZONE_FOREST, "forest"},
+    {ZONE_TOWN,   "town"},
 };
 
 // Solo buildings/empty viven en la matriz (terreno estatico).

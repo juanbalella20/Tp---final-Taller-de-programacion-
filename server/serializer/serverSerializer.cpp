@@ -5,6 +5,8 @@
 #include <cstring>
 #include <iostream>
 
+static void append_uint16_be(std::vector<uint8_t>& buf, uint16_t value);
+
 ServerSerializer::ServerSerializer() {
     handlers[MSG_REGISTER] = [this](const GameMsg& msg) { return serialize_register(msg); };
     handlers[MSG_MOVE] = [this](const GameMsg& msg) { return serialize_move(msg); };
@@ -31,6 +33,7 @@ ServerSerializer::ServerSerializer() {
     handlers[MSG_XP] = [this](const GameMsg& msg) { return serialize_xp(msg); };
     handlers[MSG_MANA] = [this](const GameMsg& msg) { return serialize_mana(msg); };
     handlers[MSG_PLAYERS_SNAPSHOT] = [this](const GameMsg& msg) { return serialize_players_snapshot(msg); };
+    handlers[MSG_ZONE_CHANGE] = [this](const GameMsg& msg) {return serialize_zone(msg); };
 }
 
 // Appendea un uint16_t en big-endian al buffer (definido mas abajo).
@@ -88,6 +91,17 @@ std::vector<uint8_t> ServerSerializer::serialize_move(const GameMsg& msg) {
     buf.push_back(static_cast<uint8_t>(msg.get_direction()));
     buf.push_back(static_cast<uint8_t>(name.size()));
     buf.insert(buf.end(), name.begin(), name.end());
+    append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_x()));
+    append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_y()));
+    return buf;
+}
+
+// Formato MSG_ZONE_CHANGE: [zona:1B][x:2B BE][y:2B BE]
+std::vector<uint8_t> ServerSerializer::serialize_zone(const GameMsg& msg) {
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + LEN_ZONE_CHANGE_PAYLOAD);
+    write_header(buf, MSG_ZONE_CHANGE, LEN_ZONE_CHANGE_PAYLOAD);
+    buf.push_back(static_cast<uint8_t>(msg.get_zone()));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_x()));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_y()));
     return buf;

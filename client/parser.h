@@ -16,6 +16,7 @@ class Parser {
     bool item_related_command(const std::string& command, ClientCmd& cmd, std::istringstream& ss);
     bool clan_related_command(const std::string& command, ClientCmd& cmd, std::istringstream& ss);
     bool gold_related_command(const std::string& command, ClientCmd& cmd, std::istringstream& ss);
+    bool teleport_command(const std::string& command, ClientCmd& cmd);
  public:
     static ClientCmd parse(const std::string& input);
     ClientCmd parse_chat(const std::string& input);

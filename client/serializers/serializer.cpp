@@ -33,6 +33,7 @@ Serializer::Serializer() {
     handlers[MSG_CHEAT_KILL] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CHEAT_KILL); };
     handlers[MSG_CHEAT_INF_HP] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CHEAT_INF_HP); };
     handlers[MSG_CHEAT_INF_MANA] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CHEAT_INF_MANA); };
+    handlers[MSG_TELEPORT] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_TELEPORT); };
     handlers[MSG_PRIVATE] = [this](const ClientCmd& cmd) { return serialize_private(cmd); };
 }
 

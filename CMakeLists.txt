@@ -130,6 +130,7 @@ add_executable(server
     server/serializer/serverSerializer.cpp
     server/gameloop.cpp
     server/Game/game_map.cpp
+    server/Game/zoneWorld.cpp
     server/Game/player/player.cpp
     server/Game/player/player_class.cpp
     server/Game/player/player_race.cpp

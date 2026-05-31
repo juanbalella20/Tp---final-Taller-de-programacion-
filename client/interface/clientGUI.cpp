@@ -51,13 +51,17 @@ void ClientGUI::initSDL() {
 }
 
 // tiene que recibir los 4 sectorPerimiter y mostrar solo eso
-void ClientGUI::loadMedia(zones zone) {
+void ClientGUI::loadMedia(Zone zone) {
     switch (zone)
     {
-    case zones::DESERT : {
+    case ZONE_DESERT : {
         tilemap = std::make_unique<TileMap>(renderer);
         tilemap->load_map("data/maps/desert/map.toml");
         break;
+    }
+    case ZONE_CITY : {
+        tilemap = std::make_unique<TileMap>(renderer);
+        tilemap->load_map("data/maps/city/map.toml");
     }
     default:
         break;
@@ -336,6 +340,12 @@ void ClientGUI::update() {
         while (receiving.try_pop(msg)) {
             std::cout << "Mesaje recibido tipo: " << (int)msg.get_type() << std::endl;
             switch (msg.get_type()) {
+                case MSG_ZONE_CHANGE : {
+                    Zone z = msg.get_zone();
+                    if (z != current_zone) loadMedia(z);
+                    player->setTilePosition(msg.get_coord_x(), msg.get_coord_y());
+                    break;
+                }
                 case MSG_REGISTER: {
                     world_map = msg.get_map();
                     if (hud) {
@@ -514,6 +524,28 @@ void ClientGUI::drawOtherPlayers() {
         }
     }
 }
+void ClientGUI::draw_teleport_labels() {
+    if (!tilemap || !chat_font) return;
+    const int tileSize = tilemap->getTileSize();
+    const SDL_Color color = {255, 255, 0, 255};
+
+    for (const auto& tp : tilemap->getTeleports()) {
+        const std::string text = "Transportarse a " + tp.dest_zone;
+        SDL_Surface* surf = TTF_RenderText_Blended(chat_font, text.c_str(), 0, color);
+        if (!surf) continue;
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+        if (tex) {
+            const float wx = static_cast<float>(tp.x * tileSize);
+            const float wy = static_cast<float>(tp.y * tileSize);
+            const float sx = camera.world_to_screen_x(wx) + (tileSize - surf->w) / 2.0f;
+            const float sy = camera.world_to_screen_y(wy) - surf->h;
+            SDL_FRect dst{sx, sy, static_cast<float>(surf->w), static_cast<float>(surf->h)};
+            SDL_RenderTexture(renderer, tex, nullptr, &dst);
+            SDL_DestroyTexture(tex);
+        }
+        SDL_DestroySurface(surf);
+    }
+}
 
 void ClientGUI::drawItems() {
     if (!tilemap) return;
@@ -551,6 +583,7 @@ void ClientGUI::draw() {
         tilemap->render(camera.get_x(), camera.get_y());
     }
 
+    draw_teleport_labels();
     drawItems();
     if (player) {
         player->draw(camera, player_pov);
@@ -575,12 +608,10 @@ void ClientGUI::draw() {
 }
 
 void ClientGUI::init_draw() {
-    // la info se la pasa el cliente desde config?
     initSDL();
-    // aca recibe del protocolo la zona
-    // hardocodeado para test
-    loadMedia(zones::DESERT);
-
+    // se carga una zona inicial por default
+    // siempre sera ZONA_CITY
+    loadMedia(ZONE_CITY);
     SDL_Surface* enemy_surf = IMG_Load("imagenes/enemigo.png");
     if (!enemy_surf) enemy_surf = IMG_Load("enemigo.png");
     if (enemy_surf) {

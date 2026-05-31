@@ -68,3 +68,12 @@ void ClientRegistryMonitor::notify_clients_less_client(uint32_t client_id, const
         }
     }
 }
+std::vector<std::pair<uint32_t, std::string>> ClientRegistryMonitor::get_active_clients() {
+    std::lock_guard<std::mutex> lock(mtx);
+    std::vector<std::pair<uint32_t, std::string>> result;
+    result.reserve(registers.size());
+    for (const auto& entry : registers) {
+        result.emplace_back(entry.first, entry.second.player_name);
+    }
+    return result;
+}
