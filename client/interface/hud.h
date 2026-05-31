@@ -66,6 +66,7 @@ public:
     void set_gold(uint32_t amount);
     void set_hp(uint32_t hp);
     void set_max_hp(uint32_t max_hp);
+    void set_max_mana(uint32_t max_mana);
     void set_xp(uint32_t xp);
     void set_mana(uint32_t mana);
     void set_equipped_item(const std::string& item_id);

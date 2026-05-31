@@ -62,6 +62,10 @@ void HUD::set_max_hp(uint32_t max_hp_value) {
     max_hp = max_hp_value;
 }
 
+void HUD::set_max_mana(uint32_t max_mana_value) {
+    max_mana = max_mana_value;
+}
+
 void HUD::set_xp(uint32_t xp) {
     player_xp = xp;
 }
