@@ -70,6 +70,7 @@ public:
     void set_mana(uint32_t mana);
     void set_equipped_item(const std::string& item_id);
     void set_equipped_slot(int slot_index);
+    int get_equipped_slot() const { return equipped_slot; }
     void drawInventoryPanel();
     void drawAttackButton();
 

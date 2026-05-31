@@ -219,9 +219,16 @@ void ClientGUI::handleEvents() {
                         for (const auto& item : inv) {
                             if (mx >= slot_x && mx <= slot_x + SLOT_SIZE &&
                                 my >= slot_y && my <= slot_y + SLOT_SIZE) {
+                                // Si el item ya está equipado, desquiparlo
+                                // if (hud->get_equipped_slot() == slot_index) {
+                                //     hud->set_equipped_slot(-1);
+                                //     player->set_equipped_weapon(false);
+                                // } else {
+                                    // Equipar el nuevo item
                                 hud->set_equipped_slot(slot_index);
                                 player->set_equipped_weapon(true);
                                 sendEquipCmd(item.get_id());
+                                // }
                                 break;
                             }
                             slot_x += SLOT_SIZE + SLOT_MARGIN;
