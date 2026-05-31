@@ -10,9 +10,11 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       player_gold(0),
       player_hp(0),
       max_hp(100),
+      max_xp(100),
       player_xp(0),
       player_mana(0),
       hp_bar_texture(nullptr),
+      xp_bar_texture(nullptr),
       game_width(game_width),
       panel_width(panel_width),
       canvas_height(canvas_height) {
@@ -244,11 +246,22 @@ void HUD::draw_hp() {
 }
 
 void HUD::draw_xp() {
-    if (!font) return;
+    if (xp_bar_texture) {
+        float tex_w, tex_h;
+        SDL_GetTextureSize(xp_bar_texture, &tex_w, &tex_h);
+        const float max_width = panel_width - 30.0f;
+        const float scale = SDL_min(1.0f, max_width / tex_w);
 
-    std::string xp_text = "Experiencia: " + std::to_string(player_xp);
+        SDL_FRect dest = {
+            game_width + 15.0f,
+            460.0f,
+            tex_w * scale,
+            tex_h * scale
+        };
+        SDL_RenderTexture(gui_renderer, xp_bar_texture, nullptr, &dest);
 
-    draw_stat(xp_text, 440.0f);
+        display_value(player_xp, max_xp, dest);
+    }
 }
 
 void HUD::draw_mana() {
@@ -282,4 +295,14 @@ void HUD::load_textures() {
         hp_bar_texture = SDL_CreateTextureFromSurface(gui_renderer, hp_bar_surf);
         SDL_DestroySurface(hp_bar_surf);
     }
+
+    SDL_Surface* xp_bar_surf = IMG_Load("imagenes/en_barraexperiencia.bmp");
+    if (!xp_bar_surf) {
+        xp_bar_surf = IMG_Load("en_barraexperiencia.bmp");
+    }
+    if (xp_bar_surf) {
+        xp_bar_texture = SDL_CreateTextureFromSurface(gui_renderer, xp_bar_surf);
+        SDL_DestroySurface(xp_bar_surf);
+    }
+
 }
