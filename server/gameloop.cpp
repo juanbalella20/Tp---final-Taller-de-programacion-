@@ -148,7 +148,7 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
     registerMsg.set_gold(game_map.get_player_gold(cmd.get_player_name()));
     registerMsg.set_hp(game_map.get_player_hp(cmd.get_player_name()));
     std::cout << "[DEBUG: handle_register] player " << cmd.get_player_name()
-              << " hp=" << registerMsg.get_hp() << std::endl;
+              << " hp=" << game_map.get_player_hp(cmd.get_player_name()) << std::endl;
     registerMsg.set_xp(game_map.get_player_xp(cmd.get_player_name()));
     registerMsg.set_mana(game_map.get_player_mana(cmd.get_player_name()));
     registerMsg.set_coord_x(p.get_coord_x());
