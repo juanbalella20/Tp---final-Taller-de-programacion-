@@ -154,7 +154,8 @@ void HUD::drawInventoryPanel() {
                 final_h
             };
             
-            SDL_RenderTexture(gui_renderer, icon, nullptr, &icon_dst);
+            SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};;
+            SDL_RenderTexture(gui_renderer, icon, &crop, &icon_dst);
         }
 
         slot_x += SLOT_SIZE + SLOT_MARGIN;
@@ -223,7 +224,7 @@ void HUD::load_textures() {
         SDL_DestroySurface(inv_bg_surf);
     }
 
-    SDL_Surface* sword_surf = IMG_Load("imagenes/espada.png");
+    SDL_Surface* sword_surf = IMG_Load("imagenes/101.png");
     if (sword_surf) {
         SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, sword_surf);
         SDL_SetTextureBlendMode(tex, SDL_SCALEMODE_LINEAR);

@@ -22,7 +22,7 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
     }
     SDL_SetTextureBlendMode(image, SDL_BLENDMODE_BLEND);
     
-    SDL_Surface* item_surf = IMG_Load("Recursos/Graficos/101.png");
+    SDL_Surface* item_surf = IMG_Load("imagenes/101.png");
     if (!item_surf) {
         throw std::runtime_error(std::string("Loading weapon surface: ") + SDL_GetError());
     }
@@ -216,7 +216,7 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect crop_pov) const {
     };
     SDL_RenderTexture(renderer, image, &crop_pov, &dst);
     if (has_equipped_weapon) {
-        SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};;
+        SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};
         float weapon_size = rect.w * 0.5f;
         SDL_FRect weapon_dst = {
             camera.world_to_screen_x(rect.x) + rect.w * weapon_dx,
