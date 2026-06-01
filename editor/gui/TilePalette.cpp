@@ -13,9 +13,9 @@ TilePalette::TilePalette(QWidget* parent)
     : QWidget(parent), ui(new Ui::TilePalette) {
     ui->setupUi(this);
 
-    connect(ui->pushButton, &QPushButton::clicked, this, &TilePalette::on_load_png);
+    connect(ui->pushButton, &QPushButton::clicked, this, &TilePalette::load_png);
     connect(ui->listWidget, &QListWidget::itemSelectionChanged,
-            this, &TilePalette::on_item_selected);
+            this, &TilePalette::item_selected);
 }
 
 TilePalette::~TilePalette() { delete ui; }
@@ -28,7 +28,7 @@ int TilePalette::next_firstgid() const {
     return next;
 }
 
-void TilePalette::on_load_png() {
+void TilePalette::load_png() {
     QString path = QFileDialog::getOpenFileName(
         this, "Elegir imagen (PNG)", QString(), "Imagenes (*.png *.PNG)");
     if (path.isEmpty()) return;
@@ -77,7 +77,7 @@ void TilePalette::add_tiles_from(const Tileset& ts, const QPixmap& sheet) {
     }
 }
 
-void TilePalette::on_item_selected() {
+void TilePalette::item_selected() {
     auto items = ui->listWidget->selectedItems();
     if (items.isEmpty()) {
         emit tileSelected(0);

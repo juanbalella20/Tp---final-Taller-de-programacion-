@@ -33,8 +33,8 @@ signals:
                        int columns, int tile_count, bool collidable);
 
 private slots:
-    void on_load_png();
-    void on_item_selected();
+    void load_png();
+    void item_selected();
 
 private:
     Ui::TilePalette* ui;
