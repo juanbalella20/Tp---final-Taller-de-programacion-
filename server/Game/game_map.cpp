@@ -143,8 +143,12 @@ void GameMap::spawn_player(const std::string& name, const std::string& race, con
     player_zone[name] = start_zone;
 
     // Posicion de spawn hardcodeada
-    int start_x = 29;
-    int start_y = 15;
+    // int start_x = 29;
+    // int start_y = 15;
+
+    std::pair<int, int> spawn_pos = zone_of(name).find_random_empty_cell(players_in(start_zone));
+    int start_x = spawn_pos.first;
+    int start_y = spawn_pos.second;
 
     PlayerRace player_race;
     PlayerClass player_class;
@@ -385,7 +389,7 @@ std::vector<PlayerInfo> GameMap::build_players_snapshot(const std::string& playe
         auto it = player_zone.find(p.get_name());
         if (it == player_zone.end() || it->second != z) continue;
 
-        snapshot.push_back({p.get_name(), 0, 0, p.get_coord_x(), p.get_coord_y()});
+        snapshot.push_back({p.get_name(), "human", 0, p.get_coord_x(), p.get_coord_y()});
     }
     return snapshot;
 }
