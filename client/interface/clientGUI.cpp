@@ -510,11 +510,17 @@ void ClientGUI::draw_npc_friends() {
 void ClientGUI::draw_npc_friends() {
     if (!friendly_texture || !tilemap) return;
     const int tileSize = tilemap->getTileSize();
-    SDL_FRect src = {512, 256, 30, 40};
+
     for (const auto& npc : npcs) {
+        SDL_FRect src = {0, 0, 0, 0};
         if (npc.type == "seller") {
-            NpcSprite(renderer, friendly_texture, npc.x, npc.y, tileSize).draw(camera, src);
+            src = {512.0f, 256.0f, 30.0f, 40.0f};
+        } else if (npc.type == "banker") {
+            src = {256.0f, 512.0f, 30.0f, 40.0f};  
+        } else {
+            continue;
         }
+        NpcSprite(renderer, friendly_texture, npc.x, npc.y, tileSize).draw(camera, src);
     }
 }
 
