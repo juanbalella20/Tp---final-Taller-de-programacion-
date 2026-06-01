@@ -210,8 +210,8 @@ SDL_FRect PlayerDisplay::right_pov() {
 
     int current_frame = walk_frame % 5;
 
-    static const float h_dx[] = { -0.2f, 0.1f, -0.15f, -0.2f, -0.25f, -0.3f };
-    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
+    static const float h_dx[] = { -0.2f, 0.1f, -0.15f, -0.2f, -0.25f };
+    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
     head_dx = h_dx[current_frame];
     head_dy = h_dy[current_frame];
     head_pov = { 407.0f, 461.0f, 18.0f, 16.0f };
@@ -239,8 +239,8 @@ SDL_FRect PlayerDisplay::left_pov() {
 
     int current_frame = walk_frame % 5;
 
-    static const float h_dx[] = { -0.05f, -0.15f, -0.05f, 0.0f, -0.1f, -0.2f };
-    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
+    static const float h_dx[] = { 0.0f, 0.0f, -0.05f, -0.05f, -0.3f };
+    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
     head_dx = h_dx[current_frame];
     head_dy = h_dy[current_frame];
     head_pov = { 407.0f, 397.0f, 18.0f, 16.0f };
