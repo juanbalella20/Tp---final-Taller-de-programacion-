@@ -6,10 +6,11 @@
 #include <iostream>
 #include <stdexcept>
 
-ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name)
+ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name,
+    const std::string& player_race)
     : window(nullptr), renderer(nullptr), event{}, chat_font(nullptr),
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
-      hud(nullptr), own_name(player_name), player(nullptr), tilemap(nullptr),
+      hud(nullptr), own_name(player_name), race(player_race), player(nullptr), tilemap(nullptr),
       enemy_texture(nullptr), frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
       camera((float)GAME_WIDTH, (float)CANVAS_HEIGHT),
       selected_npc_tile_x(-1), selected_npc_tile_y(-1) {}
@@ -505,7 +506,7 @@ void ClientGUI::drawOtherPlayers() {
 
     for (const auto& p : other_players) {
         try {
-            PlayerDisplay pd(renderer, "imagenes/1005.png", tileSize);
+            PlayerDisplay pd(renderer, "imagenes/1005.png", tileSize, p.race);
             pd.setTilePosition(p.x, p.y);
             SDL_FRect pov;
             switch (p.direction) {
@@ -645,7 +646,7 @@ void ClientGUI::init_draw() {
     // el player se escala con el mismo tamano de celda
     int tileSize = tilemap->getTileSize();
     try {
-        player = std::make_unique<PlayerDisplay>(renderer, "imagenes/1005.png", tileSize);
+        player = std::make_unique<PlayerDisplay>(renderer, "imagenes/1005.png", tileSize, race);
         player_pov = player->back_pov();
     } catch (const std::runtime_error& e) {
         std::cout << "[DEBUG] imagenes/1005.png failed: " << e.what() << std::endl;

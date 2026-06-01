@@ -44,6 +44,7 @@ private:
     Queue<std::string> chat_inbox;
     std::unique_ptr<HUD> hud;
     std::string own_name;  // nombre del jugador local
+    std::string race;      // raza del jugador local
 
     std::unique_ptr<PlayerDisplay> player;
     std::unique_ptr<TileMap> tilemap;
@@ -119,7 +120,7 @@ private:
     void draw_teleport_labels();
 
 public:
-    ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name);
+    ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name, const std::string& player_race);
     ~ClientGUI();
 
     ClientGUI(const ClientGUI&) = delete;
