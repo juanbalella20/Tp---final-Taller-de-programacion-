@@ -139,7 +139,7 @@ add_executable(server
     server/Game/item/arma.cpp
     server/Game/npc/npc.cpp
     server/Game/npc/npcHostile.cpp
-    # server/Game/npc/npcBanker.cpp
+    server/Game/npc/npcBanker.cpp
     # server/Game/npc/npcPriest.cpp
     server/Game/npc/npcSeller.cpp
 )
