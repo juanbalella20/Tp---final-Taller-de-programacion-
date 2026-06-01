@@ -52,8 +52,8 @@ PlayerDisplay::~PlayerDisplay() {
 
 PlayerDisplay::PlayerDisplay(PlayerDisplay&& other) noexcept
     : renderer(other.renderer), image(other.image), weapon_image(other.weapon_image),
-      head_image(other.head_image), rect(other.rect),
-      tileSize(other.tileSize), keystate(other.keystate) {
+      head_image(other.head_image), rect(other.rect), head_pov(other.head_pov),
+      tileSize(other.tileSize), keystate(other.keystate), race(other.race) {
     other.image = nullptr;
     other.weapon_image = nullptr;
     other.head_image = nullptr;
@@ -69,8 +69,10 @@ PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
         weapon_image = other.weapon_image;
         head_image = other.head_image;
         rect = other.rect;
+        head_pov = other.head_pov;
         tileSize = other.tileSize;
         keystate = other.keystate;
+        race = other.race;
         other.image = nullptr;
         other.weapon_image = nullptr;
         other.head_image = nullptr;
