@@ -114,6 +114,8 @@ void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
         world.spawn_seller(1, 1);
         //Banker de prueba
         world.spawn_banker(3, 1);
+        //Priest de prueba
+        world.spawn_priest(5, 1);
 
         // Item de prueba hardcodeado. TODO: moverlo a state.items cuando este listo.
         world.spawn_item(7, 7, std::make_unique<Arma>("espada", "espada", 50, 2, 2));

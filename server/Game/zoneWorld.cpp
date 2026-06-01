@@ -110,6 +110,10 @@ void ZoneWorld::spawn_banker(int x, int y) {
     bankers.emplace_back(x, y);
 }
 
+void ZoneWorld::spawn_priest(int x, int y) {
+    priests.emplace_back(x, y);
+}
+
 bool ZoneWorld::update_npcs() {
     bool respawned = false;
     for (auto& npc : npcs) {
@@ -154,6 +158,14 @@ std::vector<NpcInfo> ZoneWorld::build_npcs_snapshot() const {
         npcinfo.type = "banker";
         npcinfo.x = b.get_coord_x();
         npcinfo.y = b.get_coord_y();
+        snapshot.push_back(npcinfo);
+    }
+    for (const auto& p : priests) {
+        NpcInfo npcinfo;
+        npcinfo.name = "Sacerdote";
+        npcinfo.type = "priest";
+        npcinfo.x = p.get_coord_x();
+        npcinfo.y = p.get_coord_y();
         snapshot.push_back(npcinfo);
     }
 
