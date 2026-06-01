@@ -86,7 +86,7 @@ void PlayerDisplay::load_heads() {
     } else if (race == "elf") {
         head_surf = IMG_Load("imagenes/422.png");
     } else if (race == "dwarf") {
-        //head_surf = IMG_Load("imagenes/426.png");
+        head_surf = IMG_Load("imagenes/426.png");
     } else {
         //head_surf = IMG_Load("imagenes/no-se-todavia.png");
     }
@@ -175,8 +175,10 @@ SDL_FRect PlayerDisplay::back_pov() {
 
     if (race == "human") {
         head_pov = { 408.0f, 332.0f, 19.0f, 16.0f };
-    } else {
+    } else if (race == "elf") {
         head_pov = { 58.0f, 77.0f, 18.0f, 15.0f };
+    } else if (race == "dwarf") {
+        head_pov = { 407.0f, 79.0f, 21.0f, 17.0f };
     }
 
     if(has_equipped_weapon) {
@@ -210,8 +212,10 @@ SDL_FRect PlayerDisplay::front_pov() {
 
     if (race == "human") {
         head_pov = { 408.0f, 267.0f, 19.0f, 19.0f };
-    } else {
+    } else if (race == "elf") {
         head_pov = { 58.0f, 14.0f, 18.0f, 14.0f };
+    } else if (race == "dwarf") {
+        head_pov = { 407.0f, 16.0f, 19.0f, 16.0f };
     }
 
     if(has_equipped_weapon) {
@@ -244,8 +248,10 @@ SDL_FRect PlayerDisplay::right_pov() {
 
     if (race == "human") {
         head_pov = { 407.0f, 461.0f, 18.0f, 16.0f };
-    } else {
+    } else if (race == "elf") {
         head_pov = { 57.0f, 205.0f, 19.0f, 15.0f };
+    } else if (race == "dwarf") {
+        head_pov = { 410.0f, 208.0f, 19.0f, 16.0f };
     }
 
     if(has_equipped_weapon) {
@@ -278,8 +284,10 @@ SDL_FRect PlayerDisplay::left_pov() {
 
     if (race == "human") {
         head_pov = { 407.0f, 397.0f, 18.0f, 16.0f };
-    } else {
+    } else if (race == "elf") {
         head_pov = { 57.0f, 142.0f, 18.0f, 16.0f };
+    } else if (race == "dwarf") {
+        head_pov = { 405.0f, 144.0f, 18.0f, 16.0f };
     }
 
     if(has_equipped_weapon) {
