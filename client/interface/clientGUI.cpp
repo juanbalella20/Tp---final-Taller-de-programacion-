@@ -11,7 +11,7 @@ ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, cons
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
       hud(nullptr), own_name(player_name), player(nullptr), tilemap(nullptr),
       enemy_texture(nullptr), frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
-      camera((float)GAME_WIDTH, (float)CANVAS_HEIGHT),
+      friendly_texture(nullptr), camera((float)GAME_WIDTH, (float)CANVAS_HEIGHT),
       selected_npc_tile_x(-1), selected_npc_tile_y(-1) {}
     
 
@@ -76,6 +76,10 @@ void ClientGUI::freeSDL() {
     if (enemy_texture) {
         SDL_DestroyTexture(enemy_texture);
         enemy_texture = nullptr;
+    }
+    if (friendly_texture) {
+        SDL_DestroyTexture(friendly_texture);
+        friendly_texture = nullptr;
     }
     if (frame_texture) {
         SDL_DestroyTexture(frame_texture);
@@ -487,6 +491,7 @@ void ClientGUI::drawEnemies() {
     }
 }
 
+/*
 void ClientGUI::draw_npc_friends() {
     if (!enemy_texture || !tilemap) return;
     const int tileSize = tilemap->getTileSize();
@@ -498,6 +503,17 @@ void ClientGUI::draw_npc_friends() {
             NpcSprite(renderer, enemy_texture,
                       static_cast<int>(x), static_cast<int>(y), tileSize)
                 .draw(camera, {});
+        }
+    }
+}*/
+
+void ClientGUI::draw_npc_friends() {
+    if (!friendly_texture || !tilemap) return;
+    const int tileSize = tilemap->getTileSize();
+    SDL_FRect src = {512, 256, 30, 40};
+    for (const auto& npc : npcs) {
+        if (npc.type == "seller") {
+            NpcSprite(renderer, friendly_texture, npc.x, npc.y, tileSize).draw(camera, src);
         }
     }
 }
@@ -640,6 +656,12 @@ void ClientGUI::init_draw() {
     if (elem_surf) {
         gold_texture = SDL_CreateTextureFromSurface(renderer, elem_surf);
         SDL_DestroySurface(elem_surf);
+    }
+
+    SDL_Surface* friendly_surf = IMG_Load("imagenes/1018.png");
+    if (friendly_surf) {
+        friendly_texture = SDL_CreateTextureFromSurface(renderer, friendly_surf);
+        SDL_DestroySurface(friendly_surf);
     }
 
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
