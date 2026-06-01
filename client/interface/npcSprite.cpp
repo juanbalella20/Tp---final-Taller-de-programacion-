@@ -15,5 +15,9 @@ void NpcSprite::draw(const Camera& camera, SDL_FRect src_crop) const {
         static_cast<float>(tile_size),
         static_cast<float>(tile_size)
     };
-    SDL_RenderTexture(renderer, texture, nullptr, &dst);
+    if (src_crop.w > 0 && src_crop.h > 0) {
+        SDL_RenderTexture(renderer, texture, &src_crop, &dst);
+    } else {
+        SDL_RenderTexture(renderer, texture, nullptr, &dst);
+    }
 }

@@ -136,6 +136,14 @@ std::vector<NpcInfo> ZoneWorld::build_npcs_snapshot() const {
         npcinfo.y = npc.get_coord_y();
         snapshot.push_back(npcinfo);
     }
+    for (const auto& s : sellers) {
+        NpcInfo npcinfo;
+        npcinfo.name = "Comerciante";
+        npcinfo.type = "seller";
+        npcinfo.x = s.get_coord_x();
+        npcinfo.y = s.get_coord_y();
+        snapshot.push_back(npcinfo);
+    }
     return snapshot;
 }
 
