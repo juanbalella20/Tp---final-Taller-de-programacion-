@@ -281,8 +281,8 @@ bool GameMap::player_sell_item(const std::string& player_name, int x, int y,
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) throw std::runtime_error("Player not found: " + player_name);
 
-    NPCseller* seller = zone_of(player_name).seller_at(x, y);
-    if (seller == nullptr) throw std::runtime_error("No hay un comerciante en esa posicion.");
+    NPCseller* seller = zone_of(player_name).seller_at(player->get_coord_x(), player->get_coord_y());
+    if (seller == nullptr) throw std::runtime_error("No hay un comerciante adyacente.");
 
     Command cmd;
     cmd.action = ACTION_SELL;
@@ -296,7 +296,7 @@ bool GameMap::player_buy_item(const std::string& player_name, int x, int y,
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) throw std::runtime_error("Player not found: " + player_name);
 
-    NPCseller* seller = zone_of(player_name).seller_at(x, y);
+    NPCseller* seller = zone_of(player_name).seller_at(player->get_coord_x(), player->get_coord_y());
     if (seller == nullptr) throw std::runtime_error("No hay un comerciante en esa posicion.");
 
     Command cmd;
@@ -307,7 +307,9 @@ bool GameMap::player_buy_item(const std::string& player_name, int x, int y,
 }
 
 std::vector<ItemInfo> GameMap::list_seller_items(const std::string& player_name, int x, int y) {
-    return zone_of(player_name).list_seller_items(x, y);
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found: " + player_name);
+    return zone_of(player_name).list_seller_items(player->get_coord_x(), player->get_coord_y());
 }
 
 std::unique_ptr<Item> GameMap::pick_up_item(const std::string& player_name) {
