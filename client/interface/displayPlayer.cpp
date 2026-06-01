@@ -178,6 +178,19 @@ void PlayerDisplay::set_equipped_weapon(bool has_weapon) {
     has_equipped_weapon = has_weapon;
 }
 
+void PlayerDisplay::head_back_pov() {
+    if (race == "human") {
+        head_pov = { 408.0f, 332.0f, 19.0f, 16.0f };
+    } else if (race == "elf") {
+        head_pov = { 58.0f, 77.0f, 18.0f, 15.0f };
+    } else if (race == "dwarf") {
+        head_pov = { 407.0f, 79.0f, 21.0f, 17.0f };
+    } else if (race == "gnome") {
+        head_pov = {328.0f, 81.0f, 17.0f, 15.0f};
+        hat_dy = -0.8f;
+    }
+}
+
 SDL_FRect PlayerDisplay::back_pov() {
     static const SDL_FRect frames[] = {
         {255.0f, 51.0f, 30.0f, 40.0f},
@@ -195,16 +208,7 @@ SDL_FRect PlayerDisplay::back_pov() {
     head_dx = h_dx[current_frame];
     head_dy = h_dy[current_frame];
 
-    if (race == "human") {
-        head_pov = { 408.0f, 332.0f, 19.0f, 16.0f };
-    } else if (race == "elf") {
-        head_pov = { 58.0f, 77.0f, 18.0f, 15.0f };
-    } else if (race == "dwarf") {
-        head_pov = { 407.0f, 79.0f, 21.0f, 17.0f };
-    } else if (race == "gnome") {
-        head_pov = {328.0f, 81.0f, 17.0f, 15.0f};
-        hat_dy = -0.8f;
-    }
+    head_back_pov();
 
     if(has_equipped_weapon) {
         static const float dx[] = { 0.1f, 0.2f, 0.1f, 0.2f, 0.1f, 0.1f };
@@ -216,6 +220,20 @@ SDL_FRect PlayerDisplay::back_pov() {
     SDL_FRect frame = frames[current_frame];
     walk_frame = (walk_frame + 1) % 6;
     return frame;
+}
+
+void PlayerDisplay::head_front_pov() {
+    if (race == "human") {
+        head_pov = { 408.0f, 267.0f, 19.0f, 19.0f };
+    } else if (race == "elf") {
+        head_pov = { 58.0f, 14.0f, 18.0f, 14.0f };
+    } else if (race == "dwarf") {
+        head_pov = { 407.0f, 16.0f, 19.0f, 16.0f };
+    } else if (race == "gnome") {
+        head_pov = {328.0f, 17.0f, 17.0f, 13.0f};
+        hat_dx = 0.05f;
+        hat_dy = -1.0f;
+    }
 }
 
 SDL_FRect PlayerDisplay::front_pov() {
@@ -235,17 +253,7 @@ SDL_FRect PlayerDisplay::front_pov() {
     head_dx = h_dx[current_frame];
     head_dy = h_dy[current_frame];
 
-    if (race == "human") {
-        head_pov = { 408.0f, 267.0f, 19.0f, 19.0f };
-    } else if (race == "elf") {
-        head_pov = { 58.0f, 14.0f, 18.0f, 14.0f };
-    } else if (race == "dwarf") {
-        head_pov = { 407.0f, 16.0f, 19.0f, 16.0f };
-    } else if (race == "gnome") {
-        head_pov = {328.0f, 17.0f, 17.0f, 13.0f};
-        hat_dx = 0.05f;
-        hat_dy = -1.0f;
-    }
+    head_front_pov();
 
     if(has_equipped_weapon) {
         static const float dx[] = { 0.1f, 0.1f, 0.2f, 0.2f, 0.1f, 0.1f };
@@ -257,6 +265,19 @@ SDL_FRect PlayerDisplay::front_pov() {
     SDL_FRect frame = frames[current_frame];
     walk_frame = (walk_frame + 1) % 6;
     return frame;
+}
+
+void PlayerDisplay::head_right_pov() {
+    if (race == "human") {
+        head_pov = { 407.0f, 461.0f, 18.0f, 16.0f };
+    } else if (race == "elf") {
+        head_pov = { 57.0f, 205.0f, 19.0f, 15.0f };
+    } else if (race == "dwarf") {
+        head_pov = { 410.0f, 208.0f, 19.0f, 16.0f };
+    } else if (race == "gnome") {
+        head_pov = {328.0f, 209.0f, 19.0f, 16.0f};
+        hat_dy = -0.9f;
+    }
 }
 
 SDL_FRect PlayerDisplay::right_pov() {
@@ -275,16 +296,7 @@ SDL_FRect PlayerDisplay::right_pov() {
     head_dx = h_dx[current_frame];
     head_dy = h_dy[current_frame];
 
-    if (race == "human") {
-        head_pov = { 407.0f, 461.0f, 18.0f, 16.0f };
-    } else if (race == "elf") {
-        head_pov = { 57.0f, 205.0f, 19.0f, 15.0f };
-    } else if (race == "dwarf") {
-        head_pov = { 410.0f, 208.0f, 19.0f, 16.0f };
-    } else if (race == "gnome") {
-        head_pov = {328.0f, 209.0f, 19.0f, 16.0f};
-        hat_dy = -0.9f;
-    }
+    head_right_pov();
 
     if(has_equipped_weapon) {
         static const float dx[] = { 0.2f, 0.5f, 0.2f, 0.2f, 0.2f };
@@ -296,6 +308,21 @@ SDL_FRect PlayerDisplay::right_pov() {
     SDL_FRect frame = frames[current_frame];
     walk_frame = (walk_frame + 1) % 5;
     return frame;
+}
+
+void PlayerDisplay::head_left_pov() {
+    if (race == "human") {
+        head_pov = { 407.0f, 397.0f, 18.0f, 16.0f };
+    } else if (race == "elf") {
+        head_pov = { 57.0f, 142.0f, 18.0f, 16.0f };
+    } else if (race == "dwarf") {
+        head_pov = { 405.0f, 144.0f, 18.0f, 16.0f };
+    } else if (race == "gnome") {
+        head_pov = {328.0f, 144.0f, 20.0f, 16.0f};
+        head_dx += 0.05f;
+        head_dy += 0.05f;
+        hat_dy = -1.0f;
+    }
 }
 
 SDL_FRect PlayerDisplay::left_pov() {
@@ -314,18 +341,7 @@ SDL_FRect PlayerDisplay::left_pov() {
     head_dx = h_dx[current_frame];
     head_dy = h_dy[current_frame];
 
-    if (race == "human") {
-        head_pov = { 407.0f, 397.0f, 18.0f, 16.0f };
-    } else if (race == "elf") {
-        head_pov = { 57.0f, 142.0f, 18.0f, 16.0f };
-    } else if (race == "dwarf") {
-        head_pov = { 405.0f, 144.0f, 18.0f, 16.0f };
-    } else if (race == "gnome") {
-        head_pov = {328.0f, 144.0f, 20.0f, 16.0f};
-        head_dx += 0.05f;
-        head_dy += 0.05f;
-        hat_dy = -1.0f;
-    }
+    head_left_pov();
 
     if(has_equipped_weapon) {
         static const float dx[] = { 0.5f, 0.5f, 0.4f, 0.4f, 0.1f };

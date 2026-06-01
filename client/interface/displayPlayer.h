@@ -33,6 +33,12 @@ private:
     bool has_equipped_weapon = false;
 
     void load_heads();
+
+    void head_back_pov();
+    void head_front_pov();
+    void head_right_pov();
+    void head_left_pov();
+
 public:
     // Carga la imagen. La posicion inicial es (0, 0). Tile size en pixels.
     PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize, const std::string& race);
