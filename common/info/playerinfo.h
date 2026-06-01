@@ -13,6 +13,7 @@ struct PlayerInfo {
     int x;
     int y;
     Direction direction = DIR_SOUTH;
+    bool has_equipped_weapon = false;
 };
 
 
