@@ -31,6 +31,16 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
     if (!weapon_image) {
         throw std::runtime_error(std::string("Creating weapon texture: ") + SDL_GetError());
     }
+
+    SDL_Surface* head_surf = IMG_Load("imagenes/420.png");
+    if (!head_surf) {
+        throw std::runtime_error(std::string("Loading head surface: ") + SDL_GetError());
+    }
+    head_image = SDL_CreateTextureFromSurface(renderer, head_surf);
+    SDL_DestroySurface(head_surf);
+    if (!head_image) {
+        throw std::runtime_error(std::string("Creating head texture: ") + SDL_GetError());
+    }
 }
 
 PlayerDisplay::~PlayerDisplay() {
@@ -40,23 +50,35 @@ PlayerDisplay::~PlayerDisplay() {
     if (weapon_image) {
         SDL_DestroyTexture(weapon_image);
     }
+    if (head_image) {
+        SDL_DestroyTexture(head_image);
+    }
 }
 
 PlayerDisplay::PlayerDisplay(PlayerDisplay&& other) noexcept
-    : renderer(other.renderer), image(other.image), rect(other.rect),
+    : renderer(other.renderer), image(other.image), weapon_image(other.weapon_image),
+      head_image(other.head_image), rect(other.rect),
       tileSize(other.tileSize), keystate(other.keystate) {
     other.image = nullptr;
+    other.weapon_image = nullptr;
+    other.head_image = nullptr;
 }
 
 PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
     if (this != &other) {
         if (image) SDL_DestroyTexture(image);
+        if (weapon_image) SDL_DestroyTexture(weapon_image);
+        if (head_image) SDL_DestroyTexture(head_image);
         renderer = other.renderer;
         image = other.image;
+        weapon_image = other.weapon_image;
+        head_image = other.head_image;
         rect = other.rect;
         tileSize = other.tileSize;
         keystate = other.keystate;
         other.image = nullptr;
+        other.weapon_image = nullptr;
+        other.head_image = nullptr;
     }
     return *this;
 }
@@ -126,14 +148,21 @@ SDL_FRect PlayerDisplay::back_pov() {
         {394.0f, 51.0f, 30.0f, 40.0f}
     };
 
+    int current_frame = walk_frame % 6;
+
+    static const float h_dx[] = { 0.0f, -0.15f, -0.05f, 0.0f, -0.1f, 0.0f };
+    static const float h_dy[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    head_dx = h_dx[current_frame];
+    head_dy = h_dy[current_frame];
+
     if(has_equipped_weapon) {
         static const float dx[] = { 0.1f, 0.2f, 0.1f, 0.2f, 0.1f, 0.1f };
         static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f, 0.0f };
-        weapon_dx = dx[walk_frame % 5];
-        weapon_dy = dy[walk_frame % 5];
+        weapon_dx = dx[current_frame];
+        weapon_dy = dy[current_frame];
     }
 
-    SDL_FRect frame = frames[walk_frame % 5];
+    SDL_FRect frame = frames[current_frame];
     walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
@@ -200,11 +229,13 @@ SDL_FRect PlayerDisplay::left_pov() {
     return frame;
 }
 
-void PlayerDisplay::draw(const Camera& camera, SDL_FRect crop_pov) const {
+void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) const {
     if (ghost) {
         SDL_SetTextureAlphaMod(image, 140);
+        SDL_SetTextureAlphaMod(head_image, 140);
     } else {
         SDL_SetTextureAlphaMod(image, 255);
+        SDL_SetTextureAlphaMod(head_image, 255);
     }
 
     SDL_FRect dst{
@@ -213,7 +244,25 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect crop_pov) const {
         rect.w,
         rect.h
     };
-    SDL_RenderTexture(renderer, image, &crop_pov, &dst);
+
+    SDL_FRect head_pov = { 408.0f, 332.0f, 19.0f, 16.0f };
+    float head_width = rect.w * 0.5f;
+    float aspect_ratio = head_pov.h / head_pov.w;
+    float head_height = head_width * aspect_ratio;
+
+    float base_head_x = camera.world_to_screen_x(rect.x) + (rect.w - head_width) * 0.5f;
+    float base_head_y = camera.world_to_screen_y(rect.y) - (rect.h * 0.25f);
+
+    SDL_FRect head_dst = {
+        base_head_x + (rect.w * head_dx),
+        base_head_y + (rect.h * head_dy),
+        head_width,
+        head_height
+    };
+
+    SDL_RenderTexture(renderer, image, &body_pov, &dst);
+    SDL_RenderTexture(renderer, head_image, &head_pov, &head_dst);
+
     if (has_equipped_weapon) {
         if (ghost) {
             SDL_SetTextureAlphaMod(weapon_image, 140);
