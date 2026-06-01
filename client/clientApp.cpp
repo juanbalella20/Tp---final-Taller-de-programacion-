@@ -25,7 +25,7 @@ void ClientApp::run() {
 
     NetworkSenderThread sender(protocol, sendingQueue);
     NetworkReceiverThread receiver(protocol, receivingQueue);
-    ClientGUI gui(sendingQueue, receivingQueue, player_name_);
+    ClientGUI gui(sendingQueue, receivingQueue, player_name_, race_);
 
     sender.start();
     receiver.start();
