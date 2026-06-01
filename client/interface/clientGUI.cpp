@@ -465,6 +465,14 @@ void ClientGUI::update() {
                 case MSG_MANA:
                     if (hud) hud->set_mana(msg.get_mana());
                     break;
+                case MSG_UPDATE_EQUIP:
+                    for (auto& p : other_players) {
+                        if (p.name == msg.get_player_name()) {
+                            p.has_equipped_weapon = true;
+                            break;
+                        }
+                    }
+                    break;
                 default:
                     break;
             }
@@ -503,11 +511,11 @@ void ClientGUI::draw_npc_friends() {
 void ClientGUI::drawOtherPlayers() {
     if (!tilemap) return;
     const int tileSize = tilemap->getTileSize();
-
     for (const auto& p : other_players) {
         try {
             PlayerDisplay pd(renderer, "imagenes/1005.png", tileSize, p.race);
             pd.setTilePosition(p.x, p.y);
+            pd.set_equipped_weapon(p.has_equipped_weapon);
             SDL_FRect pov;
             switch (p.direction) {
                 case DIR_NORTH: pov = pd.back_pov();  break;

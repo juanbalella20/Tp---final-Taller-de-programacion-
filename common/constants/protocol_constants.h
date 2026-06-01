@@ -68,6 +68,7 @@ enum MessageType : uint8_t {
     MSG_PLAYERS_SNAPSHOT = 0x28, // Snapshot de players vivos: vector<PlayerInfo>
     MSG_TELEPORT       = 0x29, // Cliente->server: pedido de /tp (sin payload)
     MSG_ZONE_CHANGE = 0x30, // Server -> cliente: zona a cargar
+    MSG_UPDATE_EQUIP = 0x31, // Server -> cliente: actualizar equip de item
 };
 
 enum Direction : uint8_t {
