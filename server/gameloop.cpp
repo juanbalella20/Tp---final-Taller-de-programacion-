@@ -167,22 +167,9 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
 }
 
 void GameLoop::handle_list(const ClientCmd& cmd) {
-    auto it = selected_npc.find(cmd.get_client_id());
-    std::cout << "[DEBUG: MSG_LIST] client_id=" << cmd.get_client_id()
-              << " found=" << (it != selected_npc.end())
-              << (it != selected_npc.end() ? " x=" + std::to_string(it->second.first) + " y=" + std::to_string(it->second.second) : "")
-              << std::endl;
-    if (it == selected_npc.end()) {
-        GameMsg msg(MSG_CHAT);
-        msg.set_chat_content("Selecciona un comerciante primero.");
-        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-        return;
-    }
-    int x = it->second.first;
-    int y = it->second.second;
     try {
         std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-        std::vector<ItemInfo> items = game_map.list_seller_items(name, x, y);
+        std::vector<ItemInfo> items = game_map.list_seller_items(name, 0, 0);
         GameMsg msg(MSG_CHAT);
         std::string lista = "Items disponibles: ";
         for (const auto& item : items) {
@@ -196,23 +183,12 @@ void GameLoop::handle_list(const ClientCmd& cmd) {
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
     }
 }
-
+ 
 void GameLoop::handle_sell(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     std::string item_id = cmd.get_item_id();
-    auto it = selected_npc.find(cmd.get_client_id());
-    if (it == selected_npc.end()) {
-        GameMsg msg(MSG_CHAT);
-        msg.set_chat_content("Selecciona un comerciante primero.");
-        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-        return;
-    }
-    int x = it->second.first;
-    int y = it->second.second;
-    std::cout << "[DEBUG: MSG_SELL] player=" << name
-              << " x=" << x << " y=" << y << " item=" << item_id << std::endl;
     try {
-        game_map.player_sell_item(name, x, y, item_id);
+        game_map.player_sell_item(name, 0, 0, item_id);
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
         for (Item* item : p.get_inventory().get_items()) {
@@ -221,7 +197,7 @@ void GameLoop::handle_sell(const ClientCmd& cmd) {
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
         client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
-
+ 
         GameMsg gold_msg(MSG_CHAT);
         gold_msg.set_chat_content("Vendiste el item. Oro actual: " + std::to_string(p.get_gold()));
         client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
@@ -231,21 +207,12 @@ void GameLoop::handle_sell(const ClientCmd& cmd) {
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
     }
 }
-
+ 
 void GameLoop::handle_buy(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     std::string item_id = cmd.get_item_id();
-    auto it = selected_npc.find(cmd.get_client_id());
-    if (it == selected_npc.end()) {
-        GameMsg msg(MSG_CHAT);
-        msg.set_chat_content("Selecciona un comerciante primero.");
-        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
-        return;
-    }
-    int x = it->second.first;
-    int y = it->second.second;
     try {
-        game_map.player_buy_item(name, x, y, item_id);
+        game_map.player_buy_item(name, 0, 0, item_id);
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
         for (Item* item : p.get_inventory().get_items()) {
@@ -254,7 +221,7 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
         client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
-
+ 
         GameMsg gold_msg(MSG_CHAT);
         gold_msg.set_chat_content("Compraste el item. Oro actual: " +
                                   std::to_string(static_cast<int>(p.get_gold())));
