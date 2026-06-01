@@ -8,7 +8,7 @@
 
 struct PlayerInfo {
     std::string name;
-    uint8_t race;
+    std::string race;
     uint8_t klass;
     int x;
     int y;
