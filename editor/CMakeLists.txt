@@ -8,7 +8,14 @@ set(CMAKE_AUTOUIC ON)
 
 add_executable(map_editor
     main.cpp
+    model/Map.cpp
     gui/EditorWindow.cpp
+    gui/TilePalette.cpp
+    gui/TilePalette.ui
+    gui/LoadTilesetDialog.cpp
+    gui/LoadTilesetDialog.ui
+    render/MapCanvasWidget.cpp
+    render/TilesetPixmapCache.cpp
 )
 
 target_include_directories(map_editor PRIVATE

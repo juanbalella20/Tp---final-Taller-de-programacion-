@@ -1,23 +1,47 @@
 #include "EditorWindow.h"
 
 #include <QAction>
+#include <QDockWidget>
 #include <QKeySequence>
-#include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
+#include <QScrollArea>
 #include <QStatusBar>
+
+#include "../render/MapCanvasWidget.h"
+#include "Map.h"
+#include "TilePalette.h"
 
 EditorWindow::EditorWindow(QWidget* parent) : QMainWindow(parent) {
     setWindowTitle("Editor de Mapas - Argentum Online");
     resize(1024, 768);
 
     build_menus();
-
-    auto* placeholder = new QLabel("Area de edicion del mapa", this);
-    placeholder->setAlignment(Qt::AlignCenter);
-    setCentralWidget(placeholder);
+    build_palette_dock();
 
     statusBar()->showMessage("Listo");
+}
+
+
+void EditorWindow::build_palette_dock() {
+    palette_ = new TilePalette(this);
+    auto* dock = new QDockWidget("Tiles", this);
+    dock->setWidget(palette_);
+    addDockWidget(Qt::LeftDockWidgetArea, dock);
+
+    // Mas adelante esto ira al EditorDocument
+    connect(palette_, &TilePalette::tileSelected, this, [this](int gid) {
+        statusBar()->showMessage(QString("Tile seleccionado: gid %1").arg(gid));
+    });
+
+    // Al cargar un PNG, registrar el tileset en el Map y actualizar canvas.
+    connect(palette_, &TilePalette::tilesetLoaded, this,
+            [this](const QString& name, const QString& file_path, int columns,
+                   int tile_count, bool collidable) {
+                map_.add_tileset(name.toStdString(), file_path.toStdString(),
+                                 columns, tile_count, collidable);
+                if (canvas_) canvas_->refresh();
+            });
 }
 
 void EditorWindow::build_menus() {
