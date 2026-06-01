@@ -33,15 +33,7 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
         throw std::runtime_error(std::string("Creating weapon texture: ") + SDL_GetError());
     }
 
-    SDL_Surface* head_surf = IMG_Load("imagenes/420.png");
-    if (!head_surf) {
-        throw std::runtime_error(std::string("Loading head surface: ") + SDL_GetError());
-    }
-    head_image = SDL_CreateTextureFromSurface(renderer, head_surf);
-    SDL_DestroySurface(head_surf);
-    if (!head_image) {
-        throw std::runtime_error(std::string("Creating head texture: ") + SDL_GetError());
-    }
+    load_heads();
 }
 
 PlayerDisplay::~PlayerDisplay() {
@@ -82,6 +74,29 @@ PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
         other.head_image = nullptr;
     }
     return *this;
+}
+
+void PlayerDisplay::load_heads() {
+    SDL_Surface* head_surf;
+
+    if (race == "human") {
+        head_surf = IMG_Load("imagenes/420.png");
+    } else if (race == "elf") {
+        head_surf = IMG_Load("imagenes/422.png");
+    } else if (race == "dwarf") {
+        //head_surf = IMG_Load("imagenes/426.png");
+    } else {
+        //head_surf = IMG_Load("imagenes/no-se-todavia.png");
+    }
+
+    if (!head_surf) {
+        throw std::runtime_error(std::string("Loading head surface: ") + SDL_GetError());
+    }
+    head_image = SDL_CreateTextureFromSurface(renderer, head_surf);
+    SDL_DestroySurface(head_surf);
+    if (!head_image) {
+        throw std::runtime_error(std::string("Creating head texture: ") + SDL_GetError());
+    }
 }
 
 void PlayerDisplay::move_up() {
@@ -155,7 +170,12 @@ SDL_FRect PlayerDisplay::back_pov() {
     static const float h_dy[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
     head_dx = h_dx[current_frame];
     head_dy = h_dy[current_frame];
-    head_pov = { 408.0f, 332.0f, 19.0f, 16.0f };
+
+    if (race == "human") {
+        head_pov = { 408.0f, 332.0f, 19.0f, 16.0f };
+    } else {
+        head_pov = { 58.0f, 77.0f, 18.0f, 15.0f };
+    }
 
     if(has_equipped_weapon) {
         static const float dx[] = { 0.1f, 0.2f, 0.1f, 0.2f, 0.1f, 0.1f };
@@ -185,7 +205,12 @@ SDL_FRect PlayerDisplay::front_pov() {
     static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
     head_dx = h_dx[current_frame];
     head_dy = h_dy[current_frame];
-    head_pov = { 408.0f, 267.0f, 19.0f, 19.0f };
+
+    if (race == "human") {
+        head_pov = { 408.0f, 267.0f, 19.0f, 19.0f };
+    } else {
+        head_pov = { 58.0f, 14.0f, 18.0f, 14.0f };
+    }
 
     if(has_equipped_weapon) {
         static const float dx[] = { 0.1f, 0.1f, 0.2f, 0.2f, 0.1f, 0.1f };
@@ -214,8 +239,13 @@ SDL_FRect PlayerDisplay::right_pov() {
     static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
     head_dx = h_dx[current_frame];
     head_dy = h_dy[current_frame];
-    head_pov = { 407.0f, 461.0f, 18.0f, 16.0f };
-    
+
+    if (race == "human") {
+        head_pov = { 407.0f, 461.0f, 18.0f, 16.0f };
+    } else {
+        head_pov = { 57.0f, 205.0f, 19.0f, 15.0f };
+    }
+
     if(has_equipped_weapon) {
         static const float dx[] = { 0.2f, 0.5f, 0.2f, 0.2f, 0.2f };
         static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
@@ -240,11 +270,16 @@ SDL_FRect PlayerDisplay::left_pov() {
     int current_frame = walk_frame % 5;
 
     static const float h_dx[] = { 0.0f, 0.0f, -0.05f, -0.05f, -0.3f };
-    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
+    static const float h_dy[] = { -0.05f, -0.05f, -0.05f, -0.05f, -0.05f };
     head_dx = h_dx[current_frame];
     head_dy = h_dy[current_frame];
-    head_pov = { 407.0f, 397.0f, 18.0f, 16.0f };
-    
+
+    if (race == "human") {
+        head_pov = { 407.0f, 397.0f, 18.0f, 16.0f };
+    } else {
+        head_pov = { 57.0f, 142.0f, 18.0f, 16.0f };
+    }
+
     if(has_equipped_weapon) {
         static const float dx[] = { 0.5f, 0.5f, 0.4f, 0.4f, 0.1f };
         static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
