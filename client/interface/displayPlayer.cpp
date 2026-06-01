@@ -103,23 +103,23 @@ void PlayerDisplay::load_heads() {
     } else if (race == "gnome") {
         head_surf = IMG_Load("imagenes/426.png");
         hat_surf = IMG_Load("imagenes/437.png");
+        if (!hat_surf) {
+            throw std::runtime_error(std::string("Loading hat surface: ") + SDL_GetError());
+        }
+        hat_image = SDL_CreateTextureFromSurface(renderer, hat_surf);
+        SDL_DestroySurface(hat_surf);
+        if (!hat_image) {
+            throw std::runtime_error(std::string("Creating hat texture: ") + SDL_GetError());
+        }
     }
 
     if (!head_surf) {
         throw std::runtime_error(std::string("Loading head surface: ") + SDL_GetError());
     }
-    if (!hat_surf) {
-        throw std::runtime_error(std::string("Loading hat surface: ") + SDL_GetError());
-    }
     head_image = SDL_CreateTextureFromSurface(renderer, head_surf);
     SDL_DestroySurface(head_surf);
-    hat_image = SDL_CreateTextureFromSurface(renderer, hat_surf);
-    SDL_DestroySurface(hat_surf);
     if (!head_image) {
         throw std::runtime_error(std::string("Creating head texture: ") + SDL_GetError());
-    }
-    if (!hat_image) {
-        throw std::runtime_error(std::string("Creating hat texture: ") + SDL_GetError());
     }
 }
 
