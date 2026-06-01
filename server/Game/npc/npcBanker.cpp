@@ -2,6 +2,7 @@
 #include <map>
 #include <vector>
 
+/*
 NPCbanker::NPCbanker() {
     set_npc_name("Banker");
 }
@@ -61,3 +62,4 @@ void NPCbanker::interact(Player player, Command cmd) {
             break;
     }
 }
+*/
