@@ -355,22 +355,26 @@ SDL_FRect PlayerDisplay::left_pov() {
     return frame;
 }
 
-void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) const {
+void PlayerDisplay::set_transparency(SDL_Texture* img) const {
     if (ghost) {
-        SDL_SetTextureAlphaMod(image, 140);
-        SDL_SetTextureAlphaMod(head_image, 140);
+        SDL_SetTextureAlphaMod(img, 140);
     } else {
-        SDL_SetTextureAlphaMod(image, 255);
-        SDL_SetTextureAlphaMod(head_image, 255);
+        SDL_SetTextureAlphaMod(img, 255);
     }
+}
 
-    SDL_FRect dst{
+void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect body_pov) const {
+    SDL_FRect dst {
         camera.world_to_screen_x(rect.x),
         camera.world_to_screen_y(rect.y),
         rect.w,
         rect.h
     };
 
+    SDL_RenderTexture(renderer, image, &body_pov, &dst);
+}
+
+void PlayerDisplay::draw_player_head(const Camera& camera) const {
     float head_width = rect.w * 0.5f;
     float aspect_ratio = head_pov.h / head_pov.w;
     float head_height = head_width * aspect_ratio;
@@ -385,17 +389,17 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) const {
         head_height
     };
 
-    SDL_RenderTexture(renderer, image, &body_pov, &dst);
     SDL_RenderTexture(renderer, head_image, &head_pov, &head_dst);
 
+    draw_gnome_hat(camera, head_dst);
+}
+
+void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_dst) const {
     if (race == "gnome") {
-        if (ghost) {
-            SDL_SetTextureAlphaMod(hat_image, 140);
-        } else {
-            SDL_SetTextureAlphaMod(hat_image, 255);
-        }
+        set_transparency(hat_image);
+
         SDL_FRect crop = {194.0f, 66.0f, 19.0f, 18.0f};
-        float hat_width = head_width * 1.1f;
+        float hat_width = head_dst.w * 1.1f;
         float hat_aspect_ratio = crop.h / crop.w;
         float hat_height = hat_width * hat_aspect_ratio;
         SDL_FRect hat_dst = {
@@ -406,13 +410,11 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) const {
         };
         SDL_RenderTexture(renderer, hat_image, &crop, &hat_dst);
     }
+}
 
+void PlayerDisplay::draw_equipped_item(const Camera& camera) const {
     if (has_equipped_weapon) {
-        if (ghost) {
-            SDL_SetTextureAlphaMod(weapon_image, 140);
-        } else {
-            SDL_SetTextureAlphaMod(weapon_image, 255);
-        }
+        set_transparency(weapon_image);
         SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};
         float weapon_size = rect.w * 0.5f;
         SDL_FRect weapon_dst = {
@@ -423,6 +425,16 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) const {
         };
         SDL_RenderTexture(renderer, weapon_image, &crop, &weapon_dst);
     }
+}
+
+void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) const {
+    set_transparency(image);
+    set_transparency(head_image);
+
+    draw_player(camera, body_pov);
+    draw_player_head(camera);
+
+    draw_equipped_item(camera);
 }
 
 int PlayerDisplay::get_x() {

@@ -39,6 +39,12 @@ private:
     void head_right_pov();
     void head_left_pov();
 
+    void set_transparency(SDL_Texture* img) const;
+    void draw_player(const Camera& camera, SDL_FRect body_pov) const;
+    void draw_player_head(const Camera& camera) const;
+    void draw_gnome_hat(const Camera& camera, const SDL_FRect& head_dst) const;
+    void draw_equipped_item(const Camera& camera) const;
+
 public:
     // Carga la imagen. La posicion inicial es (0, 0). Tile size en pixels.
     PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize, const std::string& race);
