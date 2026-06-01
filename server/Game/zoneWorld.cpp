@@ -106,6 +106,10 @@ void ZoneWorld::spawn_gold(int x, int y, int amount) {
     }
 }
 
+void ZoneWorld::spawn_banker(int x, int y) {
+    bankers.emplace_back(x, y);
+}
+
 bool ZoneWorld::update_npcs() {
     bool respawned = false;
     for (auto& npc : npcs) {
@@ -144,6 +148,15 @@ std::vector<NpcInfo> ZoneWorld::build_npcs_snapshot() const {
         npcinfo.y = s.get_coord_y();
         snapshot.push_back(npcinfo);
     }
+    for (const auto& b : bankers) {
+        NpcInfo npcinfo;
+        npcinfo.name = "Banquero";
+        npcinfo.type = "banker";
+        npcinfo.x = b.get_coord_x();
+        npcinfo.y = b.get_coord_y();
+        snapshot.push_back(npcinfo);
+    }
+
     return snapshot;
 }
 

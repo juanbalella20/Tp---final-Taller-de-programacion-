@@ -14,6 +14,7 @@
 #include "../../common/mapLoader.h"
 #include "npc/npcHostile.h"
 #include "npc/npcSeller.h"
+#include "npc/npcBanker.h"
 
 class Player;
 class Item;
@@ -33,6 +34,7 @@ private:
     std::map<std::string, positionCoord> spawns;
     std::vector<NPChostile> npcs;
     std::vector<NPCseller> sellers;
+    std::vector<NPCbanker> bankers;
     std::vector<groundItem> ground_items;
     std::vector<groundGold> ground_gold;
     std::vector<TeleportDef> teleports;
@@ -69,6 +71,7 @@ public:
     // --- Spawns / mutaciones de esta zona ---
     void spawn_npc(NPChostile&& npc);
     void spawn_seller(int x, int y);
+    void spawn_banker(int x, int y);
     void spawn_item(int x, int y, std::unique_ptr<Item> item);
     void spawn_gold(int x, int y, int amount);
 
