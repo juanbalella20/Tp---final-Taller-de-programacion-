@@ -2,6 +2,7 @@
 #include "../player/player.h"
 #include "../item/item.h"
 #include "../item/arma.h"
+#include <stdexcept>
 
 NPCseller::NPCseller(int x, int y) : pos_x(x), pos_y(y) {
     name = "Comerciante";
@@ -54,7 +55,7 @@ void NPCseller::interact(Player& player, Command cmd) {
         if (store_item == nullptr) return;
  
         int price = store_item->getPrice();
-        if (player.get_gold() < price) return;
+        if (player.get_gold() < price) throw std::runtime_error("No tenes suficiente oro.");
  
         player.give_gold(price);
  

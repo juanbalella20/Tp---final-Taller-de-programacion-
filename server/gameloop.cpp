@@ -198,8 +198,8 @@ void GameLoop::handle_sell(const ClientCmd& cmd) {
         inv_msg.set_items(item_infos);
         client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
  
-        GameMsg gold_msg(MSG_CHAT);
-        gold_msg.set_chat_content("Vendiste el item. Oro actual: " + std::to_string(p.get_gold()));
+        GameMsg gold_msg(MSG_GOLD);
+        gold_msg.set_gold(p.get_gold());
         client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
     } catch (const std::runtime_error& e) {
         GameMsg msg(MSG_CHAT);
@@ -222,9 +222,8 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
         inv_msg.set_items(item_infos);
         client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
  
-        GameMsg gold_msg(MSG_CHAT);
-        gold_msg.set_chat_content("Compraste el item. Oro actual: " +
-                                  std::to_string(static_cast<int>(p.get_gold())));
+        GameMsg gold_msg(MSG_GOLD);
+        gold_msg.set_gold(p.get_gold());
         client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
     } catch (const std::runtime_error& e) {
         GameMsg msg(MSG_CHAT);
