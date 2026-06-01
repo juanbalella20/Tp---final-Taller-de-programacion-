@@ -272,7 +272,7 @@ SDL_FRect PlayerDisplay::left_pov() {
     int current_frame = walk_frame % 5;
 
     static const float h_dx[] = { 0.0f, 0.0f, -0.05f, -0.05f, -0.3f };
-    static const float h_dy[] = { -0.05f, -0.05f, -0.05f, -0.05f, -0.05f };
+    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
     head_dx = h_dx[current_frame];
     head_dy = h_dy[current_frame];
 
