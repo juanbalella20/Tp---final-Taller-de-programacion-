@@ -80,6 +80,9 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_ZONE_CHANGE] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_zone(payload, msg);
     };
+    handlers[MSG_UPDATE_EQUIP] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_name(payload, msg);
+    };
 }
 
 
@@ -185,6 +188,11 @@ static std::string read_string(const std::vector<uint8_t>& payload, size_t& offs
 void ClientDeserializer::deserialize_text(const std::vector<uint8_t>& payload, GameMsg& msg) {
     size_t offset = 0;
     msg.set_chat_content(read_string(payload, offset));
+}
+
+void ClientDeserializer::deserialize_name(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    size_t offset = 0;
+    msg.set_player_name(read_string(payload, offset));
 }
 
 uint32_t ClientDeserializer::deserialize_value(const std::vector<uint8_t>& payload, GameMsg& msg) {
