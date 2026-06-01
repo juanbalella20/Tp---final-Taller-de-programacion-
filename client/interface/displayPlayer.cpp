@@ -178,15 +178,24 @@ SDL_FRect PlayerDisplay::front_pov() {
         {365.0f, 5.0f, 30.0f, 40.0f},
         {394.0f, 5.0f, 30.0f, 40.0f}
     };
+
+    int current_frame = walk_frame % 6;
+
+    static const float h_dx[] = { -0.05f, -0.15f, -0.05f, 0.0f, -0.1f, -0.2f };
+    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
+    head_dx = h_dx[current_frame];
+    head_dy = h_dy[current_frame];
+    head_pov = { 408.0f, 267.0f, 19.0f, 19.0f };
+
     if(has_equipped_weapon) {
         static const float dx[] = { 0.1f, 0.1f, 0.2f, 0.2f, 0.1f, 0.1f };
         static const float dy[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-        weapon_dx = dx[walk_frame % 5];
-        weapon_dy = dy[walk_frame % 5];
+        weapon_dx = dx[current_frame];
+        weapon_dy = dy[current_frame];
     }
 
-    SDL_FRect frame = frames[walk_frame % 5];
-    walk_frame = (walk_frame + 1) % 5;
+    SDL_FRect frame = frames[current_frame];
+    walk_frame = (walk_frame + 1) % 6;
     return frame;
 }
 
