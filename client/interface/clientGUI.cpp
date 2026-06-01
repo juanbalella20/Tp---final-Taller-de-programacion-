@@ -328,11 +328,6 @@ void ClientGUI::sendChatCmd(const std::string& msg) {
 
 void ClientGUI::update() {
     try {
-        // static bool tested = false;
-        // if (!tested) {
-        //     chat_inbox.push("Hola");
-        //     tested = true;
-        // }
         if (!player) {
             return;
         }
