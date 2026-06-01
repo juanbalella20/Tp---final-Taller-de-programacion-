@@ -516,7 +516,9 @@ void ClientGUI::draw_npc_friends() {
         if (npc.type == "seller") {
             src = {512.0f, 256.0f, 30.0f, 40.0f};
         } else if (npc.type == "banker") {
-            src = {256.0f, 512.0f, 30.0f, 40.0f};  
+            src = {512.0f, 768.0f, 30.0f, 40.0f};  
+        } else if (npc.type == "priest") {
+            src = {0.0f, 512.0f, 30.0f, 40.0f};  // STD 9
         } else {
             continue;
         }
