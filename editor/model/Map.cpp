@@ -3,9 +3,9 @@
 #include <stdexcept>
 
 // ============================================================================
-// Implementacion del modelo puro del mapa (Persona A). SIN Qt.
+// Implementacion del modelo puro del mapa  SIN Qt.
 //
-// V1: tamano FIJO WIDTH x HEIGHT (30x16), tile TILE_SIZE (64), DOS capas fijas
+// V1: tamaño FIJO WIDTH x HEIGHT (30x16), tile TILE_SIZE (64), DOS capas fijas
 // ("ground" indice 0, "buildings" indice 1). Sin spawns ni teleports.
 //
 // Reutiliza la semantica de MapLoader para tilesets/colision: build_tile_index,

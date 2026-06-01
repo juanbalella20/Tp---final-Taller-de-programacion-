@@ -26,6 +26,9 @@ enum class elements {
 
 #define HEIGHT 16
 #define WIDTH 30
+// Tamano de tile en pixeles. Lo usan el editor grafico, el formato .bin y el
+// render. Fijo en V1 (mapas 30x16 con tiles de 64x64).
+#define TILE_SIZE 64
 
 
 #endif

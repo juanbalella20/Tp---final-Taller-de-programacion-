@@ -6,28 +6,49 @@
 #include <stdexcept>
 
 #include "../../common/mapLoader.h"
+#include "../../common/binaryMap/binaryMapLoader.h"
 #include "item/item.h"
 #include "player/player.h"
 
-void ZoneWorld::load_terrain(const std::string& toml_path) {
-    MapLoader md;
-    md.load(toml_path);
+void ZoneWorld::load_terrain(const std::string& map_path) {
+    // Vuelca cualquier loader que exponga la superficie de MapLoader
+    // (is_collidable / get_width / get_height / get_spawns / get_teleports) al
+    // estado de la zona. Asi el cuerpo es identico para .toml y .bin: el mundo
+    // de colision que ve el server es el mismo desde ambos formatos.
+    auto fill_from = [this](const auto& loader) {
+        width = loader.get_width();
+        height = loader.get_height();
+        map.assign(height, std::vector<elements>(width, elements::empty));
 
-    width = md.get_width();
-    height = md.get_height();
-    map.assign(height, std::vector<elements>(width, elements::empty));
-
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            if (md.is_collidable(x, y)) {
-                map[y][x] = elements::buildings;
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                if (loader.is_collidable(x, y)) {
+                    map[y][x] = elements::buildings;
+                }
             }
         }
+        // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
+        spawns = loader.get_spawns();
+        // [[teleport]] = tiles de teletransporte hacia otra zona.
+        teleports = loader.get_teleports();
+    };
+
+    // Elegir loader por extension. El .bin (editor grafico) y el .toml producen
+    // el mismo mundo via la misma superficie publica.
+    auto ends_with = [](const std::string& s, const std::string& suffix) {
+        return s.size() >= suffix.size() &&
+               s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
+    };
+
+    if (ends_with(map_path, ".bin")) {
+        BinaryMapLoader md;
+        md.load(map_path);
+        fill_from(md);
+    } else {
+        MapLoader md;
+        md.load(map_path);
+        fill_from(md);
     }
-    // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
-    spawns = md.get_spawns();
-    // [[teleport]] = tiles de teletransporte hacia otra zona.
-    teleports = md.get_teleports();
 }
 
 bool ZoneWorld::in_bounds(int x, int y) const {

@@ -25,7 +25,6 @@
  *
  * Es el unico estado del mapa; lo muta exclusivamente el EditorDocument.
  *
- * Implementacion: Persona A (editor/model/Map.cpp). C++20.
  */
 class Map {
 public:
