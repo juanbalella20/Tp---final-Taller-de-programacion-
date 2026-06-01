@@ -16,6 +16,7 @@ private:
     std::vector<uint8_t> serialize_map(const GameMsg& msg);
     std::vector<uint8_t> serialize_inventory(const GameMsg& msg);
     std::vector<uint8_t> serialize_text(const GameMsg& msg);
+    std::vector<uint8_t> serialize_name(const GameMsg& msg);
     std::vector<uint8_t> serialize_private(const GameMsg& msg);
     std::vector<uint8_t> serialize_npcs_snapshot(const GameMsg& msg);
     std::vector<uint8_t> serialize_items_snapshot(const GameMsg& msg);

@@ -34,6 +34,7 @@ ServerSerializer::ServerSerializer() {
     handlers[MSG_MANA] = [this](const GameMsg& msg) { return serialize_mana(msg); };
     handlers[MSG_PLAYERS_SNAPSHOT] = [this](const GameMsg& msg) { return serialize_players_snapshot(msg); };
     handlers[MSG_ZONE_CHANGE] = [this](const GameMsg& msg) {return serialize_zone(msg); };
+    handlers[MSG_UPDATE_EQUIP] = [this](const GameMsg& msg) {return serialize_name(msg); };
 }
 
 // Appendea un uint16_t en big-endian al buffer (definido mas abajo).
@@ -147,6 +148,18 @@ std::vector<uint8_t> ServerSerializer::serialize_text(const GameMsg& msg) {
     write_header(buf, static_cast<uint8_t>(msg.get_type()), payload_len);
     buf.push_back(static_cast<uint8_t>(content.size()));
     buf.insert(buf.end(), content.begin(), content.end());
+    return buf;
+}
+
+std::vector<uint8_t> ServerSerializer::serialize_name(const GameMsg& msg) {
+    const std::string& name = msg.get_player_name();
+    uint16_t payload_len = LEN_NAME_SIZE_FIELD + static_cast<uint16_t>(name.size());
+
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, static_cast<uint8_t>(msg.get_type()), payload_len);
+    buf.push_back(static_cast<uint8_t>(name.size()));
+    buf.insert(buf.end(), name.begin(), name.end());
     return buf;
 }
 
