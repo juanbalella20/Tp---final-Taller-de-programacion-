@@ -13,6 +13,9 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
       tileSize(tileSize),
       keystate(SDL_GetKeyboardState(nullptr)),
       race(race) {
+    const float size_scale = (race == "dwarf") ? 0.75f : 1.0f;
+    rect.w *= size_scale;
+    rect.h *= size_scale;
 
     SDL_Surface* surf = IMG_Load(imagePath.c_str());
     if (!surf) {
