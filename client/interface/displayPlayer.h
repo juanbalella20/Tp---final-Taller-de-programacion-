@@ -20,7 +20,7 @@ private:
     int tileSize;
     const bool* keystate;
     bool ghost = false;
-    std::string race = "elf";
+    std::string race;
 
     float weapon_dx = 0.0f;
     float weapon_dy = 0.0f;
@@ -32,7 +32,7 @@ private:
     void load_heads();
 public:
     // Carga la imagen. La posicion inicial es (0, 0). Tile size en pixels.
-    PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize);
+    PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize, const std::string& race);
     ~PlayerDisplay();
 
     PlayerDisplay(const PlayerDisplay&) = delete;

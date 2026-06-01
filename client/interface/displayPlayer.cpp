@@ -5,12 +5,14 @@
 #include <string>
 #include <iostream>
 
-PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize)
+PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize,
+    const std::string& race)
     : renderer(renderer), image(nullptr),
       rect{0.0f, 0.0f, static_cast<float>(tileSize), static_cast<float>(tileSize)},
       head_pov{0.0f, 0.0f, 0.0f, 0.0f},
       tileSize(tileSize),
-      keystate(SDL_GetKeyboardState(nullptr)) {
+      keystate(SDL_GetKeyboardState(nullptr)),
+      race(race) {
 
     SDL_Surface* surf = IMG_Load(imagePath.c_str());
     if (!surf) {
