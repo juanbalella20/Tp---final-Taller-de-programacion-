@@ -3,8 +3,13 @@
 
 #include "npcFriendly.h"
 
+class Player;
+
 class NPCpriest : public NPCfriendly {
     private:
+        int pos_x;
+        int pos_y;
+        /*
         // store can be a class
         Store store;
 
@@ -18,7 +23,7 @@ class NPCpriest : public NPCfriendly {
         void heal(Player player);
         // sells item to player
         void sell_item(Item item, Player player, int cantidad);
-
+        */
     public:
         // an npc_id is generated and a name
         NPCpriest();
@@ -27,7 +32,16 @@ class NPCpriest : public NPCfriendly {
          * - heals player
          * - sells item to player
          */
-        void interact(Player player, Command cmd) override;
+        NPCpriest(int x, int y) : pos_x(x), pos_y(y) {}
+        NPCpriest(NPCpriest&&) = default;
+        NPCpriest& operator=(NPCpriest&&) = default;
+        NPCpriest(const NPCpriest&) = delete;
+        NPCpriest& operator=(const NPCpriest&) = delete;
+
+        int get_coord_x() const { return pos_x; }
+        int get_coord_y() const { return pos_y; }
+
+        void interact(Player& player, Command cmd) override {}
 
 };
 
