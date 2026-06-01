@@ -337,7 +337,7 @@ void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
         std::string name = read_string(payload, offset);
         int x = static_cast<int>(read_uint16_be(payload, offset));
         int y = static_cast<int>(read_uint16_be(payload, offset));
-        players.push_back({std::move(name), 0, 0, x, y});
+        players.push_back({std::move(name), "human", 0, x, y});
     }
     msg.set_players(players);
 }
@@ -357,7 +357,7 @@ void ClientDeserializer::deserialize_players_snapshot(const std::vector<uint8_t>
         int x = static_cast<int>(read_uint16_be(payload, offset));
         int y = static_cast<int>(read_uint16_be(payload, offset));
         // race y klass no viajan en este snapshot (solo posicion y nombre)
-        players.push_back({std::move(name), 0, 0, x, y});
+        players.push_back({std::move(name), "human", 0, x, y});
     }
 
     msg.set_players(players);

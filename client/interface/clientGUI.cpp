@@ -417,7 +417,7 @@ void ClientGUI::update() {
                             it->y = y;
                             it->direction = dir;
                         } else {
-                            PlayerInfo pi{mover, 0, 0, x, y, dir};
+                            PlayerInfo pi{mover, "human", 0, x, y, dir};
                             other_players.push_back(pi);
                         }
                     }
