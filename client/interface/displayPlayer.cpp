@@ -8,6 +8,7 @@
 PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize)
     : renderer(renderer), image(nullptr),
       rect{0.0f, 0.0f, static_cast<float>(tileSize), static_cast<float>(tileSize)},
+      head_pov{0.0f, 0.0f, 0.0f, 0.0f},
       tileSize(tileSize),
       keystate(SDL_GetKeyboardState(nullptr)) {
 
@@ -150,10 +151,11 @@ SDL_FRect PlayerDisplay::back_pov() {
 
     int current_frame = walk_frame % 6;
 
-    static const float h_dx[] = { 0.0f, -0.15f, -0.05f, 0.0f, -0.1f, 0.0f };
+    static const float h_dx[] = { -0.05f, -0.15f, -0.05f, 0.0f, -0.1f, -0.15f };
     static const float h_dy[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
     head_dx = h_dx[current_frame];
     head_dy = h_dy[current_frame];
+    head_pov = { 408.0f, 332.0f, 19.0f, 16.0f };
 
     if(has_equipped_weapon) {
         static const float dx[] = { 0.1f, 0.2f, 0.1f, 0.2f, 0.1f, 0.1f };
@@ -163,7 +165,7 @@ SDL_FRect PlayerDisplay::back_pov() {
     }
 
     SDL_FRect frame = frames[current_frame];
-    walk_frame = (walk_frame + 1) % 5;
+    walk_frame = (walk_frame + 1) % 6;
     return frame;
 }
 
@@ -245,7 +247,6 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) const {
         rect.h
     };
 
-    SDL_FRect head_pov = { 408.0f, 332.0f, 19.0f, 16.0f };
     float head_width = rect.w * 0.5f;
     float aspect_ratio = head_pov.h / head_pov.w;
     float head_height = head_width * aspect_ratio;
