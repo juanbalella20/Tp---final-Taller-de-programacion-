@@ -25,6 +25,8 @@ private:
     void build_menus();
     // Crea widget de tiles
     void build_palette_dock();
+    // Crea el grid del mapa
+    void build_canvas();
 
     // Modelo del mapa (mas adelante pasa a EditorDocument).
     Map map_;

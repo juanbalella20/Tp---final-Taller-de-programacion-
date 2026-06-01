@@ -17,11 +17,19 @@ EditorWindow::EditorWindow(QWidget* parent) : QMainWindow(parent) {
     resize(1024, 768);
 
     build_menus();
+    build_canvas();
     build_palette_dock();
 
     statusBar()->showMessage("Listo");
 }
 
+void EditorWindow::build_canvas() {
+    canvas_ = new MapCanvasWidget(&map_, this);
+    auto* scroll = new QScrollArea(this);
+    scroll->setWidget(canvas_);
+    scroll->setAlignment(Qt::AlignCenter);
+    setCentralWidget(scroll);
+}
 
 void EditorWindow::build_palette_dock() {
     palette_ = new TilePalette(this);

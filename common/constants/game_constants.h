@@ -30,5 +30,4 @@ enum class elements {
 // render. Fijo en V1 (mapas 30x16 con tiles de 64x64).
 #define TILE_SIZE 64
 
-
 #endif
