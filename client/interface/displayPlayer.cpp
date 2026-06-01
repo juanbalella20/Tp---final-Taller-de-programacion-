@@ -51,15 +51,19 @@ PlayerDisplay::~PlayerDisplay() {
     if (head_image) {
         SDL_DestroyTexture(head_image);
     }
+    if (hat_image) {
+        SDL_DestroyTexture(hat_image);
+    }
 }
 
 PlayerDisplay::PlayerDisplay(PlayerDisplay&& other) noexcept
     : renderer(other.renderer), image(other.image), weapon_image(other.weapon_image),
-      head_image(other.head_image), rect(other.rect), head_pov(other.head_pov),
+      head_image(other.head_image), hat_image(other.hat_image), rect(other.rect), head_pov(other.head_pov),
       tileSize(other.tileSize), keystate(other.keystate), race(other.race) {
     other.image = nullptr;
     other.weapon_image = nullptr;
     other.head_image = nullptr;
+    other.hat_image = nullptr;
 }
 
 PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
@@ -67,10 +71,12 @@ PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
         if (image) SDL_DestroyTexture(image);
         if (weapon_image) SDL_DestroyTexture(weapon_image);
         if (head_image) SDL_DestroyTexture(head_image);
+        if (hat_image) SDL_DestroyTexture(hat_image);
         renderer = other.renderer;
         image = other.image;
         weapon_image = other.weapon_image;
         head_image = other.head_image;
+        hat_image = other.hat_image;
         rect = other.rect;
         head_pov = other.head_pov;
         tileSize = other.tileSize;
@@ -79,28 +85,41 @@ PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
         other.image = nullptr;
         other.weapon_image = nullptr;
         other.head_image = nullptr;
+        other.hat_image = nullptr;
     }
     return *this;
 }
 
 void PlayerDisplay::load_heads() {
     SDL_Surface* head_surf;
+    SDL_Surface* hat_surf;
 
     if (race == "human") {
         head_surf = IMG_Load("imagenes/420.png");
     } else if (race == "elf") {
         head_surf = IMG_Load("imagenes/422.png");
-    } else if (race == "dwarf" || race == "gnome") {
+    } else if (race == "dwarf") {
         head_surf = IMG_Load("imagenes/426.png");
+    } else if (race == "gnome") {
+        head_surf = IMG_Load("imagenes/426.png");
+        hat_surf = IMG_Load("imagenes/437.png");
     }
 
     if (!head_surf) {
         throw std::runtime_error(std::string("Loading head surface: ") + SDL_GetError());
     }
+    if (!hat_surf) {
+        throw std::runtime_error(std::string("Loading hat surface: ") + SDL_GetError());
+    }
     head_image = SDL_CreateTextureFromSurface(renderer, head_surf);
     SDL_DestroySurface(head_surf);
+    hat_image = SDL_CreateTextureFromSurface(renderer, hat_surf);
+    SDL_DestroySurface(hat_surf);
     if (!head_image) {
         throw std::runtime_error(std::string("Creating head texture: ") + SDL_GetError());
+    }
+    if (!hat_image) {
+        throw std::runtime_error(std::string("Creating hat texture: ") + SDL_GetError());
     }
 }
 
@@ -184,6 +203,7 @@ SDL_FRect PlayerDisplay::back_pov() {
         head_pov = { 407.0f, 79.0f, 21.0f, 17.0f };
     } else if (race == "gnome") {
         head_pov = {328.0f, 81.0f, 17.0f, 15.0f};
+        hat_dy = -0.8f;
     }
 
     if(has_equipped_weapon) {
@@ -223,6 +243,8 @@ SDL_FRect PlayerDisplay::front_pov() {
         head_pov = { 407.0f, 16.0f, 19.0f, 16.0f };
     } else if (race == "gnome") {
         head_pov = {328.0f, 17.0f, 17.0f, 13.0f};
+        hat_dx = 0.05f;
+        hat_dy = -1.0f;
     }
 
     if(has_equipped_weapon) {
@@ -261,6 +283,7 @@ SDL_FRect PlayerDisplay::right_pov() {
         head_pov = { 410.0f, 208.0f, 19.0f, 16.0f };
     } else if (race == "gnome") {
         head_pov = {328.0f, 209.0f, 19.0f, 16.0f};
+        hat_dy = -0.9f;
     }
 
     if(has_equipped_weapon) {
@@ -301,6 +324,7 @@ SDL_FRect PlayerDisplay::left_pov() {
         head_pov = {328.0f, 144.0f, 20.0f, 16.0f};
         head_dx += 0.05f;
         head_dy += 0.05f;
+        hat_dy = -1.0f;
     }
 
     if(has_equipped_weapon) {
@@ -347,6 +371,25 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) const {
 
     SDL_RenderTexture(renderer, image, &body_pov, &dst);
     SDL_RenderTexture(renderer, head_image, &head_pov, &head_dst);
+
+    if (race == "gnome") {
+        if (ghost) {
+            SDL_SetTextureAlphaMod(hat_image, 140);
+        } else {
+            SDL_SetTextureAlphaMod(hat_image, 255);
+        }
+        SDL_FRect crop = {194.0f, 66.0f, 19.0f, 18.0f};
+        float hat_width = head_width * 1.1f;
+        float hat_aspect_ratio = crop.h / crop.w;
+        float hat_height = hat_width * hat_aspect_ratio;
+        SDL_FRect hat_dst = {
+            head_dst.x + (head_dst.w * hat_dx),
+            head_dst.y + (head_dst.h * hat_dy),
+            hat_width,
+            hat_height
+        };
+        SDL_RenderTexture(renderer, hat_image, &crop, &hat_dst);
+    }
 
     if (has_equipped_weapon) {
         if (ghost) {

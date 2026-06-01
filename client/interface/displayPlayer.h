@@ -15,6 +15,7 @@ private:
     SDL_Texture* image;
     SDL_Texture* weapon_image;
     SDL_Texture* head_image;
+    SDL_Texture* hat_image;
     SDL_FRect rect;
     SDL_FRect head_pov;
     int tileSize;
@@ -26,6 +27,8 @@ private:
     float weapon_dy = 0.0f;
     float head_dx = 0.0f;
     float head_dy = 0.0f;
+    float hat_dx = 0.0f;
+    float hat_dy = 0.0f;
     int walk_frame = 0;
     bool has_equipped_weapon = false;
 
