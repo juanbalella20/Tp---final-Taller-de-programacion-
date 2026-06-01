@@ -16,6 +16,7 @@ private:
     SDL_Texture* weapon_image;
     SDL_Texture* head_image;
     SDL_FRect rect;
+    SDL_FRect head_pov;
     int tileSize;
     const bool* keystate;
     bool ghost = false;
