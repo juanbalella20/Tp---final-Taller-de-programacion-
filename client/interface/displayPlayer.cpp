@@ -208,14 +208,22 @@ SDL_FRect PlayerDisplay::right_pov() {
         {370.0f, 147.0f, 30.0f, 40.0}
     };
 
+    int current_frame = walk_frame % 5;
+
+    static const float h_dx[] = { -0.2f, 0.1f, -0.15f, -0.2f, -0.25f, -0.3f };
+    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
+    head_dx = h_dx[current_frame];
+    head_dy = h_dy[current_frame];
+    head_pov = { 407.0f, 461.0f, 18.0f, 16.0f };
+    
     if(has_equipped_weapon) {
         static const float dx[] = { 0.2f, 0.5f, 0.2f, 0.2f, 0.2f };
         static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
-        weapon_dx = dx[walk_frame % 5];
-        weapon_dy = dy[walk_frame % 5];
+        weapon_dx = dx[current_frame];
+        weapon_dy = dy[current_frame];
     }
 
-    SDL_FRect frame = frames[walk_frame % 5];
+    SDL_FRect frame = frames[current_frame];
     walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
@@ -228,14 +236,23 @@ SDL_FRect PlayerDisplay::left_pov() {
         {336.0f, 100.0f, 30.0f, 40.0},
         {370.0f, 100.0f, 30.0f, 40.0}
     };
+
+    int current_frame = walk_frame % 5;
+
+    static const float h_dx[] = { -0.05f, -0.15f, -0.05f, 0.0f, -0.1f, -0.2f };
+    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
+    head_dx = h_dx[current_frame];
+    head_dy = h_dy[current_frame];
+    head_pov = { 407.0f, 397.0f, 18.0f, 16.0f };
+    
     if(has_equipped_weapon) {
         static const float dx[] = { 0.5f, 0.5f, 0.4f, 0.4f, 0.1f };
         static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
-        weapon_dx = dx[walk_frame % 5];
-        weapon_dy = dy[walk_frame % 5];
+        weapon_dx = dx[current_frame];
+        weapon_dy = dy[current_frame];
     }
 
-    SDL_FRect frame = frames[walk_frame % 5];
+    SDL_FRect frame = frames[current_frame];
     walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
