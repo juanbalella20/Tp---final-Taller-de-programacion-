@@ -152,21 +152,32 @@ std::vector<ItemFloorInfo> ZoneWorld::build_items_snapshot() const {
     return snapshot;
 }
 
-NPCseller* ZoneWorld::seller_at(int x, int y) {
+static bool is_adyacent(const positionCoord& a, const positionCoord& b) {
+    return std::abs(a.x - b.x) + std::abs(a.y - b.y) <= 1;
+}
+
+NPCseller* ZoneWorld::seller_adjacent_to(int px, int py) {
+    positionCoord player_pos{px, py};
     for (auto& s : sellers) {
-        if (s.get_coord_x() == x && s.get_coord_y() == y) return &s;
+        positionCoord seller_pos{s.get_coord_x(), s.get_coord_y()};
+        if (is_adyacent(player_pos, seller_pos)) return &s;
     }
     return nullptr;
 }
 
-std::vector<ItemInfo> ZoneWorld::list_seller_items(int x, int y) {
-    NPCseller* seller = seller_at(x, y);
-    if (seller == nullptr) throw std::runtime_error("No hay un comerciante en esa posicion.");
-    return seller->list_items();
+NPCseller* ZoneWorld::seller_at(int x, int y) {
+    positionCoord player_pos{x, y};
+    for (auto& s : sellers) {
+        positionCoord seller_pos{s.get_coord_x(), s.get_coord_y()};
+        if (is_adyacent(player_pos, seller_pos)) return &s;
+    }
+    return nullptr;
 }
 
-static bool is_adyacent(const positionCoord& a, const positionCoord& b) {
-    return std::abs(a.x - b.x) + std::abs(a.y - b.y) <= 1;
+std::vector<ItemInfo> ZoneWorld::list_seller_items(int px, int py) {
+    NPCseller* seller = seller_adjacent_to(px, py);
+    if (seller == nullptr) throw std::runtime_error("No hay un comerciante adyacente.");
+    return seller->list_items();
 }
 
 std::unique_ptr<Item> ZoneWorld::take_item_near(int px, int py) {

@@ -60,6 +60,7 @@ public:
     bool is_blocked_terrain(int x, int y) const;  // map[y][x] != empty
     // Hay un actor (npc vivo o alguno de los players_here) en (x,y)?
     bool has_actor_at(int x, int y, const std::vector<const Player*>& players_here) const;
+    NPCseller* seller_adjacent_to(int px, int py);
     // Hay un item en el piso en (x,y)?
     bool has_ground_item_at(int x, int y) const;
     std::pair<int, int> find_random_empty_cell(
