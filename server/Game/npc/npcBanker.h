@@ -29,7 +29,8 @@ class NPCbanker: public NPCfriendly {
         int get_coord_x() const;
         int get_coord_y() const; 
 
-        std::vector<ItemInfo> list_banker_items(const std::string& player_name) const;
+        std::vector<ItemInfo> list_bank_items(const std::string& player_name) const;
+        int get_bank_gold(const std::string& player_name) const;
 
         void interact(Player& player, Command cmd) override;
 

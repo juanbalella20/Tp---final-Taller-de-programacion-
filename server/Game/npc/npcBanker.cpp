@@ -44,15 +44,21 @@ void NPCbanker::retire_gold(Player& player, int amount) {
     player.add_gold(amount);
 }
 
-std::vector<ItemInfo> NPCbanker::list_banker_items(const std::string& player_name) const {
+std::vector<ItemInfo> NPCbanker::list_bank_items(const std::string& player_name) const {
     std::vector<ItemInfo> result;
-    auto it = item_bank.find(player_name);
+    std::map<std::string, std::vector<std::unique_ptr<Item>>>::const_iterator it = item_bank.find(player_name);
     if (it != item_bank.end()) {
         for (const std::unique_ptr<Item>& item : it->second) {
             result.emplace_back(item->get_id(), item->getName(), item->getPrice());
         }
     }
     return result;
+}
+
+int NPCbanker::get_bank_gold(const std::string& player_name) const {
+    std::map<std::string, int>::const_iterator it = gold_bank.find(player_name);
+    if (it == gold_bank.end()) return 0;
+    return it->second;
 }
 
 void NPCbanker::interact(Player& player, Command cmd) {
