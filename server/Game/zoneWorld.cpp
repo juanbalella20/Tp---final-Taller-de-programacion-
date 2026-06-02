@@ -24,7 +24,6 @@ void ZoneWorld::load_terrain(const std::string& toml_path) {
             }
         }
     }
-
     // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
     spawns = md.get_spawns();
     // [[teleport]] = tiles de teletransporte hacia otra zona.
@@ -114,11 +113,17 @@ void ZoneWorld::spawn_gold(int x, int y, int amount) {
 }
 
 void ZoneWorld::spawn_banker(int x, int y) {
-    bankers.emplace_back(x, y);
+    if (in_bounds(x, y)) {
+        bankers.emplace_back(x, y);
+        map[y][x] = elements::npcs;
+    }
 }
 
 void ZoneWorld::spawn_priest(int x, int y) {
-    priests.emplace_back(x, y);
+    if (in_bounds(x, y)) {
+        priests.emplace_back(x, y);
+        map[y][x] = elements::npcs;
+    }
 }
 
 bool ZoneWorld::update_npcs() {
