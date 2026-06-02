@@ -379,6 +379,12 @@ bool GameMap::pick_up_gold(const std::string& player_name) {
     return false;
 }
 
+std::string GameMap::get_adjacent_npc_type(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    return zone_of(player_name).get_adjacent_friendly_type(player->get_coord_x(), player->get_coord_y());
+}
+
 void GameMap::give_item_to_player(const std::string& player_name, std::unique_ptr<Item> item) {
     Player* player = find_player_by_name(player_name);
     if (!player) throw std::runtime_error("Player not found: " + player_name);

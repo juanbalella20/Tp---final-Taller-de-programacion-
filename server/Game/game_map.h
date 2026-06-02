@@ -134,6 +134,7 @@ public:
     uint32_t get_player_hp(const std::string& name);
     uint32_t get_player_xp(const std::string& name);
     uint32_t get_player_mana(const std::string& name);
+    std::string get_adjacent_npc_type(const std::string& player_name);
 
     /*
      * Carga TODAS las zonas al iniciar el server. Por cada (zone_id, path):
