@@ -19,7 +19,7 @@ void NPCbanker::deposit_item(Player& player, const std::string& item_id) {
 void NPCbanker::deposit_gold(Player& player, int amount) {
     if (player.get_gold() < (uint32_t)amount)
         throw std::runtime_error("No tenes suficiente oro.");
-    player.give_gold(-amount);
+    player.give_gold(amount);
     gold_bank[player.get_name()] += amount;
 }
 
