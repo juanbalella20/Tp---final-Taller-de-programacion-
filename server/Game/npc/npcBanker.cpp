@@ -44,6 +44,14 @@ void NPCbanker::retire_gold(Player& player, int amount) {
     player.add_gold(amount);
 }
 
+std::vector<ItemInfo> GameMap::list_banker_items(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    NPCbanker* banker = zone_of(player_name).banker_adjacent_to(player->get_coord_x(), player->get_coord_y());
+    if (banker == nullptr) throw std::runtime_error("No hay un banquero adyacente.");
+    return banker->list_bank(player_name);
+}
+
 void NPCbanker::interact(Player& player, Command cmd) {
     switch (cmd.action) {
         case ACTION_DEPOSIT:
