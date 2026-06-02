@@ -24,6 +24,7 @@ void GameLoop::register_handlers() {
     handlers[MSG_DEPOSIT]        = [this](const ClientCmd& cmd) { handle_deposit(cmd); };
     handlers[MSG_DEP_GOLD]       = [this](const ClientCmd& cmd) { handle_deposit_gold(cmd); };
     handlers[MSG_RETIRE]         = [this](const ClientCmd& cmd) { handle_retire_item(cmd); };
+    handlers[MSG_RET_GOLD]       = [this](const ClientCmd& cmd) { handle_retire_gold(cmd); };
     handlers[MSG_EQUIP]          = [this](const ClientCmd& cmd) { handle_equip(cmd); };
     handlers[MSG_SELECT]         = [this](const ClientCmd& cmd) { handle_select(cmd); };
     handlers[MSG_TAKE]           = [this](const ClientCmd& cmd) { handle_take(cmd); };
@@ -291,6 +292,24 @@ void GameLoop::handle_retire_item(const ClientCmd& cmd) {
         client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
         GameMsg chat_msg(MSG_CHAT);
         chat_msg.set_chat_content("Item retirado del banco.");
+        client_registry_monitor.notify_client(cmd.get_client_id(), chat_msg);
+    } catch (const std::runtime_error& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    }
+}
+
+void GameLoop::handle_retire_gold(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    int amount = cmd.get_gold();
+    try {
+        game_map.player_retire_gold(name, amount);
+        GameMsg gold_msg(MSG_GOLD);
+        gold_msg.set_gold(game_map.get_player(name).get_gold());
+        client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
+        GameMsg chat_msg(MSG_CHAT);
+        chat_msg.set_chat_content("Oro retirado del banco.");
         client_registry_monitor.notify_client(cmd.get_client_id(), chat_msg);
     } catch (const std::runtime_error& e) {
         GameMsg msg(MSG_CHAT);
