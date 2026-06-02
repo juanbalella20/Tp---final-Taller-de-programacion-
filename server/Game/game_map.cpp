@@ -137,7 +137,8 @@ void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
             }
             // spawn de items
             for (int i = 0; i < state_it->second.num_items; i++) {
-                world.spawn_item(7, 7, std::make_unique<Arma>("espada", "espada", 50, 2, 2));
+                //world.spawn_item(rand_item());
+                //world.spawn_item(7, 7, std::make_unique<Arma>("espada", "espada", 50, 2, 2));
             }
         }
         // Seller de prueba

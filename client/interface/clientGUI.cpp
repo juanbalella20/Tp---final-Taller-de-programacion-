@@ -494,7 +494,8 @@ void ClientGUI::drawEnemies() {
     if (!enemy_texture || !tilemap) return;
     const int tileSize = tilemap->getTileSize();
     for (const auto& npc : npcs) {
-        NpcSprite(renderer, enemy_texture, npc.x, npc.y, tileSize).draw(camera, {});
+        NpcSprite(renderer, enemies_textures[npc.name], npc.x, npc.y, tileSize)
+            .draw(camera, enemies_crops[npc.name]);
     }
 }
 
@@ -625,13 +626,31 @@ void ClientGUI::init_draw() {
     // arranca en un centinela, asi que siempre recarga la zona real). No tocar
     // current_zone aca: dejarlo en el centinela.
     loadMedia(ZONE_CITY);
+    // TODO: eliminar esto
     SDL_Surface* enemy_surf = IMG_Load("imagenes/enemigo.png");
     if (!enemy_surf) enemy_surf = IMG_Load("enemigo.png");
     if (enemy_surf) {
         enemy_texture = SDL_CreateTextureFromSurface(renderer, enemy_surf);
         SDL_DestroySurface(enemy_surf);
     }
-
+    // load enemies textures
+    SDL_Surface* goblin_surf = IMG_Load("imagenes/4047.png");
+    SDL_Surface* spider_surf = IMG_Load("imagenes/4060.png");
+    if (goblin_surf) {
+        SDL_Texture* goblin_text = SDL_CreateTextureFromSurface(renderer, goblin_surf);
+        enemies_textures["Goblin"] = goblin_text;
+        SDL_DestroySurface(goblin_surf);
+    }
+    if (spider_surf) {
+        SDL_Texture* spider_text = SDL_CreateTextureFromSurface(renderer, spider_surf);
+        enemies_textures["Spider"] = spider_text;
+        SDL_DestroySurface(spider_surf);
+    }
+    // Recorte del 1er tile (esquina sup-izq) de cada spritesheet. La grilla es
+    // 8 columnas: Goblin 256/8=32px, Spider 512/8=64px.
+    enemies_crops["Goblin"] = {0.0f, 0.0f, 32.0f, 32.0f};
+    enemies_crops["Spider"] = {0.0f, 0.0f, 64.0f, 64.0f};
+    //
     SDL_Surface* frame_surf = IMG_Load("imagenes/frame..png");
     if (frame_surf) {
         frame_texture = SDL_CreateTextureFromSurface(renderer, frame_surf);

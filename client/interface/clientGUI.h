@@ -54,6 +54,10 @@ private:
     std::vector<ItemFloorInfo> items_on_floor;
     std::vector<PlayerInfo> other_players;
     SDL_Texture* enemy_texture;
+    std::map<std::string, SDL_Texture*> enemies_textures;
+    // Recorte del 1er tile del spritesheet por tipo de NPC (nombre -> src crop)
+    // TODO: refactorizar para permitir movimientos de los npcs
+    std::map<std::string, SDL_FRect> enemies_crops;
     SDL_Texture* frame_texture;
     SDL_Texture* item_texture;
     SDL_Texture* gold_texture;
