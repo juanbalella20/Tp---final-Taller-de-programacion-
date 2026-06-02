@@ -36,6 +36,14 @@ void NPCbanker::retire_item(Player& player, const std::string& item_id) {
     throw std::runtime_error("No tenes ese item en el banco.");
 }
 
+void NPCbanker::retire_gold(Player& player, int amount) {
+    int& saved = gold_bank[player.get_name()];
+    if (saved < amount)
+        throw std::runtime_error("No tenes suficiente oro en el banco.");
+    saved -= amount;
+    player.add_gold(amount);
+}
+
 void NPCbanker::interact(Player& player, Command cmd) {
     switch (cmd.action) {
         case ACTION_DEPOSIT:
@@ -46,6 +54,9 @@ void NPCbanker::interact(Player& player, Command cmd) {
             break;
         case ACTION_RETIRE:
             retire_item(player, cmd.item_id);
+            break;
+        case ACTION_RETIRE_GOLD:
+            retire_gold(player, cmd.cantidad);
             break;
         default:
             break;

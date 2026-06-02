@@ -22,6 +22,7 @@ class NPCbanker: public NPCfriendly {
         void deposit_item(Player& player, const std::string& item_id);
         void deposit_gold(Player& player, int amount);
         void retire_item(Player& player, const std::string& item_id);
+        void retire_gold(Player& player, int amount);
 
     public:
         NPCbanker(int x, int y);
