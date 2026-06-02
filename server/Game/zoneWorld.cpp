@@ -225,6 +225,15 @@ std::vector<ItemInfo> ZoneWorld::list_seller_items(int px, int py) {
     return seller->list_items();
 }
 
+NPCbanker* ZoneWorld::banker_adjacent_to(int px, int py) {
+    positionCoord player_pos{px, py};
+    for (auto& b : bankers) {
+        positionCoord banker_pos{b.get_coord_x(), b.get_coord_y()};
+        if (is_adyacent(player_pos, banker_pos)) return &b;
+    }
+    return nullptr;
+}
+
 std::unique_ptr<Item> ZoneWorld::take_item_near(int px, int py) {
     positionCoord player_pos{px, py};
     // Items: cualquiera adyacente

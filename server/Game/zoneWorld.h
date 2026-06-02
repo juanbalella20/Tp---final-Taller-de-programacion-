@@ -64,7 +64,7 @@ public:
     bool is_blocked_terrain(int x, int y) const;  // map[y][x] != empty
     // Hay un actor (npc vivo o alguno de los players_here) en (x,y)?
     bool has_actor_at(int x, int y, const std::vector<const Player*>& players_here) const;
-    NPCseller* seller_adjacent_to(int px, int py);
+    
     // Hay un item en el piso en (x,y)?
     bool has_ground_item_at(int x, int y) const;
     std::pair<int, int> find_random_empty_cell(
@@ -89,6 +89,9 @@ public:
     // Devuelve el seller en (x,y) o nullptr si no hay.
     NPCseller* seller_at(int x, int y);
     std::vector<ItemInfo> list_seller_items(int x, int y);
+    NPCseller* seller_adjacent_to(int px, int py);
+    //--- Bankers---
+    NPCbanker* banker_adjacent_to(int px, int py);
 
     // --- Items / oro en el piso ---
     // Saca y devuelve un item adyacente a (px,py), o nullptr.
