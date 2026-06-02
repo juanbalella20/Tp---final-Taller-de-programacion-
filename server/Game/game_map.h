@@ -114,6 +114,7 @@ public:
     void player_deposit_gold(const std::string& player_name, int amount);
     void player_retire_item(const std::string& player_name, const std::string& item_id);
     void player_retire_gold(const std::string& player_name, int amount);
+    std::vector<ItemInfo> list_banker_items(const std::string& player_name);
 
     // Zona actual del player (para MSG_ZONE_CHANGE)
     Zone get_player_zone(const std::string& player_name) const;
