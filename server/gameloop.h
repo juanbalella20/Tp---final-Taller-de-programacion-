@@ -30,7 +30,11 @@ class GameLoop : public Thread {
     void load_maps();
     void load_world();
     void update_npcs_in_map();
-
+    // Busca en la matriz de IntitialState (previamente parseada desde config.TOML)
+    // y devulve el estado inicial por zona: cantidad de npcs, cantidad de items que genera esa zona
+    InitialState load_initial_state_from_file(Zone zone);
+    // Version hardcodeada. TODO: eliminar cuando este implementada la persistencia
+    InitialState load_initial_state_hardcoded(Zone zone);
     void broadcast_npcs_snapshot();
     void send_npcs_snapshot_to(uint32_t client_id);
     void broadcast_items_snapshot();

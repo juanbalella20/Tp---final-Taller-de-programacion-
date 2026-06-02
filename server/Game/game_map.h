@@ -33,8 +33,8 @@ struct ItemSpawn {
 };
 
 struct InitialState {
-    std::vector<NpcSpawn> npcs;
-    std::vector<ItemSpawn> items;
+    int num_npc;
+    int num_items;
 };
 
 struct TeleportResult {
@@ -67,6 +67,10 @@ private:
     // teleport de esa zona si tiene, o una celda libre random. {-1,-1} si nada.
     std::pair<int, int> find_arrival_cell(ZoneWorld& dst, Zone dest_zone);
 
+    // Recibe una Zona y su mundo, elige un tipo de NPC permitido en esa zona y
+    // genera un NPChostile random ubicado en una celda libre. Si la zona no
+    // tiene tipos permitidos, devuelve un NPC en {-1,-1} (no se spawnea).
+    NPChostile rand_npc(Zone zone, ZoneWorld& world);
 public:
     GameMap();
 

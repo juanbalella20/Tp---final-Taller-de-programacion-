@@ -40,12 +40,24 @@ void GameLoop::load_world() {
 
 }
 
-InitialState load_initial_state_hardcoded() {
+InitialState GameLoop::load_initial_state_hardcoded(Zone zone) {
     InitialState is;
 
-    // NPCs de prueba (stats reales viven en make_npc_from_spawn).
-    is.npcs.push_back({"goblin", 7, 5});
-    is.npcs.push_back({"spider", 9, 5});
+    switch (zone)
+    {
+    case ZONE_CITY:
+        is.num_items = 5;
+        is.num_npc = 0;
+        break;
+    case ZONE_DESERT:
+        is.num_items = 6;
+        is.num_npc = 7;
+    default:
+        break;
+    }
+
+    // Los NPCs se spawnean random via rand_npc segun num_npc y los tipos
+    // permitidos por zona (ZONE_NPC_TYPES en game_map.cpp).
 
     // TODO: items hardcodeados en el piso
     return is;
@@ -88,17 +100,18 @@ void GameLoop::send_items_snapshot_to(uint32_t client_id) {
 void GameLoop::load_maps() {
     // TODO:
     // funcion para persistencia
-    // InitialState load_initial_state_from_file(path);
+    // InitialState load_initial_state_from_file(path,zone);
 
     // harcoded:
-    InitialState hardocded_state = load_initial_state_hardcoded();
+    InitialState state_desert = load_initial_state_hardcoded(ZONE_DESERT);
+    InitialState state_city = load_initial_state_hardcoded(ZONE_CITY);
     std::map<Zone, std::string> zone_paths = {
         {ZONE_DESERT, "data/maps/desert/map.toml"},
         {ZONE_CITY,   "data/maps/city/map.toml"},
     };
     std::map<Zone, InitialState> initial_states = {
-        {ZONE_DESERT, hardocded_state},
-        {ZONE_CITY,   InitialState{}},  // city sin NPCs por ahora (testeo)
+        {ZONE_DESERT, state_desert},
+        {ZONE_CITY,   state_city},
     };
     game_map.init_world(zone_paths, initial_states);
 }
