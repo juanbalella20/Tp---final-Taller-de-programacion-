@@ -110,6 +110,7 @@ public:
     bool player_sell_item(const std::string& player_name, int x, int y, const std::string& item_id);
     bool player_buy_item(const std::string& player_name, int x, int y, const std::string& item_id);
     std::vector<ItemInfo> list_seller_items(const std::string& player_name, int x, int y);
+    void player_deposit_item(const std::string& player_name, const std::string& item_id);
 
     // Zona actual del player (para MSG_ZONE_CHANGE)
     Zone get_player_zone(const std::string& player_name) const;
