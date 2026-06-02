@@ -110,16 +110,18 @@ void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
                 world.spawn_npc(make_npc_from_spawn(spawn));
             }
         }
-        // Seller de prueba
-        world.spawn_seller(1, 1);
-        //Banker de prueba
-        world.spawn_banker(3, 1);
-        //Priest de prueba
-        world.spawn_priest(5, 1);
 
         // Item de prueba hardcodeado. TODO: moverlo a state.items cuando este listo.
         world.spawn_item(7, 7, std::make_unique<Arma>("espada", "espada", 50, 2, 2));
-
+        if (zone_id == ZONE_CITY) {
+            std::vector<const Player*> no_players;
+            auto [sx, sy] = world.find_random_empty_cell(no_players);
+            world.spawn_seller(sx, sy);
+            auto [bx, by] = world.find_random_empty_cell(no_players);
+            world.spawn_banker(bx, by);
+            auto [px, py] = world.find_random_empty_cell(no_players);
+            world.spawn_priest(px, py);
+        }
         zones.emplace(zone_id, std::move(world));
     }
 }

@@ -24,10 +24,17 @@ void ZoneWorld::load_terrain(const std::string& toml_path) {
             }
         }
     }
+
     // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
     spawns = md.get_spawns();
     // [[teleport]] = tiles de teletransporte hacia otra zona.
     teleports = md.get_teleports();
+    for (const auto& [name, pos] : spawns) {
+        if (name == "seller") spawn_seller(pos.x, pos.y);
+        else if (name == "banker") spawn_banker(pos.x, pos.y);
+        else if (name == "priest") spawn_priest(pos.x, pos.y);
+    }
+
 }
 
 bool ZoneWorld::in_bounds(int x, int y) const {
