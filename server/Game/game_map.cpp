@@ -340,6 +340,17 @@ void GameMap::player_deposit_gold(const std::string& player_name, int amount) {
     banker->interact(*player, cmd);
 }
 
+void GameMap::player_retire_item(const std::string& player_name, const std::string& item_id) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    NPCbanker* banker = zone_of(player_name).banker_adjacent_to(player->get_coord_x(), player->get_coord_y());
+    if (banker == nullptr) throw std::runtime_error("No hay un banquero adyacente.");
+    Command cmd;
+    cmd.action = ACTION_RETIRE;
+    cmd.item_id = item_id;
+    banker->interact(*player, cmd);
+}
+
 std::unique_ptr<Item> GameMap::pick_up_item(const std::string& player_name) {
     Player* player = find_player_by_name(player_name);
     if (!player) throw std::runtime_error("Player not found: " + player_name);
