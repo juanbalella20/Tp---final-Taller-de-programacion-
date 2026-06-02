@@ -234,6 +234,13 @@ NPCbanker* ZoneWorld::banker_adjacent_to(int px, int py) {
     return nullptr;
 }
 
+std::string ZoneWorld::get_adjacent_friendly_type(int px, int py) {
+    if (seller_at(px, py) != nullptr) return "seller";
+    if (banker_adjacent_to(px, py) != nullptr) return "banker";
+    //if (priest_adjacent_to(px, py) != nullptr) return "priest";
+    return "";
+}
+
 std::unique_ptr<Item> ZoneWorld::take_item_near(int px, int py) {
     positionCoord player_pos{px, py};
     // Items: cualquiera adyacente
