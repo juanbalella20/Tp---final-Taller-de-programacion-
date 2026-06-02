@@ -13,6 +13,7 @@ ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, cons
       hud(nullptr), own_name(player_name), race(player_race), player(nullptr), tilemap(nullptr),
       enemy_texture(nullptr), frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
       camera((float)GAME_WIDTH, (float)CANVAS_HEIGHT),
+      current_zone(static_cast<Zone>(0xFF)),  
       selected_npc_tile_x(-1), selected_npc_tile_y(-1) {}
     
 
@@ -63,6 +64,7 @@ void ClientGUI::loadMedia(Zone zone) {
     case ZONE_CITY : {
         tilemap = std::make_unique<TileMap>(renderer);
         tilemap->load_map("data/maps/city/map.toml");
+        break;
     }
     default:
         break;
@@ -338,7 +340,10 @@ void ClientGUI::update() {
             switch (msg.get_type()) {
                 case MSG_ZONE_CHANGE : {
                     Zone z = msg.get_zone();
-                    if (z != current_zone) loadMedia(z);
+                    if (z != current_zone) {
+                        loadMedia(z);
+                        current_zone = z;
+                    }
                     player->setTilePosition(msg.get_coord_x(), msg.get_coord_y());
                     break;
                 }
@@ -615,8 +620,10 @@ void ClientGUI::draw() {
 
 void ClientGUI::init_draw() {
     initSDL();
-    // se carga una zona inicial por default
-    // siempre sera ZONA_CITY
+    // Carga provisional solo para tener un tileSize valido al crear el player.
+    // El mapa REAL lo carga el primer MSG_ZONE_CHANGE del server (current_zone
+    // arranca en un centinela, asi que siempre recarga la zona real). No tocar
+    // current_zone aca: dejarlo en el centinela.
     loadMedia(ZONE_CITY);
     SDL_Surface* enemy_surf = IMG_Load("imagenes/enemigo.png");
     if (!enemy_surf) enemy_surf = IMG_Load("enemigo.png");
