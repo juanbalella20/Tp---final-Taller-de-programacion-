@@ -126,6 +126,12 @@ uint32_t Player::get_gold() const {
     return gold;
 }
 
+std::unique_ptr<Item> Player::take_item_from_inventory(const std::string& item_id) {
+    Item* item_ptr = player_inventory.find_by_id(item_id);
+    if (!item_ptr) throw std::runtime_error("No tenes ese item en el inventario.");
+    return player_inventory.drop_item(item_ptr);
+}
+
 std::string Player::get_name() const {
     return name;
 }

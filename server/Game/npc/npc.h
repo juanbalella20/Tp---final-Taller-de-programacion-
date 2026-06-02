@@ -3,10 +3,14 @@
 
 #include <string>
 
-enum SellerAction {
+enum NpcAction {
     ACTION_SELL = 0,
     ACTION_BUY  = 1,
     ACTION_LIST = 2,
+    ACTION_DEPOSIT = 3,
+    ACTION_DEPOSIT_GOLD = 4,
+    ACTION_RETIRE = 5,
+    ACTION_RETIRE_GOLD = 6,
 };
 
 

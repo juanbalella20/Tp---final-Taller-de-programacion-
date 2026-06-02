@@ -30,6 +30,8 @@ public:
 
     bool is_full() const;
     void use_equipped(Entity& target, int attacker_x, int attacker_y, int target_x, int target_y);
+
+    Item* find_by_id(const std::string& item_id) const;
 };
 
 

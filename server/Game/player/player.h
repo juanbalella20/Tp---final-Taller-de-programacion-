@@ -76,6 +76,9 @@ public:
     void update_position(const int x, const int y);
 
     const Inventory& get_inventory() const;
+
+    std::unique_ptr<Item> take_item_from_inventory(const std::string& item_id);
+
     bool is_ghost() const;
     bool is_dead() const override;
     
