@@ -173,12 +173,25 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
 void GameLoop::handle_list(const ClientCmd& cmd) {
     try {
         std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-        std::vector<ItemInfo> items = game_map.list_seller_items(name, 0, 0);
-        GameMsg msg(MSG_CHAT);
-        std::string lista = "Items disponibles: ";
-        for (const auto& item : items) {
-            lista += item.get_name() + " ($" + std::to_string(item.get_price()) + ") ";
+        std::string type = game_map.get_adjacent_npc_type(name);
+        std::string lista = "";
+        if (type == "seller") {
+            std::vector<ItemInfo> items = game_map.list_seller_items(name, 0, 0);
+            lista = "Items disponibles: ";
+            for (const auto& item : items) {
+                lista += item.get_name() + " ($" + std::to_string(item.get_price()) + ") ";
+            }
+        } else if (type == "banker") {
+            std::vector<ItemInfo> items = game_map.list_banker_items(name);
+            int gold = game_map.get_banker_gold(name);
+            lista = "Banco - Oro: " + std::to_string(gold) + " Items: ";
+            for (const auto& item : items) {
+                lista += item.get_name() + " ";
+            }
+        } else {
+            lista = "No hay un NPC adyacente.";
         }
+        GameMsg msg(MSG_CHAT);
         msg.set_chat_content(lista);
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
     } catch (const std::runtime_error& e) {
