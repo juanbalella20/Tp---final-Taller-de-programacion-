@@ -23,6 +23,19 @@ void NPCbanker::deposit_gold(Player& player, int amount) {
     gold_bank[player.get_name()] += amount;
 }
 
+void NPCbanker::retire_item(Player& player, const std::string& item_id) {
+    auto& items = item_bank[player.get_name()];
+    for (auto it = items.begin(); it != items.end(); ++it) {
+        if ((*it)->get_id() == item_id) {
+            std::unique_ptr<Item> item = std::move(*it);
+            items.erase(it);
+            player.add_item(std::move(item));
+            return;
+        }
+    }
+    throw std::runtime_error("No tenes ese item en el banco.");
+}
+
 void NPCbanker::interact(Player& player, Command cmd) {
     switch (cmd.action) {
         case ACTION_DEPOSIT:
@@ -30,6 +43,9 @@ void NPCbanker::interact(Player& player, Command cmd) {
             break;
         case ACTION_DEPOSIT_GOLD:
             deposit_gold(player, cmd.cantidad);
+            break;
+        case ACTION_RETIRE:
+            retire_item(player, cmd.item_id);
             break;
         default:
             break;
