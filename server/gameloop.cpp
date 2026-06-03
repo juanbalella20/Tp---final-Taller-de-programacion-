@@ -114,12 +114,12 @@ void GameLoop::load_maps() {
 // mandar snaphot de players
 
 
-void GameLoop::send_player_snapshot_to_other_players(uint32_t client_id, const std::string& player_name) {
+void GameLoop::send_player_snapshot_to_other_players(uint32_t client_id, const std::string& player_name, const std::string& player_race) {
     // Avisa a todos los demás clientes que un nuevo jugador apareció.
     // Solo incluye al jugador recién registrado, no a todos.
     const Player& p = game_map.get_player(player_name);
     GameMsg msg(MSG_PLAYERS_SNAPSHOT);
-    msg.set_player({player_name, 0, 0, p.get_coord_x(), p.get_coord_y()});
+    msg.set_player({player_name, player_race, 0, p.get_coord_x(), p.get_coord_y()});
     std::cout << "[DEBUG: MSG_PLAYERS_SNAPSHOT] Notificando a otros jugadores sobre nuevo jugador " << msg.get_players().front().name << std::endl;
     client_registry_monitor.notify_clients_less_client(client_id, msg);
 }
@@ -154,11 +154,13 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
     registerMsg.set_coord_x(p.get_coord_x());
     registerMsg.set_coord_y(p.get_coord_y());
     registerMsg.set_players(game_map.build_players_snapshot(cmd.get_player_name()));
+    std::cout << "[DEBUG: handle_register] player " << cmd.get_player_name()
+              << " has race " << cmd.get_race() << std::endl;
     client_registry_monitor.notify_client(cmd.get_client_id(), registerMsg);
 
     send_npcs_snapshot_to(cmd.get_client_id());
     send_items_snapshot_to(cmd.get_client_id());
-    send_player_snapshot_to_other_players(cmd.get_client_id(), cmd.get_player_name());//le quiero avisar a toods que se conecto el cliente 1
+    send_player_snapshot_to_other_players(cmd.get_client_id(), cmd.get_player_name(), cmd.get_race());//le quiero avisar a toods que se conecto el cliente 1
 
     // Envia la zona real donde spawneo el player
     GameMsg zoneMsg(MSG_ZONE_CHANGE);
@@ -347,8 +349,11 @@ void GameLoop::handle_move(const ClientCmd& cmd) {
         msg.set_player_name(result.player_name);
         msg.set_coord_x(result.new_x);
         msg.set_coord_y(result.new_y);
+        msg.set_race(cmd.get_race());
+        std::cout << "[DEBUG: handle_move] player " << cmd.get_player_name()
+              << " has race " << cmd.get_race() << std::endl;
         client_registry_monitor.notify_clients(msg);
-        std::cout << "[DBUG]: sended" << std::endl;
+        std::cout << "[DEBUG]: sended" << std::endl;
     // }
 }
 

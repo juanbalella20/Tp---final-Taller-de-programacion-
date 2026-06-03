@@ -372,7 +372,7 @@ void ClientGUI::update() {
                 case MSG_ITEMS_SNAPSHOT:
                     items_on_floor = msg.get_items_on_floor();
                     break;
-                case MSG_PLAYERS_SNAPSHOT:
+                case MSG_PLAYERS_SNAPSHOT: {
                     std::cout << "Received players snapshot with " << msg.get_players().size() << " players." << std::endl;
                     for (const auto& incoming : msg.get_players()) {
                         auto it = std::find_if(other_players.begin(), other_players.end(),
@@ -384,6 +384,7 @@ void ClientGUI::update() {
                         }
                     }
                     break;
+                }
                 case MSG_MOVE: {
                     const std::string& mover = msg.get_player_name();
                     int x = msg.get_coord_x();
@@ -417,7 +418,7 @@ void ClientGUI::update() {
                             it->y = y;
                             it->direction = dir;
                         } else {
-                            PlayerInfo pi{mover, "human", 0, x, y, dir};
+                            PlayerInfo pi{mover, msg.get_race(), 0, x, y, dir};
                             other_players.push_back(pi);
                         }
                     }
