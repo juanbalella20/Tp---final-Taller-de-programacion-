@@ -19,9 +19,7 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       xp_bar_texture(nullptr),
       mana_bar_texture(nullptr),
       gold_texture(nullptr),
-      stats_button_texture(nullptr),
-      mana_icon_texture(nullptr),
-      xp_icon_texture(nullptr),
+      game_texture(nullptr),
       game_width(game_width),
       panel_width(panel_width),
       canvas_height(canvas_height) {
@@ -48,14 +46,8 @@ HUD::~HUD() {
     if (gold_texture) {
         SDL_DestroyTexture(gold_texture);
     }
-    if (stats_button_texture) {
-        SDL_DestroyTexture(stats_button_texture);
-    }
-    if (mana_icon_texture) {
-        SDL_DestroyTexture(mana_icon_texture);
-    }
-    if (xp_icon_texture) {
-        SDL_DestroyTexture(xp_icon_texture);
+    if (game_texture) {
+        SDL_DestroyTexture(game_texture);
     }
 
     if (font) {
@@ -90,7 +82,8 @@ void HUD::set_max_mana(uint32_t max_mana_value) {
 }
 
 void HUD::set_xp(uint32_t xp) {
-    player_xp = xp;
+    //player_xp = xp;
+    player_xp = 20;
 }
 
 void HUD::set_mana(uint32_t mana) {
@@ -156,8 +149,8 @@ void HUD::drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float S
 void HUD::drawItems() {
     const float SLOT_SIZE = 48.0f;
     const float SLOT_MARGIN = 8.0f;
-    float slot_x = game_width + SLOT_MARGIN;
-    float slot_y = 40.0f;
+    float slot_x = 785.0f;
+    float slot_y = 210.0f;
 
     int slot_index = 0;
     for (const auto& item : inventory.items) {
@@ -187,64 +180,91 @@ void HUD::drawItems() {
     }
 }
 
-void HUD::drawInventoryPanel() {
-    // Fondo del panel: textura si esta disponible, color solido como fallback
-    if (inventory.bg_texture) {
-        SDL_RenderTexture(gui_renderer, inventory.bg_texture, nullptr, &inventory.panel);
-    } else {
-        SDL_SetRenderDrawColor(gui_renderer, 30, 30, 30, 255);
-        SDL_RenderFillRect(gui_renderer, &inventory.panel);
-        SDL_SetRenderDrawColor(gui_renderer, 180, 180, 180, 255);
-        SDL_RenderRect(gui_renderer, &inventory.panel);
-    }
-
-    // Titulo "Inventario"
-    if (font) {
-        SDL_Color white = {255, 255, 255, 255};
-        draw_text("Inventario", game_width + 10.0f, 10.0f, white);
-    }
+void HUD::drawInventoryItems() {
 
     // Items del inventario en slots
     drawItems();
 }
 
-void HUD::draw_stat(SDL_Texture* tex, float pos_y, int current, int max) {
+void HUD::drawBigStat(SDL_Texture* tex, float pos_y, int current, int max) {
     float tex_w, tex_h;
     SDL_GetTextureSize(tex, &tex_w, &tex_h);
-    const float max_width = panel_width - 30.0f;
-    const float scale = SDL_min(1.0f, max_width / tex_w);
+
+    float image_w = 1021.0f;
+    float image_h = 767.0f;
+
+    float scale_x = static_cast<float>(game_width + panel_width) / image_w;
+    float scale_y = static_cast<float>(canvas_height) / image_h;
+
+    float start_x = 788.0f;
+    const float bar_w = 217.0f;
+    const float bar_h = 18.0f;
+
+    float x = start_x * scale_x;
+    float y = pos_y * scale_y;
+    float w = bar_w * scale_x;
+    float h = bar_h * scale_y;
 
     float percentage = (max > 0) ? static_cast<float>(current) / static_cast<float>(max) : 0.0f;
     if (percentage < 0.0f) percentage = 0.0f;
     if (percentage > 1.0f) percentage = 1.0f;
 
-    float scaled_w = tex_w * scale;
-    float scaled_h = tex_h * scale;
-    float start_x = game_width + 30.0f;
-
-    SDL_FRect border_dest = { start_x - 2.0f, pos_y - 2.0f, scaled_w + 4.0f, scaled_h + 4.0f };
-    SDL_SetRenderDrawColor(gui_renderer, 10, 10, 10, 255);
-    SDL_RenderFillRect(gui_renderer, &border_dest);
-
-    SDL_FRect bg_dest = { start_x, pos_y, scaled_w, scaled_h };
-    SDL_SetRenderDrawColor(gui_renderer, 30, 30, 30, 255);
-    SDL_RenderFillRect(gui_renderer, &bg_dest);
-
     if (percentage > 0.0f) {
         SDL_FRect src_rect = { 0.0f, 0.0f, tex_w * percentage, tex_h };
-        SDL_FRect fill_dest = { start_x, pos_y, scaled_w * percentage, scaled_h };
+        SDL_FRect fill_dest = { x, y, w * percentage, h };
         SDL_RenderTexture(gui_renderer, tex, &src_rect, &fill_dest);
     }
 
-    display_value(current, max, bg_dest);
+    SDL_FRect text_dest = { x, y, w, h };
+    float text_scale = 0.75f;
+    displayValue(current, max, text_dest, text_scale);
 }
 
-void HUD::draw_text(const std::string& text, float x, float y, SDL_Color color) {
+void HUD::drawSmallStat(SDL_Texture* tex, float pos_y, int current, int max) {
+    float tex_w, tex_h;
+    SDL_GetTextureSize(tex, &tex_w, &tex_h);
+
+    float image_w = 1021.0f;
+    float image_h = 767.0f;
+
+    float scale_x = static_cast<float>(game_width + panel_width) / image_w;
+    float scale_y = static_cast<float>(canvas_height) / image_h;
+
+    float start_x = 788.0f;
+    const float bar_w = 89.0f;
+    const float bar_h = 12.0f;
+
+    float x = start_x * scale_x;
+    float y = pos_y * scale_y;
+    float w = bar_w * scale_x;
+    float h = bar_h * scale_y;
+
+    float percentage = (max > 0) ? static_cast<float>(current) / static_cast<float>(max) : 0.0f;
+    if (percentage < 0.0f) percentage = 0.0f;
+    if (percentage > 1.0f) percentage = 1.0f;
+
+    if (percentage > 0.0f) {
+        SDL_FRect src_rect = { 0.0f, 0.0f, tex_w * percentage, tex_h };
+        SDL_FRect fill_dest = { x, y, w * percentage, h };
+        SDL_RenderTexture(gui_renderer, tex, &src_rect, &fill_dest);
+    }
+
+    SDL_FRect text_dest = { x, y, w, h };
+    float text_scale = 0.55f;
+    displayValue(current, max, text_dest, text_scale);
+}
+
+void HUD::drawText(const std::string& text, float x, float y, SDL_Color color) {
     SDL_Surface* surf = TTF_RenderText_Solid(font, text.c_str(), 0, color);
     if (surf) {
         SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
         if (tex) {
-            SDL_FRect dest = { x, y, static_cast<float>(surf->w), static_cast<float>(surf->h)};
+            SDL_FRect dest = { 
+                x,
+                y, 
+                static_cast<float>(surf->w) * 0.75f, 
+                static_cast<float>(surf->h) * 0.75f
+            };
             SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);
             SDL_DestroyTexture(tex);
         }
@@ -252,40 +272,19 @@ void HUD::draw_text(const std::string& text, float x, float y, SDL_Color color) 
     }
 }
 
-void HUD::draw_gold() {
+void HUD::drawGold() {
     if (!font) return;
-
-    float current_x = game_width + 15.0f;
-    float current_y = 440.0f;
-
-    if (gold_texture) {
-        SDL_FRect gold_cutout = { 0.0f, 320.0f, 30.0f, 27.0f };
-        float crop_w = gold_cutout.w;
-        float crop_h = gold_cutout.h;
-
-        float target_height = 18.0f;
-
-        float scale = target_height / crop_h;
-        float dest_w = crop_w * scale;
-
-        SDL_FRect icon_dest = {
-            current_x - (dest_w / 2.0f), 
-            current_y + 2.0f, 
-            dest_w, 
-            target_height
-        };
-        SDL_RenderTexture(gui_renderer, gold_texture, &gold_cutout, &icon_dest);
-    }
 
     std::string gold_text = std::to_string(player_gold);
     SDL_Color gold_color = {255, 215, 0, 255};
 
-    float text_start_x = game_width + 30.0f;
+    float text_start_x = 740.0f;
+    float text_start_y = 418.0f;
 
-    draw_text(gold_text, text_start_x, current_y + 2.0f, gold_color);
+    drawText(gold_text, text_start_x, text_start_y, gold_color);
 }
 
-void HUD::display_value(int current, int max, SDL_FRect& dest) {
+void HUD::displayValue(int current, int max, SDL_FRect& dest, float text_scale) {
     if (font) {
         std::string text = std::to_string(current) + "/" + std::to_string(max);
         SDL_Color white = {255, 255, 255, 255};
@@ -293,7 +292,7 @@ void HUD::display_value(int current, int max, SDL_FRect& dest) {
         if (surf) {
             SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
             if (tex) {
-                float text_scale = 0.75f;
+                //float text_scale = 0.75f;
                 float scaled_w = surf->w * text_scale;
                 float scaled_h = surf->h * text_scale;
                 float text_x = dest.x + (dest.w - scaled_w) / 2.0f;
@@ -307,103 +306,40 @@ void HUD::display_value(int current, int max, SDL_FRect& dest) {
     }
 }
 
-void HUD::draw_stats_button() {
-    if (stats_button_texture) {
-        float tex_w, tex_h;
-        SDL_GetTextureSize(stats_button_texture, &tex_w, &tex_h);
-
-        float start_x = game_width + (panel_width - tex_w) / 2.0f;
-        float start_y = 400.0f;
-
-        SDL_FRect dest = { start_x, start_y, tex_w, tex_h };
-        SDL_RenderTexture(gui_renderer, stats_button_texture, nullptr, &dest);
-    }
-}
-
-void HUD::draw_hp() {
+void HUD::drawHp() {
     if (hp_bar_texture) {
-        draw_stat(hp_bar_texture, 475.0f, player_hp, max_hp);
+        drawBigStat(hp_bar_texture, 600.0f, player_hp, max_hp);
     }
-
-    float icon_center_x = game_width + 15.0f;
-    float icon_center_y = 475.0f + 6.0f;
-
-    float thickness = 4.0f;
-    float length = 12.0f;
-
-    SDL_FRect h_rect = {
-        icon_center_x - (length / 2.0f),
-        icon_center_y - (thickness / 2.0f),
-        length,
-        thickness
-    };
-
-    SDL_FRect v_rect = {
-        icon_center_x - (thickness / 2.0f),
-        icon_center_y - (length / 2.0f),
-        thickness,
-        length
-    };
-
-    SDL_SetRenderDrawColor(gui_renderer, 220, 30, 30, 255);
-    SDL_RenderFillRect(gui_renderer, &h_rect);
-    SDL_RenderFillRect(gui_renderer, &v_rect);
 }
 
-void HUD::draw_xp() {
+void HUD::drawXp() {
     if (xp_bar_texture) {
-        draw_stat(xp_bar_texture, 525.0f, player_xp, max_xp);
-    }
-
-    if (xp_icon_texture) {
-        SDL_FRect xp_cutout = { 253.0f, 225.0f, 37.0f, 26.0f };
-        float crop_w = xp_cutout.w;
-        float crop_h = xp_cutout.h;
-
-        float target_height = 14.0f;
-        float scale = target_height / crop_h;
-        float dest_w = crop_w * scale;
-
-        float icon_center_x = game_width + 15.0f;
-        float icon_center_y = 525.0f + 6.0f;
-
-        SDL_FRect icon_dest = {
-            icon_center_x - (dest_w / 2.0f),
-            icon_center_y - (target_height / 2.0f),
-            dest_w,
-            target_height
-        };
-
-        SDL_RenderTexture(gui_renderer, xp_icon_texture, &xp_cutout, &icon_dest);
+        drawSmallStat(xp_bar_texture, 658.0f, player_xp, max_xp);
     }
 }
 
-void HUD::draw_mana() {
+void HUD::drawMana() {
     if (mana_bar_texture) {
-        draw_stat(mana_bar_texture, 500.0f, player_mana, max_mana);
+        drawBigStat(mana_bar_texture, 629.0f, player_mana, max_mana);
     }
+}
 
-    if (mana_icon_texture) {
-        SDL_FRect mana_cutout = { 130.0f, 389.0f, 27.0f, 21.0f };
-        float crop_w = mana_cutout.w;
-        float crop_h = mana_cutout.h;
-
-        float target_height = 12.0f;
-        float scale = target_height / crop_h;
-        float dest_w = crop_w * scale;
-
-        float icon_center_x = game_width + 15.0f;
-        float icon_center_y = 500.0f + 6.0f;
-
-        SDL_FRect icon_dest = {
-            icon_center_x - (dest_w / 2.0f),
-            icon_center_y - (target_height / 2.0f),
-            dest_w,
-            target_height
+void HUD::render() {
+    if (game_texture) {
+        SDL_FRect bg_dest = { 
+            0.0f, 
+            0.0f, 
+            static_cast<float>(game_width + panel_width), 
+            static_cast<float>(canvas_height)
         };
-
-        SDL_RenderTexture(gui_renderer, mana_icon_texture, &mana_cutout, &icon_dest);
+        SDL_RenderTexture(gui_renderer, game_texture, nullptr, &bg_dest);
     }
+
+    drawInventoryItems();
+    drawGold();
+    drawHp();
+    drawMana();
+    drawXp();
 }
 
 void HUD::load_stat_texture(const std::string& path, SDL_Texture** texture) {
@@ -437,7 +373,5 @@ void HUD::load_textures() {
     load_stat_texture("imagenes/en_barraexperiencia.bmp", &xp_bar_texture);
     load_stat_texture("imagenes/en_barrademana.bmp", &mana_bar_texture);
     load_stat_texture("imagenes/100.png", &gold_texture);
-    load_stat_texture("imagenes/en_boton-stats-off.bmp", &stats_button_texture);
-    load_stat_texture("imagenes/109.png", &mana_icon_texture);
-    load_stat_texture("imagenes/102.png", &xp_icon_texture);
+    load_stat_texture("imagenes/en_ventanaprincipal.bmp", &game_texture);
 }

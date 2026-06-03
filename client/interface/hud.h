@@ -35,9 +35,7 @@ private:
     SDL_Texture* xp_bar_texture;
     SDL_Texture* mana_bar_texture;
     SDL_Texture* gold_texture;
-    SDL_Texture* stats_button_texture;
-    SDL_Texture* mana_icon_texture;
-    SDL_Texture* xp_icon_texture;
+    SDL_Texture* game_texture;
     int equipped_slot = -1;
     std::string equipped_item_id;
 
@@ -47,9 +45,10 @@ private:
 
     void load_textures();
     void load_stat_texture(const std::string& path, SDL_Texture** texture);
-    void draw_stat(SDL_Texture* tex, float pos_y, int current, int max);
-    void display_value(int current, int max, SDL_FRect& dest);
-    void draw_text(const std::string& text, float x, float y, SDL_Color color);
+    void drawBigStat(SDL_Texture* tex, float pos_y, int current, int max);
+    void drawSmallStat(SDL_Texture* tex, float pos_y, int current, int max);
+    void displayValue(int current, int max, SDL_FRect& dest, float text_scale);
+    void drawText(const std::string& text, float x, float y, SDL_Color color);
     void drawItems();
     void drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float SLOT_SIZE);
 
@@ -76,13 +75,13 @@ public:
     void set_equipped_item(const std::string& item_id);
     void set_equipped_slot(int slot_index);
     int get_equipped_slot() const { return equipped_slot; }
-    void drawInventoryPanel();
+    void drawInventoryItems();
     void drawAttackButton();
-    void draw_stats_button();
-    void draw_hp();
-    void draw_mana();
-    void draw_gold();
-    void draw_xp();
+    void drawHp();
+    void drawMana();
+    void drawGold();
+    void drawXp();
+    void render();
 };
 
 #endif
