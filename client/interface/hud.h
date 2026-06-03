@@ -37,6 +37,7 @@ private:
     SDL_Texture* gold_texture;
     SDL_Texture* stats_button_texture;
     SDL_Texture* mana_icon_texture;
+    SDL_Texture* xp_icon_texture;
     int equipped_slot = -1;
     std::string equipped_item_id;
 

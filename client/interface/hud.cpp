@@ -21,6 +21,7 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       gold_texture(nullptr),
       stats_button_texture(nullptr),
       mana_icon_texture(nullptr),
+      xp_icon_texture(nullptr),
       game_width(game_width),
       panel_width(panel_width),
       canvas_height(canvas_height) {
@@ -52,6 +53,9 @@ HUD::~HUD() {
     }
     if (mana_icon_texture) {
         SDL_DestroyTexture(mana_icon_texture);
+    }
+    if (xp_icon_texture) {
+        SDL_DestroyTexture(xp_icon_texture);
     }
 
     if (font) {
@@ -345,6 +349,28 @@ void HUD::draw_xp() {
     if (xp_bar_texture) {
         draw_stat(xp_bar_texture, 525.0f, player_xp, max_xp);
     }
+
+    if (xp_icon_texture) {
+        SDL_FRect xp_cutout = { 253.0f, 225.0f, 37.0f, 26.0f };
+        float crop_w = xp_cutout.w;
+        float crop_h = xp_cutout.h;
+
+        float target_height = 16.0f;
+        float scale = target_height / crop_h;
+        float dest_w = crop_w * scale;
+
+        float icon_center_x = game_width + 15.0f;
+        float icon_center_y = 525.0f + 6.0f;
+
+        SDL_FRect icon_dest = {
+            icon_center_x - (dest_w / 2.0f),
+            icon_center_y - (target_height / 2.0f),
+            dest_w,
+            target_height
+        };
+
+        SDL_RenderTexture(gui_renderer, xp_icon_texture, &xp_cutout, &icon_dest);
+    }
 }
 
 void HUD::draw_mana() {
@@ -353,12 +379,13 @@ void HUD::draw_mana() {
     }
 
     if (mana_icon_texture) {
-        float icon_w, icon_h;
-        SDL_GetTextureSize(mana_icon_texture, &icon_w, &icon_h);
+        SDL_FRect mana_cutout = { 130.0f, 389.0f, 27.0f, 21.0f };
+        float crop_w = mana_cutout.w;
+        float crop_h = mana_cutout.h;
 
         float target_height = 14.0f;
-        float scale = target_height / icon_h;
-        float dest_w = icon_w * scale;
+        float scale = target_height / crop_h;
+        float dest_w = crop_w * scale;
 
         float icon_center_x = game_width + 15.0f;
         float icon_center_y = 500.0f + 6.0f;
@@ -369,7 +396,7 @@ void HUD::draw_mana() {
             dest_w,
             target_height
         };
-        SDL_FRect mana_cutout = { 130.0f, 389.0f, 27.0f, 21.0f };
+
         SDL_RenderTexture(gui_renderer, mana_icon_texture, &mana_cutout, &icon_dest);
     }
 }
@@ -407,4 +434,5 @@ void HUD::load_textures() {
     load_stat_texture("imagenes/100.png", &gold_texture);
     load_stat_texture("imagenes/en_boton-stats-off.bmp", &stats_button_texture);
     load_stat_texture("imagenes/109.png", &mana_icon_texture);
+    load_stat_texture("imagenes/102.png", &xp_icon_texture);
 }
