@@ -46,7 +46,7 @@ void ClientGUI::initSDL() {
         throw std::runtime_error(std::string("TTF_Init: ") + SDL_GetError());
     }
 
-    chat_font = TTF_OpenFont("fonts/Roboto-VariableFont_wdth,wght.ttf", 16);
+    chat_font = TTF_OpenFont("fonts/StackSansText-Medium.ttf", 16);
 
     mini_chat = std::make_unique<MiniChat>(renderer, chat_font);
 }

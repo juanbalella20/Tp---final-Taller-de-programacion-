@@ -4,7 +4,7 @@
 HUD::HUD(SDL_Renderer* gui_renderer,
          float game_width, float panel_width, float canvas_height)
     : gui_renderer(gui_renderer),
-      font(TTF_OpenFont("fonts/Roboto-VariableFont_wdth,wght.ttf", 16)),
+      font(TTF_OpenFont("fonts/StackSansText-Medium.ttf", 16)),
       inventory{},
       attack_btn{game_width + 10.0f, canvas_height - 60.0f, panel_width - 20.0f, 40.0f},
       show_attack_button(false),
