@@ -212,7 +212,7 @@ void HUD::draw_stat(SDL_Texture* tex, float pos_y, int current, int max) {
 
     float scaled_w = tex_w * scale;
     float scaled_h = tex_h * scale;
-    float start_x = game_width + 15.0f;
+    float start_x = game_width + 30.0f;
 
     SDL_FRect border_dest = { start_x - 2.0f, pos_y - 2.0f, scaled_w + 4.0f, scaled_h + 4.0f };
     SDL_SetRenderDrawColor(gui_renderer, 10, 10, 10, 255);
@@ -311,6 +311,30 @@ void HUD::draw_hp() {
     if (hp_bar_texture) {
         draw_stat(hp_bar_texture, 475.0f, player_hp, max_hp);
     }
+
+    float icon_center_x = game_width + 15.0f;
+    float icon_center_y = 475.0f + 6.0f;
+
+    float thickness = 4.0f;
+    float length = 12.0f;
+
+    SDL_FRect h_rect = {
+        icon_center_x - (length / 2.0f),
+        icon_center_y - (thickness / 2.0f),
+        length,
+        thickness
+    };
+
+    SDL_FRect v_rect = {
+        icon_center_x - (thickness / 2.0f),
+        icon_center_y - (length / 2.0f),
+        thickness,
+        length
+    };
+
+    SDL_SetRenderDrawColor(gui_renderer, 220, 30, 30, 255);
+    SDL_RenderFillRect(gui_renderer, &h_rect);
+    SDL_RenderFillRect(gui_renderer, &v_rect);
 }
 
 void HUD::draw_xp() {
