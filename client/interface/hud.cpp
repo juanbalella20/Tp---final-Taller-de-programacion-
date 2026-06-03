@@ -270,7 +270,7 @@ void HUD::draw_gold() {
 
         SDL_FRect icon_dest = {
             current_x - (dest_w / 2.0f), 
-            current_y, 
+            current_y + 2.0f, 
             dest_w, 
             target_height
         };
