@@ -18,6 +18,8 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       hp_bar_texture(nullptr),
       xp_bar_texture(nullptr),
       mana_bar_texture(nullptr),
+      gold_texture(nullptr),
+      stats_button_texture(nullptr),
       game_width(game_width),
       panel_width(panel_width),
       canvas_height(canvas_height) {
@@ -35,6 +37,19 @@ HUD::~HUD() {
     if (hp_bar_texture) {
         SDL_DestroyTexture(hp_bar_texture);
     }
+    if (xp_bar_texture) {
+        SDL_DestroyTexture(xp_bar_texture);
+    }
+    if (mana_bar_texture) {
+        SDL_DestroyTexture(mana_bar_texture);
+    }
+    if (gold_texture) {
+        SDL_DestroyTexture(gold_texture);
+    }
+    if (stats_button_texture) {
+        SDL_DestroyTexture(stats_button_texture);
+    }
+
     if (font) {
         TTF_CloseFont(font);
     }
@@ -177,7 +192,8 @@ void HUD::drawInventoryPanel() {
 
     // Titulo "Inventario"
     if (font) {
-        draw_text("Inventario", game_width + 10.0f, 10.0f);
+        SDL_Color white = {255, 255, 255, 255};
+        draw_text("Inventario", game_width + 10.0f, 10.0f, white);
     }
 
     // Items del inventario en slots
@@ -190,23 +206,35 @@ void HUD::draw_stat(SDL_Texture* tex, float pos_y, int current, int max) {
     const float max_width = panel_width - 30.0f;
     const float scale = SDL_min(1.0f, max_width / tex_w);
 
-    SDL_FRect dest = {
-        game_width + 15.0f,
-        pos_y,
-        tex_w * scale,
-        tex_h * scale
-    };
-    SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);
+    float percentage = (max > 0) ? static_cast<float>(current) / static_cast<float>(max) : 0.0f;
+    if (percentage < 0.0f) percentage = 0.0f;
+    if (percentage > 1.0f) percentage = 1.0f;
 
-    display_value(current, max, dest);
+    float scaled_w = tex_w * scale;
+    float scaled_h = tex_h * scale;
+    float start_x = game_width + 15.0f;
+
+    SDL_FRect border_dest = { start_x - 2.0f, pos_y - 2.0f, scaled_w + 4.0f, scaled_h + 4.0f };
+    SDL_SetRenderDrawColor(gui_renderer, 10, 10, 10, 255);
+    SDL_RenderFillRect(gui_renderer, &border_dest);
+
+    SDL_FRect bg_dest = { start_x, pos_y, scaled_w, scaled_h };
+    SDL_SetRenderDrawColor(gui_renderer, 30, 30, 30, 255);
+    SDL_RenderFillRect(gui_renderer, &bg_dest);
+
+    if (percentage > 0.0f) {
+        SDL_FRect src_rect = { 0.0f, 0.0f, tex_w * percentage, tex_h };
+        SDL_FRect fill_dest = { start_x, pos_y, scaled_w * percentage, scaled_h };
+        SDL_RenderTexture(gui_renderer, tex, &src_rect, &fill_dest);
+    }
+
+    display_value(current, max, bg_dest);
 }
 
-void HUD::draw_text(const std::string& text, float x, float y) {
-    SDL_Color color = {255, 255, 255, 255};
+void HUD::draw_text(const std::string& text, float x, float y, SDL_Color color) {
     SDL_Surface* surf = TTF_RenderText_Solid(font, text.c_str(), 0, color);
     if (surf) {
         SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
-
         if (tex) {
             SDL_FRect dest = { x, y, static_cast<float>(surf->w), static_cast<float>(surf->h)};
             SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);
@@ -219,9 +247,29 @@ void HUD::draw_text(const std::string& text, float x, float y) {
 void HUD::draw_gold() {
     if (!font) return;
 
-    std::string gold_text = "Oro: " + std::to_string(player_gold);
+    float current_x = game_width + 15.0f;
+    float current_y = 440.0f;
 
-    draw_text(gold_text, game_width + 15.0f, 530.0f);
+    if (gold_texture) {
+        float icon_w, icon_h;
+        SDL_GetTextureSize(gold_texture, &icon_w, &icon_h);
+
+        float target_height = 20.0f;
+
+        float scale = target_height / icon_h;
+        float dest_w = icon_w * scale;
+
+        SDL_FRect icon_dest = {current_x, current_y, dest_w, target_height};
+        SDL_FRect gold_cutout = { 0.0f, 320.0f, 30.0f, 27.0f };
+        SDL_RenderTexture(gui_renderer, gold_texture, &gold_cutout, &icon_dest);
+
+        current_x += dest_w + 8.0f; // espacio entre icono y texto
+    }
+
+    std::string gold_text = std::to_string(player_gold);
+    SDL_Color gold_color = {255, 215, 0, 255};
+
+    draw_text(gold_text, current_x, current_y + 2.0f, gold_color);
 }
 
 void HUD::display_value(int current, int max, SDL_FRect& dest) {
@@ -246,21 +294,34 @@ void HUD::display_value(int current, int max, SDL_FRect& dest) {
     }
 }
 
+void HUD::draw_stats_button() {
+    if (stats_button_texture) {
+        float tex_w, tex_h;
+        SDL_GetTextureSize(stats_button_texture, &tex_w, &tex_h);
+
+        float start_x = game_width + (panel_width - tex_w) / 2.0f;
+        float start_y = 400.0f;
+
+        SDL_FRect dest = { start_x, start_y, tex_w, tex_h };
+        SDL_RenderTexture(gui_renderer, stats_button_texture, nullptr, &dest);
+    }
+}
+
 void HUD::draw_hp() {
     if (hp_bar_texture) {
-        draw_stat(hp_bar_texture, 430.0f, player_hp, max_hp);
+        draw_stat(hp_bar_texture, 475.0f, player_hp, max_hp);
     }
 }
 
 void HUD::draw_xp() {
     if (xp_bar_texture) {
-        draw_stat(xp_bar_texture, 460.0f, player_xp, max_xp);
+        draw_stat(xp_bar_texture, 525.0f, player_xp, max_xp);
     }
 }
 
 void HUD::draw_mana() {
     if (mana_bar_texture) {
-        draw_stat(mana_bar_texture, 490.0f, player_mana, max_mana);
+        draw_stat(mana_bar_texture, 500.0f, player_mana, max_mana);
     }
 }
 
@@ -294,4 +355,6 @@ void HUD::load_textures() {
     load_stat_texture("imagenes/en_barradevida.bmp", &hp_bar_texture);
     load_stat_texture("imagenes/en_barraexperiencia.bmp", &xp_bar_texture);
     load_stat_texture("imagenes/en_barrademana.bmp", &mana_bar_texture);
+    load_stat_texture("imagenes/100.png", &gold_texture);
+    load_stat_texture("imagenes/en_boton-stats-off.bmp", &stats_button_texture);
 }
