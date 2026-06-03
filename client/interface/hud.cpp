@@ -259,25 +259,30 @@ void HUD::draw_gold() {
     float current_y = 440.0f;
 
     if (gold_texture) {
-        float icon_w, icon_h;
-        SDL_GetTextureSize(gold_texture, &icon_w, &icon_h);
-
-        float target_height = 20.0f;
-
-        float scale = target_height / icon_h;
-        float dest_w = icon_w * scale;
-
-        SDL_FRect icon_dest = {current_x, current_y, dest_w, target_height};
         SDL_FRect gold_cutout = { 0.0f, 320.0f, 30.0f, 27.0f };
-        SDL_RenderTexture(gui_renderer, gold_texture, &gold_cutout, &icon_dest);
+        float crop_w = gold_cutout.w;
+        float crop_h = gold_cutout.h;
 
-        current_x += dest_w + 8.0f; // espacio entre icono y texto
+        float target_height = 18.0f;
+
+        float scale = target_height / crop_h;
+        float dest_w = crop_w * scale;
+
+        SDL_FRect icon_dest = {
+            current_x - (dest_w / 2.0f), 
+            current_y, 
+            dest_w, 
+            target_height
+        };
+        SDL_RenderTexture(gui_renderer, gold_texture, &gold_cutout, &icon_dest);
     }
 
     std::string gold_text = std::to_string(player_gold);
     SDL_Color gold_color = {255, 215, 0, 255};
 
-    draw_text(gold_text, current_x, current_y + 2.0f, gold_color);
+    float text_start_x = game_width + 30.0f;
+
+    draw_text(gold_text, text_start_x, current_y + 2.0f, gold_color);
 }
 
 void HUD::display_value(int current, int max, SDL_FRect& dest) {
@@ -355,7 +360,7 @@ void HUD::draw_xp() {
         float crop_w = xp_cutout.w;
         float crop_h = xp_cutout.h;
 
-        float target_height = 16.0f;
+        float target_height = 14.0f;
         float scale = target_height / crop_h;
         float dest_w = crop_w * scale;
 
@@ -383,7 +388,7 @@ void HUD::draw_mana() {
         float crop_w = mana_cutout.w;
         float crop_h = mana_cutout.h;
 
-        float target_height = 14.0f;
+        float target_height = 12.0f;
         float scale = target_height / crop_h;
         float dest_w = crop_w * scale;
 
