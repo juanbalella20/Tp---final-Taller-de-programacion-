@@ -40,3 +40,6 @@ const std::vector<PlayerInfo>& GameMsg::get_players() const { return players; }
 void GameMsg::set_player(const PlayerInfo& player) { this->players = {player}; }
 void GameMsg::set_zone(Zone z) { this->zone = z;}
 Zone GameMsg::get_zone() const { return this->zone; }
+
+void GameMsg::set_race(const std::string& race) { this->race = race; }
+const std::string& GameMsg::get_race() const { return this->race; }
