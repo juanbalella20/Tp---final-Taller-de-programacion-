@@ -7,6 +7,8 @@
 #include "item/item.h"
 #include "entity.h"
 
+class Player;
+
 class Inventory {
 
 private:
@@ -29,7 +31,7 @@ public:
     void unequip_item();
 
     bool is_full() const;
-    void use_equipped(Entity& target, int attacker_x, int attacker_y, int target_x, int target_y);
+    int use_equipped(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y);
 };
 
 

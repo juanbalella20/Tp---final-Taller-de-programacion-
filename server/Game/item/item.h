@@ -4,6 +4,7 @@
 #include <string>
 
 class Entity;
+class Player;
 
 class Item {
 protected:
@@ -22,7 +23,7 @@ public:
     
     int getPrice() const;
 
-    virtual void use_item(Entity& target, int attacker_x, int attacker_y, int target_x, int target_y) = 0;
+    virtual int use_item(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y) = 0;
 };
 
 #endif

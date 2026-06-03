@@ -6,6 +6,7 @@
 #include "player_race.h"
 #include "player_class.h"
 #include "../inventory.h"
+#include "nivel.h"
 
 #include <string>
 #include <memory>
@@ -31,6 +32,7 @@ private:
     PlayerRace player_race;
     PlayerClass player_class;
     Inventory player_inventory;
+    Nivel nivel;
 
     uint32_t max_life();
 
@@ -51,7 +53,10 @@ public:
 
     void use_object(Item item);
 
-    void attack(Entity& target, int target_x, int target_y);
+    int attack(Entity& target, int target_x, int target_y);
+
+    // Suma a este jugador (atacante) la XP por golpear/matar a un target.
+    void ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target);
 
     void revive();
 
@@ -97,7 +102,7 @@ public:
 
     int damage_attack();
 
-    void receive_damage(int damage) override;
+    int receive_damage(int damage, Player& atacante) override;
 
     void add_experience(int exp);
 

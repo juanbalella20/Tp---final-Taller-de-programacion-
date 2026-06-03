@@ -1,4 +1,5 @@
 #include "npcHostile.h"
+#include "../player/player.h"
 
 NPChostile::NPChostile(const std::string& type_id, const std::string& name,
                        int lifepoints, int attack_dmg, int ticks_to_spawn)
@@ -45,11 +46,16 @@ void NPChostile::revive(int x, int y) {
     set_state(State::ALIVE);
 }
 
-void NPChostile::receive_damage(int dmg) {
+int NPChostile::receive_damage(int dmg, Player& atacante) {
     lifepoints -= dmg;
+    bool murio = false;
     if (lifepoints <= 0) {
         death();
+        murio = true;
     }
+    const int nivel_npc = 1;  // los NPC no tienen nivel modelado: valor fijo
+    atacante.ganar_xp(dmg, nivel_npc, murio, max_lifepoints);
+    return 0;
 }
 
 /*

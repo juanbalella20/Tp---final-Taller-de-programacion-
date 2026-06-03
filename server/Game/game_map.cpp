@@ -279,11 +279,11 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
     }
     if (target == nullptr) throw NoEntityException();
 
-    attacker->attack(*target, x, y);
+    int gold_drop = attacker->attack(*target, x, y);
 
     if (target->is_dead()) {
-        // este "1" tiene que cambiar por el oro real que deja el npc/jugador.
-        world.spawn_gold(x, y, 1);
+        if (gold_drop > 0)
+            world.spawn_gold(x, y, static_cast<uint32_t>(gold_drop));
         return {true, true, target_is_player, target->get_name()};
     }
     return {true, false, target_is_player, target->get_name()};

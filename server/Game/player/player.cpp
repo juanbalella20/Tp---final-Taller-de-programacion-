@@ -7,13 +7,14 @@ Player::Player(const std::string name, PlayerRace& player_race, PlayerClass& pla
     name(name),
     status(PlayerStatus::ALIVE),
     equipped_item(nullptr),
-    player_race(player_race), 
-    player_class(player_class), 
+    player_race(player_race),
+    player_class(player_class),
     player_inventory(),
+    nivel(1),
     level(1) {
 
     lives = max_life();
-    gold = 0;
+    gold = 10000;
     experience = 0;
     mana = max_mana();
 }
@@ -198,18 +199,38 @@ int Player::damage_attack() {
     return player_race.race_strength() + player_class.class_strength();
 }
  
-void Player::receive_damage(int damage) {
+int Player::receive_damage(int damage, Player& atacante) {
+    bool murio = false;
     if (static_cast<int>(lives) <= damage) {
         lives = 0;
+        status = PlayerStatus::DEAD;
+        murio = true;
     } else {
         lives -= static_cast<uint32_t>(damage);
     }
+
+    // El target recompensa al atacante con sus propios atributos (nivel, vida máxima)
+    atacante.ganar_xp(damage, level, murio, static_cast<int>(max_life()));
+
+    if (murio) {
+        uint32_t drop = nivel.calcular_drop_gold(gold);
+        gold -= drop;
+        return static_cast<int>(drop);
+    }
+    return 0;
 }
 
-void Player::attack(Entity& target, int target_x, int target_y) {
+int Player::attack(Entity& target, int target_x, int target_y) {
     if (status == PlayerStatus::DEAD)
         throw AttackNotAllowedException("Estás muerto, no podés atacar");
-    player_inventory.use_equipped(target, coord_x, coord_y, target_x, target_y);
+    return player_inventory.use_equipped(target, *this, coord_x, coord_y, target_x, target_y);
+}
+
+void Player::ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target) {
+    experience += nivel.xp_por_ataque(dano, nivel_target);
+    if (murio)
+        experience += nivel.xp_por_kill(vida_max_target, nivel_target);
+    check_level_up();
 }
  
 void Player::add_experience(int exp) {

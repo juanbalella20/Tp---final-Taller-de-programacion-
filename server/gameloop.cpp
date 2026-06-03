@@ -362,10 +362,20 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
             broadcast_npcs_snapshot();
             broadcast_items_snapshot();
         }
+        // El atacante gana XP en cada golpe: notificarle su XP actualizada
+        GameMsg xp_msg(MSG_XP);
+        xp_msg.set_xp(game_map.get_player_xp(attacker_name));
+        client_registry_monitor.notify_client(cmd.get_client_id(), xp_msg);
         if (result.target_is_player) {
             GameMsg hp_msg(MSG_HP);
             hp_msg.set_hp(game_map.get_player_hp(result.entity_name));
             client_registry_monitor.notify_client_by_name(result.entity_name, hp_msg);
+
+            if (result.entity_died) {
+                GameMsg gold_msg(MSG_GOLD);
+                gold_msg.set_gold(game_map.get_player_gold(result.entity_name));
+                client_registry_monitor.notify_client_by_name(result.entity_name, gold_msg);
+            }
         }
     } catch (const NoEntityException& e) {
         GameMsg msg(MSG_CHAT);

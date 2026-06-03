@@ -134,6 +134,7 @@ add_executable(server
     server/Game/player/player.cpp
     server/Game/player/player_class.cpp
     server/Game/player/player_race.cpp
+    server/Game/player/nivel.cpp
     server/Game/inventory.cpp
     server/Game/item/item.cpp
     server/Game/item/arma.cpp
