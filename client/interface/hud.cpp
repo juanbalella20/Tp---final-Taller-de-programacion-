@@ -20,6 +20,7 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       mana_bar_texture(nullptr),
       gold_texture(nullptr),
       stats_button_texture(nullptr),
+      mana_icon_texture(nullptr),
       game_width(game_width),
       panel_width(panel_width),
       canvas_height(canvas_height) {
@@ -48,6 +49,9 @@ HUD::~HUD() {
     }
     if (stats_button_texture) {
         SDL_DestroyTexture(stats_button_texture);
+    }
+    if (mana_icon_texture) {
+        SDL_DestroyTexture(mana_icon_texture);
     }
 
     if (font) {
@@ -347,6 +351,27 @@ void HUD::draw_mana() {
     if (mana_bar_texture) {
         draw_stat(mana_bar_texture, 500.0f, player_mana, max_mana);
     }
+
+    if (mana_icon_texture) {
+        float icon_w, icon_h;
+        SDL_GetTextureSize(mana_icon_texture, &icon_w, &icon_h);
+
+        float target_height = 14.0f;
+        float scale = target_height / icon_h;
+        float dest_w = icon_w * scale;
+
+        float icon_center_x = game_width + 15.0f;
+        float icon_center_y = 500.0f + 6.0f;
+
+        SDL_FRect icon_dest = {
+            icon_center_x - (dest_w / 2.0f),
+            icon_center_y - (target_height / 2.0f),
+            dest_w,
+            target_height
+        };
+        SDL_FRect mana_cutout = { 130.0f, 389.0f, 27.0f, 21.0f };
+        SDL_RenderTexture(gui_renderer, mana_icon_texture, &mana_cutout, &icon_dest);
+    }
 }
 
 void HUD::load_stat_texture(const std::string& path, SDL_Texture** texture) {
@@ -381,4 +406,5 @@ void HUD::load_textures() {
     load_stat_texture("imagenes/en_barrademana.bmp", &mana_bar_texture);
     load_stat_texture("imagenes/100.png", &gold_texture);
     load_stat_texture("imagenes/en_boton-stats-off.bmp", &stats_button_texture);
+    load_stat_texture("imagenes/109.png", &mana_icon_texture);
 }
