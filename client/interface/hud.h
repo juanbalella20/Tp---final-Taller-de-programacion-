@@ -12,8 +12,6 @@
 class HUD {
 private:
     struct InventoryView {
-        SDL_FRect panel;
-        SDL_Texture* bg_texture;
         std::vector<ItemInfo> items;
         std::map<std::string, SDL_Texture*> items_textures;
     };

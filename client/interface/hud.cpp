@@ -23,14 +23,11 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       game_width(game_width),
       panel_width(panel_width),
       canvas_height(canvas_height) {
-    inventory.panel = {game_width, 0.0f, panel_width, canvas_height};
+    
     load_textures();
 }
 
 HUD::~HUD() {
-    if (inventory.bg_texture) {
-        SDL_DestroyTexture(inventory.bg_texture);
-    }
     for (auto& kv : inventory.items_textures) {
         if (kv.second) SDL_DestroyTexture(kv.second);
     }
@@ -376,12 +373,6 @@ void HUD::load_stat_texture(const std::string& path, SDL_Texture** texture) {
 }
 
 void HUD::load_textures() {
-    SDL_Surface* inv_bg_surf = IMG_Load("imagenes/inventory-bg..png");
-    if (inv_bg_surf) {
-        inventory.bg_texture = SDL_CreateTextureFromSurface(gui_renderer, inv_bg_surf);
-        SDL_DestroySurface(inv_bg_surf);
-    }
-
     SDL_Surface* sword_surf = IMG_Load("imagenes/101.png");
     if (sword_surf) {
         SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, sword_surf);
@@ -394,5 +385,5 @@ void HUD::load_textures() {
     load_stat_texture("imagenes/en_barraexperiencia.bmp", &xp_bar_texture);
     load_stat_texture("imagenes/en_barrademana.bmp", &mana_bar_texture);
     load_stat_texture("imagenes/100.png", &gold_texture);
-    load_stat_texture("imagenes/en_ventanaprincipal.bmp", &game_texture);
+    load_stat_texture("imagenes/en_ventanaprincipal.png", &game_texture);
 }
