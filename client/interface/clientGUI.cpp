@@ -135,21 +135,23 @@ void ClientGUI::sendCoord(int tile_x, int tile_y) {
 }
 
 void ClientGUI::selectCoord(int tile_x, int tile_y) {
-    bool npc_clicked = false;
-    for (const auto& npc : npcs) {
-        if (npc.x == tile_x && npc.y == tile_y) {
-            npc_clicked = true;
+  bool position_other_player = false;
+  bool position_npc = false;
+    for (const auto& p : other_players) {
+        if (p.x == tile_x && p.y == tile_y) {
+            position_other_player = true;
             break;
         }
     }
-
-    if (npc_clicked) {
-        selected_npc_tile_x = tile_x;
-        selected_npc_tile_y = tile_y;
+    for (const auto& npc : npcs) {
+        if (npc.x == tile_x && npc.y == tile_y) {
+            position_npc = true;
+            break;
+        }
+    }
+    if (position_other_player || position_npc) {
         sendAttackCmd(tile_x, tile_y);
     } else {
-        selected_npc_tile_x = -1;
-        selected_npc_tile_y = -1;
         sendCoord(tile_x, tile_y);
     }
 }
