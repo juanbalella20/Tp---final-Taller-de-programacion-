@@ -136,16 +136,25 @@ std::string MiniChat::pop_outbound_message() {
 void MiniChat::render(int game_width, int game_height) {
     float panel_x = 10.0f;
     float panel_y = 10.0f;
-    float panel_w = static_cast<float>(game_width) - 20.0f;
+
     float line_h  = 20.0f;
     float spacing = 3.0f;
     float input_h = active ? (line_h + 6.0f) : 0.0f;
-    float panel_h = MAX_LINES * (line_h + spacing) + 10.0f + input_h;
 
-    Uint8 alpha = active ? 200 : 140;
+    float panel_w = static_cast<float>(game_width) - 20.0f;
+    float panel_h = (MAX_LINES/2) * (line_h + spacing) + 10.0f + input_h;
+
+    Uint8 alpha = active ? 255 : 180;
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, alpha);
+
+    SDL_FRect border_rect = {
+        panel_x - 2.0f, panel_y - 2.0f, panel_w + 4.0f, panel_h + 4.0f
+    };
+    SDL_SetRenderDrawColor(renderer, 40, 40, 40, alpha);
+    SDL_RenderFillRect(renderer, &border_rect);
+
     SDL_FRect bg_rect = { panel_x, panel_y, panel_w, panel_h };
+    SDL_SetRenderDrawColor(renderer, 10, 10, 10, alpha);
     SDL_RenderFillRect(renderer, &bg_rect);
 
     float start_x = panel_x + 8.0f;
@@ -154,11 +163,16 @@ void MiniChat::render(int game_width, int game_height) {
     for (const auto& msg : msg_history) {
         SDL_FRect dest_rect = { start_x, current_y, msg.width, msg.height };
         SDL_RenderTexture(renderer, msg.texture, nullptr, &dest_rect);
-
         current_y += msg.height + spacing;
     }
 
     if (active) {
+        SDL_FRect separator = {
+            panel_x, current_y - 2.0f, panel_w, 2.0f
+        };
+        SDL_SetRenderDrawColor(renderer, 60, 60, 60, alpha);
+        SDL_RenderFillRect(renderer, &separator);
+
         std::string prompt = "> " + player_input;
 
         if ((SDL_GetTicks() / 500) % 2 == 0) {
@@ -170,13 +184,12 @@ void MiniChat::render(int game_width, int game_height) {
         SDL_Texture* input_texture = create_texture_from_msg(prompt, input_width, input_height);
 
         if (input_texture) {
-            SDL_FRect dest_rect = { start_x, current_y, input_width, input_height };
+            SDL_FRect dest_rect = { start_x, current_y + 3.0f, input_width, input_height };
             SDL_RenderTexture(renderer, input_texture, nullptr, &dest_rect);
 
             SDL_DestroyTexture(input_texture);
         }
     }
-
 }
 
 MiniChat::~MiniChat() {
