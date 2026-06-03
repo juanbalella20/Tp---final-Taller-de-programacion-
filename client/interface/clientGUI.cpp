@@ -609,6 +609,7 @@ void ClientGUI::draw() {
         hud->draw_mana();
         hud->draw_gold();
         hud->draw_xp();
+        hud->draw_stats_button();
     }
     mini_chat->render(GAME_WIDTH, CANVAS_HEIGHT);
     SDL_RenderPresent(renderer);
