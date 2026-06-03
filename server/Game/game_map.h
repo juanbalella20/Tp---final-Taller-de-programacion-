@@ -94,6 +94,9 @@ public:
         bool hit;
         bool entity_died;
         std::string entity_name;
+        int damage;
+        int target_x;
+        int target_y;
     };
 
     // Calcula la nueva posicion del player a partir de su posicion actual y la

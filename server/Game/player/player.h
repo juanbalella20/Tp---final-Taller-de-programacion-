@@ -51,7 +51,7 @@ public:
 
     void use_object(Item item);
 
-    void attack(Entity& target, int target_x, int target_y);
+    int attack(Entity& target, int target_x, int target_y);
 
     void revive();
 

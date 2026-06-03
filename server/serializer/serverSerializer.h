@@ -29,6 +29,7 @@ private:
     std::vector<uint8_t> serialize_xp(const GameMsg& msg);
     std::vector<uint8_t> serialize_players_snapshot(const GameMsg& msg);
     std::vector<uint8_t> serialize_zone(const GameMsg& msg);
+    std::vector<uint8_t> serialize_attack(const GameMsg& msg);
 
  public:
     ServerSerializer();

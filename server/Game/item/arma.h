@@ -16,7 +16,7 @@ public:
 
     int get_disntance_min_attack() const;
 
-    void use_item(Entity& target, int attacker_x, int attacker_y, int target_x, int target_y) override;
+    int use_item(Entity& target, int attacker_x, int attacker_y, int target_x, int target_y) override;
 };
 
 #endif

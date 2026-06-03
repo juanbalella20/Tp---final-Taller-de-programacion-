@@ -27,10 +27,11 @@ class GameMsg {
     uint32_t mana;
     std::vector<PlayerInfo> players;
     Zone zone;
+    int damage;
 
     public:
     GameMsg(uint8_t type, Direction direction = DIR_NORTH)
-        : type(type), direction(direction), coord_x(0), coord_y(0), zone(ZONE_CITY) {}
+        : type(type), direction(direction), coord_x(0), coord_y(0), zone(ZONE_CITY), damage(0) {}
     uint8_t get_type() const;
     void set_direction(Direction dir);
     Direction get_direction() const;
@@ -71,6 +72,9 @@ class GameMsg {
 
     void set_zone(Zone z);
     Zone get_zone() const;
+
+    void set_damage(int dmg);
+    int get_damage() const;
 };
 
 

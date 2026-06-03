@@ -29,6 +29,15 @@
 
 #define LOGICAL_WIDTH  960
 #define LOGICAL_HEIGHT 576
+#define DMG_MS 800
+
+// Numero de daño flotante que aparece sobre una celda y desaparece.
+struct DamageNumber {
+    int tile_x;
+    int tile_y;
+    int value;
+    uint64_t expire_ms;
+};
 
 class ClientGUI: public Thread {
 private:
@@ -58,6 +67,7 @@ private:
     // Recorte del 1er tile del spritesheet por tipo de NPC (nombre -> src crop)
     // TODO: refactorizar para permitir movimientos de los npcs
     std::map<std::string, SDL_FRect> enemies_crops;
+    std::vector<DamageNumber> damage_numbers;
     SDL_Texture* frame_texture;
     SDL_Texture* item_texture;
     SDL_Texture* gold_texture;
@@ -122,6 +132,8 @@ private:
     void draw_npc_friends();
     // Dibuja "Transportarse a <zona>" sobre cada tile de teleport del mapa.
     void draw_teleport_labels();
+    // Dibuja los numeros de daño flotantes en rojo y descarta los expirados.
+    void draw_damage_numbers();
 
 public:
     ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name, const std::string& player_race);

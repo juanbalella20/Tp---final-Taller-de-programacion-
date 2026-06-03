@@ -9,9 +9,10 @@ int Arma::get_disntance_min_attack() const {
     return disntance_min_attack;
 }
 
-void Arma::use_item(Entity& target, int attacker_x, int attacker_y, int target_x, int target_y) {
+int Arma::use_item(Entity& target, int attacker_x, int attacker_y, int target_x, int target_y) {
     int dx = std::abs(attacker_x - target_x);
     int dy = std::abs(attacker_y - target_y);
-    if (dx + dy > disntance_min_attack) return;
+    if (dx + dy > disntance_min_attack) return 0;
     target.receive_damage(damage);
+    return damage;
 }

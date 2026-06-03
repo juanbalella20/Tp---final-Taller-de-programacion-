@@ -371,6 +371,14 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
     std::string attacker_name = client_registry_monitor.get_name(cmd.get_client_id());
     try {
         auto result = game_map.attack(attacker_name, x, y);
+        // notifica solo al cliente el daño que hizo (no se hace broadcast a todos los clientes)
+        if (result.damage > 0) {
+            GameMsg dmg_msg(MSG_ATTACK);
+            dmg_msg.set_coord_x(result.target_x);
+            dmg_msg.set_coord_y(result.target_y);
+            dmg_msg.set_damage(result.damage);
+            client_registry_monitor.notify_client(cmd.get_client_id(), dmg_msg);
+        }
         if (result.entity_died) {
             broadcast_npcs_snapshot();
             broadcast_items_snapshot();

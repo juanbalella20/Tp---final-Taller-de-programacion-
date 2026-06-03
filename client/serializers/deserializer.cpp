@@ -83,6 +83,9 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_UPDATE_EQUIP] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_name(payload, msg);
     };
+    handlers[MSG_ATTACK] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_attack(payload, msg);
+    };
 }
 
 
@@ -103,6 +106,16 @@ void ClientDeserializer::deserialize_zone(const std::vector<uint8_t>& payload, G
     size_t offset = LEN_ZONE;
     msg.set_coord_x(static_cast<int>(read_uint16_be(payload, offset)));
     msg.set_coord_y(static_cast<int>(read_uint16_be(payload, offset)));
+}
+
+void ClientDeserializer::deserialize_attack(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    if (payload.size() != LEN_ATTACK_PAYLOAD) {
+        throw std::invalid_argument("Payload invalido para MSG_ATTACK");
+    }
+    size_t offset = 0;
+    msg.set_coord_x(static_cast<int>(read_uint16_be(payload, offset)));
+    msg.set_coord_y(static_cast<int>(read_uint16_be(payload, offset)));
+    msg.set_damage(static_cast<int>(read_uint16_be(payload, offset)));
 }
 
 void ClientDeserializer::deserialize_move(const std::vector<uint8_t>& payload, GameMsg& msg) {

@@ -464,6 +464,14 @@ void ClientGUI::update() {
                 case MSG_HP:
                     if (hud) hud->set_hp(msg.get_hp());
                     break;
+                case MSG_ATTACK:
+                    if (msg.get_damage() > 0) {
+                        damage_numbers.push_back({
+                            msg.get_coord_x(), msg.get_coord_y(),
+                            msg.get_damage(), SDL_GetTicks() + DMG_MS
+                        });
+                    }
+                    break;
                 case MSG_XP:
                     if (hud) hud->set_xp(msg.get_xp());
                     break;
@@ -559,6 +567,36 @@ void ClientGUI::draw_teleport_labels() {
     }
 }
 
+void ClientGUI::draw_damage_numbers() {
+    if (!tilemap || !chat_font) return;
+    const int tileSize = tilemap->getTileSize();
+    const SDL_Color color = {255, 0, 0, 255};  // rojo
+    const uint64_t now = SDL_GetTicks();
+
+    // Descarta los numeros que ya expiraron.
+    damage_numbers.erase(
+        std::remove_if(damage_numbers.begin(), damage_numbers.end(),
+                       [now](const DamageNumber& d) { return now >= d.expire_ms; }),
+        damage_numbers.end());
+
+    for (const auto& d : damage_numbers) {
+        const std::string text = std::to_string(d.value);
+        SDL_Surface* surf = TTF_RenderText_Blended(chat_font, text.c_str(), 0, color);
+        if (!surf) continue;
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+        if (tex) {
+            const float wx = static_cast<float>(d.tile_x * tileSize);
+            const float wy = static_cast<float>(d.tile_y * tileSize);
+            const float sx = camera.world_to_screen_x(wx) + (tileSize - surf->w) / 2.0f;
+            const float sy = camera.world_to_screen_y(wy) - surf->h;
+            SDL_FRect dst{sx, sy, static_cast<float>(surf->w), static_cast<float>(surf->h)};
+            SDL_RenderTexture(renderer, tex, nullptr, &dst);
+            SDL_DestroyTexture(tex);
+        }
+        SDL_DestroySurface(surf);
+    }
+}
+
 void ClientGUI::drawItems() {
     if (!tilemap) return;
     const int tileSize = tilemap->getTileSize();
@@ -603,6 +641,7 @@ void ClientGUI::draw() {
     drawEnemies();
     drawOtherPlayers();
     draw_npc_friends();
+    draw_damage_numbers();
 
     // Levanta el clip para dibujar el panel y el chat encima
     SDL_SetRenderClipRect(renderer, nullptr);

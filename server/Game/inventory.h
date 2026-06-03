@@ -29,7 +29,7 @@ public:
     void unequip_item();
 
     bool is_full() const;
-    void use_equipped(Entity& target, int attacker_x, int attacker_y, int target_x, int target_y);
+    int use_equipped(Entity& target, int attacker_x, int attacker_y, int target_x, int target_y);
 };
 
 

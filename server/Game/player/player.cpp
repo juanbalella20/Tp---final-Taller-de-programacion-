@@ -203,10 +203,10 @@ void Player::receive_damage(int damage) {
     if (lives < 0) lives = 0;
 }
 
-void Player::attack(Entity& target, int target_x, int target_y) {
+int Player::attack(Entity& target, int target_x, int target_y) {
     if (status == PlayerStatus::DEAD)
         throw AttackNotAllowedException("Estás muerto, no podés atacar");
-    player_inventory.use_equipped(target, coord_x, coord_y, target_x, target_y);
+    return player_inventory.use_equipped(target, coord_x, coord_y, target_x, target_y);
 }
  
 void Player::add_experience(int exp) {

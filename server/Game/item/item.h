@@ -22,7 +22,8 @@ public:
     
     int getPrice() const;
 
-    virtual void use_item(Entity& target, int attacker_x, int attacker_y, int target_x, int target_y) = 0;
+    // Devuelve el daño aplicado al target (0 si no aplicó, p.ej. fuera de rango).
+    virtual int use_item(Entity& target, int attacker_x, int attacker_y, int target_x, int target_y) = 0;
 };
 
 #endif
