@@ -106,6 +106,8 @@ public:
     uint32_t get_xp() const;
 
     uint32_t get_mana() const;
+
+    const std::string& get_race_name() const;
 };
 
 #endif
