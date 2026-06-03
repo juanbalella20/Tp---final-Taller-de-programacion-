@@ -6,8 +6,6 @@ HUD::HUD(SDL_Renderer* gui_renderer,
     : gui_renderer(gui_renderer),
       font(TTF_OpenFont("fonts/Roboto-VariableFont_wdth,wght.ttf", 16)),
       inventory{},
-      attack_btn{game_width + 10.0f, canvas_height - 60.0f, panel_width - 20.0f, 40.0f},
-      show_attack_button(false),
       player_gold(0),
       player_hp(0),
       max_hp(100),
@@ -46,10 +44,6 @@ void HUD::set_inventory(const std::vector<ItemInfo>& items) {
     equipped_slot = -1;
 }
 
-void HUD::set_attack_button_visible(bool visible) {
-    show_attack_button = visible;
-}
-
 void HUD::set_gold(uint32_t amount) {
     player_gold = amount;
 }
@@ -80,29 +74,6 @@ void HUD::set_equipped_item(const std::string& id) {
 
 void HUD::set_equipped_slot(int slot_index) {
     equipped_slot = slot_index;
-}
-
-void HUD::drawAttackButton() {
-    if (!show_attack_button) return;
-
-    SDL_SetRenderDrawColor(gui_renderer, 200, 50, 50, 255);
-    SDL_RenderFillRect(gui_renderer, &attack_btn);
-    SDL_SetRenderDrawColor(gui_renderer, 255, 255, 255, 255);
-    SDL_RenderRect(gui_renderer, &attack_btn);
-
-    if (font) {
-        SDL_Color white = {255, 255, 255, 255};
-        SDL_Surface* surf = TTF_RenderText_Solid(font, "PEGAR", 0, white);
-        if (surf) {
-            SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
-            SDL_FRect dst = {attack_btn.x + (attack_btn.w - surf->w) / 2.0f,
-                             attack_btn.y + (attack_btn.h - surf->h) / 2.0f,
-                             static_cast<float>(surf->w), static_cast<float>(surf->h)};
-            SDL_RenderTexture(gui_renderer, tex, nullptr, &dst);
-            SDL_DestroyTexture(tex);
-            SDL_DestroySurface(surf);
-        }
-    }
 }
 
 void HUD::drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float SLOT_SIZE) {

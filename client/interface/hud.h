@@ -21,9 +21,6 @@ private:
     SDL_Renderer* gui_renderer;
     TTF_Font* font;
     InventoryView inventory;
-    SDL_FRect attack_btn;
-    bool show_attack_button;
-
     uint32_t player_gold;
     uint32_t player_hp;
     uint32_t max_hp;
@@ -59,10 +56,6 @@ public:
 
     void set_inventory(const std::vector<ItemInfo>& items);
     const std::vector<ItemInfo>& get_inventory() const { return inventory.items; }
-    void set_attack_button_visible(bool visible);
-    bool is_attack_button_visible() const { return show_attack_button; }
-    const SDL_FRect& get_attack_button_rect() const { return attack_btn; }
-
     void set_gold(uint32_t amount);
     void set_hp(uint32_t hp);
     void set_max_hp(uint32_t max_hp);
@@ -73,7 +66,6 @@ public:
     void set_equipped_slot(int slot_index);
     int get_equipped_slot() const { return equipped_slot; }
     void drawInventoryPanel();
-    void drawAttackButton();
 
     void draw_hp();
     void draw_mana();

@@ -146,11 +146,10 @@ void ClientGUI::selectCoord(int tile_x, int tile_y) {
     if (npc_clicked) {
         selected_npc_tile_x = tile_x;
         selected_npc_tile_y = tile_y;
-        if (hud) hud->set_attack_button_visible(true);
+        sendAttackCmd(tile_x, tile_y);
     } else {
-        if (hud) hud->set_attack_button_visible(false);
-        selected_npc_tile_x = -1; // revisar
-        selected_npc_tile_y = -1; // revisar
+        selected_npc_tile_x = -1;
+        selected_npc_tile_y = -1;
         sendCoord(tile_x, tile_y);
     }
 }
@@ -241,15 +240,6 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
 
                 if (mx >= GAME_WIDTH) {
                     // Click dentro del panel — nunca toca el mapa
-                    if (hud && hud->is_attack_button_visible()) {
-                        const SDL_FRect& btn = hud->get_attack_button_rect();
-                        if (mx >= btn.x && mx <= btn.x + btn.w &&
-                            my >= btn.y && my <= btn.y + btn.h) {
-                            sendAttackCmd(selected_npc_tile_x, selected_npc_tile_y);
-                            hud->set_attack_button_visible(false);
-                            break;
-                        }
-                    }
                     const int SLOT_SIZE = 48;
                     const int SLOT_MARGIN = 8;
                     int slot_x = GAME_WIDTH + SLOT_MARGIN;
@@ -603,7 +593,6 @@ void ClientGUI::draw() {
 
     if (hud) {
         hud->drawInventoryPanel();
-        hud->drawAttackButton();
         hud->draw_hp();
         hud->draw_mana();
         hud->draw_gold();

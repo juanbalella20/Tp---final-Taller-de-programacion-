@@ -108,7 +108,7 @@ private:
     //POS ESAS COORDENADAS SE ENVIAN AL SERVIDOR PARA QUE SE MUEVA EL JUGADOR A ESA POS
     void sendCoord(int x, int y);
 
-    // Verifica si hay NPC en la celda clickeada y muestra el botón "Pegar"
+    // Si hay NPC en la celda: ataca directamente. Si no: mueve al jugador.
     void selectCoord(int tile_x, int tile_y);
 
     std::vector<int> translate_tile_to_coord(int pixel_x, int pixel_y) const;
