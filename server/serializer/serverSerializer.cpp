@@ -84,6 +84,7 @@ std::vector<uint8_t> ServerSerializer::serialize_move(const GameMsg& msg) {
     const std::string& name = msg.get_player_name();
     uint16_t payload_len = LEN_DIRECTION
                          + LEN_PLAYER_NAME_SIZE + static_cast<uint16_t>(name.size())
+                         + 1
                          + 2 * LEN_COORD;
 
     std::vector<uint8_t> buf;
@@ -92,6 +93,7 @@ std::vector<uint8_t> ServerSerializer::serialize_move(const GameMsg& msg) {
     buf.push_back(static_cast<uint8_t>(msg.get_direction()));
     buf.push_back(static_cast<uint8_t>(name.size()));
     buf.insert(buf.end(), name.begin(), name.end());
+    buf.push_back(static_cast<uint8_t>(RACE_MAP.at(msg.get_race())));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_x()));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_y()));
     return buf;
@@ -330,6 +332,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
     payload_len += LEN_PLAYER_COUNT;
     for (const auto& pl : players) {
         payload_len += LEN_PLAYER_NAME_SIZE + static_cast<uint16_t>(pl.name.size());
+        payload_len += 1;                   // race
         payload_len += 2 * LEN_COORD;       // x + y
     }
 
@@ -375,6 +378,15 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
     for (const auto& pl : players) {
         buf.push_back(static_cast<uint8_t>(pl.name.size()));
         buf.insert(buf.end(), pl.name.begin(), pl.name.end());
+        uint8_t race_code = RACE_HUMAN;
+        if (pl.race == "elf") {
+            race_code = RACE_ELF;
+        } else if (pl.race == "dwarf") {
+            race_code = RACE_DWARF;
+        } else if (pl.race == "gnome") {
+            race_code = RACE_GNOME;
+        }
+        buf.push_back(race_code);
         append_uint16_be(buf, static_cast<uint16_t>(pl.x));
         append_uint16_be(buf, static_cast<uint16_t>(pl.y));
     }
