@@ -89,6 +89,7 @@ public:
     struct AttackResult {
         bool hit;
         bool entity_died;
+        bool target_is_player;
         std::string entity_name;
     };
 

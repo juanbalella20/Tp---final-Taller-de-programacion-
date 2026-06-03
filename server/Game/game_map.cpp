@@ -263,12 +263,14 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
 
     // Buscar target en la celda (x,y): primero otros players de la zona, luego NPCs
     Entity* target = nullptr;
+    bool target_is_player = false;
     for (auto& p : players) {
         if (p.get_name() == attacker_name) continue;
         auto it = player_zone.find(p.get_name());
         if (it == player_zone.end() || it->second != z) continue;
         if (p.get_coord_x() == x && p.get_coord_y() == y) {
             target = &p;
+            target_is_player = true;
             break;
         }
     }
@@ -282,9 +284,9 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
     if (target->is_dead()) {
         // este "1" tiene que cambiar por el oro real que deja el npc/jugador.
         world.spawn_gold(x, y, 1);
-        return {true, true, target->get_name()};
+        return {true, true, target_is_player, target->get_name()};
     }
-    return {true, false, target->get_name()};
+    return {true, false, target_is_player, target->get_name()};
 }
 
 bool GameMap::update_npcs() {

@@ -362,6 +362,11 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
             broadcast_npcs_snapshot();
             broadcast_items_snapshot();
         }
+        if (result.target_is_player) {
+            GameMsg hp_msg(MSG_HP);
+            hp_msg.set_hp(game_map.get_player_hp(result.entity_name));
+            client_registry_monitor.notify_client_by_name(result.entity_name, hp_msg);
+        }
     } catch (const NoEntityException& e) {
         GameMsg msg(MSG_CHAT);
         msg.set_chat_content(e.what());

@@ -46,6 +46,19 @@ void ClientRegistryMonitor::notify_client(uint32_t client_id, const GameMsg& msg
     it->second.sending_queue.get().push(msg);
 }
 
+void ClientRegistryMonitor::notify_client_by_name(const std::string& player_name, const GameMsg& msg) {
+    std::lock_guard<std::mutex> lock(mtx);
+    for (auto& entry : registers) {
+        if (entry.second.player_name == player_name) {
+            try {
+                entry.second.sending_queue.get().push(msg);
+            } catch (const ClosedQueue&) {}
+            return;
+        }
+    }
+    // Si no se encuentra, era un NPC — se ignora silenciosamente
+}
+
 void ClientRegistryMonitor::notify_clients(const GameMsg& msg) {
     std::lock_guard<std::mutex> lock(mtx);
     for (auto& entry: registers) {

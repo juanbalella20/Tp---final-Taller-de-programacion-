@@ -199,8 +199,11 @@ int Player::damage_attack() {
 }
  
 void Player::receive_damage(int damage) {
-    lives -= damage;
-    if (lives < 0) lives = 0;
+    if (static_cast<int>(lives) <= damage) {
+        lives = 0;
+    } else {
+        lives -= static_cast<uint32_t>(damage);
+    }
 }
 
 void Player::attack(Entity& target, int target_x, int target_y) {

@@ -22,6 +22,7 @@ class ClientRegistryMonitor {
     std::string get_name(uint32_t client_id);
     void remove_client(uint32_t client_id);
     void notify_client(uint32_t client_id, const GameMsg& msg);
+    void notify_client_by_name(const std::string& player_name, const GameMsg& msg);
     void notify_clients(const GameMsg& msg);
     void notify_clients_less_client(uint32_t client_id, const GameMsg& msg);
 
