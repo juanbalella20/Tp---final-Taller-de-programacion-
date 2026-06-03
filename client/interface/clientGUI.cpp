@@ -603,13 +603,14 @@ void ClientGUI::draw() {
     SDL_SetRenderClipRect(renderer, nullptr);
 
     if (hud) {
-        hud->drawInventoryPanel();
-        hud->drawAttackButton();
-        hud->draw_hp();
-        hud->draw_mana();
-        hud->draw_gold();
-        hud->draw_xp();
-        // hud->draw_stats_button();
+        // Reemplazar por hud->render()
+        // hud->drawInventoryPanel();
+        // hud->drawAttackButton();
+        // hud->draw_hp();
+        // hud->draw_mana();
+        // hud->draw_gold();
+        // hud->draw_xp();
+        hud->render();
     }
     mini_chat->render(GAME_WIDTH, CANVAS_HEIGHT);
     SDL_RenderPresent(renderer);
