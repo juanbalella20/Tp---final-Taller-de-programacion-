@@ -147,19 +147,40 @@ void HUD::drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float S
 }
 
 void HUD::drawItems() {
-    const float SLOT_SIZE = 48.0f;
-    const float SLOT_MARGIN = 8.0f;
-    float slot_x = 785.0f;
-    float slot_y = 210.0f;
+    float image_w = 1021.0f;
+    float image_h = 767.0f;
+
+    float scale_x = static_cast<float>(game_width + panel_width) / image_w;
+    float scale_y = static_cast<float>(canvas_height) / image_h;
+
+    float slot_start_size = 48.0f;
+    float slot_margin = 4.0f;
+    float padding = 6.0f;
+
+    float inv_x = 781.0f;
+    float inv_y = 200.0f;
+    float inv_w = 218.0f;
+
+    float start_x = (inv_x + padding) * scale_x;
+    float start_y = (inv_y + padding) * scale_y;
+
+    float slot_size = slot_start_size * scale_x;
+    float margin_x = slot_margin * scale_x;
+    float margin_y = slot_margin * scale_y;
+
+    float limit_x = (inv_x + inv_w - padding) * scale_x;
+
+    float slot_x = start_x;
+    float slot_y = start_y;
 
     int slot_index = 0;
     for (const auto& item : inventory.items) {
-        SDL_FRect slot_rect = {slot_x, slot_y, SLOT_SIZE, SLOT_SIZE};
+        SDL_FRect slot_rect = {slot_x, slot_y, slot_size, slot_size};
         SDL_SetRenderDrawBlendMode(gui_renderer, SDL_BLENDMODE_BLEND);
 
         // Si este item esta equipado, dibujar un halo amarillo detrás
         if (equipped_slot >= 0 && slot_index == equipped_slot) {
-            SDL_FRect halo = {slot_x - 3.0f, slot_y - 3.0f, SLOT_SIZE + 6.0f, SLOT_SIZE + 6.0f};
+            SDL_FRect halo = {slot_x - 3.0f, slot_y - 3.0f, slot_size + 6.0f, slot_size + 6.0f};
             SDL_SetRenderDrawColor(gui_renderer, 255, 215, 0, 120);
             SDL_RenderFillRect(gui_renderer, &halo);
         }
@@ -169,13 +190,13 @@ void HUD::drawItems() {
         SDL_SetRenderDrawColor(gui_renderer, 120, 120, 120, 180);
         SDL_RenderRect(gui_renderer, &slot_rect);
 
-        drawIconItem(item, slot_x, slot_y, SLOT_SIZE);
+        drawIconItem(item, slot_x, slot_y, slot_size);
 
-        slot_x += SLOT_SIZE + SLOT_MARGIN;
+        slot_x += slot_size + margin_x;
         ++slot_index;
-        if (slot_x + SLOT_SIZE > game_width + panel_width - SLOT_MARGIN) {
-            slot_x = game_width + SLOT_MARGIN;
-            slot_y += SLOT_SIZE + SLOT_MARGIN;
+        if (slot_x + slot_size > limit_x) {
+            slot_x = start_x;
+            slot_y += slot_size + margin_y;
         }
     }
 }
