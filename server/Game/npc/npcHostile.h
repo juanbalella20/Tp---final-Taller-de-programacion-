@@ -34,7 +34,7 @@ class NPChostile : public NPC, public Entity {
                    int lifepoints, int attack_dmg, int ticks_to_spawn);
         std::string get_name() const override;
         const std::string& get_type_id() const;
-        int receive_damage(int damage, Player& atacante) override;
+        int receive_damage(int damage, Player& atacante, bool is_critical) override;
         bool is_dead() const override;
         bool can_spawn() const;
         void reduce_ticks_to_spawn();

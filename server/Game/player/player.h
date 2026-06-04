@@ -119,7 +119,7 @@ public:
 
     int damage_attack();
 
-    int receive_damage(int damage, Player& atacante) override;
+    int receive_damage(int damage, Player& atacante, bool is_critical) override;
 
     void add_experience(int exp);
 

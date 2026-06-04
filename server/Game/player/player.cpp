@@ -215,8 +215,8 @@ int Player::damage_attack() {
     return player_race.race_strength() + player_class.class_strength();
 }
  
-int Player::receive_damage(int damage, Player& atacante) {
-    return state->receive_damage(*this, damage, atacante);
+int Player::receive_damage(int damage, Player& atacante, bool is_critical) {
+    return state->receive_damage(*this, damage, atacante, is_critical);
 }
 
 int Player::attack(Entity& target, int target_x, int target_y) {

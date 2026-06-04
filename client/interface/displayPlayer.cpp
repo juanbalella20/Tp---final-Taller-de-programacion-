@@ -354,6 +354,7 @@ SDL_FRect PlayerDisplay::left_pov() {
     walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
+//E VEZ DE QUE LO TRASNPARENZCA, LO QUE TENGO QUE HACER ES PONERLE LA SKIN DEL FANTASMA
 
 void PlayerDisplay::set_transparency(SDL_Texture* img) const {
     if (ghost) {

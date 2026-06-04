@@ -13,7 +13,7 @@ int Arma::get_disntance_min_attack() const {
     return disntance_min_attack;
 }
 
-int Arma::use_item(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y) {
+int Arma::use_item(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical) {
     int dx = std::abs(attacker_x - target_x);
     int dy = std::abs(attacker_y - target_y);
     if (dx + dy > disntance_min_attack) return 0;
@@ -23,5 +23,10 @@ int Arma::use_item(Entity& target, Player& atacante, int attacker_x, int attacke
     int roll = (rango > 0) ? (std::rand() % (rango + 1)) : 0;
     int damage = atacante.damage_attack() * (damage_min + roll);
 
-    return target.receive_damage(damage, atacante);
+    // Crítico: probabilidad 10%, daño doble, no puede ser esquivado
+    static constexpr double CRIT_CHANCE = 0.1;
+    bool critical = is_critical || ((std::rand() / static_cast<double>(RAND_MAX)) < CRIT_CHANCE);
+    if (critical) damage *= 2;
+
+    return target.receive_damage(damage, atacante, critical);
 }

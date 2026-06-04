@@ -15,7 +15,7 @@ public:
 
     // Recibe daño de un atacante. Devuelve el oro que droppea al suelo (0 si no
     // murió o si el estado no recibe daño).
-    virtual int receive_damage(Player& self, int damage, Player& attacker) = 0;
+    virtual int receive_damage(Player& self, int damage, Player& attacker, bool is_critical) = 0;
 
     // Resucita al jugador (solo tiene efecto si está muerto).
     virtual void revive(Player& self) = 0;

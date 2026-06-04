@@ -46,14 +46,15 @@ void NPChostile::revive(int x, int y) {
     set_state(State::ALIVE);
 }
 
-int NPChostile::receive_damage(int dmg, Player& atacante) {
+int NPChostile::receive_damage(int dmg, Player& atacante, bool is_critical) {
+    (void)is_critical;  // los NPC no esquivan ni tienen defensa modelada aún
     lifepoints -= dmg;
     bool murio = false;
     if (lifepoints <= 0) {
         death();
         murio = true;
     }
-    const int nivel_npc = 1;  // los NPC no tienen nivel modelado: valor fijo
+    const int nivel_npc = 1;
     atacante.ganar_xp(dmg, nivel_npc, murio, max_lifepoints);
     return 0;
 }
