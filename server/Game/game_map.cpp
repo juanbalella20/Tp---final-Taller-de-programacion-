@@ -502,3 +502,19 @@ bool GameMap::kick_member(const std::string& player_name, const std::string& mem
     }
     return true;
 }
+
+bool GameMap::ban_member(const std::string& player_name, const std::string& member) {
+    auto clan = std::find_if(clans.begin(), clans.end(), 
+        [&player_name](auto& par) {
+            // par.first es el nombre del clan (la clave)
+            // par.second es el objeto Clan (el valor)
+            return par.second.is_founder(player_name);
+        }
+    );
+
+    Clan& wanted_clan = clan->second;
+    if (!wanted_clan.ban(member)) {
+        return false;
+    }
+    return true;
+}

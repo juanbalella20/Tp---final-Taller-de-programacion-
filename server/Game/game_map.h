@@ -150,6 +150,7 @@ public:
     void accept_new_member(const std::string& player_name, const std::string& new_member);
     bool leave_clan(const std::string& player_name, std::string& clan_name);
     bool kick_member(const std::string& player_name, const std::string& member);
+    bool ban_member(const std::string& player_name, const std::string& member);
 };
 
 #endif

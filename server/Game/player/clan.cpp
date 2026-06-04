@@ -14,6 +14,13 @@ bool Clan::join_request(const std::string& player_name) {
     if (player_name == founder_name) {
         return false;
     }
+
+    auto it = std::find(banned_players.begin(), banned_players.end(), player_name);
+    
+    if (it != banned_players.end()) {
+        return false;
+    }
+
     std::string incoming = "Jugador " + player_name + " solicitó unirse al clan " + clan_name + "\n";
     clan_review += incoming;
 
@@ -62,4 +69,12 @@ bool Clan::joined(const std::string& player_name) {
 
 bool Clan::kick(const std::string& member) {
     return leave(member);
+}
+
+bool Clan::ban(const std::string& member) {
+    if (leave(member)) {
+        banned_players.push_back(member);
+        return true;
+    }
+    return false;
 }

@@ -12,6 +12,7 @@ private:
     std::string clan_review;
 
     std::vector<std::string> members;
+    std::vector<std::string> banned_players;
 
 public:
     Clan(const std::string& founder_name, const std::string& clan_name);
@@ -31,6 +32,8 @@ public:
     std::string& get_name() { return clan_name; }
 
     bool kick(const std::string& member);
+
+    bool ban(const std::string& member);
 
 };
 
