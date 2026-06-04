@@ -63,6 +63,9 @@ ServerDeserializer::ServerDeserializer() {
     handlers[MSG_FOUND_CLAN] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_clan(payload, cmd);
     };
+    handlers[MSG_JOIN_CLAN] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_clan(payload, cmd);
+    };
 }
 
 
