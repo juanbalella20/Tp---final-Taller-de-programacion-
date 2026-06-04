@@ -51,6 +51,10 @@ void Player::drop_item(Item* item) {
     player_inventory.drop_item(item);
 }
 
+std::vector<std::unique_ptr<Item>> Player::drop_inventory() {
+    return player_inventory.drop_all();
+}
+
 /*
 
 void Player::equip_item(Item item) {

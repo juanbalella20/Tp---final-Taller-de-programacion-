@@ -106,6 +106,31 @@ void ZoneWorld::spawn_gold(int x, int y, int amount) {
     }
 }
 
+void ZoneWorld::scatter_items(int center_x, int center_y,
+                              std::vector<std::unique_ptr<Item>> items,
+                              const std::vector<const Player*>& players_here) {
+    size_t placed = 0;
+    // Anillos crecientes alrededor del centro (radio Chebyshev r = 1, 2, 3, ...).
+    // El máximo radio posible cubre toda la zona.
+    int max_radius = std::max(width, height);
+    for (int r = 1; r <= max_radius && placed < items.size(); ++r) {
+        for (int dy = -r; dy <= r && placed < items.size(); ++dy) {
+            for (int dx = -r; dx <= r && placed < items.size(); ++dx) {
+                // Solo el borde del anillo (las celdas a distancia exacta r).
+                if (std::max(std::abs(dx), std::abs(dy)) != r) continue;
+                int nx = center_x + dx;
+                int ny = center_y + dy;
+                if (!in_bounds(nx, ny)) continue;
+                if (is_blocked_terrain(nx, ny)) continue;
+                if (has_actor_at(nx, ny, players_here)) continue;
+                if (has_ground_item_at(nx, ny)) continue;
+                spawn_item(nx, ny, std::move(items[placed]));
+                ++placed;
+            }
+        }
+    }
+}
+
 bool ZoneWorld::update_npcs() {
     bool respawned = false;
     for (auto& npc : npcs) {

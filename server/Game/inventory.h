@@ -26,6 +26,9 @@ public:
 
     std::unique_ptr<Item> drop_item(Item* item);
 
+    // Devuelve todos los items del inventario y lo deja vacío.
+    std::vector<std::unique_ptr<Item>> drop_all();
+
     void equip_item(std::string item_id);
 
     void unequip_item();

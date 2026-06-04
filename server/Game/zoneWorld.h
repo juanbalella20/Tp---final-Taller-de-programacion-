@@ -71,6 +71,13 @@ public:
     void spawn_item(int x, int y, std::unique_ptr<Item> item);
     void spawn_gold(int x, int y, int amount);
 
+    // Esparce los items alrededor de (center_x, center_y) en anillos crecientes
+    // (8 vecinas primero, luego más lejos). Saltea celdas bloqueadas, con actor
+    // o con un item ya tirado. Cada item ocupa una celda libre distinta.
+    void scatter_items(int center_x, int center_y,
+                       std::vector<std::unique_ptr<Item>> items,
+                       const std::vector<const Player*>& players_here);
+
     // Respawn de NPCs muertos cuyo timer venció. Devuelve true si hubo alguno.
     bool update_npcs();
 

@@ -10,6 +10,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 enum class PlayerStatus { ALIVE, DEAD };
 
@@ -46,6 +47,9 @@ public:
     void add_item(std::unique_ptr<Item> item);
 
     void drop_item(Item* item);
+
+    // Saca todos los items del inventario al morir y los devuelve.
+    std::vector<std::unique_ptr<Item>> drop_inventory();
 
     void equip_item(std::string item_id);
 

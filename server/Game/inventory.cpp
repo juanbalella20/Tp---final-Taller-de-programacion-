@@ -22,6 +22,13 @@ std::unique_ptr<Item> Inventory::drop_item(Item* item) {
     return nullptr;
 }
 
+std::vector<std::unique_ptr<Item>> Inventory::drop_all() {
+    equipped_item = nullptr;
+    std::vector<std::unique_ptr<Item>> dropped = std::move(items);
+    items.clear();
+    return dropped;
+}
+
 void Inventory::equip_item(std::string item_id) {
     // si había otro equipado lo desequipa
     if (equipped_item) {

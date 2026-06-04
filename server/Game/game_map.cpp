@@ -263,14 +263,14 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
 
     // Buscar target en la celda (x,y): primero otros players de la zona, luego NPCs
     Entity* target = nullptr;
-    bool target_is_player = false;
+    Player* target_player = nullptr;
     for (auto& p : players) {
         if (p.get_name() == attacker_name) continue;
         auto it = player_zone.find(p.get_name());
         if (it == player_zone.end() || it->second != z) continue;
         if (p.get_coord_x() == x && p.get_coord_y() == y) {
             target = &p;
-            target_is_player = true;
+            target_player = &p;
             break;
         }
     }
@@ -279,11 +279,16 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
     }
     if (target == nullptr) throw NoEntityException();
 
+    bool target_is_player = (target_player != nullptr);
     int gold_drop = attacker->attack(*target, x, y);
 
     if (target->is_dead()) {
         if (gold_drop > 0)
             world.spawn_gold(x, y, static_cast<uint32_t>(gold_drop));
+        if (target_is_player) {
+            auto dropped = target_player->drop_inventory();
+            world.scatter_items(x, y, std::move(dropped), players_in(z));
+        }
         return {true, true, target_is_player, target->get_name()};
     }
     return {true, false, target_is_player, target->get_name()};
