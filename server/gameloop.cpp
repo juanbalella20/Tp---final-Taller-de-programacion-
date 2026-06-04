@@ -32,6 +32,7 @@ void GameLoop::register_handlers() {
     handlers[MSG_CHEAT_KILL]     = [this](const ClientCmd& cmd) { handle_cheat_kill(cmd); };
     handlers[MSG_CHEAT_INF_HP]   = [this](const ClientCmd& cmd) { handle_cheat_inf_hp(cmd); };
     handlers[MSG_CHEAT_INF_MANA] = [this](const ClientCmd& cmd) { handle_cheat_inf_mana(cmd); };
+    handlers[MSG_FOUND_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_foundation(cmd); };
 }
 
 
@@ -438,6 +439,12 @@ void GameLoop::handle_cheat_inf_mana(const ClientCmd& cmd) {
     GameMsg msg(MSG_CHAT);
     msg.set_chat_content("Mana infinito activado.");
     client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+}
+
+void GameLoop::handle_clan_foundation(const ClientCmd& cmd) {
+    GameMsg clan_msg(MSG_FOUND_CLAN);
+    clan_msg.set_chat_content("Fundaste un clan con nombre: " + cmd.get_target_name());
+    client_registry_monitor.notify_clients(clan_msg);
 }
 
 void GameLoop::update_npcs_in_map(){
