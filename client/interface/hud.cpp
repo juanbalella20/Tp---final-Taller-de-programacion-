@@ -251,8 +251,8 @@ void HUD::drawText(const std::string& text, float x, float y, SDL_Color color) {
             SDL_FRect dest = { 
                 x,
                 y, 
-                static_cast<float>(surf->w) * 0.75f, 
-                static_cast<float>(surf->h) * 0.75f
+                static_cast<float>(surf->w) * 0.70f, 
+                static_cast<float>(surf->h) * 0.70f
             };
             SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);
             SDL_DestroyTexture(tex);
@@ -267,8 +267,14 @@ void HUD::drawGold() {
     std::string gold_text = std::to_string(player_gold);
     SDL_Color gold_color = {255, 215, 0, 255};
 
-    float text_start_x = 740.0f;
-    float text_start_y = 418.0f;
+    float image_w = 1021.0f;
+    float image_h = 767.0f;
+
+    float scale_x = static_cast<float>(game_width + panel_width) / image_w;
+    float scale_y = static_cast<float>(canvas_height) / image_h;
+
+    float text_start_x = 788.0f * scale_x;
+    float text_start_y = 558.0f * scale_y;
 
     drawText(gold_text, text_start_x, text_start_y, gold_color);
 }
