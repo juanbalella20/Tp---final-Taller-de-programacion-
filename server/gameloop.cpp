@@ -35,6 +35,7 @@ void GameLoop::register_handlers() {
     handlers[MSG_FOUND_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_foundation(cmd); };
     handlers[MSG_JOIN_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_joining(cmd); };
     handlers[MSG_REV_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_reviewing(cmd); };
+    handlers[MSG_CLAN_ACEP]     = [this](const ClientCmd& cmd) { handle_clan_accepting(cmd); };
 }
 
 
@@ -449,10 +450,11 @@ void GameLoop::handle_clan_foundation(const ClientCmd& cmd) {
     GameMsg clan_msg(MSG_FOUND_CLAN);
     if (!game_map.found_clan(player_name, clan_name)) {
         clan_msg.set_chat_content("Ya existe un clan con el nombre: " + clan_name);
+        client_registry_monitor.notify_client(cmd.get_client_id(), clan_msg);
     } else {
-        clan_msg.set_chat_content("Fundaste un clan con nombre: " + clan_name);
+        clan_msg.set_chat_content("Jugador " + player_name + " fundó el clan " + clan_name);
+        client_registry_monitor.notify_clients(clan_msg);
     }
-    client_registry_monitor.notify_clients(clan_msg);
 }
 
 void GameLoop::handle_clan_joining(const ClientCmd& cmd) {
@@ -472,6 +474,19 @@ void GameLoop::handle_clan_reviewing(const ClientCmd& cmd) {
     std::string result = game_map.rev_clan(player_name);
     GameMsg clan_msg(MSG_REV_CLAN);
     clan_msg.set_chat_content(result);
+    client_registry_monitor.notify_clients(clan_msg);
+}
+
+void GameLoop::handle_clan_accepting(const ClientCmd& cmd) {
+    std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
+    std::string new_member = cmd.get_target_name();
+
+    GameMsg clan_msg(MSG_CLAN_ACEP);
+    if (game_map.accept_new_member(player_name, new_member)) {
+        clan_msg.set_chat_content("Jugador " + new_member + " fue aceptado a unirse al clan fundado por " + player_name);
+    } else {
+        clan_msg.set_chat_content("Jugador " + new_member + " NO fue aceptado a unirse al clan fundado por " + player_name);
+    }
     client_registry_monitor.notify_clients(clan_msg);
 }
 
