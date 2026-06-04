@@ -69,6 +69,9 @@ ServerDeserializer::ServerDeserializer() {
     handlers[MSG_CLAN_ACEP] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_clan(payload, cmd);
     };
+    handlers[MSG_CLAN_RECH] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_clan(payload, cmd);
+    };
 }
 
 

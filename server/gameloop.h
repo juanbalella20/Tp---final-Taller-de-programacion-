@@ -60,6 +60,7 @@ class GameLoop : public Thread {
     void handle_clan_joining(const ClientCmd& cmd);
     void handle_clan_reviewing(const ClientCmd& cmd);
     void handle_clan_accepting(const ClientCmd& cmd);
+    void handle_clan_rejecting(const ClientCmd& cmd);
 };
 
 #endif  // SERVER_SRC_GAMELOOP_H_

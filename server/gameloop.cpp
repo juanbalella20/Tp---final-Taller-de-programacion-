@@ -36,6 +36,7 @@ void GameLoop::register_handlers() {
     handlers[MSG_JOIN_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_joining(cmd); };
     handlers[MSG_REV_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_reviewing(cmd); };
     handlers[MSG_CLAN_ACEP]     = [this](const ClientCmd& cmd) { handle_clan_accepting(cmd); };
+    handlers[MSG_CLAN_RECH]     = [this](const ClientCmd& cmd) { handle_clan_rejecting(cmd); };
 }
 
 
@@ -484,6 +485,15 @@ void GameLoop::handle_clan_accepting(const ClientCmd& cmd) {
     GameMsg clan_msg(MSG_CLAN_ACEP);
     game_map.accept_new_member(player_name, new_member);
     clan_msg.set_chat_content("Jugador " + new_member + " fue aceptado a unirse al clan fundado por " + player_name);
+    client_registry_monitor.notify_clients(clan_msg);
+}
+
+void GameLoop::handle_clan_rejecting(const ClientCmd& cmd) {
+    std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
+    std::string new_member = cmd.get_target_name();
+
+    GameMsg clan_msg(MSG_CLAN_RECH);
+    clan_msg.set_chat_content("Jugador " + new_member + " fue rechazado a unirse al clan fundado por " + player_name);
     client_registry_monitor.notify_clients(clan_msg);
 }
 
