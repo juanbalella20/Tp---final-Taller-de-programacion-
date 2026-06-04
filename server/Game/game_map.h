@@ -141,8 +141,6 @@ public:
                     const std::map<Zone, InitialState>& initial_states);
 
     bool pick_up_gold(const std::string& player_name);
-
-    void found_clan(const std::string& player_name, const std::string& clan_name);
 };
 
 #endif
