@@ -444,10 +444,21 @@ void GameLoop::handle_cheat_inf_mana(const ClientCmd& cmd) {
 void GameLoop::handle_clan_foundation(const ClientCmd& cmd) {
     std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
     std::string clan_name = cmd.get_target_name();
-    game_map.found_clan(player_name, clan_name);
-    
     GameMsg clan_msg(MSG_FOUND_CLAN);
-    clan_msg.set_chat_content("Fundaste un clan con nombre: " + clan_name);
+    if (!game_map.found_clan(player_name, clan_name)) {
+        clan_msg.set_chat_content("Ya existe un clan con el nombre: " + clan_name);
+    } else {
+        clan_msg.set_chat_content("Fundaste un clan con nombre: " + clan_name);
+    }
+    client_registry_monitor.notify_clients(clan_msg);
+}
+
+void GameLoop::handle_clan_joining(const ClientCmd& cmd) {
+    std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
+    std::string clan_name = cmd.get_target_name();
+
+    GameMsg clan_msg(MSG_JOIN_CLAN);
+    clan_msg.set_chat_content("Te uniste al clan: " + clan_name);
     client_registry_monitor.notify_clients(clan_msg);
 }
 
