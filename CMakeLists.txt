@@ -72,8 +72,6 @@ add_library(common STATIC
     common/binaryMap/binaryMapLoader.cpp
     common/binaryMap/binaryMapSaver.cpp
     common/binaryMap/byteReader.cpp
-    common/binaryMap/binaryMapSaver.cpp
-    common/binaryMap/binaryMapLoader.cpp
 )
 target_include_directories(common PUBLIC
     common
@@ -163,14 +161,12 @@ target_link_libraries(server PRIVATE common)
 # ── Editor grafico de mapas (Qt6) ────────────────────────────────────────────
 # Se construye solo si Qt6 Widgets esta disponible, para no romper el build de
 # client/server en entornos sin qt6-base-dev. Instalar con: apt install qt6-base-dev
-# ── Editor grafico de mapas (Qt6) ───────────────────────────────────────────
 find_package(Qt6 QUIET COMPONENTS Widgets)
 if(Qt6_FOUND)
     add_subdirectory(editor)
 else()
     message(WARNING "Qt6 Widgets no encontrado: se omite el target map_editor. "
                     "Instalar con: sudo apt install qt6-base-dev")
-    message(STATUS "Qt6 Widgets no encontrado: se omite map_editor (instalar qt6-base-dev)")
 endif()
 
 # ── Tests (GoogleTest) ──────────────────────────────────────────────────────

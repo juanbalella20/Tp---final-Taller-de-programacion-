@@ -12,10 +12,13 @@ add_executable(map_editor
     gui/EditorWindow.cpp
     gui/TilePalette.cpp
     gui/TilePalette.ui
-    gui/LoadTilesetDialog.cpp
-    gui/LoadTilesetDialog.ui
     render/MapCanvasWidget.cpp
     render/TilesetPixmapCache.cpp
+    document/EditorDocument.cpp
+    document/SetTilesCommand.cpp
+    tools/PencilTool.cpp
+    tools/EraserTool.cpp
+    tools/FillTool.cpp
 )
 
 target_include_directories(map_editor PRIVATE

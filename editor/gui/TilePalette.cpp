@@ -1,12 +1,12 @@
 #include "TilePalette.h"
 
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QIcon>
 #include <QListWidget>
 #include <QMessageBox>
 
 #include "ui_TilePalette.h"  // generado por AUTOUIC desde TilePalette.ui
-#include "LoadTilesetDialog.h"
 #include "game_constants.h"  // TILE_SIZE
 
 TilePalette::TilePalette(QWidget* parent)
@@ -39,16 +39,20 @@ void TilePalette::load_png() {
         return;
     }
 
-    LoadTilesetDialog dialog(path, this);
-    if (dialog.exec() != QDialog::Accepted) return;
+    // Deriva columns/tile_count de las dimensiones reales del PNG (un tile por
+    // celda de TILE_SIZE). El nombre del tileset es el del archivo.
+    int cols = sheet.width() / TILE_SIZE;
+    int rows = sheet.height() / TILE_SIZE;
+    if (cols < 1) cols = 1;
+    if (rows < 1) rows = 1;
 
     Tileset ts;
-    ts.name = dialog.tileset_name().toStdString();
+    ts.name = QFileInfo(path).baseName().toStdString();
     ts.file_path = path.toStdString();
-    ts.columns = dialog.columns();
-    ts.tile_count = dialog.tile_count();
+    ts.columns = cols;
+    ts.tile_count = cols * rows;
     ts.firstgid = next_firstgid();
-    ts.collidable = dialog.collidable();
+    ts.collidable = false;
 
     tilesets_.push_back(ts);
     pixmaps_.push_back(sheet);
