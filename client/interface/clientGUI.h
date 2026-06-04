@@ -71,6 +71,9 @@ private:
     SDL_Texture* frame_texture;
     SDL_Texture* item_texture;
     SDL_Texture* gold_texture;
+    // Textura y recorte del sprite de cada item del piso, por id de item.
+    std::map<std::string, SDL_Texture*> floor_item_textures;
+    std::map<std::string, SDL_FRect> floor_item_crops;
     Camera camera;
     SDL_FRect player_pov;
     Zone current_zone;

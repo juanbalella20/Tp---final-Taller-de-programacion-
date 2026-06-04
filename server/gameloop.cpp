@@ -106,8 +106,8 @@ void GameLoop::load_maps() {
     InitialState state_desert = load_initial_state_hardcoded(ZONE_DESERT);
     InitialState state_city = load_initial_state_hardcoded(ZONE_CITY);
     std::map<Zone, std::string> zone_paths = {
-        //{ZONE_DESERT, "data/maps/desert/map.toml"},
-        {ZONE_DESERT, "data/maps/desert/map-test-1.bin"},
+        {ZONE_DESERT, "data/maps/desert/map.toml"},
+        //{ZONE_DESERT, "data/maps/desert/map-test-1.bin"},
         {ZONE_CITY,   "data/maps/city/map.toml"},
     };
     std::map<Zone, InitialState> initial_states = {
@@ -155,8 +155,8 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
 
     const Player& p = game_map.get_player(cmd.get_player_name());
     std::vector<ItemInfo> item_infos;
-    for (Item* item : p.get_inventory().get_items()) {
-        item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
+    for (Item* item : p.get_all_items()) {
+        item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
     }
     registerMsg.set_items(item_infos);
     registerMsg.set_gold(game_map.get_player_gold(cmd.get_player_name()));
@@ -233,8 +233,8 @@ void GameLoop::handle_sell(const ClientCmd& cmd) {
         game_map.player_sell_item(name, x, y, item_id);
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
-        for (Item* item : p.get_inventory().get_items()) {
-            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
+        for (Item* item : p.get_all_items()) {
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
         }
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
@@ -266,8 +266,8 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
         game_map.player_buy_item(name, x, y, item_id);
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
-        for (Item* item : p.get_inventory().get_items()) {
-            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
+        for (Item* item : p.get_all_items()) {
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
         }
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
@@ -310,8 +310,8 @@ void GameLoop::handle_take(const ClientCmd& cmd) {
         msg.set_chat_content("Recogiste un objeto.");
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
-        for (Item* item : p.get_inventory().get_items()) {
-            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
+        for (Item* item : p.get_all_items()) {
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
         }
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);

@@ -30,16 +30,22 @@ std::vector<std::unique_ptr<Item>> Inventory::drop_all() {
 }
 
 void Inventory::equip_item(std::string item_id) {
-    // si había otro equipado lo desequipa
-    if (equipped_item) {
-        equipped_item = nullptr;
-    }
+    // El inventario solo equipa armas en su slot de arma. Los items de defensa
+    // (armadura/casco/escudo) no se equipan acá — los maneja el DefenseSet.
     for (const auto& item : items) {
         if (item->get_id() == item_id) {
+            if (item->get_type() != ItemType::WEAPON) return;  // no es un arma
             equipped_item = item.get();
-            break;
+            return;
         }
     }
+}
+
+Item* Inventory::find_item(const std::string& item_id) const {
+    for (const auto& item : items) {
+        if (item->get_id() == item_id) return item.get();
+    }
+    return nullptr;
 }
 
 void Inventory::unequip_item() {

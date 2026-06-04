@@ -52,8 +52,8 @@ HUD::~HUD() {
 
 void HUD::set_inventory(const std::vector<ItemInfo>& items) {
     inventory.items = items;
-    // inventory changed -> clear optimistic selected slot
-    equipped_slot = -1;
+    // inventory cambió -> limpiar resaltados optimistas
+    equipped_slots.clear();
 }
 
 void HUD::set_gold(uint32_t amount) {
@@ -86,30 +86,49 @@ void HUD::set_equipped_item(const std::string& id) {
 }
 
 void HUD::set_equipped_slot(int slot_index) {
-    equipped_slot = slot_index;
+    if (slot_index < 0 || slot_index >= static_cast<int>(inventory.items.size())) {
+        return;
+    }
+    uint8_t type = inventory.items[slot_index].get_type();
+
+    // Des-resalta cualquier slot ya equipado del mismo tipo (uno por tipo).
+    for (auto it = equipped_slots.begin(); it != equipped_slots.end();) {
+        if (*it < static_cast<int>(inventory.items.size()) &&
+            inventory.items[*it].get_type() == type) {
+            it = equipped_slots.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    equipped_slots.insert(slot_index);
 }
 
 void HUD::drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float SLOT_SIZE) {
     auto it = inventory.items_textures.find(item.get_id());
     if (it != inventory.items_textures.end() && it->second != nullptr) {
         SDL_Texture* icon = it->second;
-        
-        float tex_w, tex_h;
-        SDL_GetTextureSize(icon, &tex_w, &tex_h); 
+
+        // Crop específico del item; fallback al de la espada si no está registrado.
+        SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};
+        auto crop_it = inventory.items_crops.find(item.get_id());
+        if (crop_it != inventory.items_crops.end()) {
+            crop = crop_it->second;
+        }
+
+        // Escala según el tamaño del sprite recortado, no de todo el spritesheet.
         const float PADDING = 4.0f;
         float max_size = SLOT_SIZE - (PADDING * 2.0f);
-        float scale = SDL_min(max_size / tex_w, max_size / tex_h);
-        float final_w = tex_w * scale;
-        float final_h = tex_h * scale;
-        
+        float scale = SDL_min(max_size / crop.w, max_size / crop.h);
+        float final_w = crop.w * scale;
+        float final_h = crop.h * scale;
+
         SDL_FRect icon_dst = {
             slot_x + (SLOT_SIZE - final_w) / 2.0f,
             slot_y + (SLOT_SIZE - final_h) / 2.0f,
             final_w,
             final_h
         };
-        
-        SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};;
+
         SDL_RenderTexture(gui_renderer, icon, &crop, &icon_dst);
     }
 }
@@ -147,7 +166,7 @@ void HUD::drawItems() {
         SDL_SetRenderDrawBlendMode(gui_renderer, SDL_BLENDMODE_BLEND);
 
         // Si este item esta equipado, dibujar un halo amarillo detrás
-        if (equipped_slot >= 0 && slot_index == equipped_slot) {
+        if (equipped_slots.count(slot_index) > 0) {
             SDL_FRect halo = {slot_x - 3.0f, slot_y - 3.0f, slot_size + 6.0f, slot_size + 6.0f};
             SDL_SetRenderDrawColor(gui_renderer, 255, 215, 0, 120);
             SDL_RenderFillRect(gui_renderer, &halo);
@@ -349,7 +368,18 @@ void HUD::load_textures() {
         SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, sword_surf);
         SDL_SetTextureBlendMode(tex, SDL_SCALEMODE_LINEAR);
         inventory.items_textures["espada"] = tex;
+        inventory.items_crops["espada"] = {224.0f, 96.0f, 30.0f, 30.0f};
         SDL_DestroySurface(sword_surf);
+    }
+
+    SDL_Surface* shield_surf = IMG_Load("imagenes/2141.png");
+    if (shield_surf) {
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, shield_surf);
+        SDL_SetTextureBlendMode(tex, SDL_SCALEMODE_LINEAR);
+        inventory.items_textures["escudo"] = tex;
+        // Primer sprite del escudo (esquina superior izquierda del spritesheet).
+        inventory.items_crops["escudo"] = {0.0f, 0.0f, 32.0f, 32.0f};
+        SDL_DestroySurface(shield_surf);
     }
 
     load_stat_texture("imagenes/en_barradevida.bmp", &hp_bar_texture);

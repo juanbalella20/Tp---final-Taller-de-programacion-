@@ -54,7 +54,8 @@ std::vector<uint8_t> ServerSerializer::serialize_inventory(const GameMsg& msg) {
     uint16_t payload_len = 0;
     for (const auto& item : items) {
         payload_len += static_cast<uint16_t>(item.get_id().size()) + 1
-                     + static_cast<uint16_t>(item.get_name().size()) + 1;
+                     + static_cast<uint16_t>(item.get_name().size()) + 1
+                     + 1;  // type
     }
 
     std::vector<uint8_t> buf;
@@ -68,6 +69,7 @@ std::vector<uint8_t> ServerSerializer::serialize_inventory(const GameMsg& msg) {
         const std::string& name = item.get_name();
         buf.push_back(static_cast<uint8_t>(name.size()));
         buf.insert(buf.end(), name.begin(), name.end());
+        buf.push_back(item.get_type());
     }
 
     return buf;
@@ -337,6 +339,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
     for (const auto& item : items) {
         payload_len += 1 + static_cast<uint16_t>(item.get_id().size());
         payload_len += 1 + static_cast<uint16_t>(item.get_name().size());
+        payload_len += 1;  // type
     }
     payload_len += 4 * sizeof(uint32_t);    // gold + hp + xp + mana
     payload_len += 2 * LEN_COORD;           // spawn_x + spawn_y
@@ -371,6 +374,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
         const std::string& name = item.get_name();
         buf.push_back(static_cast<uint8_t>(name.size()));
         buf.insert(buf.end(), name.begin(), name.end());
+        buf.push_back(item.get_type());
     }
 
     auto append_u32 = [&](uint32_t value) {

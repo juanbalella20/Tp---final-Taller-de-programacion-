@@ -58,12 +58,14 @@ void ClientGUI::loadMedia(Zone zone) {
     {
     case ZONE_DESERT : {
         tilemap = std::make_unique<TileMap>(renderer);
-        tilemap->load_map_bin("data/maps/desert/map-test-1.bin");
+        ///tilemap->load_map_bin("data/maps/desert/map-test-1.bin");
+        tilemap->load_map_toml("data/maps/desert/map.toml");
         break;
     }
     case ZONE_CITY : {
         tilemap = std::make_unique<TileMap>(renderer);
-        tilemap->load_map_bin("data/maps/city/city-map-test.bin");
+        //tilemap->load_map_bin("data/maps/city/city-map-test.bin");
+        tilemap->load_map_toml("data/maps/city/map.toml");
     }
     default:
         break;
@@ -83,6 +85,14 @@ void ClientGUI::freeSDL() {
         SDL_DestroyTexture(frame_texture);
         frame_texture = nullptr;
     }
+
+    // Texturas extra de items del piso (las que no son item_texture, p. ej. escudo).
+    for (auto& kv : floor_item_textures) {
+        if (kv.second && kv.second != item_texture) {
+            SDL_DestroyTexture(kv.second);
+        }
+    }
+    floor_item_textures.clear();
 
     if (item_texture) {
         SDL_DestroyTexture(item_texture);
@@ -274,7 +284,10 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
                                 my >= slot_y && my <= slot_y + slot_size) {
                                 std::cout << "DEBUG mx: " << mx << " my: " << my << std::endl;
                                 hud->set_equipped_slot(slot_index);
-                                player->set_equipped_weapon(true);
+                                // El personaje solo "lleva arma" si el item es un arma (tipo 0).
+                                if (item.get_type() == 0) {
+                                    player->set_equipped_weapon(true);
+                                }
                                 sendEquipCmd(item.get_id());
                                 break;
                             }
@@ -611,9 +624,15 @@ void ClientGUI::drawItems() {
             SDL_FRect gold_cutout = { 0.0f, 320.0f, 30.0f, 27.0f };
             ItemSprite(renderer, gold_texture, item.x, item.y, tileSize).draw(camera, gold_cutout);
         } else {
-            if (!item_texture) continue;
+            // Textura y crop específicos del item por id; fallback a la espada.
+            SDL_Texture* tex = item_texture;
             SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};
-            ItemSprite(renderer, item_texture, item.x, item.y, tileSize).draw(camera, crop);
+            auto tex_it = floor_item_textures.find(item.type);
+            auto crop_it = floor_item_crops.find(item.type);
+            if (tex_it != floor_item_textures.end()) tex = tex_it->second;
+            if (crop_it != floor_item_crops.end()) crop = crop_it->second;
+            if (!tex) continue;
+            ItemSprite(renderer, tex, item.x, item.y, tileSize).draw(camera, crop);
         }
     }
 }
@@ -698,13 +717,26 @@ void ClientGUI::init_draw() {
     }
 
     SDL_Surface* item_surf = IMG_Load("imagenes/101.png");
-    if (!item_surf) { 
+    if (!item_surf) {
         item_surf = IMG_Load("101.png");
     }
     if (item_surf) {
         item_texture = SDL_CreateTextureFromSurface(renderer, item_surf);
         SDL_SetTextureBlendMode(item_texture, SDL_BLENDMODE_BLEND);
         SDL_DestroySurface(item_surf);
+        // La espada en el piso usa la textura/crop de 101.png.
+        floor_item_textures["espada"] = item_texture;
+        floor_item_crops["espada"] = {224.0f, 96.0f, 30.0f, 30.0f};
+    }
+
+    SDL_Surface* shield_surf = IMG_Load("imagenes/2141.png");
+    if (!shield_surf) { shield_surf = IMG_Load("2141.png"); }
+    if (shield_surf) {
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, shield_surf);
+        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+        SDL_DestroySurface(shield_surf);
+        floor_item_textures["escudo"] = tex;
+        floor_item_crops["escudo"] = {0.0f, 0.0f, 32.0f, 32.0f};
     }
 
     SDL_Surface* elem_surf = IMG_Load("imagenes/100.png");

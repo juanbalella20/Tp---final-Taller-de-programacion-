@@ -1,6 +1,7 @@
 #include "game_map.h"
 #include "../game_exceptions.h"
 #include "item/arma.h"
+#include "item/escudo.h"
 
 #include <algorithm>
 #include <iostream>
@@ -206,6 +207,7 @@ void GameMap::spawn_player(const std::string& name, const std::string& race, con
     Player player(name, player_race, player_class);
     player.update_position(start_x, start_y);
     player.add_item(std::make_unique<Arma>("espada", "Espada", 100, 2, 2, 5));
+    player.add_item(std::make_unique<Escudo>("escudo", "Escudo de tortuga", 80, 1, 2));
     players.push_back(std::move(player));
     std::cout << "[DEBUG: spawn_player] " << name << " at ("
               << start_x << "," << start_y << ") zona=" << static_cast<int>(start_zone)

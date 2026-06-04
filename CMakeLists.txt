@@ -138,8 +138,13 @@ add_executable(server
     server/Game/player/alive_state.cpp
     server/Game/player/ghost_state.cpp
     server/Game/inventory.cpp
+    server/Game/defense_set.cpp
     server/Game/item/item.cpp
     server/Game/item/arma.cpp
+    server/Game/item/defense_item.cpp
+    server/Game/item/armadura.cpp
+    server/Game/item/casco.cpp
+    server/Game/item/escudo.cpp
     server/Game/npc/npc.cpp
     server/Game/npc/npcHostile.cpp
     # server/Game/npc/npcBanker.cpp

@@ -265,7 +265,8 @@ void ClientDeserializer::deserialize_inventory(const std::vector<uint8_t>& paylo
     while (offset < payload.size()) {
         std::string id   = read_string(payload, offset);
         std::string name = read_string(payload, offset);
-        items.emplace_back(id, name, 0);
+        uint8_t type = payload[offset++];
+        items.emplace_back(id, name, 0, type);
     }
 
     msg.set_items(items);
@@ -341,7 +342,8 @@ void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
     for (uint8_t i = 0; i < item_count; ++i) {
         std::string id   = read_string(payload, offset);
         std::string name = read_string(payload, offset);
-        items.emplace_back(id, name, 0);
+        uint8_t type = payload[offset++];
+        items.emplace_back(id, name, 0, type);
     }
     msg.set_items(items);
 

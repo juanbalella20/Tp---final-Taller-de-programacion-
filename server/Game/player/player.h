@@ -6,6 +6,7 @@
 #include "player_race.h"
 #include "player_class.h"
 #include "../inventory.h"
+#include "../defense_set.h"
 #include "level.h"
 #include "player_state.h"
 
@@ -36,6 +37,7 @@ private:
     PlayerRace player_race;
     PlayerClass player_class;
     Inventory player_inventory;
+    DefenseSet defense_set;
     Level level;
 
     uint32_t max_life();
@@ -57,7 +59,11 @@ public:
     // Saca todos los items del inventario al morir y los devuelve.
     std::vector<std::unique_ptr<Item>> drop_inventory();
 
+    // Equipa el item (por id) en el slot que corresponde a su tipo.
     void equip_item(std::string item_id);
+
+    // Defensa total que aportan los items de defensa equipados.
+    int calculate_defense();
 
     void unequip_item(Item item);
 
@@ -91,6 +97,9 @@ public:
     void update_position(const int x, const int y);
 
     const Inventory& get_inventory() const;
+
+    // Todos los items del jugador (inventario + defensa equipada), para mostrar.
+    std::vector<Item*> get_all_items() const;
     bool is_ghost() const;
     bool is_dead() const override;
     bool can_interact() const;

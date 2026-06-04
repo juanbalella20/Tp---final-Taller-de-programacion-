@@ -50,12 +50,12 @@ void TileMap::load_map_toml(const std::string& tomlPath) {
     mapData.load(tomlPath);
     load_tileset_textures();
 }
-
+/*
 void TileMap::load_map_bin(const std::string& path) {
     mapData.load_bin(path);
     load_tileset_textures();
 }
-
+*/
 void TileMap::render(int mapViewport_x, int mapViewport_y) const {
     const int ts = mapData.get_tile_size();
     if (ts <= 0) return;

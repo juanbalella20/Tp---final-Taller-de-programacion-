@@ -18,6 +18,8 @@ public:
 
     int get_disntance_min_attack() const;
 
+    ItemType get_type() const override { return ItemType::WEAPON; }
+
     int use_item(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical) override;
 };
 

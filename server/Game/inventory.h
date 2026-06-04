@@ -31,6 +31,9 @@ public:
 
     void equip_item(std::string item_id);
 
+    // Devuelve el item con ese id (sin ceder ownership), o nullptr si no está.
+    Item* find_item(const std::string& item_id) const;
+
     void unequip_item();
 
     bool is_full() const;

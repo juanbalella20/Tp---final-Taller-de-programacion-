@@ -32,6 +32,12 @@ const Inventory& Player::get_inventory() const {
     return player_inventory;
 }
 
+std::vector<Item*> Player::get_all_items() const {
+    // El Inventory es dueño de todos los items (armas y defensa). El DefenseSet
+    // solo referencia cuáles de ellos están equipados.
+    return player_inventory.get_items();
+}
+
 uint32_t Player::max_life() {
     // VidaMax = Constitución * FClaseVida * FRazaVida * Nivel
     return player_race.race_constitution() * player_class.class_life_factor() * player_race.race_life_factor() * level.get_number();
@@ -55,6 +61,9 @@ void Player::drop_item(Item* item) {
 }
 
 std::vector<std::unique_ptr<Item>> Player::drop_inventory() {
+    // Al morir caen todos los items: el Inventory es dueño de armas y defensa.
+    // El DefenseSet solo referenciaba algunos, así que se limpia.
+    defense_set.clear();
     return player_inventory.drop_all();
 }
 
@@ -235,7 +244,31 @@ void Player::add_experience(int exp) {
 }
 
 void Player::equip_item(std::string item_id) {
-    player_inventory.equip_item(item_id);
+    // Busca el item en el inventario y lo equipa en el slot que corresponde a
+    // su tipo. El Inventory sigue siendo dueño; el DefenseSet solo referencia.
+    Item* item = player_inventory.find_item(item_id);
+    if (item == nullptr) return;
+
+    switch (item->get_type()) {
+        case ItemType::WEAPON:
+            player_inventory.equip_item(item_id);
+            break;
+        case ItemType::ARMOR:
+            defense_set.equip_armadura(static_cast<DefenseItem*>(item));
+            break;
+        case ItemType::HELMET:
+            defense_set.equip_casco(static_cast<DefenseItem*>(item));
+            break;
+        case ItemType::SHIELD:
+            defense_set.equip_escudo(static_cast<DefenseItem*>(item));
+            break;
+        default:
+            break;
+    }
+}
+
+int Player::calculate_defense() {
+    return defense_set.calculate_defense();
 }
  
 void Player::check_level_up() {

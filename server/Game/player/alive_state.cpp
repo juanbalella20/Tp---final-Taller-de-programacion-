@@ -16,8 +16,8 @@ int AliveState::receive_damage(Player& self, int damage, Player& attacker, bool 
         double rnd = std::rand() / static_cast<double>(RAND_MAX);
         if (std::pow(rnd, agility) < 0.001) return 0;  // esquivó
 
-        // Defensa: armadura + escudo + casco (por ahora 0 hasta que se modelen)
-        int defense = 0;
+        // Defensa: armadura + escudo + casco
+        int defense = self.calculate_defense();
         damage = std::max(0, damage - defense);
     }
 
