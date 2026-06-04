@@ -411,3 +411,9 @@ std::vector<PlayerInfo> GameMap::build_players_snapshot(const std::string& playe
     }
     return snapshot;
 }
+
+bool GameMap::found_clan(const std::string& player_name, const std::string& clan_name) {
+    auto [it, created] = clans.try_emplace(clan_name, player_name, clan_name);
+
+    return created;
+}
