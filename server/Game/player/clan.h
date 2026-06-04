@@ -35,6 +35,8 @@ public:
 
     bool ban(const std::string& member);
 
+    bool same_clan(const std::string& player_name_1, const std::string& player_name_2);
+
 };
 
 #endif

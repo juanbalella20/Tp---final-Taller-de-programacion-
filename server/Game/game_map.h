@@ -151,6 +151,8 @@ public:
     bool leave_clan(const std::string& player_name, std::string& clan_name);
     bool kick_member(const std::string& player_name, const std::string& member);
     bool ban_member(const std::string& player_name, const std::string& member);
+
+    bool same_clan(Player* player1, Player* player2);
 };
 
 #endif

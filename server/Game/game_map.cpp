@@ -254,6 +254,23 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     return {true, player_name, new_x, new_y};
 }
 
+bool GameMap::same_clan(Player* player1, Player* player2) {
+    std::string name1 = player1->get_name();
+    std::string name2 = player2->get_name();
+
+    auto clan = std::find_if(clans.begin(), clans.end(), 
+        [&name1, &name2](auto& par) {
+            return par.second.same_clan(name1, name2);
+        }
+    );
+
+    if (clan != clans.end()) {
+        return true;
+    }
+
+    return false;
+}
+
 GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, int y) {
     Player* attacker = find_player_by_name(attacker_name);
     if (attacker == nullptr) throw AttackerNotFoundException();
@@ -287,6 +304,8 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
             throw AttackNotAllowedException("Los newbies no pueden atacar ni ser atacados");
         if (!attacker->can_attack_level(target_player->get_level()))
             throw AttackNotAllowedException("La diferencia de niveles es mayor a 10");
+        if (same_clan(attacker, target_player))
+            throw AttackNotAllowedException("No puede haber ataques entre miembros del mismo clan");
     }
 
     int gold_drop = attacker->attack(*target, x, y);

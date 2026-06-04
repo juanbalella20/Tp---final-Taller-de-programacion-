@@ -78,3 +78,13 @@ bool Clan::ban(const std::string& member) {
     }
     return false;
 }
+
+bool Clan::same_clan(const std::string& player_name_1, const std::string& player_name_2) {
+    auto player1 = std::find(members.begin(), members.end(), player_name_1);
+    auto player2 = std::find(members.begin(), members.end(), player_name_2);
+    
+    if (player1 != members.end() && player2 != members.end()) {
+        return true;
+    }
+    return false;
+}
