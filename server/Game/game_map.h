@@ -145,6 +145,7 @@ public:
     bool pick_up_gold(const std::string& player_name);
 
     bool found_clan(const std::string& player_name, const std::string& clan_name);
+    bool join_clan(const std::string& player_name, const std::string& clan_name);
 };
 
 #endif

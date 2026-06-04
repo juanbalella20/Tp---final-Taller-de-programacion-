@@ -417,3 +417,16 @@ bool GameMap::found_clan(const std::string& player_name, const std::string& clan
 
     return created;
 }
+
+bool GameMap::join_clan(const std::string& player_name, const std::string& clan_name) {
+    auto clan = clans.find(clan_name);
+    if (clan == clans.end()) {
+        return false;
+    }
+
+    Clan& wanted_clan = clan->second;
+    if (!wanted_clan.join(player_name)) {
+        return false;
+    }
+    return true;
+}

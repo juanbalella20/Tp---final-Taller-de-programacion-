@@ -33,6 +33,7 @@ void GameLoop::register_handlers() {
     handlers[MSG_CHEAT_INF_HP]   = [this](const ClientCmd& cmd) { handle_cheat_inf_hp(cmd); };
     handlers[MSG_CHEAT_INF_MANA] = [this](const ClientCmd& cmd) { handle_cheat_inf_mana(cmd); };
     handlers[MSG_FOUND_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_foundation(cmd); };
+    handlers[MSG_JOIN_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_joining(cmd); };
 }
 
 
@@ -456,9 +457,12 @@ void GameLoop::handle_clan_foundation(const ClientCmd& cmd) {
 void GameLoop::handle_clan_joining(const ClientCmd& cmd) {
     std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
     std::string clan_name = cmd.get_target_name();
-
     GameMsg clan_msg(MSG_JOIN_CLAN);
-    clan_msg.set_chat_content("Te uniste al clan: " + clan_name);
+    if (!game_map.join_clan(player_name, clan_name)) {
+        clan_msg.set_chat_content("No te podes unir al clan: " + clan_name);
+    } else {
+        clan_msg.set_chat_content("Te uniste al clan: " + clan_name);
+    }
     client_registry_monitor.notify_clients(clan_msg);
 }
 
