@@ -95,6 +95,9 @@ private:
     std::unique_ptr<Tool> gesture_tool_;
     std::vector<CellChange> gesture_changes_;
 
+    // Capa sobre la que actua el gesto actual: Teleports si la herramienta
+    // activa es Teleport (capa oculta), o la capa de tiles activa en otro caso.
+    int effective_layer() const;
     // Fabrica la Tool concreta segun tool_.
     std::unique_ptr<Tool> make_tool(ToolType t) const;
     // Aplica los deltas al Map en vivo, emite cellChanged y los acumula en

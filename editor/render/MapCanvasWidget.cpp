@@ -100,10 +100,13 @@ void MapCanvasWidget::paintEvent(QPaintEvent* /*event*/) {
     painter.fillRect(rect(), QColor(30, 30, 30));
     painter.fillRect(QRect(o.x(), o.y(), map_w, map_h), QColor(0, 0, 0));
 
-    // Tiles del mapa, capa por capa (algoritmo del pintor)
+    // Tiles del mapa, capa por capa (algoritmo del pintor). La capa Teleports
+    // NO se dibuja como tiles: es solo marcado semantico (su gid coincide con
+    // gids reales). Se representa aparte con el borde amarillo, mas abajo.
     if (doc_) {
         const Map& map = doc_->map();
         for (int layer = 0; layer < map.layer_count(); ++layer) {
+            if (layer == Map::Teleports) continue;
             for (int y = 0; y < HEIGHT; ++y) {
                 for (int x = 0; x < WIDTH; ++x) {
                     int gid = map.get_cell(layer, x, y);
@@ -124,6 +127,17 @@ void MapCanvasWidget::paintEvent(QPaintEvent* /*event*/) {
             }
         }
     }
+    const Map& map = doc_->map();
+    QPen tp_pen(QColor(255, 230, 0), 3);   // amarillo, 3px
+    painter.setPen(tp_pen);
+    painter.setBrush(Qt::NoBrush);
+    for (int y = 0; y < HEIGHT; ++y)
+      for (int x = 0; x < WIDTH; ++x)
+        if (map.get_cell(Map::Teleports, x, y) == Map::TELEPORT_MARKER) {
+          QRect r(o.x() + x*ts + 1, o.y() + y*ts + 1, ts - 2, ts - 2);
+          painter.drawRect(r);
+        }
+    
 
     // Grilla: lineas verticales y horizontales cada tile.
     painter.setPen(QColor(70, 70, 70));

@@ -81,10 +81,13 @@ void EditorWindow::build_tools_toolbar() {
     add_tool("Lapiz", ToolType::Pencil, true);  // default
     add_tool("Goma", ToolType::Eraser, false);
     add_tool("Relleno", ToolType::Fill, false);
+    // La herramienta Teleport edita la capa Teleports (oculta) automaticamente
+    // via EditorDocument::effective_layer(); no necesita un boton de capa.
+    add_tool("Teleport", ToolType::Teleport, false);
 
     toolbar->addSeparator();
 
-    // --- Capa activa (exclusivas entre si) -------------------------------
+    // --- Capa activa (solo las capas de tiles editables) -----------------
     auto* layers = new QActionGroup(this);
     layers->setExclusive(true);
 

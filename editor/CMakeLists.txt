@@ -19,6 +19,7 @@ add_executable(map_editor
     tools/PencilTool.cpp
     tools/EraserTool.cpp
     tools/FillTool.cpp
+    tools/TeleportTool.cpp
 )
 
 target_include_directories(map_editor PRIVATE

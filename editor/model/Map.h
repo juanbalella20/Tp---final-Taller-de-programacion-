@@ -8,29 +8,16 @@
 #include "constants/game_constants.h"  // WIDTH, HEIGHT, TILE_SIZE
 #include "mapLoader.h"                  // Tileset, TileDef, MapLayerData
 
-/*
- * Modelo puro del mapa en edicion. SIN dependencias de Qt.
- *
- * Reutiliza los structs de common/mapLoader.h (Tileset, TileDef, MapLayerData)
- * para ser byte-compatible con el modelo del juego. A diferencia de MapLoader
- * (que solo sabe load(toml)), Map ofrece mutaciones celda-a-celda y carga de
- * tilesets, que es lo que el editor necesita.
- *
- * V1 SIMPLIFICADA:
- *  - Mapa de tamano FIJO WIDTH x HEIGHT (30x16), tile TILE_SIZE (64). No
- *    configurable.
- *  - DOS capas fijas: "ground" (indice 0, atras) y "buildings" (indice 1,
- *    adelante). No se agregan/quitan/renombran capas.
- *  - Sin spawns ni teleports (quedan para una version futura).
- *
- * Es el unico estado del mapa; lo muta exclusivamente el EditorDocument.
- *
- */
+// Reutiliza los structs de common/mapLoader.h (Tileset, TileDef, MapLayerData)
 class Map {
 public:
-    // Indices de las dos capas fijas.
-    enum LayerId { Ground = 0, Buildings = 1 };
-    static constexpr int LAYER_COUNT = 2;
+    // Indices de las tres capas fijas.
+    enum LayerId { Ground = 0, Buildings = 1, Teleports = 2 };
+    static constexpr int LAYER_COUNT = 3;
+
+    // gid marcador en la capa Teleports: 1 = celda apta para teleport, 0 = no.
+    // No pertenece a ningun tileset, asi que no se dibuja como tile ni colisiona.
+    static constexpr int TELEPORT_MARKER = 1;
 
     // Mapa nuevo: WIDTH x HEIGHT, dos capas ("ground", "buildings") llenas de 0.
     Map();

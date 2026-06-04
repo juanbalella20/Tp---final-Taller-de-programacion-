@@ -18,6 +18,7 @@ Map::Map() {
     layers_.resize(LAYER_COUNT);
     layers_[Ground].name    = "ground";
     layers_[Buildings].name = "buildings";
+    layers_[Teleports].name = "teleports";
     for (MapLayerData& layer : layers_) {
         layer.data.assign(HEIGHT, std::vector<int>(WIDTH, 0));
     }
@@ -93,12 +94,15 @@ void Map::set_cell(int layer, int x, int y, int gid) {
 // --- Colision (misma semantica que MapLoader::is_collidable) -----------------
 bool Map::is_collidable(int x, int y) const {
     if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) return true;
-    for (const auto& layer : layers_) {
-        if (y >= static_cast<int>(layer.data.size())) continue;
-        const auto& row = layer.data[y];
+    for (int layer = 0; layer < LAYER_COUNT; ++layer) {
+        // La capa Teleports es marcado semantico, no tiles: su gid coincide con
+        // gids reales, asi que no debe aportar colision (el teleport es ground).
+        if (layer == Teleports) continue;
+        const auto& data = layers_[layer].data;
+        if (y >= static_cast<int>(data.size())) continue;
+        const auto& row = data[y];
         if (x >= static_cast<int>(row.size())) continue;
-        int id = row[x];
-        const TileDef* td = find_tile(id);
+        const TileDef* td = find_tile(row[x]);
         if (td && td->collidable) return true;
     }
     return false;
