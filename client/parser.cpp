@@ -91,9 +91,15 @@ ClientCmd Parser::parse_gold_cmd(MessageType type, std::istringstream& ss, const
 
 ClientCmd Parser::parse_name_cmd(MessageType type, std::istringstream& ss, const std::string& correct_use) {
     std::string name;
-    if (!(ss >> name)) {
+    if (!std::getline(ss >> std::ws, name) || name.empty()) {
         throw std::invalid_argument(correct_use);
     }
+
+    size_t end = name.find_last_not_of(" \t\r\n");
+    if (end != std::string::npos) {
+        name = name.substr(0, end + 1);
+    }
+
     ClientCmd cmd;
     cmd.set_message_type(type);
     cmd.set_target_name(name);
