@@ -2,14 +2,6 @@
 
 #include "../model/Map.h"
 
-// ============================================================================
-// Implementacion del Command de cambios de celda 
-//
-// Un gesto completo (trazo de lapiz, goma o relleno) se guarda como UN solo
-// SetTilesCommand: execute() aplica los new_gid y undo() restaura los old_gid.
-// Guarda solo las celdas tocadas, no un snapshot del mapa entero.
-// ============================================================================
-
 SetTilesCommand::SetTilesCommand(Map* map, int layer, std::vector<CellChange> changes)
     : map_(map), layer_(layer), changes_(std::move(changes)) {}
 

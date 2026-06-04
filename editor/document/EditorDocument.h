@@ -76,6 +76,8 @@ signals:
     void cellChanged(int layer, int x, int y);
     void dirtyChanged(bool dirty);
     void activeLayerChanged(int idx);
+    // Las pilas de undo/redo cambiaron: la GUI actualiza el enable de sus acciones.
+    void undoStackChanged();
 
 private:
     Map map_;
@@ -87,10 +89,19 @@ private:
     std::vector<std::unique_ptr<Command>> undo_stack_;
     std::vector<std::unique_ptr<Command>> redo_stack_;
 
+    // Estado del gesto en curso (entre press y release). gesture_tool_ es la
+    // Tool fabricada en el press; gesture_changes_ acumula todos los CellChange
+    // del gesto para armar UN solo SetTilesCommand al soltar.
+    std::unique_ptr<Tool> gesture_tool_;
+    std::vector<CellChange> gesture_changes_;
+
     // Fabrica la Tool concreta segun tool_.
     std::unique_ptr<Tool> make_tool(ToolType t) const;
-    // Aplica un conjunto de cambios via SetTilesCommand y emite cellChanged.
-    void commit_changes(int layer, std::vector<CellChange> changes);
+    // Aplica los deltas al Map en vivo, emite cellChanged y los acumula en
+    // gesture_changes_ (para el Command que se arma al soltar).
+    void apply_changes_live(std::vector<CellChange> changes);
+    // Apila los cambios (ya aplicados) como un SetTilesCommand para undo/redo.
+    void push_committed_changes(int layer, std::vector<CellChange> changes);
     void set_dirty(bool d);
 };
 
