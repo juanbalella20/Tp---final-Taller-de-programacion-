@@ -34,6 +34,7 @@ ServerSerializer::ServerSerializer() {
     handlers[MSG_MANA] = [this](const GameMsg& msg) { return serialize_mana(msg); };
     handlers[MSG_PLAYERS_SNAPSHOT] = [this](const GameMsg& msg) { return serialize_players_snapshot(msg); };
     handlers[MSG_ZONE_CHANGE] = [this](const GameMsg& msg) {return serialize_zone(msg); };
+    handlers[MSG_ATTACK] = [this](const GameMsg& msg) { return serialize_attack(msg); };
     handlers[MSG_UPDATE_EQUIP] = [this](const GameMsg& msg) {return serialize_name(msg); };
 }
 
@@ -107,6 +108,17 @@ std::vector<uint8_t> ServerSerializer::serialize_zone(const GameMsg& msg) {
     buf.push_back(static_cast<uint8_t>(msg.get_zone()));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_x()));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_y()));
+    return buf;
+}
+
+// MSG_ATTACK (server->cliente): [x:2B BE][y:2B BE][damage:2B BE]
+std::vector<uint8_t> ServerSerializer::serialize_attack(const GameMsg& msg) {
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + LEN_ATTACK_PAYLOAD);
+    write_header(buf, MSG_ATTACK, LEN_ATTACK_PAYLOAD);
+    append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_x()));
+    append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_y()));
+    append_uint16_be(buf, static_cast<uint16_t>(msg.get_damage()));
     return buf;
 }
 

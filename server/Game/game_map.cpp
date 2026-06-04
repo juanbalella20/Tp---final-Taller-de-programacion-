@@ -9,6 +9,16 @@
 #include <vector>
 #include <cstdlib>
 
+namespace {
+// Que tipos de NPC hostil pueden generarse en cada zona. Los strings deben
+// coincidir con los que reconoce make_npc_from_spawn
+// TODO: mover a archivo de config.toml mas adelante.
+const std::map<Zone, std::vector<std::string>> ZONE_NPC_TYPES = {
+    {ZONE_DESERT, {"goblin", "spider"}},
+    // ZONE_CITY/FOREST/TOWN: sin NPCs hostiles por ahora.
+};
+}  // namespace
+
 // Esto tienen que ser posiciones aleatorias
 NPChostile make_npc_from_spawn(const NpcSpawn& spawn) {
     // Catalogo de tipos de NPC hostiles. Mas adelante esto puede vivir
@@ -27,6 +37,21 @@ NPChostile make_npc_from_spawn(const NpcSpawn& spawn) {
     NPChostile npc(spawn.type, spawn.type, 10, 1, 50);
     npc.set_position(spawn.x, spawn.y);
     return npc;
+}
+
+NPChostile GameMap::rand_npc(Zone zone, ZoneWorld& world) {
+    auto it = ZONE_NPC_TYPES.find(zone);
+    if (it == ZONE_NPC_TYPES.end() || it->second.empty()) {
+        // Zona sin NPCs permitidos: NPC en {-1,-1}, spawn_npc lo descarta.
+        return make_npc_from_spawn({"", -1, -1});
+    }
+    const std::vector<std::string>& allowed = it->second;
+    const std::string& type = allowed[rand() % allowed.size()];
+
+    // Celda libre random en el mundo de esta zona.
+    auto [x, y] = world.find_random_empty_cell(players_in(zone));
+
+    return make_npc_from_spawn({type, x, y});
 }
 
 GameMap::GameMap() = default;
@@ -106,8 +131,14 @@ void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
 
         auto state_it = initial_states.find(zone_id);
         if (state_it != initial_states.end()) {
-            for (const auto& spawn : state_it->second.npcs) {
-                world.spawn_npc(make_npc_from_spawn(spawn));
+            // spawn de npcs random segun los tipos permitidos en la zona
+            for (int i = 0; i < state_it->second.num_npc; i++) {
+                world.spawn_npc(rand_npc(zone_id, world));
+            }
+            // spawn de items
+            for (int i = 0; i < state_it->second.num_items; i++) {
+                //world.spawn_item(rand_item());
+                //world.spawn_item(7, 7, std::make_unique<Arma>("espada", "espada", 50, 2, 2));
             }
         }
         // Seller de prueba
@@ -138,8 +169,7 @@ Player* GameMap::find_player_by_name(const std::string& name) {
 void GameMap::spawn_player(const std::string& name, const std::string& race, const std::string& pclass) {
     // Zona inicial de spawn
     // TODO: derivar de config / persistencia
-    //const Zone start_zone = ZONE_CITY;
-    const Zone start_zone = ZONE_DESERT;
+    const Zone start_zone = ZONE_CITY;
     player_zone[name] = start_zone;
 
     // Posicion de spawn hardcodeada
@@ -290,7 +320,7 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
     }
 
     int gold_drop = attacker->attack(*target, x, y);
-
+//attack debe devolver danio hecho
     if (target->is_dead()) {
         if (gold_drop > 0)
             world.spawn_gold(x, y, static_cast<uint32_t>(gold_drop));
@@ -300,7 +330,7 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
         }
         return {true, true, target_is_player, target->get_name()};
     }
-    return {true, false, target_is_player, target->get_name()};
+    return {true, false, target_is_player, target->get_name()};//agustin devolvia las posiciones, xq?-> no se 
 }
 
 bool GameMap::update_npcs() {

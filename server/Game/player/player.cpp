@@ -12,7 +12,7 @@ Player::Player(const std::string name, PlayerRace& player_race, PlayerClass& pla
     player_race(player_race),
     player_class(player_class),
     player_inventory(),
-    level(1) {
+    level(14) {
 
     lives = max_life();
     gold = 10000;

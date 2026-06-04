@@ -16,6 +16,8 @@ const uint16_t LEN_COORD = 2;  // 2 bytes para cada coordenada (x e y)
 const uint16_t LEN_ZONE = 1;  // 1 byte para el valor de zona
 // MSG_ZONE_CHANGE: [zona:1B][x:2B BE][y:2B BE] -> zona destino + posicion de spawn
 const uint16_t LEN_ZONE_CHANGE_PAYLOAD = LEN_ZONE + 2 * LEN_COORD;
+const uint16_t LEN_DAMAGE = 2;
+const uint16_t LEN_ATTACK_PAYLOAD = 2 * LEN_COORD + LEN_DAMAGE;
 const uint16_t LEN_ITEM_ID = 1;  // 1 byte para largo del id del item
 const uint16_t LEN_NPC_COUNT = 2;  // 2 bytes para la cantidad de NPCs en el snapshot
 const uint16_t LEN_NPC_TYPE_SIZE = 1;  // 1 byte para largo del tipo del NPC

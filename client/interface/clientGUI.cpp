@@ -13,6 +13,7 @@ ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, cons
       hud(nullptr), own_name(player_name), race(player_race), player(nullptr), tilemap(nullptr),
       enemy_texture(nullptr), frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
       camera((float)GAME_WIDTH, (float)CANVAS_HEIGHT),
+      current_zone(static_cast<Zone>(0xFF)),  
       selected_npc_tile_x(-1), selected_npc_tile_y(-1) {}
     
 
@@ -63,6 +64,7 @@ void ClientGUI::loadMedia(Zone zone) {
     case ZONE_CITY : {
         tilemap = std::make_unique<TileMap>(renderer);
         tilemap->load_map("data/maps/city/map.toml");
+        break;
     }
     default:
         break;
@@ -343,7 +345,10 @@ void ClientGUI::update() {
             switch (msg.get_type()) {
                 case MSG_ZONE_CHANGE : {
                     Zone z = msg.get_zone();
-                    if (z != current_zone) loadMedia(z);
+                    if (z != current_zone) {
+                        loadMedia(z);
+                        current_zone = z;
+                    }
                     player->setTilePosition(msg.get_coord_x(), msg.get_coord_y());
                     break;
                 }
@@ -465,6 +470,14 @@ void ClientGUI::update() {
                 case MSG_HP:
                     if (hud) hud->set_hp(msg.get_hp());
                     break;
+                case MSG_ATTACK:
+                    if (msg.get_damage() > 0) {
+                        damage_numbers.push_back({
+                            msg.get_coord_x(), msg.get_coord_y(),
+                            msg.get_damage(), SDL_GetTicks() + DMG_MS
+                        });
+                    }
+                    break;
                 case MSG_XP:
                     if (hud) hud->set_xp(msg.get_xp());
                     break;
@@ -495,7 +508,8 @@ void ClientGUI::drawEnemies() {
     if (!enemy_texture || !tilemap) return;
     const int tileSize = tilemap->getTileSize();
     for (const auto& npc : npcs) {
-        NpcSprite(renderer, enemy_texture, npc.x, npc.y, tileSize).draw(camera, {});
+        NpcSprite(renderer, enemies_textures[npc.name], npc.x, npc.y, tileSize)
+            .draw(camera, enemies_crops[npc.name]);
     }
 }
 
@@ -559,6 +573,36 @@ void ClientGUI::draw_teleport_labels() {
     }
 }
 
+void ClientGUI::draw_damage_numbers() {
+    if (!tilemap || !chat_font) return;
+    const int tileSize = tilemap->getTileSize();
+    const SDL_Color color = {255, 0, 0, 255};  // rojo
+    const uint64_t now = SDL_GetTicks();
+
+    // Descarta los numeros que ya expiraron.
+    damage_numbers.erase(
+        std::remove_if(damage_numbers.begin(), damage_numbers.end(),
+                       [now](const DamageNumber& d) { return now >= d.expire_ms; }),
+        damage_numbers.end());
+
+    for (const auto& d : damage_numbers) {
+        const std::string text = std::to_string(d.value);
+        SDL_Surface* surf = TTF_RenderText_Blended(chat_font, text.c_str(), 0, color);
+        if (!surf) continue;
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+        if (tex) {
+            const float wx = static_cast<float>(d.tile_x * tileSize);
+            const float wy = static_cast<float>(d.tile_y * tileSize);
+            const float sx = camera.world_to_screen_x(wx) + (tileSize - surf->w) / 2.0f;
+            const float sy = camera.world_to_screen_y(wy) - surf->h;
+            SDL_FRect dst{sx, sy, static_cast<float>(surf->w), static_cast<float>(surf->h)};
+            SDL_RenderTexture(renderer, tex, nullptr, &dst);
+            SDL_DestroyTexture(tex);
+        }
+        SDL_DestroySurface(surf);
+    }
+}
+
 void ClientGUI::drawItems() {
     if (!tilemap) return;
     const int tileSize = tilemap->getTileSize();
@@ -603,6 +647,7 @@ void ClientGUI::draw() {
     drawEnemies();
     drawOtherPlayers();
     draw_npc_friends();
+    draw_damage_numbers();
 
     if (hud) {
         hud->render();
@@ -617,16 +662,36 @@ void ClientGUI::draw() {
 
 void ClientGUI::init_draw() {
     initSDL();
-    // se carga una zona inicial por default
-    // siempre sera ZONA_CITY
+    // Carga provisional solo para tener un tileSize valido al crear el player.
+    // El mapa REAL lo carga el primer MSG_ZONE_CHANGE del server (current_zone
+    // arranca en un centinela, asi que siempre recarga la zona real). No tocar
+    // current_zone aca: dejarlo en el centinela.
     loadMedia(ZONE_CITY);
+    // TODO: eliminar esto
     SDL_Surface* enemy_surf = IMG_Load("imagenes/enemigo.png");
     if (!enemy_surf) enemy_surf = IMG_Load("enemigo.png");
     if (enemy_surf) {
         enemy_texture = SDL_CreateTextureFromSurface(renderer, enemy_surf);
         SDL_DestroySurface(enemy_surf);
     }
-
+    // load enemies textures
+    SDL_Surface* goblin_surf = IMG_Load("imagenes/4047.png");
+    SDL_Surface* spider_surf = IMG_Load("imagenes/4060.png");
+    if (goblin_surf) {
+        SDL_Texture* goblin_text = SDL_CreateTextureFromSurface(renderer, goblin_surf);
+        enemies_textures["Goblin"] = goblin_text;
+        SDL_DestroySurface(goblin_surf);
+    }
+    if (spider_surf) {
+        SDL_Texture* spider_text = SDL_CreateTextureFromSurface(renderer, spider_surf);
+        enemies_textures["Spider"] = spider_text;
+        SDL_DestroySurface(spider_surf);
+    }
+    // Recorte del 1er tile (esquina sup-izq) de cada spritesheet. La grilla es
+    // 8 columnas: Goblin 256/8=32px, Spider 512/8=64px.
+    enemies_crops["Goblin"] = {0.0f, 0.0f, 32.0f, 32.0f};
+    enemies_crops["Spider"] = {0.0f, 0.0f, 64.0f, 64.0f};
+    //
     SDL_Surface* frame_surf = IMG_Load("imagenes/frame..png");
     if (frame_surf) {
         frame_texture = SDL_CreateTextureFromSurface(renderer, frame_surf);
