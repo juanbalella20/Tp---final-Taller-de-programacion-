@@ -6,15 +6,19 @@
 #include "player_race.h"
 #include "player_class.h"
 #include "../inventory.h"
-#include "nivel.h"
+#include "level.h"
+#include "player_state.h"
 
 #include <string>
 #include <memory>
 #include <vector>
 
-enum class PlayerStatus { ALIVE, DEAD };
-
 class Player : public Entity {
+
+    // Los estados manipulan el estado interno del jugador (vida, inventario,
+    // transición de estado) al ejecutar las acciones que gobiernan.
+    friend class AliveState;
+    friend class GhostState;
 
 private:
     std::string name;
@@ -23,23 +27,25 @@ private:
     uint32_t experience;
     uint32_t mana;
     int id_clan;
-    int level;
     int coord_x;
     int coord_y;
     bool meditating;
-    PlayerStatus status;
+    std::unique_ptr<PlayerState> state;
     std::shared_ptr<Item> equipped_item;
 
     PlayerRace player_race;
     PlayerClass player_class;
     Inventory player_inventory;
-    Nivel nivel;
+    Level level;
 
     uint32_t max_life();
 
     uint32_t max_mana();
 
-    void level_up();
+    // Transiciones de estado internas (las disparan los propios estados).
+    // to_ghost: pasa a fantasma (muerto). to_alive: vuelve a vivo.
+    void to_ghost();
+    void to_alive();
 
 public:
     Player(const std::string name, PlayerRace& player_race, PlayerClass& player_class);
@@ -87,6 +93,7 @@ public:
     const Inventory& get_inventory() const;
     bool is_ghost() const;
     bool is_dead() const override;
+    bool can_interact() const;
     
     void set_ghost();
 
@@ -101,6 +108,12 @@ public:
     uint32_t get_lives() const;
 
     int get_level() const;
+
+    // Fair play: ¿es newbie (nivel <= 12)?
+    bool is_newbie() const;
+
+    // Fair play: ¿puede atacar a un jugador de otro_nivel?
+    bool can_attack_level(int other_level) const;
 
     int get_clan_id() const;
 

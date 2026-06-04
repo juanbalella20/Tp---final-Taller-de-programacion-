@@ -114,7 +114,7 @@ void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
         world.spawn_seller(1, 1);
 
         // Item de prueba hardcodeado. TODO: moverlo a state.items cuando este listo.
-        world.spawn_item(7, 7, std::make_unique<Arma>("espada", "espada", 50, 2, 2));
+        world.spawn_item(7, 7, std::make_unique<Arma>("espada", "espada", 50, 2, 2, 5));
 
         zones.emplace(zone_id, std::move(world));
     }
@@ -175,7 +175,7 @@ void GameMap::spawn_player(const std::string& name, const std::string& race, con
 
     Player player(name, player_race, player_class);
     player.update_position(start_x, start_y);
-    player.add_item(std::make_unique<Arma>("espada", "Espada", 100, 2, 10));
+    player.add_item(std::make_unique<Arma>("espada", "Espada", 100, 2, 2, 5));
     players.push_back(std::move(player));
     std::cout << "[DEBUG: spawn_player] " << name << " at ("
               << start_x << "," << start_y << ") zona=" << static_cast<int>(start_zone)
@@ -280,6 +280,15 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
     if (target == nullptr) throw NoEntityException();
 
     bool target_is_player = (target_player != nullptr);
+
+    // Fair play: solo aplica en PvP
+    if (target_is_player) {
+        if (attacker->is_newbie() || target_player->is_newbie())
+            throw AttackNotAllowedException("Los newbies no pueden atacar ni ser atacados");
+        if (!attacker->can_attack_level(target_player->get_level()))
+            throw AttackNotAllowedException("La diferencia de niveles es mayor a 10");
+    }
+
     int gold_drop = attacker->attack(*target, x, y);
 
     if (target->is_dead()) {
@@ -347,12 +356,14 @@ std::vector<ItemInfo> GameMap::list_seller_items(const std::string& player_name,
 std::unique_ptr<Item> GameMap::pick_up_item(const std::string& player_name) {
     Player* player = find_player_by_name(player_name);
     if (!player) throw std::runtime_error("Player not found: " + player_name);
+    if (!player->can_interact()) return nullptr;  // un fantasma no recolecta
     return zone_of(player_name).take_item_near(player->get_coord_x(), player->get_coord_y());
 }
 
 bool GameMap::pick_up_gold(const std::string& player_name) {
     Player* player = find_player_by_name(player_name);
     if (!player) throw std::runtime_error("Player not found: " + player_name);
+    if (!player->can_interact()) return false;  // un fantasma no recolecta
     int amount = zone_of(player_name).take_gold_at(player->get_coord_x(), player->get_coord_y());
     if (amount > 0) {
         player->add_gold(amount);

@@ -2,9 +2,12 @@
 #include "../entity.h"
 #include "../player/player.h"
 #include <cmath>
+#include <cstdlib>
 
-Arma::Arma(const std::string& id, const std::string& name, int price, int disntance_min_attack, int damage):
-        Item(id, name, price), disntance_min_attack(disntance_min_attack), damage(damage) {}
+Arma::Arma(const std::string& id, const std::string& name, int price, int disntance_min_attack,
+           int damage_min, int damage_max):
+        Item(id, name, price), disntance_min_attack(disntance_min_attack),
+        damage_min(damage_min), damage_max(damage_max) {}
 
 int Arma::get_disntance_min_attack() const {
     return disntance_min_attack;
@@ -14,5 +17,11 @@ int Arma::use_item(Entity& target, Player& atacante, int attacker_x, int attacke
     int dx = std::abs(attacker_x - target_x);
     int dy = std::abs(attacker_y - target_y);
     if (dx + dy > disntance_min_attack) return 0;
+
+    // Daño = Fuerza * rand(DañoArmaMin, DañoArmaMax)
+    int rango = damage_max - damage_min;
+    int roll = (rango > 0) ? (std::rand() % (rango + 1)) : 0;
+    int damage = atacante.damage_attack() * (damage_min + roll);
+
     return target.receive_damage(damage, atacante);
 }

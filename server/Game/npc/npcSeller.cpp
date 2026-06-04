@@ -10,9 +10,9 @@ NPCseller::NPCseller(int x, int y) : pos_x(x), pos_y(y) {
  
 // TODO: cargar desde ItemDataBase cuando este implementada (pociones, armaduras, etc)
 void NPCseller::init_store() {
-    store_items.push_back(std::make_unique<Arma>("espada",   "Espada",   100, 1, 5));
-    store_items.push_back(std::make_unique<Arma>("hacha",    "Hacha",    150, 1, 7));
-    store_items.push_back(std::make_unique<Arma>("martillo", "Martillo", 120, 1, 6));
+    store_items.push_back(std::make_unique<Arma>("espada",   "Espada",   100, 1, 2, 5));
+    store_items.push_back(std::make_unique<Arma>("hacha",    "Hacha",    150, 1, 4, 5));
+    store_items.push_back(std::make_unique<Arma>("martillo", "Martillo", 120, 1, 1, 9));
 }
 
 int NPCseller::get_coord_x() const { return pos_x; }
@@ -63,7 +63,7 @@ void NPCseller::interact(Player& player, Command cmd) {
             store_item->get_id(),
             store_item->getName(),
             store_item->getPrice(),
-            1, 5
+            1, 2, 5
         );
         player.add_item(std::move(new_item));
     }

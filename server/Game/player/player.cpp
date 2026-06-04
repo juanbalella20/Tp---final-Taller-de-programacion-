@@ -1,16 +1,17 @@
 #include "player.h"
 #include "../../game_exceptions.h"
+#include "alive_state.h"
+#include "ghost_state.h"
 
 #include <cmath>
 
 Player::Player(const std::string name, PlayerRace& player_race, PlayerClass& player_class):
     name(name),
-    status(PlayerStatus::ALIVE),
+    state(std::make_unique<AliveState>()),
     equipped_item(nullptr),
     player_race(player_race),
     player_class(player_class),
     player_inventory(),
-    nivel(1),
     level(1) {
 
     lives = max_life();
@@ -19,26 +20,28 @@ Player::Player(const std::string name, PlayerRace& player_race, PlayerClass& pla
     mana = max_mana();
 }
 
+void Player::to_ghost() {
+    state = std::make_unique<GhostState>();
+}
+
+void Player::to_alive() {
+    state = std::make_unique<AliveState>();
+}
+
 const Inventory& Player::get_inventory() const {
     return player_inventory;
 }
 
 uint32_t Player::max_life() {
     // VidaMax = Constitución * FClaseVida * FRazaVida * Nivel
-    return player_race.race_constitution() * player_class.class_life_factor() * player_race.race_life_factor() * level;
+    return player_race.race_constitution() * player_class.class_life_factor() * player_race.race_life_factor() * level.get_number();
 }
 
 uint32_t Player::max_mana() {
     // ManaMax = Inteligencia * FClaseMana * FRazaMana * Nivel
-    return (player_race.race_inteligence() + player_class.class_inteligence()) * player_class.class_mana_factor() * player_race.race_mana_factor() * level;
+    return (player_race.race_inteligence() + player_class.class_inteligence()) * player_class.class_mana_factor() * player_race.race_mana_factor() * level.get_number();
 }
 
-void Player::level_up() {
-    int limit = 1000 * std::pow(level, 1.8);
-    if (experience >= limit) {
-        level += 1;
-    }
-}
 
 void Player::add_item(std::unique_ptr<Item> item) {
     player_inventory.add_item(std::move(item));
@@ -87,10 +90,7 @@ void Player::use_object(Item item) {
 
 
 void Player::revive() {
-    lives = max_life();
-    mana = max_mana();
-    status = PlayerStatus::ALIVE;
-    experience = 0;
+    state->revive(*this);
 }
 
 void Player::heal_life(const int healthy_life) {
@@ -149,15 +149,19 @@ void Player::update_position(const int x, const int y) {
 }
 
 bool Player::is_ghost() const {
-    return status == PlayerStatus::DEAD;
+    return state->is_ghost();
 }
 
 bool Player::is_dead() const {
-    return status == PlayerStatus::DEAD;
+    return state->is_ghost();
 }
- 
+
+bool Player::can_interact() const {
+    return state->can_interact();
+}
+
 void Player::set_ghost() {
-    status = PlayerStatus::DEAD;
+    to_ghost();
 }
 
 bool Player::is_meditating() const {
@@ -190,7 +194,15 @@ uint32_t Player::get_mana() const {
 }
  
 int Player::get_level() const {
-    return level;
+    return level.get_number();
+}
+
+bool Player::is_newbie() const {
+    return level.is_newbie();
+}
+
+bool Player::can_attack_level(int other_level) const {
+    return level.can_attack_level(other_level);
 }
  
 int Player::get_clan_id() const {
@@ -204,36 +216,17 @@ int Player::damage_attack() {
 }
  
 int Player::receive_damage(int damage, Player& atacante) {
-    bool murio = false;
-    if (static_cast<int>(lives) <= damage) {
-        lives = 0;
-        status = PlayerStatus::DEAD;
-        murio = true;
-    } else {
-        lives -= static_cast<uint32_t>(damage);
-    }
-
-    // El target recompensa al atacante con sus propios atributos (nivel, vida máxima)
-    atacante.ganar_xp(damage, level, murio, static_cast<int>(max_life()));
-
-    if (murio) {
-        uint32_t drop = nivel.calcular_drop_gold(gold);
-        gold -= drop;
-        return static_cast<int>(drop);
-    }
-    return 0;
+    return state->receive_damage(*this, damage, atacante);
 }
 
 int Player::attack(Entity& target, int target_x, int target_y) {
-    if (status == PlayerStatus::DEAD)
-        throw AttackNotAllowedException("Estás muerto, no podés atacar");
-    return player_inventory.use_equipped(target, *this, coord_x, coord_y, target_x, target_y);
+    return state->attack(*this, target, target_x, target_y);
 }
 
 void Player::ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target) {
-    experience += nivel.xp_por_ataque(dano, nivel_target);
+    experience += level.xp_per_attack(dano, nivel_target);
     if (murio)
-        experience += nivel.xp_por_kill(vida_max_target, nivel_target);
+        experience += level.xp_per_kill(vida_max_target, nivel_target);
     check_level_up();
 }
  
@@ -246,9 +239,7 @@ void Player::equip_item(std::string item_id) {
 }
  
 void Player::check_level_up() {
-    int limit = static_cast<int>(1000 * std::pow(level, 1.8));
-    if (experience >= limit) {
-        level += 1;
+    if (level.try_level_up(experience)) {
         lives = max_life();
         mana  = max_mana();
     }

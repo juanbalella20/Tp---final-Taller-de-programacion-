@@ -9,10 +9,12 @@
 class Arma: public Item {
 private:
     int disntance_min_attack;
-    int damage;
+    int damage_min;
+    int damage_max;
 
 public:
-    Arma(const std::string& id, const std::string& name, int price, int disntance_min_attack, int damage);
+    Arma(const std::string& id, const std::string& name, int price, int disntance_min_attack,
+         int damage_min, int damage_max);
 
     int get_disntance_min_attack() const;
 
