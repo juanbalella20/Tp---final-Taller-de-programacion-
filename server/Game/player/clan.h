@@ -15,7 +15,7 @@ private:
 public:
     Clan(const std::string& founder_name, const std::string& clan_name);
 
-    void join(const std::string& clan_name);
+    bool join(const std::string& player_name);
 
     void leave(const std::string& clan_name);
 
