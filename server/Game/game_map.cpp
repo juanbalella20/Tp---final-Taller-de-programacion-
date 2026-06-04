@@ -427,7 +427,7 @@ bool GameMap::join_clan(const std::string& player_name, const std::string& clan_
     }
 
     Clan& wanted_clan = clan->second;
-    if (!wanted_clan.join(player_name)) {
+    if (!wanted_clan.join_request(player_name)) {
         return false;
     }
     return true;
@@ -443,10 +443,24 @@ std::string GameMap::rev_clan(const std::string& player_name) {
     );
 
     if (clan == clans.end()) {
-        return "No tenes habilitada la revision para el clan: " + clan->first;
+        return "No eres fundador del clan " + clan->first;
     }
 
     Clan& wanted_clan = clan->second;
     std::string review = wanted_clan.review();
     return review;
+}
+
+void GameMap::accept_new_member(const std::string& player_name, const std::string& new_member) {
+    // TO-DO chequeo: solo 1 clan por player
+    auto clan = std::find_if(clans.begin(), clans.end(), 
+        [&player_name](auto& par) {
+            // par.first es el nombre del clan (la clave)
+            // par.second es el objeto Clan (el valor)
+            return par.second.is_founder(player_name);
+        }
+    );
+
+    Clan& wanted_clan = clan->second;
+    wanted_clan.accept_join_request(new_member);
 }

@@ -16,11 +16,13 @@ private:
 public:
     Clan(const std::string& founder_name, const std::string& clan_name);
 
-    bool join(const std::string& player_name);
+    bool join_request(const std::string& player_name);
 
     std::string review();
 
     bool is_founder(const std::string& player_name);
+
+    void accept_join_request(const std::string& player_name);
 
     void leave(const std::string& clan_name);
 
