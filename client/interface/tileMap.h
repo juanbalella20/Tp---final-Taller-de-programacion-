@@ -13,6 +13,10 @@ private:
     MapLoader mapData;
     std::vector<SDL_Texture*> tileset_textures;
 
+    // Carga en tileset_textures una textura por cada tileset ya parseado
+    // en mapData
+    void load_tileset_textures();
+
 public:
     explicit TileMap(SDL_Renderer* renderer);
     ~TileMap();
@@ -23,7 +27,11 @@ public:
     // Parsea el TOML (via MapLoader) 
     // y carga las texturas de cada tileset en el vector
     // tileset_textures
-    void load_map(const std::string& tomlPath);
+    void load_map_toml(const std::string& tomlPath);
+
+    // Parsea el mapa binario
+    // carga las texturas de cada tileset en el vector tileset_textures
+    void load_map_bin(const std::string& path);
 
     // recorre las capas en orden, y para cada celda no vacía calcula el 
     // recorte del spritesheet (src) y la posición en pantalla (dst)

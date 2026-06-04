@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <stdexcept>
 #include "../vendored/tomlplusplus/toml.hpp"
+#include "binaryMap/binaryMapLoader.h"
 #include <iostream>
 
 int MapLoader::get_tile_size() const {
@@ -225,4 +226,21 @@ void MapLoader::load(const std::string& tomlPath) {
     parse_layers(tbl);
     parse_spawns(tbl);
     parse_teleports(tbl);
+}
+
+void MapLoader::load_bin(const std::string& binPath) {
+    // BinaryMapLoader expone la misma superficie que MapLoader: parsea el .bin
+    BinaryMapLoader bin;
+    bin.load(binPath);
+
+    tile_size = bin.get_tile_size();
+    width     = bin.get_width();
+    height    = bin.get_height();
+    tilesets  = bin.get_tilesets();
+    layers    = bin.get_layers();
+    spawns    = bin.get_spawns();
+    teleports = bin.get_teleports();
+
+    tiles.clear();
+    build_tile_index();
 }
