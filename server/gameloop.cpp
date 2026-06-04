@@ -38,6 +38,7 @@ void GameLoop::register_handlers() {
     handlers[MSG_CLAN_ACEP]     = [this](const ClientCmd& cmd) { handle_clan_accepting(cmd); };
     handlers[MSG_CLAN_RECH]     = [this](const ClientCmd& cmd) { handle_clan_rejecting(cmd); };
     handlers[MSG_LEFT_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_leaving(cmd); };
+    handlers[MSG_CLAN_KICK]     = [this](const ClientCmd& cmd) { handle_clan_kick(cmd); };
 }
 
 
@@ -510,6 +511,22 @@ void GameLoop::handle_clan_leaving(const ClientCmd& cmd) {
         return;
     }
     clan_msg.set_chat_content("Jugador " + player_name + " abandonó el clan " + clan_name);
+    client_registry_monitor.notify_clients(clan_msg);
+}
+
+void GameLoop::handle_clan_kick(const ClientCmd& cmd) {
+    std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
+    std::string member = cmd.get_target_name();
+
+    GameMsg personal_msg(MSG_CLAN_KICK);
+    GameMsg clan_msg(MSG_CLAN_KICK);
+    
+    if (!game_map.kick_member(player_name, member)) {
+        personal_msg.set_chat_content("El jugador " + member + " no es parte del clan");
+        client_registry_monitor.notify_client(cmd.get_client_id(), personal_msg);
+        return;
+    }
+    clan_msg.set_chat_content("Jugador " + member + " fue echado del clan");
     client_registry_monitor.notify_clients(clan_msg);
 }
 

@@ -35,10 +35,14 @@ bool Clan::leave(const std::string& player_name) {
         return false;
     }
 
-    members.erase(
-        std::remove(members.begin(), members.end(), player_name), members.end()
-    );
-    return true;
+    auto it = std::find(members.begin(), members.end(), player_name);
+    
+    if (it != members.end()) {
+        members.erase(it);
+        return true;
+    }
+    
+    return false;
 }
 
 bool Clan::joined(const std::string& player_name) {
@@ -54,4 +58,8 @@ bool Clan::joined(const std::string& player_name) {
         return false;
     }
     return true;
+}
+
+bool Clan::kick(const std::string& member) {
+    return leave(member);
 }

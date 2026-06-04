@@ -149,6 +149,7 @@ public:
     std::string rev_clan(const std::string& player_name);
     void accept_new_member(const std::string& player_name, const std::string& new_member);
     bool leave_clan(const std::string& player_name, std::string& clan_name);
+    bool kick_member(const std::string& player_name, const std::string& member);
 };
 
 #endif

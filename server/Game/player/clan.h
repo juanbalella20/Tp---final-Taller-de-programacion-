@@ -30,7 +30,7 @@ public:
 
     std::string& get_name() { return clan_name; }
 
-    void kick(const std::string& member, const std::string& clan_name);
+    bool kick(const std::string& member);
 
 };
 
