@@ -3,10 +3,11 @@
 
 #include <QMainWindow>
 
-#include "Map.h"
+#include "../document/EditorDocument.h"
 
 class TilePalette;
 class MapCanvasWidget;
+class QAction;
 
 class EditorWindow : public QMainWindow {
     Q_OBJECT
@@ -27,11 +28,19 @@ private:
     void build_palette_dock();
     // Crea el grid del mapa
     void build_canvas();
+    // Crea la toolbar: herramientas (lapiz/goma/relleno) y capa activa.
+    void build_tools_toolbar();
+    // Crea menu Editar (deshacer/rehacer) y guarda las acciones.
+    void build_edit_menu();
+    // Habilita/deshabilita deshacer/rehacer segun el estado del document.
+    void update_undo_actions();
 
-    // Modelo del mapa (mas adelante pasa a EditorDocument).
-    Map map_;
+    // Controlador: dueno del Map, del estado de edicion y del undo/redo.
+    EditorDocument doc_;
     TilePalette* palette_ = nullptr;
     MapCanvasWidget* canvas_ = nullptr;
+    QAction* undo_action_ = nullptr;
+    QAction* redo_action_ = nullptr;
 };
 
 #endif
