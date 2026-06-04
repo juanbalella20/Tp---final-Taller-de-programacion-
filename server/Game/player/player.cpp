@@ -248,3 +248,8 @@ void Player::check_level_up() {
 const std::string& Player::get_race_name() const {
     return player_race.get_name();
 }
+
+void Player::found_clan(const std::string& clan_name) {
+    Clan new_clan = Clan(name, clan_name);
+    founded_clans.push_back(new_clan);
+}

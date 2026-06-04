@@ -8,6 +8,7 @@
 #include "../inventory.h"
 #include "level.h"
 #include "player_state.h"
+#include "clan.h"
 
 #include <string>
 #include <memory>
@@ -37,6 +38,8 @@ private:
     PlayerClass player_class;
     Inventory player_inventory;
     Level level;
+
+    std::vector<Clan> founded_clans;
 
     uint32_t max_life();
 
@@ -130,6 +133,8 @@ public:
     uint32_t get_mana() const;
 
     const std::string& get_race_name() const;
+
+    void found_clan(const std::string& clan_name);
 };
 
 #endif
