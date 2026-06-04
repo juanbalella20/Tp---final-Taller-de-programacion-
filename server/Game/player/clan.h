@@ -24,7 +24,11 @@ public:
 
     void accept_join_request(const std::string& player_name);
 
-    void leave(const std::string& clan_name);
+    bool leave(const std::string& player_name);
+
+    bool joined(const std::string& player_name);
+
+    std::string& get_name() { return clan_name; }
 
     void kick(const std::string& member, const std::string& clan_name);
 

@@ -464,3 +464,25 @@ void GameMap::accept_new_member(const std::string& player_name, const std::strin
     Clan& wanted_clan = clan->second;
     wanted_clan.accept_join_request(new_member);
 }
+
+bool GameMap::leave_clan(const std::string& player_name, std::string& clan_name) {
+    auto clan = std::find_if(clans.begin(), clans.end(), 
+        [&player_name](auto& par) {
+            // par.first es el nombre del clan (la clave)
+            // par.second es el objeto Clan (el valor)
+            return par.second.joined(player_name);
+        }
+    );
+
+    if (clan == clans.end()) {
+        return false;
+    }
+
+    Clan& wanted_clan = clan->second;
+    clan_name = wanted_clan.get_name();
+
+    if (!wanted_clan.leave(player_name)) {
+        return false;
+    }
+    return true;
+}

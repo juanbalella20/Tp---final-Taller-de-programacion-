@@ -37,6 +37,7 @@ void GameLoop::register_handlers() {
     handlers[MSG_REV_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_reviewing(cmd); };
     handlers[MSG_CLAN_ACEP]     = [this](const ClientCmd& cmd) { handle_clan_accepting(cmd); };
     handlers[MSG_CLAN_RECH]     = [this](const ClientCmd& cmd) { handle_clan_rejecting(cmd); };
+    handlers[MSG_LEFT_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_leaving(cmd); };
 }
 
 
@@ -494,6 +495,21 @@ void GameLoop::handle_clan_rejecting(const ClientCmd& cmd) {
 
     GameMsg clan_msg(MSG_CLAN_RECH);
     clan_msg.set_chat_content("Jugador " + new_member + " fue rechazado a unirse al clan fundado por " + player_name);
+    client_registry_monitor.notify_clients(clan_msg);
+}
+
+void GameLoop::handle_clan_leaving(const ClientCmd& cmd) {
+    std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
+
+    GameMsg personal_msg(MSG_LEFT_CLAN);
+    GameMsg clan_msg(MSG_LEFT_CLAN);
+    std::string clan_name;
+    if (!game_map.leave_clan(player_name, clan_name)) {
+        personal_msg.set_chat_content("No podes abandonar el clan " + clan_name);
+        client_registry_monitor.notify_client(cmd.get_client_id(), personal_msg);
+        return;
+    }
+    clan_msg.set_chat_content("Jugador " + player_name + " abandonó el clan " + clan_name);
     client_registry_monitor.notify_clients(clan_msg);
 }
 
