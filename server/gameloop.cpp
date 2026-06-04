@@ -462,11 +462,11 @@ void GameLoop::handle_clan_joining(const ClientCmd& cmd) {
     std::string clan_name = cmd.get_target_name();
     GameMsg clan_msg(MSG_JOIN_CLAN);
     if (!game_map.join_clan(player_name, clan_name)) {
-        clan_msg.set_chat_content("No te podes unir al clan: " + clan_name);
+        clan_msg.set_chat_content("No existe el clan: " + clan_name);
     } else {
-        clan_msg.set_chat_content("Te uniste al clan: " + clan_name);
+        clan_msg.set_chat_content("Solicitud de unión al clan " + clan_name + " enviada");
     }
-    client_registry_monitor.notify_clients(clan_msg);
+    client_registry_monitor.notify_client(cmd.get_client_id(), clan_msg);
 }
 
 void GameLoop::handle_clan_reviewing(const ClientCmd& cmd) {

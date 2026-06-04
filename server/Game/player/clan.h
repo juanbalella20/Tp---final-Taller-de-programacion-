@@ -9,6 +9,7 @@ class Clan {
 private:
     std::string founder_name;
     std::string clan_name;
+    std::string clan_review;
 
     std::vector<std::string> members;
 
