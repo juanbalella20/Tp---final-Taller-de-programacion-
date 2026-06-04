@@ -102,7 +102,14 @@ class MapLoader {
          */
         void load(const std::string& tomlPath);
 
-        
+        /*
+         * Abre y parsea el archivo binario
+         * Lee la metada del mapa 
+         * Llena los campos de MapLoader: tilesets, tiles, layers, spwans
+         */
+        void load_bin(const std::string& binPath);
+
+
 };
 
 #endif

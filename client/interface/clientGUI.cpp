@@ -58,13 +58,12 @@ void ClientGUI::loadMedia(Zone zone) {
     {
     case ZONE_DESERT : {
         tilemap = std::make_unique<TileMap>(renderer);
-        tilemap->load_map("data/maps/desert/map.toml");
+        tilemap->load_map_bin("data/maps/desert/map-test-1.bin");
         break;
     }
     case ZONE_CITY : {
         tilemap = std::make_unique<TileMap>(renderer);
-        tilemap->load_map("data/maps/city/map.toml");
-        break;
+        tilemap->load_map_bin("data/maps/city/city-map-test.bin");
     }
     default:
         break;

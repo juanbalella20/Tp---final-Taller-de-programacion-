@@ -31,10 +31,7 @@ int TileMap::getPixelHeight() const {
 
 
 
-void TileMap::load_map(const std::string& tomlPath) {
-    mapData.load(tomlPath);
-
-    // carga texturas
+void TileMap::load_tileset_textures() {
     const auto& tilesets = mapData.get_tilesets();
     tileset_textures.reserve(tilesets.size());
     for (const auto& ts : tilesets) {
@@ -47,6 +44,16 @@ void TileMap::load_map(const std::string& tomlPath) {
         SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
         tileset_textures.push_back(tex);
     }
+}
+
+void TileMap::load_map_toml(const std::string& tomlPath) {
+    mapData.load(tomlPath);
+    load_tileset_textures();
+}
+
+void TileMap::load_map_bin(const std::string& path) {
+    mapData.load_bin(path);
+    load_tileset_textures();
 }
 
 void TileMap::render(int mapViewport_x, int mapViewport_y) const {
