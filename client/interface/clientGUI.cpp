@@ -46,9 +46,9 @@ void ClientGUI::initSDL() {
         throw std::runtime_error(std::string("TTF_Init: ") + SDL_GetError());
     }
 
-    chat_font = TTF_OpenFont("fonts/Roboto-VariableFont_wdth,wght.ttf", 16);
+    chat_font = TTF_OpenFont("fonts/StackSansText-Medium.ttf", 12);
 
-    mini_chat = std::make_unique<MiniChat>(renderer, chat_font);
+    mini_chat = std::make_unique<MiniChat>(renderer, chat_font, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
 }
 
 // tiene que recibir los 4 sectorPerimiter y mostrar solo eso
@@ -241,35 +241,48 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
                 int my = static_cast<int>(ly);
 
                 if (mx >= GAME_WIDTH) {
-                    // Click dentro del panel — nunca toca el mapa
-                    const int SLOT_SIZE = 48;
-                    const int SLOT_MARGIN = 8;
-                    int slot_x = GAME_WIDTH + SLOT_MARGIN;
-                    int slot_y = 40;
                     if (hud) {
                         const auto& inv = hud->get_inventory();
+                        float image_w = 1021.0f;
+                        float image_h = 767.0f;
+
+                        float scale_x = static_cast<float>(GAME_WIDTH + PANEL_WIDTH) / image_w;
+                        float scale_y = static_cast<float>(CANVAS_HEIGHT) / image_h;
+
+                        float slot_start_size = 48.0f;
+                        float slot_margin = 4.0f;
+                        float padding = 6.0f;
+
+                        float inv_x = 781.0f;
+                        float inv_y = 200.0f;
+                        float inv_w = 218.0f;
+                        float start_x = (inv_x + padding) * scale_x;
+                        float start_y = (inv_y + padding) * scale_y;
+
+                        float slot_size = slot_start_size * scale_x;
+                        float margin_x = slot_margin * scale_x;
+                        float margin_y = slot_margin * scale_y;
+
+                        float limit_x = (inv_x + inv_w - padding) * scale_x;
+
+                        float slot_x = start_x;
+                        float slot_y = start_y;
                         int slot_index = 0;
                         for (const auto& item : inv) {
-                            if (mx >= slot_x && mx <= slot_x + SLOT_SIZE &&
-                                my >= slot_y && my <= slot_y + SLOT_SIZE) {
-                                // Si el item ya está equipado, desquiparlo
-                                // if (hud->get_equipped_slot() == slot_index) {
-                                //     hud->set_equipped_slot(-1);
-                                //     player->set_equipped_weapon(false);
-                                // } else {
-                                    // Equipar el nuevo item
+                            if (mx >= slot_x && mx <= slot_x + slot_size &&
+                                my >= slot_y && my <= slot_y + slot_size) {
+                                std::cout << "DEBUG mx: " << mx << " my: " << my << std::endl;
                                 hud->set_equipped_slot(slot_index);
                                 player->set_equipped_weapon(true);
                                 sendEquipCmd(item.get_id());
-                                // }
                                 break;
                             }
-                            slot_x += SLOT_SIZE + SLOT_MARGIN;
-                            ++slot_index;
-                            if (slot_x + SLOT_SIZE > GAME_WIDTH + PANEL_WIDTH - SLOT_MARGIN) {
-                                slot_x = GAME_WIDTH + SLOT_MARGIN;
-                                slot_y += SLOT_SIZE + SLOT_MARGIN;
+                            slot_x += slot_size + margin_x;
+                            if (slot_x + slot_size > limit_x) {
+                                slot_x = start_x;
+                                slot_y += slot_size + margin_y;
                             }
+                            ++slot_index;
                         }
                     }
                 } else {
@@ -364,7 +377,7 @@ void ClientGUI::update() {
                 case MSG_ITEMS_SNAPSHOT:
                     items_on_floor = msg.get_items_on_floor();
                     break;
-                case MSG_PLAYERS_SNAPSHOT:
+                case MSG_PLAYERS_SNAPSHOT: {
                     std::cout << "Received players snapshot with " << msg.get_players().size() << " players." << std::endl;
                     for (const auto& incoming : msg.get_players()) {
                         auto it = std::find_if(other_players.begin(), other_players.end(),
@@ -376,6 +389,7 @@ void ClientGUI::update() {
                         }
                     }
                     break;
+                }
                 case MSG_MOVE: {
                     const std::string& mover = msg.get_player_name();
                     int x = msg.get_coord_x();
@@ -409,7 +423,7 @@ void ClientGUI::update() {
                             it->y = y;
                             it->direction = dir;
                         } else {
-                            PlayerInfo pi{mover, "human", 0, x, y, dir};
+                            PlayerInfo pi{mover, msg.get_race(), 0, x, y, dir};
                             other_players.push_back(pi);
                         }
                     }
@@ -574,8 +588,8 @@ void ClientGUI::draw() {
     SDL_RenderClear(renderer);
 
     // Limita el rendering del mapa y entidades al area del juego (excluye panel derecho)
-    SDL_Rect game_clip = {0, 0, GAME_WIDTH, CANVAS_HEIGHT};
-    SDL_SetRenderClipRect(renderer, &game_clip);
+    // SDL_Rect game_clip = {0, 0, GAME_WIDTH, CANVAS_HEIGHT};
+    // SDL_SetRenderClipRect(renderer, &game_clip);
 
     if (tilemap) {
         tilemap->render(camera.get_x(), camera.get_y());
@@ -590,16 +604,13 @@ void ClientGUI::draw() {
     drawOtherPlayers();
     draw_npc_friends();
 
-    // Levanta el clip para dibujar el panel y el chat encima
-    SDL_SetRenderClipRect(renderer, nullptr);
-
     if (hud) {
-        hud->drawInventoryPanel();
-        hud->draw_hp();
-        hud->draw_mana();
-        hud->draw_gold();
-        hud->draw_xp();
+        hud->render();
     }
+
+    // Levanta el clip para dibujar el panel y el chat encima
+    // SDL_SetRenderClipRect(renderer, nullptr);
+
     mini_chat->render(GAME_WIDTH, CANVAS_HEIGHT);
     SDL_RenderPresent(renderer);
 }

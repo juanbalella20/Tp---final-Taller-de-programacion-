@@ -407,7 +407,7 @@ std::vector<PlayerInfo> GameMap::build_players_snapshot(const std::string& playe
         auto it = player_zone.find(p.get_name());
         if (it == player_zone.end() || it->second != z) continue;
 
-        snapshot.push_back({p.get_name(), "human", 0, p.get_coord_x(), p.get_coord_y()});
+        snapshot.push_back({p.get_name(), p.get_race_name(), 0, p.get_coord_x(), p.get_coord_y()});
     }
     return snapshot;
 }

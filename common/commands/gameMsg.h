@@ -17,6 +17,7 @@ class GameMsg {
     std::string item_id;
     uint32_t gold;
     std::string player_name;
+    std::string race;
     int coord_x;
     int coord_y;
     std::vector<ItemInfo> items;
@@ -68,6 +69,9 @@ class GameMsg {
 
     void set_mana(uint32_t mana);
     uint32_t get_mana() const;
+
+    void set_race(const std::string& race);
+    const std::string& get_race() const;
 
     void set_zone(Zone z);
     Zone get_zone() const;

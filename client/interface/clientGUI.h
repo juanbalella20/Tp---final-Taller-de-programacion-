@@ -27,7 +27,7 @@
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
 
-#define LOGICAL_WIDTH  960
+#define LOGICAL_WIDTH  1024
 #define LOGICAL_HEIGHT 576
 
 class ClientGUI: public Thread {
@@ -65,7 +65,7 @@ private:
     int selected_npc_tile_x;
     int selected_npc_tile_y;
 
-    static constexpr int PANEL_WIDTH  = 192;
+    static constexpr int PANEL_WIDTH  = 276;
     static constexpr int GAME_WIDTH   = LOGICAL_WIDTH - PANEL_WIDTH;
     static constexpr int CANVAS_HEIGHT = LOGICAL_HEIGHT;
 

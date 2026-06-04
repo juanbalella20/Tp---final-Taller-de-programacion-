@@ -1,6 +1,8 @@
 #ifndef PLAYER_RACE_H_
 #define PLAYER_RACE_H_
 
+#include <string>
+
 class PlayerRace {
 
 private:
@@ -10,6 +12,7 @@ private:
     float endurance;
     float life_factor;
     float mana_factor;
+    std::string name;
 
 public:
     PlayerRace() {}
@@ -33,6 +36,8 @@ public:
     int race_life_factor();
 
     int race_mana_factor();
+
+    const std::string& get_name() const;
 
 };
 

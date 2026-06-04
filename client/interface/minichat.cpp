@@ -3,10 +3,14 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-MiniChat::MiniChat(SDL_Renderer* renderer, TTF_Font* font) : 
+MiniChat::MiniChat(SDL_Renderer* renderer, TTF_Font* font,
+    float game_width, float panel_width, float canvas_height) : 
     active(false),
     renderer(renderer),
-    font(font) {}
+    font(font),
+    game_width(game_width),
+    panel_width(panel_width),
+    canvas_height(canvas_height) {}
 
 bool MiniChat::is_active() const { return active; }
 
@@ -134,27 +138,34 @@ std::string MiniChat::pop_outbound_message() {
 }
 
 void MiniChat::render(int game_width, int game_height) {
-    float panel_x = 10.0f;
-    float panel_y = 10.0f;
-    float panel_w = static_cast<float>(game_width) - 20.0f;
-    float line_h  = 20.0f;
-    float spacing = 3.0f;
-    float input_h = active ? (line_h + 6.0f) : 0.0f;
-    float panel_h = MAX_LINES * (line_h + spacing) + 10.0f + input_h;
+    float image_w = 1021.0f;
+    float image_h = 767.0f;
 
-    Uint8 alpha = active ? 200 : 140;
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, alpha);
-    SDL_FRect bg_rect = { panel_x, panel_y, panel_w, panel_h };
-    SDL_RenderFillRect(renderer, &bg_rect);
+    float scale_x = static_cast<float>(game_width + panel_width) / image_w;
+    float scale_y = static_cast<float>(canvas_height) / image_h;
 
-    float start_x = panel_x + 8.0f;
-    float current_y = panel_y + 5.0f;
+    float panel_x = 11.0f * scale_x;
+    float panel_y = 33.0f * scale_y;
+    float panel_w = 619.0f * scale_x;
+    float panel_h = 86.0f * scale_y;
+
+    float line_h  = 20.0f * scale_y;
+    float spacing = 3.0f * scale_y;
+
+    float start_x = panel_x + (5.0f * scale_x);
+    float input_y = panel_y + panel_h - line_h - (5.0f * scale_y);
+    float available_h = active ? (input_y - panel_y) : panel_h;
+    int visible_lines = static_cast<int>(available_h / (line_h + spacing));
+    if (visible_lines < 1) visible_lines = 1;
+
+    int total_msgs = static_cast<int>(msg_history.size());
+    int start_idx = (total_msgs > visible_lines) ? (total_msgs - visible_lines) : 0;
+
+    float current_y = panel_y + (5.0f * scale_y);
 
     for (const auto& msg : msg_history) {
         SDL_FRect dest_rect = { start_x, current_y, msg.width, msg.height };
         SDL_RenderTexture(renderer, msg.texture, nullptr, &dest_rect);
-
         current_y += msg.height + spacing;
     }
 
@@ -170,13 +181,11 @@ void MiniChat::render(int game_width, int game_height) {
         SDL_Texture* input_texture = create_texture_from_msg(prompt, input_width, input_height);
 
         if (input_texture) {
-            SDL_FRect dest_rect = { start_x, current_y, input_width, input_height };
+            SDL_FRect dest_rect = { start_x, input_y, input_width, input_height };
             SDL_RenderTexture(renderer, input_texture, nullptr, &dest_rect);
-
             SDL_DestroyTexture(input_texture);
         }
     }
-
 }
 
 MiniChat::~MiniChat() {

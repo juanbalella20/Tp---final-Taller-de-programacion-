@@ -112,6 +112,19 @@ void ClientDeserializer::deserialize_move(const std::vector<uint8_t>& payload, G
     size_t offset = 0;
     msg.set_direction(static_cast<Direction>(payload[offset++]));
     msg.set_player_name(read_string(payload, offset));
+    if (offset >= payload.size()) {
+        throw std::invalid_argument("Payload demasiado corto leyendo raza de otro jugador en MSG_MOVE");
+    }
+    uint8_t race_code = payload[offset++];
+    std::string race;
+    switch (race_code) {
+        case RACE_HUMAN: race = "human"; break;
+        case RACE_ELF: race = "elf"; break;
+        case RACE_DWARF: race = "dwarf"; break;
+        case RACE_GNOME: race = "gnome"; break;
+        default: throw std::invalid_argument("Raza invalida en MSG_REGISTER");
+    }
+    msg.set_race(race);
     msg.set_coord_x(static_cast<int>(read_uint16_be(payload, offset)));
     msg.set_coord_y(static_cast<int>(read_uint16_be(payload, offset)));
 }
@@ -343,9 +356,21 @@ void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
     players.reserve(player_count);
     for (uint16_t i = 0; i < player_count; ++i) {
         std::string name = read_string(payload, offset);
+        if (offset >= payload.size()) {
+            throw std::invalid_argument("Payload demasiado corto leyendo raza de otro jugador en MSG_REGISTER");
+        }
+        uint8_t race_code = payload[offset++];
         int x = static_cast<int>(read_uint16_be(payload, offset));
         int y = static_cast<int>(read_uint16_be(payload, offset));
-        players.push_back({std::move(name), "human", 0, x, y});
+        std::string race;
+        switch (race_code) {
+            case RACE_HUMAN: race = "human"; break;
+            case RACE_ELF: race = "elf"; break;
+            case RACE_DWARF: race = "dwarf"; break;
+            case RACE_GNOME: race = "gnome"; break;
+            default: throw std::invalid_argument("Raza invalida en MSG_REGISTER");
+        }
+        players.push_back({std::move(name), race, 0, x, y});
     }
     msg.set_players(players);
 }

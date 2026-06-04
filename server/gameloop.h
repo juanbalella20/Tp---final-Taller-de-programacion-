@@ -36,7 +36,8 @@ class GameLoop : public Thread {
     void broadcast_items_snapshot();
     void send_items_snapshot_to(uint32_t client_id);
     void send_players_snapshot_to(uint32_t client_id, const std::string& player_name);
-    void send_player_snapshot_to_other_players(uint32_t client_id, const std::string& player_name);
+    void send_player_snapshot_to_other_players(uint32_t client_id, const std::string& player_name, 
+         const std::string& player_race);
 
     void process_cmd(const ClientCmd& cmd);
 

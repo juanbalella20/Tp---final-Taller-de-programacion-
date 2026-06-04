@@ -7,7 +7,7 @@
 #include <deque>
 #include "queue.h"
 
-#define MAX_LINES 8
+#define MAX_LINES 2
 
 struct chatMessage {
     std::string text;
@@ -27,6 +27,10 @@ private:
     SDL_Renderer* renderer;
     TTF_Font* font;
 
+    float game_width;
+    float panel_width;
+    float canvas_height;
+
     /*
     Si el chat supera MAX_LINES, elimina el mensaje más viejo
     y destruye su textura de la memoria
@@ -34,7 +38,7 @@ private:
     void pop_oldest_message();
 
 public:
-    MiniChat(SDL_Renderer* renderer, TTF_Font* font);
+    MiniChat(SDL_Renderer* renderer, TTF_Font* font, float game_width, float panel_width, float canvas_height);
 
     bool is_active() const;
 

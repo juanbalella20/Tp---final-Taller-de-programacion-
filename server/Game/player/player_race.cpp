@@ -1,5 +1,7 @@
 #include "player_race.h"
 
+#include <string>
+
 float PlayerRace::race_constitution() {
     return endurance;
 }
@@ -31,6 +33,7 @@ void PlayerRace::set_human() {
     endurance = 0.5;
     life_factor = 5;
     mana_factor = 5;
+    name = "human";
 }
 
 void PlayerRace::set_elf() {
@@ -40,6 +43,7 @@ void PlayerRace::set_elf() {
     endurance = 0.2;
     life_factor = 4;
     mana_factor = 6;
+    name = "elf";
 }
 
 void PlayerRace::set_dwarf() {
@@ -49,6 +53,7 @@ void PlayerRace::set_dwarf() {
     endurance = 0.7;
     life_factor = 6;
     mana_factor = 4;
+    name = "dwarf";
 }
 
 void PlayerRace::set_gnome() {
@@ -58,4 +63,9 @@ void PlayerRace::set_gnome() {
     endurance = 0.6;
     life_factor = 2;
     mana_factor = 4;
+    name = "gnome";
+}
+
+const std::string& PlayerRace::get_name() const {
+    return name;
 }

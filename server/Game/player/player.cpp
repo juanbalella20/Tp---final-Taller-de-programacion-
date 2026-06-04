@@ -245,4 +245,6 @@ void Player::check_level_up() {
     }
 }
 
-
+const std::string& Player::get_race_name() const {
+    return player_race.get_name();
+}
