@@ -411,3 +411,8 @@ std::vector<PlayerInfo> GameMap::build_players_snapshot(const std::string& playe
     }
     return snapshot;
 }
+
+void GameMap::found_clan(const std::string& player_name, const std::string& clan_name) {
+    Player* player = find_player_by_name(player_name);
+    player->found_clan(clan_name);
+}
