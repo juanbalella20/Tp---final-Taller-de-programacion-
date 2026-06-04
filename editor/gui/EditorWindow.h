@@ -2,6 +2,7 @@
 #define EDITOR_WINDOW_H
 
 #include <QMainWindow>
+#include <QString>
 
 #include "../document/EditorDocument.h"
 
@@ -35,12 +36,19 @@ private:
     // Habilita/deshabilita deshacer/rehacer segun el estado del document.
     void update_undo_actions();
 
+    // Serializa el Map actual a 'path' (.bin via BinaryMapSaver). Muestra el
+    // resultado en la status bar; devuelve true si se guardo bien.
+    bool save_to(const QString& path);
+
     // Controlador: dueno del Map, del estado de edicion y del undo/redo.
     EditorDocument doc_;
     TilePalette* palette_ = nullptr;
     MapCanvasWidget* canvas_ = nullptr;
     QAction* undo_action_ = nullptr;
     QAction* redo_action_ = nullptr;
+    // Ruta del archivo actual (vacia si nunca se guardo). on_save reusa esta
+    // ruta; si esta vacia delega en on_save_as.
+    QString current_path_;
 };
 
 #endif

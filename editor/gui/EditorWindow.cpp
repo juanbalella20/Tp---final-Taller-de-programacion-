@@ -3,15 +3,21 @@
 #include <QAction>
 #include <QActionGroup>
 #include <QDockWidget>
+#include <QFileDialog>
+#include <QFileInfo>
 #include <QKeySequence>
 #include <QMenu>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QStatusBar>
 #include <QToolBar>
+
+#include <exception>
 
 #include "../model/Map.h"
 #include "../render/MapCanvasWidget.h"
 #include "TilePalette.h"
+#include "binaryMap/binaryMapSaver.h"
 
 EditorWindow::EditorWindow(QWidget* parent) : QMainWindow(parent) {
     setWindowTitle("Editor de Mapas - Argentum Online");
@@ -145,5 +151,38 @@ void EditorWindow::build_menus() {
 
 void EditorWindow::on_new() { statusBar()->showMessage("Nuevo mapa (pendiente)"); }
 void EditorWindow::on_open() { statusBar()->showMessage("Abrir mapa (pendiente)"); }
-void EditorWindow::on_save() { statusBar()->showMessage("Guardar mapa (pendiente)"); }
-void EditorWindow::on_save_as() { statusBar()->showMessage("Guardar como (pendiente)"); }
+void EditorWindow::on_save() {
+    // Sin ruta previa (mapa nunca guardado): comportarse como "Guardar como".
+    if (current_path_.isEmpty()) {
+        on_save_as();
+        return;
+    }
+    save_to(current_path_);
+}
+
+void EditorWindow::on_save_as() {
+    QString path = QFileDialog::getSaveFileName(
+        this, "Guardar mapa", current_path_, "Mapa binario (*.bin)");
+    if (path.isEmpty()) return;  // cancelado
+
+    // Asegura la extension .bin si el usuario no la escribio.
+    if (QFileInfo(path).suffix().isEmpty()) path += ".bin";
+
+    if (save_to(path)) current_path_ = path;
+}
+
+bool EditorWindow::save_to(const QString& path) {
+    const Map& map = doc_.map();
+    try {
+        BinaryMapSaver::save(path.toStdString(), map.tile_size(), map.width(),
+                             map.height(), map.tilesets(), map.layers());
+    } catch (const std::exception& e) {
+        QMessageBox::warning(this, "Error al guardar",
+                             QString("No se pudo guardar el mapa:\n%1").arg(e.what()));
+        statusBar()->showMessage("Error al guardar");
+        return false;
+    }
+
+    statusBar()->showMessage(QString("Mapa guardado: %1").arg(path));
+    return true;
+}
