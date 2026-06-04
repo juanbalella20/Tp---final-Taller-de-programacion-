@@ -58,6 +58,7 @@ class GameLoop : public Thread {
     void handle_cheat_inf_mana(const ClientCmd& cmd);
     void handle_clan_foundation(const ClientCmd& cmd);
     void handle_clan_joining(const ClientCmd& cmd);
+    void handle_clan_reviewing(const ClientCmd& cmd);
 };
 
 #endif  // SERVER_SRC_GAMELOOP_H_

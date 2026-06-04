@@ -17,6 +17,10 @@ public:
 
     bool join(const std::string& player_name);
 
+    std::string review();
+
+    bool is_founder(const std::string& player_name);
+
     void leave(const std::string& clan_name);
 
     void kick(const std::string& member, const std::string& clan_name);

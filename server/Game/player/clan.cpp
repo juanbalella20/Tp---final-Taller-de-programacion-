@@ -14,3 +14,9 @@ bool Clan::join(const std::string& player_name) {
     members.push_back(player_name);
     return true;
 }
+
+std::string Clan::review() {
+    return "No hay novedades";
+}
+
+bool Clan::is_founder(const std::string& player_name) { return player_name == founder_name; }

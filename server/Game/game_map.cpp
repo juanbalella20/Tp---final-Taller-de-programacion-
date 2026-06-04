@@ -413,12 +413,14 @@ std::vector<PlayerInfo> GameMap::build_players_snapshot(const std::string& playe
 }
 
 bool GameMap::found_clan(const std::string& player_name, const std::string& clan_name) {
+    // TO-DO chequeo: solo 1 clan por player
     auto [it, created] = clans.try_emplace(clan_name, player_name, clan_name);
 
     return created;
 }
 
 bool GameMap::join_clan(const std::string& player_name, const std::string& clan_name) {
+    // TO-DO chequeo: solo 1 clan por player
     auto clan = clans.find(clan_name);
     if (clan == clans.end()) {
         return false;
@@ -429,4 +431,22 @@ bool GameMap::join_clan(const std::string& player_name, const std::string& clan_
         return false;
     }
     return true;
+}
+
+std::string GameMap::rev_clan(const std::string& player_name) {
+    auto clan = std::find_if(clans.begin(), clans.end(), 
+        [&player_name](auto& par) {
+            // par.first es el nombre del clan (la clave)
+            // par.second es el objeto Clan (el valor)
+            return par.second.is_founder(player_name);
+        }
+    );
+
+    if (clan == clans.end()) {
+        return "No tenes habilitada la revision para el clan: " + clan->first;
+    }
+
+    Clan& wanted_clan = clan->second;
+    std::string review = wanted_clan.review();
+    return review;
 }
