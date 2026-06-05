@@ -28,7 +28,7 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
     }
     SDL_SetTextureBlendMode(image, SDL_BLENDMODE_BLEND);
     
-    SDL_Surface* item_surf = IMG_Load("imagenes/101.png");
+    SDL_Surface* item_surf = IMG_Load("imagenes/espada.png");
     if (!item_surf) {
         throw std::runtime_error(std::string("Loading weapon surface: ") + SDL_GetError());
     }
@@ -256,8 +256,8 @@ SDL_FRect PlayerDisplay::front_pov() {
     head_front_pov();
 
     if(has_equipped_weapon) {
-        static const float dx[] = { 0.1f, 0.1f, 0.2f, 0.2f, 0.1f, 0.1f };
-        static const float dy[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+        static const float dx[] = { 0.0f, 0.05f, 0.15f, 0.05f, -0.05f, -0.1f };
+        static const float dy[] = { 0.0f, 0.0f, -0.05f, 0.0f, 0.0f, 0.0f};
         weapon_dx = dx[current_frame];
         weapon_dy = dy[current_frame];
     }
@@ -416,7 +416,7 @@ void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_d
 void PlayerDisplay::draw_equipped_item(const Camera& camera) const {
     if (has_equipped_weapon) {
         set_transparency(weapon_image);
-        SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};
+        //SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};
         float weapon_size = rect.w * 0.5f;
         SDL_FRect weapon_dst = {
             camera.world_to_screen_x(rect.x) + rect.w * weapon_dx,
@@ -424,7 +424,7 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera) const {
             weapon_size,
             weapon_size
         };
-        SDL_RenderTexture(renderer, weapon_image, &crop, &weapon_dst);
+        SDL_RenderTexture(renderer, weapon_image, nullptr, &weapon_dst);
     }
 }
 
