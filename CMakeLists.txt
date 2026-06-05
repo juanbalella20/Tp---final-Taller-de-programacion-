@@ -72,6 +72,7 @@ add_library(common STATIC
     common/binaryMap/binaryMapLoader.cpp
     common/binaryMap/binaryMapSaver.cpp
     common/binaryMap/byteReader.cpp
+    common/utility/paths.cpp
 )
 target_include_directories(common PUBLIC
     common
