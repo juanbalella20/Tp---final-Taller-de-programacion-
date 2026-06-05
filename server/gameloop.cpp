@@ -362,10 +362,12 @@ void GameLoop::handle_move(const ClientCmd& cmd) {
     // if (result.moved) {
         if (game_map.pick_up_gold(name)) {
             std::cout << "oro" << std::endl;
-            broadcast_items_snapshot();
+            broadcast_items_snapshot();  // todos ven que el oro desapareció del piso
             GameMsg msg_gold(MSG_GOLD);
             msg_gold.set_gold(game_map.get_player_gold(name));
-            client_registry_monitor.notify_clients(msg_gold);
+            // El oro recogido es solo del que lo levantó: notificar SOLO a él.
+            // Con notify_clients, el resto de los HUD pisaban su propio oro con este valor.
+            client_registry_monitor.notify_client(cmd.get_client_id(), msg_gold);
         }
         GameMsg msg(MSG_MOVE, cmd.get_direction());
         msg.set_player_name(result.player_name);
@@ -410,6 +412,15 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
                 GameMsg gold_msg(MSG_GOLD);
                 gold_msg.set_gold(game_map.get_player_gold(result.entity_name));
                 client_registry_monitor.notify_client_by_name(result.entity_name, gold_msg);
+                const Player& p = game_map.get_player(result.entity_name);
+                std::vector<ItemInfo> item_infos;
+                for (Item* item : p.get_all_items()) {
+                    item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+                }
+                GameMsg inv_msg(MSG_INVENTORY);
+                inv_msg.set_items(item_infos);
+                client_registry_monitor.notify_client_by_name(result.entity_name, inv_msg);
+
             }
         }
     } catch (const NoEntityException& e) {
