@@ -128,7 +128,9 @@ public:
     // Si el player esta adyacente a un teleport, lo mueve a la zona destino y actualiza su tag.
     TeleportResult teleport_player(const std::string& player_name);
 
-    void player_equip_item(const std::string& player_name, const std::string& item_id);
+    // Equipa/desequipa (toggle) el item del jugador.
+    // Devuelve true si, tras la operación, el jugador tiene un arma equipada.
+    bool player_equip_item(const std::string& player_name, const std::string& item_id);
     void spawn_player(const std::string& name, const std::string& race, const std::string& pclass);
     const Player& get_player(const std::string& name);
     bool player_exists(const std::string& name);

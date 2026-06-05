@@ -253,11 +253,9 @@ void ClientGUI::handleEvents() {
                             if (mx >= slot_x && mx <= slot_x + slot_size &&
                                 my >= slot_y && my <= slot_y + slot_size) {
                                 std::cout << "DEBUG mx: " << mx << " my: " << my << std::endl;
-                                hud->set_equipped_slot(slot_index);
-                                // El personaje solo "lleva arma" si el item es un arma (tipo 0).
-                                if (item.get_type() == 0) {
-                                    player->set_equipped_weapon(true);
-                                }
+                                // Sólo pedimos el toggle al server. Él responde con
+                                // MSG_UPDATE_EQUIP y de ahí derivamos el halo amarillo
+                                // y el arma del personaje (estado real, no optimista).
                                 sendEquipCmd(item.get_id());
                                 break;
                             }
@@ -467,10 +465,18 @@ void ClientGUI::update() {
                     if (hud) hud->set_mana(msg.get_mana());
                     break;
                 case MSG_UPDATE_EQUIP:
-                    for (auto& p : other_players) {
-                        if (p.name == msg.get_player_name()) {
-                            p.has_equipped_weapon = true;
-                            break;
+                    // El server confirma el estado real del equipo.
+                    if (msg.get_player_name() == own_name) {
+                        // Arma del personaje + halos del inventario (todos los items
+                        // equipados, arma y defensas) según el estado real del server.
+                        if (player) player->set_equipped_weapon(msg.get_equipped());
+                        if (hud) hud->set_equipped_by_ids(msg.get_equipped_ids());
+                    } else {
+                        for (auto& p : other_players) {
+                            if (p.name == msg.get_player_name()) {
+                                p.has_equipped_weapon = msg.get_equipped();
+                                break;
+                            }
                         }
                     }
                     break;

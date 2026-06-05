@@ -61,7 +61,14 @@ public:
     std::vector<std::unique_ptr<Item>> drop_inventory();
 
     // Equipa el item (por id) en el slot que corresponde a su tipo.
+    // Para armas funciona como toggle: si ya está equipada, la desequipa.
     void equip_item(std::string item_id);
+
+    // ¿El jugador tiene un arma equipada?
+    bool has_weapon_equipped() const;
+
+    // Ids de todos los items equipados (arma + defensas). Para resaltar el inventario.
+    std::vector<std::string> get_equipped_ids() const;
 
     // Defensa total que aportan los items de defensa equipados.
     int calculate_defense();

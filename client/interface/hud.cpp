@@ -103,6 +103,32 @@ void HUD::set_equipped_slot(int slot_index) {
     equipped_slots.insert(slot_index);
 }
 
+void HUD::set_equipped_by_ids(const std::vector<std::string>& ids) {
+    equipped_slots.clear();
+    for (int i = 0; i < static_cast<int>(inventory.items.size()); ++i) {
+        const std::string& item_id = inventory.items[i].get_id();
+        for (const std::string& id : ids) {
+            if (item_id == id) {
+                equipped_slots.insert(i);
+                break;
+            }
+        }
+    }
+}
+
+void HUD::toggle_equipped_slot(int slot_index) {
+    if (slot_index < 0 || slot_index >= static_cast<int>(inventory.items.size())) {
+        return;
+    }
+    // Si ya estaba equipado, lo desequipa (se quita el halo amarillo).
+    if (equipped_slots.count(slot_index) > 0) {
+        equipped_slots.erase(slot_index);
+        return;
+    }
+    // Si no, lo equipa (reemplazando cualquier otro del mismo tipo).
+    set_equipped_slot(slot_index);
+}
+
 void HUD::drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float SLOT_SIZE) {
     auto it = inventory.items_textures.find(item.get_id());
     if (it != inventory.items_textures.end() && it->second != nullptr) {

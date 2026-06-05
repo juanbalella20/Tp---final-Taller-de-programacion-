@@ -251,20 +251,50 @@ void Player::equip_item(std::string item_id) {
 
     switch (item->get_type()) {
         case ItemType::WEAPON:
-            player_inventory.equip_item(item_id);
+            // Toggle: si el arma ya está equipada, la desequipa; si no, la equipa.
+            if (player_inventory.is_equipped(item_id)) {
+                player_inventory.unequip_item();
+            } else {
+                player_inventory.equip_item(item_id);
+            }
             break;
         case ItemType::ARMOR:
-            defense_set.equip_armadura(static_cast<DefenseItem*>(item));
+            if (defense_set.is_equipped(item_id)) {
+                defense_set.unequip_armadura();
+            } else {
+                defense_set.equip_armadura(static_cast<DefenseItem*>(item));
+            }
             break;
         case ItemType::HELMET:
-            defense_set.equip_casco(static_cast<DefenseItem*>(item));
+            if (defense_set.is_equipped(item_id)) {
+                defense_set.unequip_casco();
+            } else {
+                defense_set.equip_casco(static_cast<DefenseItem*>(item));
+            }
             break;
         case ItemType::SHIELD:
-            defense_set.equip_escudo(static_cast<DefenseItem*>(item));
+            if (defense_set.is_equipped(item_id)) {
+                defense_set.unequip_escudo();
+            } else {
+                defense_set.equip_escudo(static_cast<DefenseItem*>(item));
+            }
             break;
         default:
             break;
     }
+}
+
+bool Player::has_weapon_equipped() const {
+    return player_inventory.has_weapon_equipped();
+}
+
+std::vector<std::string> Player::get_equipped_ids() const {
+    std::vector<std::string> ids = defense_set.get_equipped_ids();
+    std::string weapon_id = player_inventory.get_equipped_weapon_id();
+    if (!weapon_id.empty()) {
+        ids.push_back(weapon_id);
+    }
+    return ids;
 }
 
 int Player::calculate_defense() {

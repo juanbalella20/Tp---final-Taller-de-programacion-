@@ -294,10 +294,12 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
 
 void GameLoop::handle_equip(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-    game_map.player_equip_item(name, cmd.get_item_id());
+    bool has_weapon = game_map.player_equip_item(name, cmd.get_item_id());
 
     GameMsg msg_equip(MSG_UPDATE_EQUIP);
     msg_equip.set_player_name(name);
+    msg_equip.set_equipped(has_weapon);
+    msg_equip.set_equipped_ids(game_map.get_player(name).get_equipped_ids());
 
     client_registry_monitor.notify_clients(msg_equip);
 }

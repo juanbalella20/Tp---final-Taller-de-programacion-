@@ -72,6 +72,11 @@ public:
     // Equipa el slot dado: des-resalta cualquier otro slot del mismo tipo y
     // resalta este. Permite tener equipados varios items de distinto tipo.
     void set_equipped_slot(int slot_index);
+    // Alterna el resaltado de un slot: si estaba equipado lo desequipa, si no lo equipa.
+    void toggle_equipped_slot(int slot_index);
+    // Resalta exactamente los slots cuyos items tengan alguno de estos ids
+    // (estado real de equipo confirmado por el server).
+    void set_equipped_by_ids(const std::vector<std::string>& ids);
     void drawInventoryItems();
     void drawAttackButton();
     void drawHp();

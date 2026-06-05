@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <string>
 
 #include "item/item.h"
 #include "entity.h"
@@ -35,6 +36,15 @@ public:
     Item* find_item(const std::string& item_id) const;
 
     void unequip_item();
+
+    // ¿El item con ese id es el arma actualmente equipada?
+    bool is_equipped(const std::string& item_id) const;
+
+    // ¿Hay un arma equipada?
+    bool has_weapon_equipped() const;
+
+    // Id del arma equipada, o "" si no hay ninguna.
+    std::string get_equipped_weapon_id() const;
 
     bool is_full() const;
     int use_equipped(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical);

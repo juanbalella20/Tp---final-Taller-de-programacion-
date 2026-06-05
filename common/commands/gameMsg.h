@@ -29,10 +29,12 @@ class GameMsg {
     std::vector<PlayerInfo> players;
     Zone zone;
     int damage;
+    bool equipped;
+    std::vector<std::string> equipped_ids;
 
     public:
     GameMsg(uint8_t type, Direction direction = DIR_NORTH)
-        : type(type), direction(direction), coord_x(0), coord_y(0), zone(ZONE_CITY), damage(0) {}
+        : type(type), direction(direction), coord_x(0), coord_y(0), zone(ZONE_CITY), damage(0), equipped(false) {}
     uint8_t get_type() const;
     void set_direction(Direction dir);
     Direction get_direction() const;
@@ -79,6 +81,16 @@ class GameMsg {
 
     void set_damage(int dmg);
     int get_damage() const;
+
+    // ¿El item quedó equipado (true) o desequipado (false)? Usado por MSG_UPDATE_EQUIP.
+    // (true = el jugador tiene un arma equipada, para el sprite del personaje.)
+    void set_equipped(bool value);
+    bool get_equipped() const;
+
+    // Ids de todos los items equipados del jugador (arma + defensas). Usado por
+    // MSG_UPDATE_EQUIP para que el cliente resalte exactamente esos slots.
+    void set_equipped_ids(const std::vector<std::string>& ids);
+    const std::vector<std::string>& get_equipped_ids() const;
 };
 
 

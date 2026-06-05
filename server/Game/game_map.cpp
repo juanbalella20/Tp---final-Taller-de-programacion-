@@ -224,13 +224,13 @@ bool GameMap::player_exists(const std::string& name) {
     return find_player_by_name(name) != nullptr;
 }
 
-void GameMap::player_equip_item(const std::string& player_name, const std::string& item_id) {
+bool GameMap::player_equip_item(const std::string& player_name, const std::string& item_id) {
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) {
         throw std::runtime_error("Player not found: " + player_name);
     }
     player->equip_item(item_id);
-    // TODO: equipar item por id cuando Player::equip_item esté implementado.
+    return player->has_weapon_equipped();
 }
 // TODO: refactorizar funcion
 static int dir_to_dx(Direction dir) {

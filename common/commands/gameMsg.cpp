@@ -46,3 +46,9 @@ const std::string& GameMsg::get_race() const { return this->race; }
 
 void GameMsg::set_damage(int dmg) { this->damage = dmg; }
 int GameMsg::get_damage() const { return this->damage; }
+
+void GameMsg::set_equipped(bool value) { this->equipped = value; }
+bool GameMsg::get_equipped() const { return this->equipped; }
+
+void GameMsg::set_equipped_ids(const std::vector<std::string>& ids) { this->equipped_ids = ids; }
+const std::vector<std::string>& GameMsg::get_equipped_ids() const { return this->equipped_ids; }

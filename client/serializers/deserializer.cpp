@@ -81,7 +81,7 @@ ClientDeserializer::ClientDeserializer() {
         deserialize_zone(payload, msg);
     };
     handlers[MSG_UPDATE_EQUIP] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
-        deserialize_name(payload, msg);
+        deserialize_update_equip(payload, msg);
     };
     handlers[MSG_ATTACK] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_attack(payload, msg);
@@ -219,6 +219,26 @@ void ClientDeserializer::deserialize_text(const std::vector<uint8_t>& payload, G
 void ClientDeserializer::deserialize_name(const std::vector<uint8_t>& payload, GameMsg& msg) {
     size_t offset = 0;
     msg.set_player_name(read_string(payload, offset));
+}
+
+// Formato MSG_UPDATE_EQUIP:
+//   [name_size:1B][name][equipped:1B][n_ids:1B] luego n veces: [id_size:1B][id]
+void ClientDeserializer::deserialize_update_equip(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    size_t offset = 0;
+    msg.set_player_name(read_string(payload, offset));
+    if (offset < payload.size()) {
+        msg.set_equipped(payload[offset] != 0);
+        ++offset;
+    }
+    std::vector<std::string> ids;
+    if (offset < payload.size()) {
+        uint8_t n_ids = payload[offset];
+        ++offset;
+        for (uint8_t i = 0; i < n_ids && offset < payload.size(); ++i) {
+            ids.push_back(read_string(payload, offset));
+        }
+    }
+    msg.set_equipped_ids(ids);
 }
 
 uint32_t ClientDeserializer::deserialize_value(const std::vector<uint8_t>& payload, GameMsg& msg) {
