@@ -56,7 +56,9 @@ private:
     SDL_Texture* frame_texture;
     SDL_Texture* item_texture;
     SDL_Texture* gold_texture;
-    SDL_Texture* friendly_texture;
+    SDL_Texture* seller_texture;
+    SDL_Texture* banker_texture;
+    SDL_Texture* priest_texture;
     Camera camera;
     SDL_FRect player_pov;
     Zone current_zone;
