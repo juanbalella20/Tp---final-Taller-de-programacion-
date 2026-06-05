@@ -170,37 +170,7 @@ void ClientGUI::selectCoord(int tile_x, int tile_y) {
 
 void ClientGUI::handleEvents() {
     while (SDL_PollEvent(&event)) {
-/*
-GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_name) {
-    Player* player = find_player_by_name(player_name);
-    if (player == nullptr) {
-        return {false, player_name, 0, 0};
-    }
 
-    int new_x = player->get_coord_x() + dir_to_dx(dir);
-    int new_y = player->get_coord_y() + dir_to_dy(dir);
-
-    std::cout << "[DEBUG: try_move " << player_name
-              << "] (" << new_x << "," << new_y << ")" << std::endl;
-
-    // Limites del mapa.
-    if (new_x < 0 || new_y < 0 || new_x >= width || new_y >= height) {
-        return {false, player_name, 0, 0};
-    }
-    // Terreno bloqueado (edificio).
-    if (map[new_y][new_x] != elements::empty) {
-    // VER
-        return {false, player_name, 0, 0};
-    }
-    // Actor en la celda destino.
-    if (has_actor_at(new_x, new_y)) {
-        return {false, player_name, 0, 0};
-    }
-     for (const auto& gi : ground_items) {
-        if (gi.pos.x == new_x && gi.pos.y == new_y) {
-            return {false, player_name, 0, 0};
-        }
-    */
         
         if (mini_chat->handle_event(event)) {
             continue;
@@ -768,13 +738,13 @@ void ClientGUI::init_draw() {
 
 void ClientGUI::run() {
     try {
-        // protocol.get_mapa();
+        
         init_draw();
         while (is_running && should_keep_running()) {
             handleEvents();
             update();
             draw();
-            SDL_Delay(16);
+            //SDL_Delay(16);
         }
     } catch (const std::exception& e) {
         std::cerr << "ClientGUI error: " << e.what() << std::endl;
