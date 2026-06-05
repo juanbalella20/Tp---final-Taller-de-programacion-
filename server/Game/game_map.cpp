@@ -220,6 +220,10 @@ const Player& GameMap::get_player(const std::string& name) {
     throw std::runtime_error("Player not found: " + name);
 }
 
+Player* GameMap::get_player_mut(const std::string& name) {
+    return find_player_by_name(name);
+}
+
 bool GameMap::player_exists(const std::string& name) {
     return find_player_by_name(name) != nullptr;
 }
@@ -362,6 +366,16 @@ bool GameMap::update_npcs() {
     return respawned;
 }
 
+std::vector<std::string> GameMap::tick(double seconds) {
+    std::vector<std::string> meditating;
+    for (auto& player : players) {
+        if (player.tick(seconds)) {
+            meditating.push_back(player.get_name());
+        }
+    }
+    return meditating;
+}
+
 std::vector<NpcInfo> GameMap::build_npcs_snapshot(const std::string& player_name) {
     return zone_of(player_name).build_npcs_snapshot();
 }
@@ -438,6 +452,12 @@ uint32_t GameMap::get_player_gold(const std::string& name) {
 uint32_t GameMap::get_player_hp(const std::string& name) {
     Player* player = find_player_by_name(name);
     return player->get_lives();
+}
+
+void GameMap::cheat_lose_mana(const std::string& name, uint32_t amount) {
+    Player* player = find_player_by_name(name);
+    if (player == nullptr) return;
+    player->lose_mana(static_cast<int>(amount));
 }
 
 uint32_t GameMap::get_player_xp(const std::string& name) {

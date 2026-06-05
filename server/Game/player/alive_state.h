@@ -12,6 +12,7 @@ public:
     void revive(Player& self) override;
     bool is_ghost() const override { return false; }
     bool can_interact() const override { return true; }
+    bool toggle_meditation(Player& self) override;
 };
 
 #endif

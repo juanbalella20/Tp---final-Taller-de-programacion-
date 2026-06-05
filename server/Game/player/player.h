@@ -21,6 +21,7 @@ class Player : public Entity {
     // transición de estado) al ejecutar las acciones que gobiernan.
     friend class AliveState;
     friend class GhostState;
+    friend class MeditateState;
 
 private:
     std::string name;
@@ -31,7 +32,6 @@ private:
     int id_clan;
     int coord_x;
     int coord_y;
-    bool meditating;
     std::unique_ptr<PlayerState> state;
     std::shared_ptr<Item> equipped_item;
 
@@ -47,8 +47,10 @@ private:
 
     // Transiciones de estado internas (las disparan los propios estados).
     // to_ghost: pasa a fantasma (muerto). to_alive: vuelve a vivo.
+    // to_meditate: pasa a meditar.
     void to_ghost();
     void to_alive();
+    void to_meditate();
 
 public:
     Player(const std::string name, PlayerRace& player_race, PlayerClass& player_class);
@@ -88,6 +90,9 @@ public:
 
     void heal_mana(const int healthy_mana);
 
+    // Resta maná (no baja de 0). Usado por el cheat /mana para testear /meditar.
+    void lose_mana(const int amount);
+
     void heal(const int healthy_life, const int healthy_mana);
 
     void add_gold(const int extra_gold);
@@ -114,13 +119,23 @@ public:
     
     void set_ghost();
 
-    bool is_meditating() const;
-
-    void change_meditation();
-
+    // Deja de meditar (no-op si no estaba meditando). Cualquier acción debe
+    // llamarlo: meditar se interrumpe ante cualquier interacción.
     void stop_meditation();
 
+    // Alterna meditación (comando /meditar). Devuelve true si tras el toggle el
+    // jugador quedó meditando, false si dejó de meditar o no pudo empezar.
+    bool toggle_meditation();
+
     bool can_meditate() const;
+
+    // Avance de tiempo del game loop: delega en el estado. Devuelve true si el
+    // jugador está meditando (maná actualizado, hay que notificar al cliente).
+    bool tick(double seconds);
+
+    // Recupera maná por meditación: FClaseMeditacion * Inteligencia * segundos,
+    // tope en max_mana(). Lo invoca MeditateState desde tick().
+    void recover_meditation_mana(double seconds);
 
     uint32_t get_lives() const;
 

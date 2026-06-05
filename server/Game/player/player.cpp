@@ -2,6 +2,7 @@
 #include "../../game_exceptions.h"
 #include "alive_state.h"
 #include "ghost_state.h"
+#include "meditate_state.h"
 
 #include <cmath>
 
@@ -28,6 +29,10 @@ void Player::to_alive() {
     state = std::make_unique<AliveState>();
 }
 
+void Player::to_meditate() {
+    state = std::make_unique<MeditateState>();
+}
+
 const Inventory& Player::get_inventory() const {
     return player_inventory;
 }
@@ -50,6 +55,9 @@ uint32_t Player::max_mana() {
 
 
 void Player::add_item(std::unique_ptr<Item> item) {
+    // Tomar/recibir un item es una acción: interrumpe la meditación.
+    // (Al spawnear el jugador está vivo, así que es un no-op.)
+    stop_meditation();
     player_inventory.add_item(std::move(item));
 }
 
@@ -118,12 +126,23 @@ void Player::heal_mana(const int healthy_mana) {
     }
 }
 
+void Player::lose_mana(const int amount) {
+    if (amount <= 0) return;
+    if (static_cast<uint32_t>(amount) >= mana) {
+        mana = 0;
+    } else {
+        mana -= static_cast<uint32_t>(amount);
+    }
+}
+
 void Player::heal(const int healthy_life, const int healthy_mana) {
     heal_life(healthy_life);
     heal_mana(healthy_mana);
 }
 
 void Player::add_gold(const int extra_gold) {
+    // Tomar/recibir oro es una acción: interrumpe la meditación.
+    stop_meditation();
     gold += extra_gold;
 }
 
@@ -153,6 +172,8 @@ int Player::get_coord_y() const {
 }
 
 void Player::update_position(const int x, const int y) {
+    // Moverse es una acción: interrumpe la meditación.
+    stop_meditation();
     coord_x = x;
     coord_y = y;
 }
@@ -173,22 +194,28 @@ void Player::set_ghost() {
     to_ghost();
 }
 
-bool Player::is_meditating() const {
-    return meditating;
-}
- 
-void Player::change_meditation() {
-    meditating = !meditating;
-}
- 
 void Player::stop_meditation() {
-    meditating = false;
+    state->stop_meditation(*this);
 }
-/* 
+
+bool Player::toggle_meditation() {
+    return state->toggle_meditation(*this);
+}
+
 bool Player::can_meditate() const {
-    return player_class.class_can_meditate(); //Tengoq ue actualizar player_class, solo el guerrero no puede meditar
+    return !state->is_ghost() && player_class.class_can_meditate();
 }
-*/
+
+bool Player::tick(double seconds) {
+    return state->tick(*this, seconds);
+}
+
+void Player::recover_meditation_mana(double seconds) {
+    // Mana = FClaseMeditacion * Inteligencia * segundos (tope en max_mana()).
+    int inteligence = player_race.race_inteligence() + player_class.class_inteligence();
+    double gained = player_class.class_meditation_factor() * inteligence * seconds;
+    heal_mana(static_cast<int>(gained));
+}
 
 uint32_t Player::get_lives() const {
     return lives;
@@ -244,6 +271,8 @@ void Player::add_experience(int exp) {
 }
 
 void Player::equip_item(std::string item_id) {
+    // Equipar es una acción: interrumpe la meditación.
+    stop_meditation();
     // Busca el item en el inventario y lo equipa en el slot que corresponde a
     // su tipo. El Inventory sigue siendo dueño; el DefenseSet solo referencia.
     Item* item = player_inventory.find_item(item_id);
