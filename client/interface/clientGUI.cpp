@@ -321,7 +321,7 @@ void ClientGUI::update() {
         }
         GameMsg msg(0);
         while (receiving.try_pop(msg)) {
-            std::cout << "Mesaje recibido tipo: " << (int)msg.get_type() << std::endl;
+            // std::cout << "Mesaje recibido tipo: " << (int)msg.get_type() << std::endl;  // hot path: floodea la consola cada frame
             switch (msg.get_type()) {
                 case MSG_ZONE_CHANGE : {
                     Zone z = msg.get_zone();
@@ -363,7 +363,7 @@ void ClientGUI::update() {
                     items_on_floor = msg.get_items_on_floor();
                     break;
                 case MSG_PLAYERS_SNAPSHOT: {
-                    std::cout << "Received players snapshot with " << msg.get_players().size() << " players." << std::endl;
+                    // std::cout << "Received players snapshot with " << msg.get_players().size() << " players." << std::endl;  // hot path: floodea la consola cada frame
                     for (const auto& incoming : msg.get_players()) {
                         auto it = std::find_if(other_players.begin(), other_players.end(),
                             [&incoming](const PlayerInfo& p) { return p.name == incoming.name; });
@@ -750,7 +750,7 @@ void ClientGUI::run() {
             handleEvents();
             update();
             draw();
-            //SDL_Delay(16);
+            SDL_Delay(16);  // ~60 FPS: cede CPU para no saturar un core al 100%
         }
     } catch (const std::exception& e) {
         std::cerr << "ClientGUI error: " << e.what() << std::endl;

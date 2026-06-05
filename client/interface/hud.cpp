@@ -44,6 +44,18 @@ HUD::~HUD() {
     if (game_texture) {
         SDL_DestroyTexture(game_texture);
     }
+    if (gold_text_cache.texture) {
+        SDL_DestroyTexture(gold_text_cache.texture);
+    }
+    if (hp_text_cache.texture) {
+        SDL_DestroyTexture(hp_text_cache.texture);
+    }
+    if (mana_text_cache.texture) {
+        SDL_DestroyTexture(mana_text_cache.texture);
+    }
+    if (xp_text_cache.texture) {
+        SDL_DestroyTexture(xp_text_cache.texture);
+    }
 
     if (font) {
         TTF_CloseFont(font);
@@ -220,7 +232,7 @@ void HUD::drawInventoryItems() {
     drawItems();
 }
 
-void HUD::drawBigStat(SDL_Texture* tex, float pos_y, int current, int max) {
+void HUD::drawBigStat(SDL_Texture* tex, float pos_y, int current, int max, TextCache& cache) {
     float tex_w, tex_h;
     SDL_GetTextureSize(tex, &tex_w, &tex_h);
 
@@ -251,10 +263,10 @@ void HUD::drawBigStat(SDL_Texture* tex, float pos_y, int current, int max) {
 
     SDL_FRect text_dest = { x, y, w, h };
     float text_scale = 0.75f;
-    displayValue(current, max, text_dest, text_scale);
+    displayValue(current, max, text_dest, text_scale, cache);
 }
 
-void HUD::drawSmallStat(SDL_Texture* tex, float pos_y, int current, int max) {
+void HUD::drawSmallStat(SDL_Texture* tex, float pos_y, int current, int max, TextCache& cache) {
     float tex_w, tex_h;
     SDL_GetTextureSize(tex, &tex_w, &tex_h);
 
@@ -285,24 +297,43 @@ void HUD::drawSmallStat(SDL_Texture* tex, float pos_y, int current, int max) {
 
     SDL_FRect text_dest = { x, y, w, h };
     float text_scale = 0.55f;
-    displayValue(current, max, text_dest, text_scale);
+    displayValue(current, max, text_dest, text_scale, cache);
 }
 
-void HUD::drawText(const std::string& text, float x, float y, SDL_Color color) {
+void HUD::update_text_cache(TextCache& cache, const std::string& text, SDL_Color color) {
+    // Reusar si nada cambió: lo común frame a frame.
+    bool same_color = cache.last_color.r == color.r && cache.last_color.g == color.g &&
+                      cache.last_color.b == color.b && cache.last_color.a == color.a;
+    if (cache.texture && cache.last_text == text && same_color) {
+        return;
+    }
+
+    if (cache.texture) {
+        SDL_DestroyTexture(cache.texture);
+        cache.texture = nullptr;
+    }
+    cache.w = 0.0f;
+    cache.h = 0.0f;
+
     SDL_Surface* surf = TTF_RenderText_Solid(font, text.c_str(), 0, color);
     if (surf) {
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
-        if (tex) {
-            SDL_FRect dest = { 
-                x,
-                y, 
-                static_cast<float>(surf->w) * 0.70f, 
-                static_cast<float>(surf->h) * 0.70f
-            };
-            SDL_RenderTexture(gui_renderer, tex, nullptr, &dest);
-            SDL_DestroyTexture(tex);
+        cache.texture = SDL_CreateTextureFromSurface(gui_renderer, surf);
+        if (cache.texture) {
+            cache.w = static_cast<float>(surf->w);
+            cache.h = static_cast<float>(surf->h);
         }
         SDL_DestroySurface(surf);
+    }
+
+    cache.last_text = text;
+    cache.last_color = color;
+}
+
+void HUD::drawText(const std::string& text, float x, float y, SDL_Color color, TextCache& cache) {
+    update_text_cache(cache, text, color);
+    if (cache.texture) {
+        SDL_FRect dest = { x, y, cache.w * 0.70f, cache.h * 0.70f };
+        SDL_RenderTexture(gui_renderer, cache.texture, nullptr, &dest);
     }
 }
 
@@ -321,46 +352,40 @@ void HUD::drawGold() {
     float text_start_x = 788.0f * scale_x;
     float text_start_y = 558.0f * scale_y;
 
-    drawText(gold_text, text_start_x, text_start_y, gold_color);
+    drawText(gold_text, text_start_x, text_start_y, gold_color, gold_text_cache);
 }
 
-void HUD::displayValue(int current, int max, SDL_FRect& dest, float text_scale) {
+void HUD::displayValue(int current, int max, SDL_FRect& dest, float text_scale, TextCache& cache) {
     if (font) {
         std::string text = std::to_string(current) + "/" + std::to_string(max);
         SDL_Color white = {255, 255, 255, 255};
-        SDL_Surface* surf = TTF_RenderText_Solid(font, text.c_str(), 0, white);
-        if (surf) {
-            SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
-            if (tex) {
-                //float text_scale = 0.75f;
-                float scaled_w = surf->w * text_scale;
-                float scaled_h = surf->h * text_scale;
-                float text_x = dest.x + (dest.w - scaled_w) / 2.0f;
-                float text_y = dest.y + (dest.h - scaled_h) / 2.0f;
-                SDL_FRect text_dest = {text_x, text_y, scaled_w, scaled_h};
-                SDL_RenderTexture(gui_renderer, tex, nullptr, &text_dest);
-                SDL_DestroyTexture(tex);
-            }
-            SDL_DestroySurface(surf);
+        update_text_cache(cache, text, white);
+        if (cache.texture) {
+            float scaled_w = cache.w * text_scale;
+            float scaled_h = cache.h * text_scale;
+            float text_x = dest.x + (dest.w - scaled_w) / 2.0f;
+            float text_y = dest.y + (dest.h - scaled_h) / 2.0f;
+            SDL_FRect text_dest = {text_x, text_y, scaled_w, scaled_h};
+            SDL_RenderTexture(gui_renderer, cache.texture, nullptr, &text_dest);
         }
     }
 }
 
 void HUD::drawHp() {
     if (hp_bar_texture) {
-        drawBigStat(hp_bar_texture, 600.0f, player_hp, max_hp);
+        drawBigStat(hp_bar_texture, 600.0f, player_hp, max_hp, hp_text_cache);
     }
 }
 
 void HUD::drawXp() {
     if (xp_bar_texture) {
-        drawSmallStat(xp_bar_texture, 658.0f, player_xp, max_xp);
+        drawSmallStat(xp_bar_texture, 658.0f, player_xp, max_xp, xp_text_cache);
     }
 }
 
 void HUD::drawMana() {
     if (mana_bar_texture) {
-        drawBigStat(mana_bar_texture, 629.0f, player_mana, max_mana);
+        drawBigStat(mana_bar_texture, 629.0f, player_mana, max_mana, mana_text_cache);
     }
 }
 
