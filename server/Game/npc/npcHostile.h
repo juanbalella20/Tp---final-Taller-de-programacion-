@@ -27,7 +27,9 @@ class NPChostile : public NPC, public Entity {
 
         void death();
         void set_state(State state);
-        void drop();
+        // Calcula el oro que deja caer el NPC al morir:
+        // Oro = rand(0, 0.2) * VidaMaxNPC
+        int drop();
 
     public:
         NPChostile(const std::string& type_id, const std::string& name,
