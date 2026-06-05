@@ -45,6 +45,10 @@ static void write_u32(ByteBuffer& buf, uint32_t v) {
     append_bytes(buf, &network_value, sizeof(network_value));
 }
 
+static void write_i32(ByteBuffer& buf, int32_t v) {
+    write_u32(buf, static_cast<uint32_t>(v));
+}
+
 // String: uint16 len + len bytes UTF-8 (sin terminador NUL).
 static void write_string(ByteBuffer& buf, const std::string& s) {
     if (s.size() > 0xFFFF) {
@@ -65,7 +69,8 @@ static void write_section(ByteBuffer& out, BinaryMapFormat::Section type,
 void BinaryMapSaver::save(const std::string& path,
                           int tile_size, int width, int height,
                           const std::vector<Tileset>& tilesets,
-                          const std::vector<MapLayerData>& layers) {
+                          const std::vector<MapLayerData>& layers,
+                          const std::vector<TeleportDef>& teleports) {
     ByteBuffer out;
 
     // --- Header (16 bytes) ---------------------------------------------------
@@ -74,7 +79,7 @@ void BinaryMapSaver::save(const std::string& path,
                std::end(BinaryMapFormat::MAGIC));
     write_u16(out, BinaryMapFormat::FORMAT_VERSION);
     write_u16(out, BinaryMapFormat::ENDIANNESS_MARKER);
-    write_u32(out, 3);  // section_count = META + TILESETS + LAYERS (V1)
+    write_u32(out, 4);  // section_count = META + TILESETS + LAYERS + TELEPORTS
 
     // --- Seccion META --------------------------------------------------------
     {
@@ -135,6 +140,19 @@ void BinaryMapSaver::save(const std::string& path,
             }
         }
         write_section(out, BinaryMapFormat::Section::LAYERS, ly_buf);
+    }
+
+    // --- Seccion TELEPORTS ---------------------------------------------------
+    // count + por teleport: int32 x, int32 y, string dest_zone.
+    {
+        ByteBuffer tp_buf;
+        write_u32(tp_buf, static_cast<uint32_t>(teleports.size()));
+        for (const TeleportDef& tp : teleports) {
+            write_i32(tp_buf, tp.x);
+            write_i32(tp_buf, tp.y);
+            write_string(tp_buf, tp.dest_zone);
+        }
+        write_section(out, BinaryMapFormat::Section::TELEPORTS, tp_buf);
     }
 
     // --- Volcado a disco -----------------------------------------------------

@@ -69,6 +69,7 @@ private:
     void parse_meta_section(ByteReader& section_reader, bool& seen_meta);
     void parse_tilesets_section(ByteReader& section_reader, const std::string& base_dir);
     void parse_layers_section(ByteReader& section_reader, bool seen_meta);
+    void parse_teleports_section(ByteReader& section_reader);
 
     // Recorre el vector de tilesets y arma el mapa <id, TileDef>.
     // Identico a MapLoader::build_tile_index.

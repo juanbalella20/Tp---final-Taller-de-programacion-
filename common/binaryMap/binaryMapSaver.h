@@ -14,8 +14,8 @@
  * estos datos de su Map) como por cualquier otro productor. La persistencia no
  * conoce al editor.
  *
- * V1: escribe META + TILESETS + LAYERS. Spawns/teleports quedan fuera (sus
- * secciones estan reservadas en binaryMapFormat.h para una version futura).
+ * Escribe META + TILESETS + LAYERS + TELEPORTS. Spawns quedan fuera (su seccion
+ * esta reservada en binaryMapFormat.h para una version futura).
  *
  * Implementacion: Persona A (common/binaryMapSaver.cpp). C++17.
  */
@@ -23,7 +23,7 @@ class BinaryMapSaver {
 public:
     /*
      * Serializa el mapa a 'path' en big-endian usando network byte order.
-     * Escribe las secciones META, TILESETS, LAYERS (section_count = 3).
+     * Escribe las secciones META, TILESETS, LAYERS, TELEPORTS (section_count = 4).
      *
      * Precondiciones (responsabilidad del llamador): cada layer.data es una
      * matriz [height][width]; los gid caben en uint16.
@@ -33,7 +33,8 @@ public:
     static void save(const std::string& path,
                      int tile_size, int width, int height,
                      const std::vector<Tileset>& tilesets,
-                     const std::vector<MapLayerData>& layers);
+                     const std::vector<MapLayerData>& layers,
+                     const std::vector<TeleportDef>& teleports);
 };
 
 #endif  // BINARY_MAP_SAVER_H

@@ -124,6 +124,9 @@ void BinaryMapLoader::parse_section(uint16_t type, ByteReader& section_reader,
         case BinaryMapFormat::Section::LAYERS:
             parse_layers_section(section_reader, seen_meta);
             break;
+        case BinaryMapFormat::Section::TELEPORTS:
+            parse_teleports_section(section_reader);
+            break;
         default:
             // Seccion desconocida: se ignora su payload para forward-compat.
             break;
@@ -177,6 +180,20 @@ void BinaryMapLoader::parse_layers_section(ByteReader& section_reader, bool seen
             layer.data.push_back(std::move(row));
         }
         layers.push_back(std::move(layer));
+    }
+}
+
+void BinaryMapLoader::parse_teleports_section(ByteReader& section_reader) {
+    // count + por teleport: int32 x, int32 y, string dest_zone. (ByteReader no
+    // tiene read_i32: se castea desde read_u32, preserva el patron de bits.)
+    uint32_t count = section_reader.read_u32();
+    teleports.reserve(count);
+    for (uint32_t i = 0; i < count; ++i) {
+        TeleportDef tp;
+        tp.x = static_cast<int>(static_cast<int32_t>(section_reader.read_u32()));
+        tp.y = static_cast<int>(static_cast<int32_t>(section_reader.read_u32()));
+        tp.dest_zone = section_reader.read_string();
+        teleports.push_back(std::move(tp));
     }
 }
 

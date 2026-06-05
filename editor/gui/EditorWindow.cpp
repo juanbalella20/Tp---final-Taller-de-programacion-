@@ -2,15 +2,19 @@
 
 #include <QAction>
 #include <QActionGroup>
+#include <QComboBox>
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QHBoxLayout>
 #include <QKeySequence>
+#include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QStatusBar>
 #include <QToolBar>
+#include <QWidget>
 
 #include <exception>
 
@@ -18,6 +22,7 @@
 #include "../render/MapCanvasWidget.h"
 #include "TilePalette.h"
 #include "binaryMap/binaryMapSaver.h"
+#include "protocol_constants.h"  // Zone, ZONE_NAME_MAP_INV
 
 EditorWindow::EditorWindow(QWidget* parent) : QMainWindow(parent) {
     setWindowTitle("Editor de Mapas - Argentum Online");
@@ -66,7 +71,7 @@ void EditorWindow::build_palette_dock() {
 void EditorWindow::build_tools_toolbar() {
     auto* toolbar = addToolBar("Herramientas");
 
-    // --- Herramientas (exclusivas entre si) ------------------------------
+    // Todas las herramientas (pintura + Teleport) son mutuamente exclusivas.
     auto* tools = new QActionGroup(this);
     tools->setExclusive(true);
 
@@ -77,17 +82,46 @@ void EditorWindow::build_tools_toolbar() {
         tools->addAction(act);
         connect(act, &QAction::triggered, this,
                 [this, type] { doc_.set_active_tool(type); });
+        return act;
     };
+
+    // --- Grupo 1: herramientas de pintura --------------------------------
     add_tool("Lapiz", ToolType::Pencil, true);  // default
     add_tool("Goma", ToolType::Eraser, false);
     add_tool("Relleno", ToolType::Fill, false);
-    // La herramienta Teleport edita la capa Teleports (oculta) automaticamente
-    // via EditorDocument::effective_layer(); no necesita un boton de capa.
-    add_tool("Teleport", ToolType::Teleport, false);
 
     toolbar->addSeparator();
 
-    // --- Capa activa (solo las capas de tiles editables) -----------------
+    // --- Grupo 2: Teleport + capas de tiles ------------------------------
+    QAction* teleport_tool = add_tool("Teleport", ToolType::Teleport, false);
+
+    // Combo de zona destino (label + combo en un solo widget). Define la zona a
+    // la que apuntan las celdas marcadas con Teleport. Solo visible con esa
+    // herramienta activa.
+    auto* dest_widget = new QWidget(this);
+    auto* dest_layout = new QHBoxLayout(dest_widget);
+    dest_layout->setContentsMargins(4, 0, 4, 0);
+    dest_layout->addWidget(new QLabel("Destino: "));
+    auto* dest_combo = new QComboBox(dest_widget);
+    for (Zone z : {ZONE_DESERT, ZONE_CITY, ZONE_FOREST, ZONE_TOWN}) {
+        dest_combo->addItem(QString::fromStdString(ZONE_NAME_MAP_INV.at(z)));
+    }
+    dest_combo->setCurrentText(QString::fromStdString(doc_.active_dest_zone()));
+    dest_layout->addWidget(dest_combo);
+    dest_combo_action_ = toolbar->addWidget(dest_widget);
+    dest_combo_action_->setVisible(false);  // oculto hasta activar Teleport
+
+    connect(dest_combo, &QComboBox::currentTextChanged, this,
+            [this](const QString& zone) {
+                doc_.set_active_dest_zone(zone.toStdString());
+            });
+    // Mostrar el combo solo cuando Teleport esta activa. setChecked(false) en una
+    // accion del grupo exclusivo tambien dispara toggled, asi cubrimos ambos lados.
+    connect(teleport_tool, &QAction::toggled, this, [this](bool on) {
+        if (dest_combo_action_) dest_combo_action_->setVisible(on);
+    });
+
+    // Capas de tiles editables (exclusivas entre si).
     auto* layers = new QActionGroup(this);
     layers->setExclusive(true);
 
@@ -178,7 +212,8 @@ bool EditorWindow::save_to(const QString& path) {
     const Map& map = doc_.map();
     try {
         BinaryMapSaver::save(path.toStdString(), map.tile_size(), map.width(),
-                             map.height(), map.tilesets(), map.layers());
+                             map.height(), map.tilesets(), map.layers(),
+                             map.teleports());
     } catch (const std::exception& e) {
         QMessageBox::warning(this, "Error al guardar",
                              QString("No se pudo guardar el mapa:\n%1").arg(e.what()));

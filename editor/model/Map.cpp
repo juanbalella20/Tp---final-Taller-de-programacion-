@@ -18,7 +18,6 @@ Map::Map() {
     layers_.resize(LAYER_COUNT);
     layers_[Ground].name    = "ground";
     layers_[Buildings].name = "buildings";
-    layers_[Teleports].name = "teleports";
     for (MapLayerData& layer : layers_) {
         layer.data.assign(HEIGHT, std::vector<int>(WIDTH, 0));
     }
@@ -95,9 +94,6 @@ void Map::set_cell(int layer, int x, int y, int gid) {
 bool Map::is_collidable(int x, int y) const {
     if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) return true;
     for (int layer = 0; layer < LAYER_COUNT; ++layer) {
-        // La capa Teleports es marcado semantico, no tiles: su gid coincide con
-        // gids reales, asi que no debe aportar colision (el teleport es ground).
-        if (layer == Teleports) continue;
         const auto& data = layers_[layer].data;
         if (y >= static_cast<int>(data.size())) continue;
         const auto& row = data[y];
@@ -106,6 +102,40 @@ bool Map::is_collidable(int x, int y) const {
         if (td && td->collidable) return true;
     }
     return false;
+}
+
+// --- Teleports ---------------------------------------------------------------
+// Los teleports NO son una capa de tiles: se guardan como un vector de
+// TeleportDef{x, y, dest_zone}. El borde amarillo del editor se dibuja a partir
+// de este vector, y al guardar se vuelca a la seccion TELEPORTS del .bin.
+const std::vector<TeleportDef>& Map::teleports() const { return teleports_; }
+
+const TeleportDef* Map::teleport_at(int x, int y) const {
+    for (const TeleportDef& tp : teleports_) {
+        if (tp.x == x && tp.y == y) return &tp;
+    }
+    return nullptr;
+}
+
+void Map::add_teleport(int x, int y, const std::string& dest_zone) {
+    if (!in_bounds(x, y)) return;
+    // Si ya existe un teleport en (x,y), actualiza su destino (no duplica).
+    for (TeleportDef& tp : teleports_) {
+        if (tp.x == x && tp.y == y) {
+            tp.dest_zone = dest_zone;
+            return;
+        }
+    }
+    teleports_.push_back(TeleportDef{x, y, dest_zone});
+}
+
+void Map::remove_teleport(int x, int y) {
+    for (auto it = teleports_.begin(); it != teleports_.end(); ++it) {
+        if (it->x == x && it->y == y) {
+            teleports_.erase(it);
+            return;
+        }
+    }
 }
 
 // --- Indice de tiles ---------------------------------------------------------

@@ -16,10 +16,10 @@ add_executable(map_editor
     render/TilesetPixmapCache.cpp
     document/EditorDocument.cpp
     document/SetTilesCommand.cpp
+    document/ToggleTeleportCommand.cpp
     tools/PencilTool.cpp
     tools/EraserTool.cpp
     tools/FillTool.cpp
-    tools/TeleportTool.cpp
 )
 
 target_include_directories(map_editor PRIVATE

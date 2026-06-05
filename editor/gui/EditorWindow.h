@@ -46,6 +46,9 @@ private:
     MapCanvasWidget* canvas_ = nullptr;
     QAction* undo_action_ = nullptr;
     QAction* redo_action_ = nullptr;
+    // Accion que envuelve el combo de zona destino (label + combo). Visible solo
+    // cuando la herramienta activa es Teleport.
+    QAction* dest_combo_action_ = nullptr;
     // Ruta del archivo actual (vacia si nunca se guardo). on_save reusa esta
     // ruta; si esta vacia delega en on_save_as.
     QString current_path_;

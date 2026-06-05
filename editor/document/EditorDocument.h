@@ -2,6 +2,7 @@
 #define EDITOR_DOCUMENT_H
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include <QObject>
@@ -25,7 +26,6 @@
  * Map y se los pasa a BinaryMapSaver; al abrir reconstruye el Map desde
  * BinaryMapLoader. BinaryMapSaver/Loader NO conocen al Map.
  *
- * Implementacion: Persona B (editor/document/EditorDocument.cpp). C++20.
  */
 class EditorDocument : public QObject {
     Q_OBJECT
@@ -37,30 +37,31 @@ public:
     Map& map();
     const Map& map() const;
 
-    // --- Estado de edicion (flujo paleta -> canvas -> modelo) -------------
+    // Estado de edicion
     void set_active_tool(ToolType t);
     ToolType active_tool() const;
     void set_active_gid(int gid);   // brush seleccionado en la paleta
     int active_gid() const;
     void set_active_layer(int idx);
     int active_layer() const;
+    // Zona destino activa para la herramienta Teleport (nombre: "city", etc.).
+    void set_active_dest_zone(const std::string& zone);
+    const std::string& active_dest_zone() const;
 
-    // --- Punto de entrada de las herramientas (lo llama el canvas) --------
+    // Punto de entrada de las herramientas
     // Aplican la herramienta activa en (x,y). Internamente acumulan CellChange
     // y, al soltar, arman un unico SetTilesCommand y lo apilan en el undo stack.
     void apply_tool_press(int x, int y);
     void apply_tool_drag(int x, int y);
     void apply_tool_release(int x, int y);
 
-    // --- Undo / Redo ------------------------------------------------------
+    // Undo / Redo 
     void undo();
     void redo();
     bool can_undo() const;
     bool can_redo() const;
 
-    // --- Persistencia (delega en common/ BinaryMapSaver/Loader) -----------
-    // V1: el mapa es de tamano fijo (WIDTH x HEIGHT), asi que "Nuevo" no recibe
-    // dimensiones: crea un Map vacio (dos capas en 0).
+    // Persistencia (delega en common/ BinaryMapSaver/Loader)
     void new_map();
     bool open(const QString& path, QString* err);
     bool save(const QString& path, QString* err);
@@ -68,6 +69,7 @@ public:
 
     bool is_dirty() const;
     QString file_path() const;
+
 
 signals:
     // Tras new/open: el canvas reconstruye todo (sceneRect, repintado completo).
@@ -84,6 +86,7 @@ private:
     ToolType tool_ = ToolType::Pencil;
     int active_gid_ = 0;
     int active_layer_ = 0;
+    std::string active_dest_zone_ = "city";  // zona destino default de Teleport
     bool dirty_ = false;
     QString path_;
     std::vector<std::unique_ptr<Command>> undo_stack_;
@@ -95,9 +98,10 @@ private:
     std::unique_ptr<Tool> gesture_tool_;
     std::vector<CellChange> gesture_changes_;
 
-    // Capa sobre la que actua el gesto actual: Teleports si la herramienta
-    // activa es Teleport (capa oculta), o la capa de tiles activa en otro caso.
-    int effective_layer() const;
+    // Toggle de teleport en (x,y) con la zona destino activa, como un
+    // ToggleTeleportCommand apilado para undo/redo. Lo llama apply_tool_press
+    // cuando la herramienta activa es Teleport (no pasa por el flujo de gids).
+    void toggle_teleport(int x, int y);
     // Fabrica la Tool concreta segun tool_.
     std::unique_ptr<Tool> make_tool(ToolType t) const;
     // Aplica los deltas al Map en vivo, emite cellChanged y los acumula en
