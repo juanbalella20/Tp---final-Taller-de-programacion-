@@ -69,6 +69,10 @@ add_library(common STATIC
     common/commands/clientCmd.cpp
     common/commands/gameMsg.cpp
     common/mapLoader.cpp
+    common/binaryMap/binaryMapLoader.cpp
+    common/binaryMap/binaryMapSaver.cpp
+    common/binaryMap/byteReader.cpp
+    common/utility/paths.cpp
 )
 target_include_directories(common PUBLIC
     common
