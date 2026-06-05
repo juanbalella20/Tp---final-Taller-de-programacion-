@@ -8,23 +8,14 @@
 
 #include "binaryMapFormat.h"
 
-// ============================================================================
-//
 // Serializar a 'path' en BIG-ENDIAN usando network byte order:
-//   1. Header: MAGIC, FORMAT_VERSION, ENDIANNESS_MARKER, section_count=3.
+//   1. Header: MAGIC, FORMAT_VERSION, ENDIANNESS_MARKER, section_count=4.
 //   2. Seccion META      (tile_size, width, height).
 //   3. Seccion TILESETS  (count + por tileset: name, file_path, columns,
 //                         tile_count, firstgid, collidable).
 //   4. Seccion LAYERS    (count + por capa: name + matriz height*width uint16).
 // Cada seccion lleva su [type:uint16][byte_length:uint32] por delante.
-// V1 NO escribe SPAWNS/TELEPORTS (secciones reservadas para el futuro).
 // Lanzar std::runtime_error ante error de I/O.
-//
-// Sugerencia: helpers locales write_u16/write_u32/write_i32/write_string que
-// conviertan a network byte order y armen cada payload en un buffer para conocer
-// su byte_length antes de escribir el encabezado de la seccion.
-// ============================================================================
-
 // Buffer de bytes que crece. Acumulamos cada payload aca para conocer su
 // byte_length ANTES de escribir el encabezado [type][byte_length] de la
 // seccion (el formato lo necesita por delante para permitir skip).
