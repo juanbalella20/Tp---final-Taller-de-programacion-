@@ -13,6 +13,7 @@
 #include "npc/npcSeller.h"
 #include "item/item.h"
 #include "zoneWorld.h"
+#include "player/clan.h"
 
 #include <vector>
 #include <map>
@@ -54,6 +55,7 @@ private:
     std::map<Zone, ZoneWorld> zones;          // enum Zone -> mundo de esa zona
     std::vector<Player> players;              // players globales (atraviesan zonas)
     std::map<std::string, Zone> player_zone;  // player_name -> zona actual (tag)
+    std::map<std::string, Clan> clans;
 
     Player* find_player_by_name(const std::string& name);
 
@@ -148,6 +150,16 @@ public:
                     const std::map<Zone, InitialState>& initial_states);
 
     bool pick_up_gold(const std::string& player_name);
+
+    bool found_clan(const std::string& player_name, const std::string& clan_name);
+    bool join_clan(const std::string& player_name, const std::string& clan_name);
+    std::string rev_clan(const std::string& player_name);
+    void accept_new_member(const std::string& player_name, const std::string& new_member);
+    bool leave_clan(const std::string& player_name, std::string& clan_name);
+    bool kick_member(const std::string& player_name, const std::string& member);
+    bool ban_member(const std::string& player_name, const std::string& member);
+
+    bool same_clan(Player* player1, Player* player2);
 };
 
 #endif

@@ -32,6 +32,14 @@ void GameLoop::register_handlers() {
     handlers[MSG_CHEAT_KILL]     = [this](const ClientCmd& cmd) { handle_cheat_kill(cmd); };
     handlers[MSG_CHEAT_INF_HP]   = [this](const ClientCmd& cmd) { handle_cheat_inf_hp(cmd); };
     handlers[MSG_CHEAT_INF_MANA] = [this](const ClientCmd& cmd) { handle_cheat_inf_mana(cmd); };
+    handlers[MSG_FOUND_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_foundation(cmd); };
+    handlers[MSG_JOIN_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_joining(cmd); };
+    handlers[MSG_REV_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_reviewing(cmd); };
+    handlers[MSG_CLAN_ACEP]     = [this](const ClientCmd& cmd) { handle_clan_accepting(cmd); };
+    handlers[MSG_CLAN_RECH]     = [this](const ClientCmd& cmd) { handle_clan_rejecting(cmd); };
+    handlers[MSG_LEFT_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_leaving(cmd); };
+    handlers[MSG_CLAN_KICK]     = [this](const ClientCmd& cmd) { handle_clan_kick(cmd); };
+    handlers[MSG_CLAN_BAN]     = [this](const ClientCmd& cmd) { handle_clan_ban(cmd); };
 }
 
 
@@ -460,6 +468,105 @@ void GameLoop::handle_cheat_inf_mana(const ClientCmd& cmd) {
     GameMsg msg(MSG_CHAT);
     msg.set_chat_content("Mana infinito activado.");
     client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+}
+
+void GameLoop::handle_clan_foundation(const ClientCmd& cmd) {
+    std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
+    std::string clan_name = cmd.get_target_name();
+    GameMsg clan_msg(MSG_FOUND_CLAN);
+    if (!game_map.found_clan(player_name, clan_name)) {
+        clan_msg.set_chat_content("Ya existe un clan con el nombre: " + clan_name);
+        client_registry_monitor.notify_client(cmd.get_client_id(), clan_msg);
+    } else {
+        clan_msg.set_chat_content("Jugador " + player_name + " fundó el clan " + clan_name);
+        client_registry_monitor.notify_clients(clan_msg);
+    }
+}
+
+void GameLoop::handle_clan_joining(const ClientCmd& cmd) {
+    std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
+    std::string clan_name = cmd.get_target_name();
+    GameMsg clan_msg(MSG_JOIN_CLAN);
+    if (!game_map.join_clan(player_name, clan_name)) {
+        clan_msg.set_chat_content("No podes solicitar unirte al clan: " + clan_name);
+    } else {
+        clan_msg.set_chat_content("Solicitud de unión al clan " + clan_name + " enviada");
+    }
+    client_registry_monitor.notify_client(cmd.get_client_id(), clan_msg);
+}
+
+void GameLoop::handle_clan_reviewing(const ClientCmd& cmd) {
+    std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
+    std::string result = game_map.rev_clan(player_name);
+    GameMsg clan_msg(MSG_REV_CLAN);
+    clan_msg.set_chat_content(result);
+    client_registry_monitor.notify_client(cmd.get_client_id(), clan_msg);
+}
+
+void GameLoop::handle_clan_accepting(const ClientCmd& cmd) {
+    std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
+    std::string new_member = cmd.get_target_name();
+
+    GameMsg clan_msg(MSG_CLAN_ACEP);
+    game_map.accept_new_member(player_name, new_member);
+    clan_msg.set_chat_content("Jugador " + new_member + " fue aceptado a unirse al clan fundado por " + player_name);
+    client_registry_monitor.notify_clients(clan_msg);
+}
+
+void GameLoop::handle_clan_rejecting(const ClientCmd& cmd) {
+    std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
+    std::string new_member = cmd.get_target_name();
+
+    GameMsg clan_msg(MSG_CLAN_RECH);
+    clan_msg.set_chat_content("Jugador " + new_member + " fue rechazado a unirse al clan fundado por " + player_name);
+    client_registry_monitor.notify_clients(clan_msg);
+}
+
+void GameLoop::handle_clan_leaving(const ClientCmd& cmd) {
+    std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
+
+    GameMsg personal_msg(MSG_LEFT_CLAN);
+    GameMsg clan_msg(MSG_LEFT_CLAN);
+    std::string clan_name;
+    if (!game_map.leave_clan(player_name, clan_name)) {
+        personal_msg.set_chat_content("No podes abandonar el clan " + clan_name);
+        client_registry_monitor.notify_client(cmd.get_client_id(), personal_msg);
+        return;
+    }
+    clan_msg.set_chat_content("Jugador " + player_name + " abandonó el clan " + clan_name);
+    client_registry_monitor.notify_clients(clan_msg);
+}
+
+void GameLoop::handle_clan_kick(const ClientCmd& cmd) {
+    std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
+    std::string member = cmd.get_target_name();
+
+    GameMsg personal_msg(MSG_CLAN_KICK);
+    GameMsg clan_msg(MSG_CLAN_KICK);
+    
+    if (!game_map.kick_member(player_name, member)) {
+        personal_msg.set_chat_content("El jugador " + member + " no es parte del clan");
+        client_registry_monitor.notify_client(cmd.get_client_id(), personal_msg);
+        return;
+    }
+    clan_msg.set_chat_content("Jugador " + member + " fue echado del clan");
+    client_registry_monitor.notify_clients(clan_msg);
+}
+
+void GameLoop::handle_clan_ban(const ClientCmd& cmd) {
+    std::string player_name = client_registry_monitor.get_name(cmd.get_client_id());
+    std::string member = cmd.get_target_name();
+
+    GameMsg personal_msg(MSG_CLAN_BAN);
+    GameMsg clan_msg(MSG_CLAN_BAN);
+    
+    if (!game_map.ban_member(player_name, member)) {
+        personal_msg.set_chat_content("El jugador " + member + " no es parte del clan");
+        client_registry_monitor.notify_client(cmd.get_client_id(), personal_msg);
+        return;
+    }
+    clan_msg.set_chat_content("Jugador " + member + " fue banneado del clan");
+    client_registry_monitor.notify_clients(clan_msg);
 }
 
 void GameLoop::update_npcs_in_map(){

@@ -9,6 +9,7 @@
 #include "../defense_set.h"
 #include "level.h"
 #include "player_state.h"
+#include "clan.h"
 
 #include <string>
 #include <memory>
