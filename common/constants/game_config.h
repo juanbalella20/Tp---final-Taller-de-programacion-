@@ -90,6 +90,10 @@ public:
     DefenseItemConfig armadura_cuero;
     DefenseItemConfig armadura_placas;
     DefenseItemConfig tunica_azul;
+    // Helmets
+    DefenseItemConfig capucha;
+    DefenseItemConfig casco_hierro;
+    DefenseItemConfig sombrero_magico;
 
     static GameConfig& instance();
     void load(const std::string& toml_path);

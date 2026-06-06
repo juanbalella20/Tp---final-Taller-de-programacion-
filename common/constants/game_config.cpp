@@ -156,4 +156,19 @@ void GameConfig::load(const std::string& toml_path) {
     tunica_azul.price = root.at_path("items.tunica_azul.price").value_or(130);
     tunica_azul.defense_min = root.at_path("items.tunica_azul.defense_min").value_or(6);
     tunica_azul.defense_max = root.at_path("items.tunica_azul.defense_max").value_or(10);
+
+    capucha.name = root.at_path("items.capucha.name").value_or(std::string("Capucha"));
+    capucha.price = root.at_path("items.capucha.price").value_or(30);
+    capucha.defense_min = root.at_path("items.capucha.defense_min").value_or(1);
+    capucha.defense_max = root.at_path("items.capucha.defense_max").value_or(4);
+
+    casco_hierro.name = root.at_path("items.casco_hierro.name").value_or(std::string("Casco de hierro"));
+    casco_hierro.price = root.at_path("items.casco_hierro.price").value_or(100);
+    casco_hierro.defense_min = root.at_path("items.casco_hierro.defense_min").value_or(4);
+    casco_hierro.defense_max = root.at_path("items.casco_hierro.defense_max").value_or(8);
+
+    sombrero_magico.name = root.at_path("items.sombrero_magico.name").value_or(std::string("Sombrero magico"));
+    sombrero_magico.price = root.at_path("items.sombrero_magico.price").value_or(220);
+    sombrero_magico.defense_min = root.at_path("items.sombrero_magico.defense_min").value_or(4);
+    sombrero_magico.defense_max = root.at_path("items.sombrero_magico.defense_max").value_or(12);
 }

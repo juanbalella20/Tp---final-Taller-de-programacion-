@@ -214,3 +214,25 @@ name = "Tunica azul"
 price = 130
 defense_min = 6
 defense_max = 10
+
+# ------------------------------------------------------------
+# Items: cascos
+# ------------------------------------------------------------
+[items.helmets.capucha]
+name = "Capucha"
+price = 30
+defense_min = 1
+defense_max = 4
+ 
+[items.helmets.casco_hierro]
+name = "Casco de hierro"
+price = 100
+defense_min = 4
+defense_max = 8
+ 
+[items.helmets.sombrero_magico]
+name = "Sombrero magico"
+price = 220
+defense_min = 4
+defense_max = 12
+
