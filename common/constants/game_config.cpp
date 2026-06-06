@@ -181,4 +181,14 @@ void GameConfig::load(const std::string& toml_path) {
     escudo_hierro.price = root.at_path("items.escudo_hierro.price").value_or(140);
     escudo_hierro.defense_min = root.at_path("items.escudo_hierro.defense_min").value_or(1);
     escudo_hierro.defense_max = root.at_path("items.escudo_hierro.defense_max").value_or(4);
+
+    pocion_vida.name = root.at_path("items.pocion_vida.name").value_or(std::string("Pocion de vida"));
+    pocion_vida.price = root.at_path("items.pocion_vida.price").value_or(50);
+    pocion_vida.heal_life = root.at_path("items.pocion_vida.heal_life").value_or(100);
+    pocion_vida.heal_mana = root.at_path("items.pocion_vida.heal_mana").value_or(0);
+
+    pocion_mana.name = root.at_path("items.pocion_mana.name").value_or(std::string("Pocion de mana"));
+    pocion_mana.price = root.at_path("items.pocion_mana.price").value_or(50);
+    pocion_mana.heal_life = root.at_path("items.pocion_mana.heal_life").value_or(0);
+    pocion_mana.heal_mana = root.at_path("items.pocion_mana.heal_mana").value_or(100);
 }

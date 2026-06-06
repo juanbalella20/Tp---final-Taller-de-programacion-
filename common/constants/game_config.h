@@ -46,6 +46,13 @@ struct DefenseItemConfig {
     int defense_max;
 };
 
+struct PotionConfig {
+    std::string name;
+    int price;
+    int heal_life;
+    int heal_mana;
+};
+
 class GameConfig {
 public:
     // Level
@@ -97,6 +104,9 @@ public:
     // Shields
     DefenseItemConfig escudo_tortuga;
     DefenseItemConfig escudo_hierro;
+    // Potions
+    PotionConfig pocion_vida;
+    PotionConfig pocion_mana;
 
     static GameConfig& instance();
     void load(const std::string& toml_path);

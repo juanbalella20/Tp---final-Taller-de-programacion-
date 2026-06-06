@@ -250,3 +250,18 @@ name = "Escudo de hierro"
 price = 140
 defense_min = 1
 defense_max = 4
+
+# ------------------------------------------------------------
+# Items: pociones
+# ------------------------------------------------------------
+[items.potions.pocion_vida]
+name         = "Pocion de vida"
+price        = 50
+heal_life    = 100
+heal_mana    = 0
+ 
+[items.potions.pocion_mana]
+name         = "Pocion de mana"
+price        = 50
+heal_life    = 0
+heal_mana    = 100
