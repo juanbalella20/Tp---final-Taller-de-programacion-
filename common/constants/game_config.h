@@ -39,6 +39,13 @@ struct MagicWeaponConfig {
     int mana_cost;
 };
 
+struct DefenseItemConfig {
+    std::string name;
+    int price;
+    int defense_min;
+    int defense_max;
+};
+
 class GameConfig {
 public:
     // Level
@@ -79,6 +86,10 @@ public:
     MagicWeaponConfig flauta_elfica;
     MagicWeaponConfig baculo_nudoso;
     MagicWeaponConfig baculo_engarzado;
+    // Armours
+    DefenseItemConfig armadura_cuero;
+    DefenseItemConfig armadura_placas;
+    DefenseItemConfig tunica_azul;
 
     static GameConfig& instance();
     void load(const std::string& toml_path);

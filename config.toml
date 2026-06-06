@@ -194,3 +194,23 @@ damage_max = 20
 mana_cost = 30
 spell = "explosion"
  
+# ------------------------------------------------------------
+# Items: armaduras
+# ------------------------------------------------------------
+[items.armors.armadura_cuero]
+name  = "Armadura de cuero"
+price  = 60
+defense_min = 2
+defense_max = 6
+ 
+[items.armors.armadura_placas]
+name = "Armadura de placas"
+price = 500
+defense_min = 15
+defense_max = 30
+ 
+[items.armors.tunica_azul]
+name = "Tunica azul"
+price = 130
+defense_min = 6
+defense_max = 10

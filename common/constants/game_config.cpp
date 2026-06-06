@@ -95,7 +95,7 @@ void GameConfig::load(const std::string& toml_path) {
     warrior.mana_factor = root.at_path("classes.warrior.mana_factor").value_or(0);
     warrior.meditation_factor = static_cast<float>(root.at_path("classes.warrior.meditation_factor").value_or(0.0));
 
-    // Weapons
+    // Items
     espada.name = root.at_path("items.espada.name").value_or(std::string("Espada"));
     espada.price = root.at_path("items.espada.price").value_or(100);
     espada.distance = root.at_path("items.espada.distance").value_or(1);
@@ -141,4 +141,19 @@ void GameConfig::load(const std::string& toml_path) {
     baculo_engarzado.damage_min = root.at_path("items.baculo_engarzado.damage_min").value_or(8);
     baculo_engarzado.damage_max = root.at_path("items.baculo_engarzado.damage_max").value_or(20);
     baculo_engarzado.mana_cost = root.at_path("items.baculo_engarzado.mana_cost").value_or(30);
+
+    armadura_cuero.name = root.at_path("items.armadura_cuero.name").value_or(std::string("Armadura de cuero"));
+    armadura_cuero.price = root.at_path("items.armadura_cuero.price").value_or(60);
+    armadura_cuero.defense_min = root.at_path("items.armadura_cuero.defense_min").value_or(2);
+    armadura_cuero.defense_max = root.at_path("items.armadura_cuero.defense_max").value_or(6);
+
+    armadura_placas.name = root.at_path("items.armadura_placas.name").value_or(std::string("Armadura de placas"));
+    armadura_placas.price = root.at_path("items.armadura_placas.price").value_or(500);
+    armadura_placas.defense_min = root.at_path("items.armadura_placas.defense_min").value_or(15);
+    armadura_placas.defense_max = root.at_path("items.armadura_placas.defense_max").value_or(30);
+
+    tunica_azul.name = root.at_path("items.tunica_azul.name").value_or(std::string("Tunica azul"));
+    tunica_azul.price = root.at_path("items.tunica_azul.price").value_or(130);
+    tunica_azul.defense_min = root.at_path("items.tunica_azul.defense_min").value_or(6);
+    tunica_azul.defense_max = root.at_path("items.tunica_azul.defense_max").value_or(10);
 }
