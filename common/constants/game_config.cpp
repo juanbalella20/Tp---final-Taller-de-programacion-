@@ -113,4 +113,32 @@ void GameConfig::load(const std::string& toml_path) {
     martillo.distance = root.at_path("items.martillo.distance").value_or(1);
     martillo.damage_min = root.at_path("items.martillo.damage_min").value_or(1);
     martillo.damage_max = root.at_path("items.martillo.damage_max").value_or(9);
+
+    vara_fresno.name = root.at_path("items.vara_fresno.name").value_or(std::string("Vara de fresno"));
+    vara_fresno.price = root.at_path("items.vara_fresno.price").value_or(90);
+    vara_fresno.distance = root.at_path("items.vara_fresno.distance").value_or(5);
+    vara_fresno.damage_min = root.at_path("items.vara_fresno.damage_min").value_or(2);
+    vara_fresno.damage_max = root.at_path("items.vara_fresno.damage_max").value_or(4);
+    vara_fresno.mana_cost = root.at_path("items.vara_fresno.mana_cost").value_or(5);
+
+    flauta_elfica.name = root.at_path("items.flauta_elfica.name").value_or(std::string("Flauta elfica"));
+    flauta_elfica.price = root.at_path("items.flauta_elfica.price").value_or(300);
+    flauta_elfica.distance = root.at_path("items.flauta_elfica.distance").value_or(5);
+    flauta_elfica.damage_min = root.at_path("items.flauta_elfica.damage_min").value_or(0);
+    flauta_elfica.damage_max = root.at_path("items.flauta_elfica.damage_max").value_or(0);
+    flauta_elfica.mana_cost = root.at_path("items.flauta_elfica.mana_cost").value_or(100);
+
+    baculo_nudoso.name = root.at_path("items.baculo_nudoso.name").value_or(std::string("Baculo nudoso"));
+    baculo_nudoso.price = root.at_path("items.baculo_nudoso.price").value_or(180);
+    baculo_nudoso.distance = root.at_path("items.baculo_nudoso.distance").value_or(5);
+    baculo_nudoso.damage_min = root.at_path("items.baculo_nudoso.damage_min").value_or(4);
+    baculo_nudoso.damage_max = root.at_path("items.baculo_nudoso.damage_max").value_or(8);
+    baculo_nudoso.mana_cost = root.at_path("items.baculo_nudoso.mana_cost").value_or(15);
+
+    baculo_engarzado.name = root.at_path("items.baculo_engarzado.name").value_or(std::string("Baculo engarzado"));
+    baculo_engarzado.price = root.at_path("items.baculo_engarzado.price").value_or(350);
+    baculo_engarzado.distance = root.at_path("items.baculo_engarzado.distance").value_or(6);
+    baculo_engarzado.damage_min = root.at_path("items.baculo_engarzado.damage_min").value_or(8);
+    baculo_engarzado.damage_max = root.at_path("items.baculo_engarzado.damage_max").value_or(20);
+    baculo_engarzado.mana_cost = root.at_path("items.baculo_engarzado.mana_cost").value_or(30);
 }

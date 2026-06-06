@@ -30,6 +30,15 @@ struct WeaponConfig {
     int damage_max;
 };
 
+struct MagicWeaponConfig {
+    std::string name;
+    int price;
+    int distance;
+    int damage_min;
+    int damage_max;
+    int mana_cost;
+};
+
 class GameConfig {
 public:
     // Level
@@ -60,10 +69,16 @@ public:
     ClassConfig paladin;
     ClassConfig warrior;
 
+    // Items
     // Weapons
     WeaponConfig espada;
     WeaponConfig hacha;
     WeaponConfig martillo;
+    // Magic Weapons
+    MagicWeaponConfig vara_fresno;
+    MagicWeaponConfig flauta_elfica;
+    MagicWeaponConfig baculo_nudoso;
+    MagicWeaponConfig baculo_engarzado;
 
     static GameConfig& instance();
     void load(const std::string& toml_path);
