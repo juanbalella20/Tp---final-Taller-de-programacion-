@@ -58,14 +58,20 @@ void ClientGUI::loadMedia(Zone zone) {
     {
     case ZONE_DESERT : {
         tilemap = std::make_unique<TileMap>(renderer);
-        ///tilemap->load_map_bin("data/maps/desert/map-test-1.bin");
-        tilemap->load_map_toml("data/maps/desert/map.toml");
+        tilemap->load_map_bin("data/maps/desert/map-test-1.bin");
+        //tilemap->load_map_toml("data/maps/desert/map.toml");
         break;
     }
     case ZONE_CITY : {
         tilemap = std::make_unique<TileMap>(renderer);
-        //tilemap->load_map_bin("data/maps/city/city-map-test.bin");
-        tilemap->load_map_toml("data/maps/city/map.toml");
+        tilemap->load_map_bin("data/maps/city/city-map-test.bin");
+        //tilemap->load_map_toml("data/maps/city/map.toml");
+        break;
+    }
+    case ZONE_FOREST : {
+        tilemap = std::make_unique<TileMap>(renderer);
+        tilemap->load_map_bin("data/maps/forest/forest.bin");
+        break;
     }
     default:
         break;
@@ -538,28 +544,7 @@ void ClientGUI::drawOtherPlayers() {
         }
     }
 }
-void ClientGUI::draw_teleport_labels() {
-    if (!tilemap || !chat_font) return;
-    const int tileSize = tilemap->getTileSize();
-    const SDL_Color color = {255, 255, 0, 255};
 
-    for (const auto& tp : tilemap->getTeleports()) {
-        const std::string text = "Transportarse a " + tp.dest_zone;
-        SDL_Surface* surf = TTF_RenderText_Blended(chat_font, text.c_str(), 0, color);
-        if (!surf) continue;
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
-        if (tex) {
-            const float wx = static_cast<float>(tp.x * tileSize);
-            const float wy = static_cast<float>(tp.y * tileSize);
-            const float sx = camera.world_to_screen_x(wx) + (tileSize - surf->w) / 2.0f;
-            const float sy = camera.world_to_screen_y(wy) - surf->h;
-            SDL_FRect dst{sx, sy, static_cast<float>(surf->w), static_cast<float>(surf->h)};
-            SDL_RenderTexture(renderer, tex, nullptr, &dst);
-            SDL_DestroyTexture(tex);
-        }
-        SDL_DestroySurface(surf);
-    }
-}
 
 void ClientGUI::draw_damage_numbers() {
     if (!tilemap || !chat_font) return;
@@ -633,7 +618,6 @@ void ClientGUI::draw() {
         tilemap->render(camera.get_x(), camera.get_y());
     }
 
-    draw_teleport_labels();
     drawItems();
     if (player) {
         player->draw(camera, player_pov);

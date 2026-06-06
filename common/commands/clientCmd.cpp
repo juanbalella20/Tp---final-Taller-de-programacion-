@@ -56,3 +56,7 @@ int ClientCmd::get_coord_y() const { return this->coord_y; }
 void ClientCmd::set_chat_content(const std::string& content) { this->chat_content = content; }
 
 const std::string& ClientCmd::get_chat_content() const { return this->chat_content; }
+
+void ClientCmd::set_zone(const uint8_t zone_uint8) { this->zone_uint = zone_uint8; }
+
+uint8_t ClientCmd::get_zone() const { return this->zone_uint; }

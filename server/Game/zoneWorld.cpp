@@ -9,9 +9,21 @@
 #include "item/item.h"
 #include "player/player.h"
 
-void ZoneWorld::load_terrain(const std::string& toml_path) {
+// Devuelve true si 'path' termina en 'suffix'.
+static bool ends_with(const std::string& path, const std::string& suffix) {
+    if (suffix.size() > path.size()) return false;
+    return std::equal(suffix.rbegin(), suffix.rend(), path.rbegin());
+}
+
+void ZoneWorld::load_terrain(const std::string& map_path) {
+    // Elige el loader por extension: .bin via BinaryMapLoader (load_bin), el
+    // resto como TOML. Ambos exponen la misma superficie en MapLoader.
     MapLoader md;
-    md.load(toml_path);
+    if (ends_with(map_path, ".bin")) {
+        md.load_bin(map_path);
+    } else {
+        md.load(map_path);
+    }
 
     width = md.get_width();
     height = md.get_height();

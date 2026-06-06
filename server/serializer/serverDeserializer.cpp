@@ -58,7 +58,7 @@ ServerDeserializer::ServerDeserializer() {
         deserialize_private(payload, cmd);
     };
     handlers[MSG_TELEPORT] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
-        deserialize_no_payload(payload, cmd);
+        read_zone(payload, cmd);
     };
     handlers[MSG_FOUND_CLAN] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_clan(payload, cmd);
@@ -116,6 +116,14 @@ void ServerDeserializer::read_coords(const std::vector<uint8_t>& payload, Client
     std::memcpy(&y_be, payload.data() + LEN_COORD, LEN_COORD);
     cmd.set_coord_x(ntohs(x_be));
     cmd.set_coord_y(ntohs(y_be));
+}
+
+void ServerDeserializer::read_zone(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+    // payload = [zona:1B]
+    if (payload.size() != 1) {
+        throw std::invalid_argument("Payload invalido para MSG_TELEPORT (zona)");
+    }
+    cmd.set_zone(payload[0]);
 }
 
 void ServerDeserializer::deserialize_attack(const std::vector<uint8_t>& payload, ClientCmd& cmd) {

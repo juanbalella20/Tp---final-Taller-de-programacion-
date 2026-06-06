@@ -124,6 +124,23 @@ TeleportResult GameMap::teleport_player(const std::string& player_name) {
               << static_cast<int>(dest_zone) << " (" << nx << "," << ny << ")" << std::endl;
     return {true, dest_zone, nx, ny};
 }
+
+TeleportResult GameMap::force_zone_change(const std::string& player_name,
+                                          Zone dest_zone) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) return {false, ZONE_DESERT, 0, 0};
+
+    auto dit = zones.find(dest_zone);
+    if (dit == zones.end()) return {false, ZONE_DESERT, 0, 0};  // zona no cargada
+    ZoneWorld& dst = dit->second;
+
+    auto [nx, ny] = find_arrival_cell(dst, dest_zone);
+    if (nx == -1) return {false, ZONE_DESERT, 0, 0};  // sin lugar libre
+
+    player_zone[player_name] = dest_zone;
+    player->update_position(nx, ny);
+    return {true, dest_zone, nx, ny};
+}
 void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
                          const std::map<Zone, InitialState>& initial_states) {
     for (const auto& [zone_id, path] : zone_paths) {

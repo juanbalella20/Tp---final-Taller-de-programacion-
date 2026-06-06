@@ -114,13 +114,15 @@ void GameLoop::load_maps() {
     InitialState state_desert = load_initial_state_hardcoded(ZONE_DESERT);
     InitialState state_city = load_initial_state_hardcoded(ZONE_CITY);
     std::map<Zone, std::string> zone_paths = {
-        {ZONE_DESERT, "data/maps/desert/map.toml"},
-        //{ZONE_DESERT, "data/maps/desert/map-test-1.bin"},
-        {ZONE_CITY,   "data/maps/city/map.toml"},
+        //{ZONE_DESERT, "data/maps/desert/map.toml"},
+        {ZONE_DESERT, "data/maps/desert/map-test-1.bin"},
+        {ZONE_CITY,   "data/maps/city/city-map-test.bin"},
+        {ZONE_FOREST, "data/maps/forest/forest.bin"}
     };
     std::map<Zone, InitialState> initial_states = {
         {ZONE_DESERT, state_desert},
         {ZONE_CITY,   state_city},
+        {ZONE_FOREST, state_city},
     };
     game_map.init_world(zone_paths, initial_states);
 }
@@ -332,12 +334,14 @@ void GameLoop::handle_take(const ClientCmd& cmd) {
 }
 
 void GameLoop::handle_teleport(const ClientCmd& cmd) {
+    // CHEAT /tp <zona>: fuerza el cambio a la zona pedida (sin adyacencia).
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-    auto tp_result = game_map.teleport_player(name);
+    Zone dest = static_cast<Zone>(cmd.get_zone());
+    auto tp_result = game_map.force_zone_change(name, dest);
 
     if (!tp_result.adyacente) {
         GameMsg msg(MSG_CHAT);
-        msg.set_chat_content("No hay zona de teleportación cerca");
+        msg.set_chat_content("Zona no disponible");
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
         return;
     }

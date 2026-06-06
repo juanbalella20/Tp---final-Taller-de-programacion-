@@ -128,6 +128,11 @@ public:
     // Si el player esta adyacente a un teleport, lo mueve a la zona destino y actualiza su tag.
     TeleportResult teleport_player(const std::string& player_name);
 
+    // Fuerza el cambio del jugador a 'dest_zone' (sin chequear adyacencia),
+    // ubicandolo en una celda libre de llegada. Devuelve {false,...} si la zona no esta
+    // cargada o no hay celda libre.
+    TeleportResult force_zone_change(const std::string& player_name, Zone dest_zone);
+
     // Equipa/desequipa (toggle) el item del jugador.
     // Devuelve true si, tras la operación, el jugador tiene un arma equipada.
     bool player_equip_item(const std::string& player_name, const std::string& item_id);

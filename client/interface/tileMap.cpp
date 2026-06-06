@@ -32,6 +32,14 @@ int TileMap::getPixelHeight() const {
 
 
 void TileMap::load_tileset_textures() {
+    // Al recargar (cambio de zona) hay que descartar las texturas anteriores:
+    // si no, el vector acumula las viejas + nuevas y el render (que indexa por
+    // tileset_index desde 0) dibuja con las del mapa previo. Ademas evita el leak.
+    for (auto* tex : tileset_textures) {
+        if (tex) SDL_DestroyTexture(tex);
+    }
+    tileset_textures.clear();
+
     const auto& tilesets = mapData.get_tilesets();
     tileset_textures.reserve(tilesets.size());
     for (const auto& ts : tilesets) {
@@ -50,12 +58,10 @@ void TileMap::load_map_toml(const std::string& tomlPath) {
     mapData.load(tomlPath);
     load_tileset_textures();
 }
-/*
 void TileMap::load_map_bin(const std::string& path) {
     mapData.load_bin(path);
     load_tileset_textures();
 }
-*/
 void TileMap::render(int mapViewport_x, int mapViewport_y) const {
     const int ts = mapData.get_tile_size();
     if (ts <= 0) return;

@@ -67,6 +67,24 @@ ClientCmd Parser::parse_no_payload(MessageType type) {
     return cmd;
 }
 
+ClientCmd Parser::parse_tp_zone(MessageType type, std::string zone) {
+    ClientCmd cmd;
+    cmd.set_message_type(type);
+    if (zone == "desert") {
+        cmd.set_zone(ZONE_DESERT);
+    } else if (zone == "city") {
+        cmd.set_zone(ZONE_CITY);
+    } else if (zone == "forest") {
+        cmd.set_zone(ZONE_FOREST);
+    } else if (zone == "town") {
+        cmd.set_zone(ZONE_TOWN);
+    } else {
+        throw std::invalid_argument(
+            "Zona invalida: '" + zone + "'. Use: desert | city | forest | town");
+    }
+    return cmd;
+}
+
 ClientCmd Parser::parse_item_cmd(MessageType type, std::istringstream& ss, const std::string& correct_use) {
     std::string item;
     if (!(ss >> item)) {
@@ -218,9 +236,16 @@ bool Parser::gold_related_command(const std::string& command, ClientCmd& cmd, st
     return false;
 }
 
-bool Parser::teleport_command(const std::string& command, ClientCmd& cmd) {
+bool Parser::teleport_command(const std::string& command, ClientCmd& cmd,
+                              std::istringstream& ss) {
+    // CHEAT: "/tp <zona>". El nombre de zona se lee del stream (parse_chat ya
+    // consumio "/tp" como 'command'), igual que el resto de comandos con args.
     if (command == "/tp") {
-        cmd = parse_no_payload(MSG_TELEPORT);
+        std::string zone;
+        if (!(ss >> zone)) {
+            throw std::invalid_argument("Uso: /tp <desert|city|forest|town>");
+        }
+        cmd = parse_tp_zone(MSG_TELEPORT, zone);
         return true;
     }
     return false;
@@ -252,7 +277,7 @@ ClientCmd Parser::parse_chat(const std::string& input) {
     if (cheat_command(command, cmd)) {
         return cmd;
     }
-    if (teleport_command(command, cmd)) {
+    if (teleport_command(command, cmd, ss)) {
         return cmd;
     }
 
