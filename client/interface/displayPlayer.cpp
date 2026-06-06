@@ -417,7 +417,23 @@ void PlayerDisplay::weapon_left_offset(int current_frame) {
     weapon_dy = dy[current_frame];
 }
 
-void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect body_pov) const {
+SDL_FRect PlayerDisplay::ghost_frame() {
+    static const SDL_FRect frames[] = {
+        { 1.0f, 1.0f, 31.0f, 46.0f},
+        {32.0f, 1.0f, 32.0f, 46.0},
+        {64.0f, 0.0f, 32.0f, 47.0},
+        {96.0f, 0.0f, 32.0f, 47.0},
+        {128.0f, 1.0f, 32.0f, 46.0}
+    };
+
+    int current_frame = walk_frame % 5;
+
+    SDL_FRect frame = frames[current_frame];
+    walk_frame = (walk_frame + 1) % 5;
+    return frame;
+}
+
+void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect crop) {
     SDL_FRect dst {
         camera.world_to_screen_x(rect.x),
         camera.world_to_screen_y(rect.y),
@@ -425,16 +441,14 @@ void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect body_pov) const 
         rect.h
     };
 
-    if (ghost) {
-        SDL_FRect crop = { 2.0f, 2.0f, 25.0f, 44.0f};
-        SDL_RenderTexture(renderer, ghost_image, &crop, &dst);
-    } else {
-        SDL_RenderTexture(renderer, image, &body_pov, &dst);
+    SDL_Texture* current_image = ghost ? ghost_image : image;
+    SDL_RenderTexture(renderer, current_image, &crop, &dst);
+    if (!ghost) {
         draw_player_head(camera);
     }
 }
 
-void PlayerDisplay::draw_player_head(const Camera& camera) const {
+void PlayerDisplay::draw_player_head(const Camera& camera) {
     float head_width = rect.w * 0.5f;
     float aspect_ratio = head_pov.h / head_pov.w;
     float head_height = head_width * aspect_ratio;
@@ -454,7 +468,7 @@ void PlayerDisplay::draw_player_head(const Camera& camera) const {
     draw_gnome_hat(camera, head_dst);
 }
 
-void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_dst) const {
+void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_dst) {
     if (race == "gnome") {
         SDL_FRect crop = {194.0f, 66.0f, 19.0f, 18.0f};
         float hat_width = head_dst.w * 1.1f;
@@ -470,7 +484,7 @@ void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_d
     }
 }
 
-void PlayerDisplay::draw_equipped_item(const Camera& camera) const {
+void PlayerDisplay::draw_equipped_item(const Camera& camera) {
     if (has_equipped_weapon) {
         float weapon_size = rect.w * 0.5f;
 
@@ -491,7 +505,7 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera) const {
     }
 }
 
-void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) const {
+void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) {
     if (current_direction == ViewDirection::BACK || current_direction == ViewDirection::LEFT) {
         draw_equipped_item(camera);
     }

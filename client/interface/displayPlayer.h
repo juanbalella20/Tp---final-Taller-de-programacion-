@@ -49,10 +49,10 @@ private:
     void head_right_pov();
     void head_left_pov();
 
-    void draw_player(const Camera& camera, SDL_FRect body_pov) const;
-    void draw_player_head(const Camera& camera) const;
-    void draw_gnome_hat(const Camera& camera, const SDL_FRect& head_dst) const;
-    void draw_equipped_item(const Camera& camera) const;
+    void draw_player(const Camera& camera, SDL_FRect body_pov);
+    void draw_player_head(const Camera& camera);
+    void draw_gnome_hat(const Camera& camera, const SDL_FRect& head_dst);
+    void draw_equipped_item(const Camera& camera);
 
     void weapon_back_offset(int current_frame);
     void weapon_front_offset(int current_frame);
@@ -81,12 +81,12 @@ public:
     void set_ghost(bool ghost);
     bool is_ghost() const;
     void set_equipped_weapon(bool has_weapon);
-    void draw(const Camera& camera, SDL_FRect crop_pov) const override;
+    void draw(const Camera& camera, SDL_FRect crop) override;
     SDL_FRect right_pov(ViewDirection direction);
     SDL_FRect left_pov(ViewDirection direction);
     SDL_FRect front_pov(ViewDirection direction);
     SDL_FRect back_pov(ViewDirection direction);
-
+    SDL_FRect ghost_frame();
     void move_up();
     void move_down();
     void move_left();
