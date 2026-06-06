@@ -191,4 +191,34 @@ void GameConfig::load(const std::string& toml_path) {
     pocion_mana.price = root.at_path("items.pocion_mana.price").value_or(50);
     pocion_mana.heal_life = root.at_path("items.pocion_mana.heal_life").value_or(0);
     pocion_mana.heal_mana = root.at_path("items.pocion_mana.heal_mana").value_or(100);
+
+    goblin.name           = root.at_path("npcs.goblin.name").value_or(std::string("Goblin"));
+    goblin.lifepoints     = root.at_path("npcs.goblin.lifepoints").value_or(30);
+    goblin.attack_dmg     = root.at_path("npcs.goblin.attack_dmg").value_or(5);
+    goblin.ticks_to_spawn = root.at_path("npcs.goblin.ticks_to_spawn").value_or(100);
+
+    spider.name = root.at_path("npcs.spider.name").value_or(std::string("Spider"));
+    spider.lifepoints = root.at_path("npcs.spider.lifepoints").value_or(20);
+    spider.attack_dmg = root.at_path("npcs.spider.attack_dmg").value_or(4);
+    spider.ticks_to_spawn = root.at_path("npcs.spider.ticks_to_spawn").value_or(40);
+
+    skeleton.name = root.at_path("npcs.skeleton.name").value_or(std::string("Skeleton"));
+    skeleton.lifepoints = root.at_path("npcs.skeleton.lifepoints").value_or(25);
+    skeleton.attack_dmg = root.at_path("npcs.skeleton.attack_dmg").value_or(7);
+    skeleton.ticks_to_spawn = root.at_path("npcs.skeleton.ticks_to_spawn").value_or(60);
+
+    zombie.name = root.at_path("npcs.zombie.name").value_or(std::string("Zombie"));
+    zombie.lifepoints = root.at_path("npcs.zombie.lifepoints").value_or(35);
+    zombie.attack_dmg = root.at_path("npcs.zombie.attack_dmg").value_or(6);
+    zombie.ticks_to_spawn = root.at_path("npcs.zombie.ticks_to_spawn").value_or(80);
+
+    orc.name = root.at_path("npcs.orc.name").value_or(std::string("Orco"));
+    orc.lifepoints = root.at_path("npcs.orc.lifepoints").value_or(60);
+    orc.attack_dmg = root.at_path("npcs.orc.attack_dmg").value_or(12);
+    orc.ticks_to_spawn = root.at_path("npcs.orc.ticks_to_spawn").value_or(150);
+
+    golem.name = root.at_path("npcs.golem.name").value_or(std::string("Golem"));
+    golem.lifepoints = root.at_path("npcs.golem.lifepoints").value_or(80);
+    golem.attack_dmg = root.at_path("npcs.golem.attack_dmg").value_or(15);
+    golem.ticks_to_spawn = root.at_path("npcs.golem.ticks_to_spawn").value_or(200);
 }

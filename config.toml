@@ -255,13 +255,64 @@ defense_max = 4
 # Items: pociones
 # ------------------------------------------------------------
 [items.potions.pocion_vida]
-name         = "Pocion de vida"
-price        = 50
-heal_life    = 100
-heal_mana    = 0
+name = "Pocion de vida"
+price = 50
+heal_life = 100
+heal_mana = 0
  
 [items.potions.pocion_mana]
-name         = "Pocion de mana"
-price        = 50
-heal_life    = 0
-heal_mana    = 100
+name = "Pocion de mana"
+price = 50
+heal_life = 0
+heal_mana = 100
+
+# ------------------------------------------------------------
+# NPCs hostiles
+# ------------------------------------------------------------
+[npcs.goblin]
+name = "Goblin"
+lifepoints = 30
+attack_dmg = 5
+ticks_to_spawn = 100  
+ 
+[npcs.spider]
+name = "Spider"
+lifepoints = 20
+attack_dmg = 4
+ticks_to_spawn = 40
+ 
+[npcs.skeleton]
+name = "Skeleton"
+lifepoints = 25
+attack_dmg = 7
+ticks_to_spawn = 60
+ 
+[npcs.zombie]
+name = "Zombie"
+lifepoints = 35
+attack_dmg = 6
+ticks_to_spawn = 80
+ 
+[npcs.orc]
+name = "Orco"
+lifepoints = 60
+attack_dmg = 12
+ticks_to_spawn = 150
+ 
+[npcs.golem]
+name = "Golem"
+lifepoints = 80
+attack_dmg = 15
+ticks_to_spawn = 200
+ 
+# Drop de items al morir un NPC (probabilidades acumuladas)
+[npcs.drop]
+prob_nothing = 0.80
+prob_gold = 0.08   # 0.80 < r <= 0.88
+prob_potion = 0.01   # 0.88 < r <= 0.89
+prob_item = 0.01   # 0.89 < r <= 0.90
+# el resto (0.10) no droppea nada adicional
+ 
+# Oro drop de NPC: rand(gold_drop_min, gold_drop_max) * VidaMaxNPC
+npc_gold_drop_min = 0.01
+npc_gold_drop_max = 0.2

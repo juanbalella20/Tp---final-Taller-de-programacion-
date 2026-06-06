@@ -53,6 +53,13 @@ struct PotionConfig {
     int heal_mana;
 };
 
+struct NpcHostileConfig {
+    std::string name;
+    int lifepoints;
+    int attack_dmg;
+    int ticks_to_spawn;
+};
+
 class GameConfig {
 public:
     // Level
@@ -107,6 +114,14 @@ public:
     // Potions
     PotionConfig pocion_vida;
     PotionConfig pocion_mana;
+
+    // Npc hostile
+    NpcHostileConfig goblin;
+    NpcHostileConfig spider;
+    NpcHostileConfig skeleton;
+    NpcHostileConfig zombie;
+    NpcHostileConfig orc;
+    NpcHostileConfig golem;
 
     static GameConfig& instance();
     void load(const std::string& toml_path);
