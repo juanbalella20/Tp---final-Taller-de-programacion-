@@ -92,8 +92,12 @@ void EditorWindow::build_tools_toolbar() {
 
     toolbar->addSeparator();
 
-    // --- Grupo 2: Teleport + capas de tiles ------------------------------
+    // --- Grupo 2: Teleport + Colision + capas de tiles -------------------
     QAction* teleport_tool = add_tool("Teleport", ToolType::Teleport, false);
+
+    // Colision: pinta la grilla de bloqueo (rojo en el canvas). Es la fuente
+    // unica de verdad de la colision del .bin, independiente de los graficos.
+    add_tool("Colision", ToolType::Collision, false);
 
     // Combo de zona destino (label + combo en un solo widget). Define la zona a
     // la que apuntan las celdas marcadas con Teleport. Solo visible con esa
@@ -213,7 +217,7 @@ bool EditorWindow::save_to(const QString& path) {
     try {
         BinaryMapSaver::save(path.toStdString(), map.tile_size(), map.width(),
                              map.height(), map.tilesets(), map.layers(),
-                             map.teleports());
+                             map.teleports(), map.collision());
     } catch (const std::exception& e) {
         QMessageBox::warning(this, "Error al guardar",
                              QString("No se pudo guardar el mapa:\n%1").arg(e.what()));

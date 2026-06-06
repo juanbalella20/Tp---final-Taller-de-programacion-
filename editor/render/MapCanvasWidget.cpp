@@ -138,6 +138,20 @@ void MapCanvasWidget::paintEvent(QPaintEvent* /*event*/) {
         }
     }
 
+    // Overlay de colision: relleno rojo semitransparente sobre cada celda
+    // bloqueada (decoracion SOLO del editor; el dato vive en map.collision()).
+    if (doc_) {
+        const Map& map = doc_->map();
+        const QColor block_color(220, 40, 40, 110);  // rojo, alpha ~43%
+        for (int y = 0; y < HEIGHT; ++y) {
+            for (int x = 0; x < WIDTH; ++x) {
+                if (!map.is_blocked_cell(x, y)) continue;
+                QRect dst(o.x() + x * ts, o.y() + y * ts, ts, ts);
+                painter.fillRect(dst, block_color);
+            }
+        }
+    }
+
     // Grilla: lineas verticales y horizontales cada tile.
     painter.setPen(QColor(70, 70, 70));
     for (int col = 0; col <= WIDTH; ++col) {

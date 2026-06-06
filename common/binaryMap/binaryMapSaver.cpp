@@ -61,7 +61,8 @@ void BinaryMapSaver::save(const std::string& path,
                           int tile_size, int width, int height,
                           const std::vector<Tileset>& tilesets,
                           const std::vector<MapLayerData>& layers,
-                          const std::vector<TeleportDef>& teleports) {
+                          const std::vector<TeleportDef>& teleports,
+                          const std::vector<std::vector<uint8_t>>& collision) {
     ByteBuffer out;
 
     // --- Header (16 bytes) ---------------------------------------------------
@@ -70,7 +71,8 @@ void BinaryMapSaver::save(const std::string& path,
                std::end(BinaryMapFormat::MAGIC));
     write_u16(out, BinaryMapFormat::FORMAT_VERSION);
     write_u16(out, BinaryMapFormat::ENDIANNESS_MARKER);
-    write_u32(out, 4);  // section_count = META + TILESETS + LAYERS + TELEPORTS
+    // section_count = META + TILESETS + LAYERS + TELEPORTS + COLLISION
+    write_u32(out, 5);
 
     // --- Seccion META --------------------------------------------------------
     {
@@ -144,6 +146,32 @@ void BinaryMapSaver::save(const std::string& path,
             write_string(tp_buf, tp.dest_zone);
         }
         write_section(out, BinaryMapFormat::Section::TELEPORTS, tp_buf);
+    }
+
+    // --- Seccion COLLISION ---------------------------------------------------
+    // Grilla [height][width] de uint8 (0/1), row-major. Fuente unica de verdad
+    // de la colision. Validamos dims para no emitir un .bin corrupto.
+    {
+        if (static_cast<int>(collision.size()) != height) {
+            throw std::runtime_error(
+                "BinaryMapSaver: grilla de colision con " +
+                std::to_string(collision.size()) + " filas, se esperaban " +
+                std::to_string(height));
+        }
+        ByteBuffer col_buf;
+        col_buf.reserve(static_cast<size_t>(width) * height);
+        for (const std::vector<uint8_t>& row : collision) {
+            if (static_cast<int>(row.size()) != width) {
+                throw std::runtime_error(
+                    "BinaryMapSaver: fila de colision de " +
+                    std::to_string(row.size()) + " columnas, se esperaban " +
+                    std::to_string(width));
+            }
+            for (uint8_t blocked : row) {
+                col_buf.push_back(blocked ? 1 : 0);
+            }
+        }
+        write_section(out, BinaryMapFormat::Section::COLLISION, col_buf);
     }
 
     // --- Volcado a disco -----------------------------------------------------

@@ -58,6 +58,7 @@ void BinaryMapLoader::reset_state() {
     tiles.clear();
     spawns.clear();
     teleports.clear();
+    collision.clear();
 }
 
 uint32_t BinaryMapLoader::read_header(ByteReader& reader) const {
@@ -126,6 +127,9 @@ void BinaryMapLoader::parse_section(uint16_t type, ByteReader& section_reader,
             break;
         case BinaryMapFormat::Section::TELEPORTS:
             parse_teleports_section(section_reader);
+            break;
+        case BinaryMapFormat::Section::COLLISION:
+            parse_collision_section(section_reader, seen_meta);
             break;
         default:
             // Seccion desconocida: se ignora su payload para forward-compat.
@@ -197,6 +201,19 @@ void BinaryMapLoader::parse_teleports_section(ByteReader& section_reader) {
     }
 }
 
+void BinaryMapLoader::parse_collision_section(ByteReader& section_reader, bool seen_meta) {
+    if (!seen_meta) {
+        throw std::runtime_error("BinaryMapLoader: COLLISION antes que META");
+    }
+    // Grilla [height][width] de uint8 (0/1), row-major. Dims salen de META.
+    collision.assign(height, std::vector<uint8_t>(width, 0));
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            collision[y][x] = (section_reader.read_u8() != 0) ? 1 : 0;
+        }
+    }
+}
+
 void BinaryMapLoader::build_tile_index() {
     // Identico a MapLoader::build_tile_index (mapLoader.cpp 91-103).
     for (int ts_idx = 0; ts_idx < static_cast<int>(tilesets.size()); ++ts_idx) {
@@ -224,6 +241,9 @@ const std::map<std::string, positionCoord>& BinaryMapLoader::get_spawns() const 
 const std::vector<TeleportDef>& BinaryMapLoader::get_teleports() const {
     return teleports;
 }
+const std::vector<std::vector<uint8_t>>& BinaryMapLoader::get_collision() const {
+    return collision;
+}
 
 const TileDef* BinaryMapLoader::find_tile(int id) const {
     // Copia exacta de MapLoader::find_tile (mapLoader.cpp 31-36).
@@ -234,16 +254,12 @@ const TileDef* BinaryMapLoader::find_tile(int id) const {
 }
 
 bool BinaryMapLoader::is_collidable(int x, int y) const {
-    // Copia exacta de MapLoader::is_collidable (mapLoader.cpp 38-49): garantiza
-    // que el server obtenga el mismo mundo desde un .bin que desde un .toml.
+    // Misma semantica que MapLoader::is_collidable: la grilla COLLISION es la
+    // unica fuente de verdad. Fuera del mapa siempre bloquea; in-bounds depende
+    // de la grilla (vacia = .bin sin seccion COLLISION = transitable).
     if (x < 0 || y < 0 || x >= width || y >= height) return true;
-    for (const auto& layer : layers) {
-        if (y >= static_cast<int>(layer.data.size())) continue;
-        const auto& row = layer.data[y];
-        if (x >= static_cast<int>(row.size())) continue;
-        int id = row[x];
-        const TileDef* td = find_tile(id);
-        if (td && td->collidable) return true;
-    }
-    return false;
+    if (y >= static_cast<int>(collision.size())) return false;
+    const auto& row = collision[y];
+    if (x >= static_cast<int>(row.size())) return false;
+    return row[x] != 0;
 }

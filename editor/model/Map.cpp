@@ -21,6 +21,8 @@ Map::Map() {
     for (MapLayerData& layer : layers_) {
         layer.data.assign(HEIGHT, std::vector<int>(WIDTH, 0));
     }
+    // Grilla de colision: todas las celdas transitables al crear el mapa.
+    collision_.assign(HEIGHT, std::vector<uint8_t>(WIDTH, 0));
 }
 
 // --- Metadata (constantes) ---------------------------------------------------
@@ -90,18 +92,24 @@ void Map::set_cell(int layer, int x, int y, int gid) {
     layers_[layer].data[y][x] = gid;
 }
 
-// --- Colision (misma semantica que MapLoader::is_collidable) -----------------
+// --- Colision (grilla por celda = unica fuente de verdad) --------------------
 bool Map::is_collidable(int x, int y) const {
     if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) return true;
-    for (int layer = 0; layer < LAYER_COUNT; ++layer) {
-        const auto& data = layers_[layer].data;
-        if (y >= static_cast<int>(data.size())) continue;
-        const auto& row = data[y];
-        if (x >= static_cast<int>(row.size())) continue;
-        const TileDef* td = find_tile(row[x]);
-        if (td && td->collidable) return true;
-    }
-    return false;
+    return collision_[y][x] != 0;
+}
+
+const std::vector<std::vector<uint8_t>>& Map::collision() const {
+    return collision_;
+}
+
+bool Map::is_blocked_cell(int x, int y) const {
+    if (!in_bounds(x, y)) return false;
+    return collision_[y][x] != 0;
+}
+
+void Map::set_blocked(int x, int y, bool blocked) {
+    if (!in_bounds(x, y)) return;
+    collision_[y][x] = blocked ? 1 : 0;
 }
 
 // --- Teleports ---------------------------------------------------------------

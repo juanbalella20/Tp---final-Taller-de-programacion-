@@ -81,6 +81,13 @@
  *       int32  y
  *       string dest_zone
  *
+ *   COLLISION (0x0006):
+ *     repeat height: repeat width: uint8 blocked   (0/1, row-major, dims de META)
+ *     Grilla de colision por celda, FUENTE UNICA de verdad para is_collidable.
+ *     Independiente de los graficos: el flag 'collidable' por-tileset ya NO se
+ *     usa en runtime (queda solo como metadata historica del TOML). Un .bin sin
+ *     esta seccion no tiene colision (celdas in-bounds transitables).
+ *
  * Sumar una seccion futura (NPC/items/portales) = nuevo section_type 0x0010+
  * y subir section_count. NO se toca nada de lo anterior.
  */
@@ -108,6 +115,7 @@ public:
         LAYERS    = 0x0003,
         SPAWNS    = 0x0004,
         TELEPORTS = 0x0005,
+        COLLISION = 0x0006,
 
         // --- Reservados para futuras iteraciones (sin tocar la arquitectura) ---
         NPC_FRIENDLY = 0x0010,

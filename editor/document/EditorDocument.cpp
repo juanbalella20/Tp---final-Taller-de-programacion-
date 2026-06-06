@@ -3,6 +3,7 @@
 #include "../tools/EraserTool.h"
 #include "../tools/FillTool.h"
 #include "../tools/PencilTool.h"
+#include "SetCollisionCommand.h"
 #include "SetTilesCommand.h"
 #include "ToggleTeleportCommand.h"
 
@@ -39,9 +40,10 @@ std::unique_ptr<Tool> EditorDocument::make_tool(ToolType t) const {
         case ToolType::Pencil: return std::make_unique<PencilTool>();
         case ToolType::Eraser: return std::make_unique<EraserTool>();
         case ToolType::Fill:   return std::make_unique<FillTool>();
-        // Teleport no es una Tool de gids: se maneja en apply_tool_press via
-        // toggle_teleport(). Fallback defensivo al lapiz si llega aca.
+        // Teleport y Collision no son Tools de gids: se manejan aparte en
+        // apply_tool_press. Fallback defensivo al lapiz si llegan aca.
         case ToolType::Teleport: return std::make_unique<PencilTool>();
+        case ToolType::Collision: return std::make_unique<PencilTool>();
     }
     return std::make_unique<PencilTool>();  // fallback defensivo
 }
@@ -55,6 +57,16 @@ void EditorDocument::apply_tool_press(int x, int y) {
         toggle_teleport(x, y);
         return;
     }
+    // Colision: trazo de pintura sobre la grilla booleana. El valor a pintar se
+    // fija ahora (el inverso de la celda inicial) y se mantiene durante el drag.
+    if (tool_ == ToolType::Collision) {
+        if (!map_.in_bounds(x, y)) return;
+        collision_gesture_active_ = true;
+        collision_paint_value_ = !map_.is_blocked_cell(x, y);
+        collision_changes_.clear();
+        paint_collision(x, y);
+        return;
+    }
     // Resto: abre un gesto nuevo, fabrica la Tool y acumula sus primeros deltas.
     gesture_tool_ = make_tool(tool_);
     gesture_changes_.clear();
@@ -63,6 +75,11 @@ void EditorDocument::apply_tool_press(int x, int y) {
 }
 
 void EditorDocument::apply_tool_drag(int x, int y) {
+    // Colision: continua el trazo con el valor fijado en el press.
+    if (collision_gesture_active_) {
+        paint_collision(x, y);
+        return;
+    }
     // Solo las herramientas que pintan al arrastrar (lapiz/goma) actuan aca.
     if (!gesture_tool_ || !gesture_tool_->paints_on_drag()) return;
     apply_changes_live(gesture_tool_->on_drag(map_, active_layer_, x, y,
@@ -70,6 +87,19 @@ void EditorDocument::apply_tool_drag(int x, int y) {
 }
 
 void EditorDocument::apply_tool_release(int /*x*/, int /*y*/) {
+    // Colision: cierra el trazo y lo apila como UN solo SetCollisionCommand (sin
+    // re-ejecutar: los cambios ya se aplicaron en vivo).
+    if (collision_gesture_active_) {
+        if (!collision_changes_.empty()) {
+            undo_stack_.push_back(std::make_unique<SetCollisionCommand>(
+                &map_, std::move(collision_changes_)));
+            redo_stack_.clear();
+            emit undoStackChanged();
+        }
+        collision_gesture_active_ = false;
+        collision_changes_.clear();
+        return;
+    }
     // Cierra el gesto. Si toco al menos una celda, lo apila como UN solo
     // Command (sin re-ejecutar: los cambios ya se aplicaron en vivo).
     if (gesture_tool_ && !gesture_changes_.empty()) {
@@ -77,6 +107,16 @@ void EditorDocument::apply_tool_release(int /*x*/, int /*y*/) {
     }
     gesture_tool_.reset();
     gesture_changes_.clear();
+}
+
+void EditorDocument::paint_collision(int x, int y) {
+    if (!map_.in_bounds(x, y)) return;
+    bool old_blocked = map_.is_blocked_cell(x, y);
+    if (old_blocked == collision_paint_value_) return;  // ya esta en ese estado
+    map_.set_blocked(x, y, collision_paint_value_);
+    collision_changes_.push_back({x, y, old_blocked, collision_paint_value_});
+    set_dirty(true);
+    emit cellChanged(-1, x, y);  // layer -1: no es una capa de gids
 }
 
 void EditorDocument::toggle_teleport(int x, int y) {

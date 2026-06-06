@@ -12,6 +12,7 @@
 #include "../tools/ToolType.h"
 #include "CellChange.h"
 #include "Command.h"
+#include "SetCollisionCommand.h"
 #include "Tool.h"
 
 /*
@@ -98,10 +99,20 @@ private:
     std::unique_ptr<Tool> gesture_tool_;
     std::vector<CellChange> gesture_changes_;
 
+    // Estado del gesto de la herramienta Colision. Es un trazo de pintura sobre
+    // la grilla booleana (no gids): el valor a pintar se fija en el press (el
+    // inverso del estado de la celda inicial) y se aplica en press+drag.
+    bool collision_gesture_active_ = false;
+    bool collision_paint_value_ = true;  // valor que pinta el trazo en curso
+    std::vector<SetCollisionCommand::BlockedChange> collision_changes_;
+
     // Toggle de teleport en (x,y) con la zona destino activa, como un
     // ToggleTeleportCommand apilado para undo/redo. Lo llama apply_tool_press
     // cuando la herramienta activa es Teleport (no pasa por el flujo de gids).
     void toggle_teleport(int x, int y);
+    // Pinta una celda de la grilla de colision dentro del gesto en curso, con el
+    // valor fijado en el press. Acumula el delta para el SetCollisionCommand.
+    void paint_collision(int x, int y);
     // Fabrica la Tool concreta segun tool_.
     std::unique_ptr<Tool> make_tool(ToolType t) const;
     // Aplica los deltas al Map en vivo, emite cellChanged y los acumula en

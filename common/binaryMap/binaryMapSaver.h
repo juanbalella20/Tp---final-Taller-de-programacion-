@@ -1,6 +1,7 @@
 #ifndef BINARY_MAP_SAVER_H
 #define BINARY_MAP_SAVER_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -14,8 +15,8 @@
  * estos datos de su Map) como por cualquier otro productor. La persistencia no
  * conoce al editor.
  *
- * Escribe META + TILESETS + LAYERS + TELEPORTS. Spawns quedan fuera (su seccion
- * esta reservada en binaryMapFormat.h para una version futura).
+ * Escribe META + TILESETS + LAYERS + TELEPORTS + COLLISION. Spawns quedan fuera
+ * (su seccion esta reservada en binaryMapFormat.h para una version futura).
  *
  * Implementacion: Persona A (common/binaryMapSaver.cpp). C++17.
  */
@@ -34,7 +35,8 @@ public:
                      int tile_size, int width, int height,
                      const std::vector<Tileset>& tilesets,
                      const std::vector<MapLayerData>& layers,
-                     const std::vector<TeleportDef>& teleports);
+                     const std::vector<TeleportDef>& teleports,
+                     const std::vector<std::vector<uint8_t>>& collision);
 };
 
 #endif  // BINARY_MAP_SAVER_H

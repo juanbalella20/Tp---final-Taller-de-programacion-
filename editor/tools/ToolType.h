@@ -12,7 +12,8 @@ enum class ToolType {
     Pencil,
     Eraser,
     Fill,
-    Teleport
+    Teleport,
+    Collision
 };
 
 #endif  // EDITOR_TOOL_TYPE_H

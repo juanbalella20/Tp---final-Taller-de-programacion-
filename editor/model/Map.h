@@ -1,6 +1,7 @@
 #ifndef EDITOR_MAP_H
 #define EDITOR_MAP_H
 
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -42,6 +43,13 @@ public:
 
     bool is_collidable(int x, int y) const;
 
+    // Colision: grilla por celda, fuente unica de verdad (independiente de los
+    // graficos). La pinta la herramienta Colision y se vuelca a la seccion
+    // COLLISION del .bin.
+    const std::vector<std::vector<uint8_t>>& collision() const;
+    bool is_blocked_cell(int x, int y) const;       // false si fuera de rango
+    void set_blocked(int x, int y, bool blocked);   // no-op si fuera de rango
+
     // Teleports
     const std::vector<TeleportDef>& teleports() const;
     const TeleportDef* teleport_at(int x, int y) const;     // nullptr si no hay
@@ -53,6 +61,7 @@ private:
     std::vector<MapLayerData> layers_;             // siempre LAYER_COUNT capas
     std::unordered_map<int, TileDef> tile_index_;  // gid -> TileDef
     std::vector<TeleportDef> teleports_;           // celdas teleport + dest_zone
+    std::vector<std::vector<uint8_t>> collision_;  // [HEIGHT][WIDTH] (0/1)
 
     // Rearma tile_index_ a partir de tilesets_. = MapLoader::build_tile_index.
     void rebuild_tile_index();

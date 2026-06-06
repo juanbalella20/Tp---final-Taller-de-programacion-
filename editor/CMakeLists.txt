@@ -16,6 +16,7 @@ add_executable(map_editor
     render/TilesetPixmapCache.cpp
     document/EditorDocument.cpp
     document/SetTilesCommand.cpp
+    document/SetCollisionCommand.cpp
     document/ToggleTeleportCommand.cpp
     tools/PencilTool.cpp
     tools/EraserTool.cpp

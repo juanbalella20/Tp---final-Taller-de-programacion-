@@ -46,6 +46,9 @@ void TilePalette::load_png() {
     if (cols < 1) cols = 1;
     if (rows < 1) rows = 1;
 
+    // La colision ya NO es por-tileset: se pinta con la herramienta Colision
+    // sobre una grilla por celda (fuente unica de verdad). El flag por-tileset
+    // queda en false; el editor no lo usa.
     Tileset ts;
     ts.name = QFileInfo(path).baseName().toStdString();
     ts.file_path = path.toStdString();

@@ -41,6 +41,9 @@ public:
     const std::vector<MapLayerData>& get_layers() const;
     const std::map<std::string, positionCoord>& get_spawns() const;
     const std::vector<TeleportDef>& get_teleports() const;
+    // Grilla de colision por celda [height][width] (0/1). Vacia si el .bin no
+    // trae seccion COLLISION. Es la unica fuente de verdad de is_collidable.
+    const std::vector<std::vector<uint8_t>>& get_collision() const;
 
     // Devuelve nullptr si el id es 0 o no esta registrado en ningun tileset.
     const TileDef* find_tile(int id) const;
@@ -58,6 +61,7 @@ private:
     std::vector<MapLayerData> layers;
     std::map<std::string, positionCoord> spawns;
     std::vector<TeleportDef> teleports;
+    std::vector<std::vector<uint8_t>> collision;  // [height][width] (0/1)
 
     std::vector<uint8_t> read_file(const std::string& path) const;
     void reset_state();
@@ -70,6 +74,7 @@ private:
     void parse_tilesets_section(ByteReader& section_reader, const std::string& base_dir);
     void parse_layers_section(ByteReader& section_reader, bool seen_meta);
     void parse_teleports_section(ByteReader& section_reader);
+    void parse_collision_section(ByteReader& section_reader, bool seen_meta);
 
     // Recorre el vector de tilesets y arma el mapa <id, TileDef>.
     // Identico a MapLoader::build_tile_index.
