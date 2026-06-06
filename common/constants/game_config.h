@@ -94,6 +94,9 @@ public:
     DefenseItemConfig capucha;
     DefenseItemConfig casco_hierro;
     DefenseItemConfig sombrero_magico;
+    // Shields
+    DefenseItemConfig escudo_tortuga;
+    DefenseItemConfig escudo_hierro;
 
     static GameConfig& instance();
     void load(const std::string& toml_path);

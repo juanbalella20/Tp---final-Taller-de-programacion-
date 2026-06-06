@@ -171,4 +171,14 @@ void GameConfig::load(const std::string& toml_path) {
     sombrero_magico.price = root.at_path("items.sombrero_magico.price").value_or(220);
     sombrero_magico.defense_min = root.at_path("items.sombrero_magico.defense_min").value_or(4);
     sombrero_magico.defense_max = root.at_path("items.sombrero_magico.defense_max").value_or(12);
+
+    escudo_tortuga.name = root.at_path("items.escudo_tortuga.name").value_or(std::string("Escudo de tortuga"));
+    escudo_tortuga.price = root.at_path("items.escudo_tortuga.price").value_or(80);
+    escudo_tortuga.defense_min = root.at_path("items.escudo_tortuga.defense_min").value_or(1);
+    escudo_tortuga.defense_max = root.at_path("items.escudo_tortuga.defense_max").value_or(2);
+
+    escudo_hierro.name = root.at_path("items.escudo_hierro.name").value_or(std::string("Escudo de hierro"));
+    escudo_hierro.price = root.at_path("items.escudo_hierro.price").value_or(140);
+    escudo_hierro.defense_min = root.at_path("items.escudo_hierro.defense_min").value_or(1);
+    escudo_hierro.defense_max = root.at_path("items.escudo_hierro.defense_max").value_or(4);
 }

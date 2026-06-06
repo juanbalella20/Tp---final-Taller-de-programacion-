@@ -236,3 +236,17 @@ price = 220
 defense_min = 4
 defense_max = 12
 
+# ------------------------------------------------------------
+# Items: escudos
+# ------------------------------------------------------------
+[items.shields.escudo_tortuga]
+name = "Escudo de tortuga"
+price = 80
+defense_min = 1
+defense_max = 2
+ 
+[items.shields.escudo_hierro]
+name = "Escudo de hierro"
+price = 140
+defense_min = 1
+defense_max = 4

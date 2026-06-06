@@ -174,6 +174,7 @@ void GameMap::spawn_player(const std::string& name, const std::string& race, con
     // TODO: derivar de config / persistencia
     const Zone start_zone = ZONE_CITY;
     player_zone[name] = start_zone;
+    const auto& cfg = GameConfig::instance();
 
     // Posicion de spawn hardcodeada
     // int start_x = 29;
@@ -208,8 +209,8 @@ void GameMap::spawn_player(const std::string& name, const std::string& race, con
 
     Player player(name, player_race, player_class);
     player.update_position(start_x, start_y);
-    player.add_item(std::make_unique<Arma>("espada", "Espada", 100, 2, 2, 5));
-    player.add_item(std::make_unique<Escudo>("escudo", "Escudo de tortuga", 80, 1, 2));
+    player.add_item(std::make_unique<Arma>("espada", cfg.espada.name, cfg.espada.price, cfg.espada.distance, cfg.espada.damage_min, cfg.espada.damage_max));
+    player.add_item(std::make_unique<Escudo>("escudo", cfg.escudo_tortuga.name, cfg.escudo_tortuga.price, cfg.escudo_tortuga.defense_min, cfg.escudo_tortuga.defense_max));
     players.push_back(std::move(player));
     std::cout << "[DEBUG: spawn_player] " << name << " at ("
               << start_x << "," << start_y << ") zona=" << static_cast<int>(start_zone)
