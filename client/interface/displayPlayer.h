@@ -23,6 +23,7 @@ private:
     SDL_Texture* weapon_image;
     SDL_Texture* head_image;
     SDL_Texture* hat_image;
+    SDL_Texture* ghost_image;
     SDL_FRect rect;
     SDL_FRect head_pov;
     int tileSize;
@@ -48,7 +49,6 @@ private:
     void head_right_pov();
     void head_left_pov();
 
-    void set_transparency(SDL_Texture* img) const;
     void draw_player(const Camera& camera, SDL_FRect body_pov) const;
     void draw_player_head(const Camera& camera) const;
     void draw_gnome_hat(const Camera& camera, const SDL_FRect& head_dst) const;

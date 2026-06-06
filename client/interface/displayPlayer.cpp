@@ -38,6 +38,16 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
         throw std::runtime_error(std::string("Creating weapon texture: ") + SDL_GetError());
     }
 
+    SDL_Surface* ghost_surf = IMG_Load("imagenes/ghost.png");
+    if (!ghost_surf) {
+        throw std::runtime_error(std::string("Loading weapon surface: ") + SDL_GetError());
+    }
+    ghost_image = SDL_CreateTextureFromSurface(renderer, ghost_surf);
+    SDL_DestroySurface(ghost_surf);
+    if (!ghost_image) {
+        throw std::runtime_error(std::string("Creating weapon texture: ") + SDL_GetError());
+    }
+
     load_heads();
 }
 
@@ -54,16 +64,20 @@ PlayerDisplay::~PlayerDisplay() {
     if (hat_image) {
         SDL_DestroyTexture(hat_image);
     }
+    if (ghost_image) {
+        SDL_DestroyTexture(ghost_image);
+    }
 }
 
 PlayerDisplay::PlayerDisplay(PlayerDisplay&& other) noexcept
     : renderer(other.renderer), image(other.image), weapon_image(other.weapon_image),
-      head_image(other.head_image), hat_image(other.hat_image), rect(other.rect), head_pov(other.head_pov),
+      head_image(other.head_image), hat_image(other.hat_image), ghost_image(other.ghost_image), rect(other.rect), head_pov(other.head_pov),
       tileSize(other.tileSize), keystate(other.keystate), race(other.race) {
     other.image = nullptr;
     other.weapon_image = nullptr;
     other.head_image = nullptr;
     other.hat_image = nullptr;
+    other.ghost_image = nullptr;
 }
 
 PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
@@ -72,6 +86,7 @@ PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
         if (weapon_image) SDL_DestroyTexture(weapon_image);
         if (head_image) SDL_DestroyTexture(head_image);
         if (hat_image) SDL_DestroyTexture(hat_image);
+        if (ghost_image) SDL_DestroyTexture(ghost_image);
         renderer = other.renderer;
         image = other.image;
         weapon_image = other.weapon_image;
@@ -86,6 +101,7 @@ PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
         other.weapon_image = nullptr;
         other.head_image = nullptr;
         other.hat_image = nullptr;
+        other.ghost_image = nullptr;
     }
     return *this;
 }
@@ -401,16 +417,6 @@ void PlayerDisplay::weapon_left_offset(int current_frame) {
     weapon_dy = dy[current_frame];
 }
 
-//E VEZ DE QUE LO TRASNPARENZCA, LO QUE TENGO QUE HACER ES PONERLE LA SKIN DEL FANTASMA
-
-void PlayerDisplay::set_transparency(SDL_Texture* img) const {
-    if (ghost) {
-        SDL_SetTextureAlphaMod(img, 140);
-    } else {
-        SDL_SetTextureAlphaMod(img, 255);
-    }
-}
-
 void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect body_pov) const {
     SDL_FRect dst {
         camera.world_to_screen_x(rect.x),
@@ -419,7 +425,13 @@ void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect body_pov) const 
         rect.h
     };
 
-    SDL_RenderTexture(renderer, image, &body_pov, &dst);
+    if (ghost) {
+        SDL_FRect crop = { 2.0f, 2.0f, 25.0f, 44.0f};
+        SDL_RenderTexture(renderer, ghost_image, &crop, &dst);
+    } else {
+        SDL_RenderTexture(renderer, image, &body_pov, &dst);
+        draw_player_head(camera);
+    }
 }
 
 void PlayerDisplay::draw_player_head(const Camera& camera) const {
@@ -444,8 +456,6 @@ void PlayerDisplay::draw_player_head(const Camera& camera) const {
 
 void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_dst) const {
     if (race == "gnome") {
-        set_transparency(hat_image);
-
         SDL_FRect crop = {194.0f, 66.0f, 19.0f, 18.0f};
         float hat_width = head_dst.w * 1.1f;
         float hat_aspect_ratio = crop.h / crop.w;
@@ -462,7 +472,6 @@ void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_d
 
 void PlayerDisplay::draw_equipped_item(const Camera& camera) const {
     if (has_equipped_weapon) {
-        set_transparency(weapon_image);
         float weapon_size = rect.w * 0.5f;
 
         double angle = 0.0;
@@ -483,15 +492,12 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera) const {
 }
 
 void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) const {
-    set_transparency(image);
-    set_transparency(head_image);
-
     if (current_direction == ViewDirection::BACK || current_direction == ViewDirection::LEFT) {
         draw_equipped_item(camera);
     }
 
     draw_player(camera, body_pov);
-    draw_player_head(camera);
+    // draw_player_head(camera);
 
     if (current_direction == ViewDirection::FRONT || current_direction == ViewDirection::RIGHT) {
         draw_equipped_item(camera);
