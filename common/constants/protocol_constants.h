@@ -116,6 +116,7 @@ enum ELEMENT_TYPE : uint8_t {
 };
 
 enum Zone : uint8_t {
+    ZONE_DEFAULT = 0x01, // misma que city
     ZONE_DESERT = 0x00,
     ZONE_CITY = 0x01,
     ZONE_FOREST = 0x02,

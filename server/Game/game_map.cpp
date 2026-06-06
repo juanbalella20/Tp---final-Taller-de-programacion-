@@ -94,37 +94,6 @@ std::pair<int, int> GameMap::find_arrival_cell(ZoneWorld& dst, Zone dest_zone) {
     return dst.find_random_empty_cell(dest_players);
 }
 
-TeleportResult GameMap::teleport_player(const std::string& player_name) {
-    Player* player = find_player_by_name(player_name);
-    if (player == nullptr) return {false, ZONE_DESERT, 0, 0};
-
-    // Chequea si el player esta adyacente a un teleport
-    ZoneWorld& src = zone_of(player_name);
-    const TeleportDef* tp = src.teleport_adjacent_to(player->get_coord_x(),
-                                                     player->get_coord_y());
-    if (tp == nullptr) return {false, ZONE_DESERT, 0, 0};
-
-    // Encuentra la zona por nombre
-    auto zit = ZONE_NAME_MAP.find(tp->dest_zone);
-    if (zit == ZONE_NAME_MAP.end()) return {false, ZONE_DESERT, 0, 0};
-    Zone dest_zone = zit->second;
-
-    auto dit = zones.find(dest_zone);
-    if (dit == zones.end()) return {false, ZONE_DESERT, 0, 0};  // zona no cargada
-    ZoneWorld& dst = dit->second;
-
-    // Ubica al player en una celda libre de la zona destino.
-    auto [nx, ny] = find_arrival_cell(dst, dest_zone);
-    if (nx == -1) return {false, ZONE_DESERT, 0, 0};  // sin lugar libre
-
-    // Aplica el cambio de zona y posicion.
-    player_zone[player_name] = dest_zone;
-    player->update_position(nx, ny);
-    std::cout << "[DEBUG: teleport] " << player_name << " -> zona "
-              << static_cast<int>(dest_zone) << " (" << nx << "," << ny << ")" << std::endl;
-    return {true, dest_zone, nx, ny};
-}
-
 TeleportResult GameMap::force_zone_change(const std::string& player_name,
                                           Zone dest_zone) {
     Player* player = find_player_by_name(player_name);
@@ -586,3 +555,19 @@ bool GameMap::ban_member(const std::string& player_name, const std::string& memb
     }
     return true;
 }
+
+TeleportResult GameMap::try_teleport_on_current_cell(const std::string& player_name) {
+    ZoneWorld& zw = zone_of(player_name);
+    Player* player = find_player_by_name(player_name);
+    const TeleportDef* tp = zw.teleport_at(player->get_coord_x(), player->get_coord_y());
+    if (tp == nullptr) {
+        return {false, Zone::ZONE_DEFAULT,0,0};
+    }
+    auto it = ZONE_NAME_MAP.find(tp->dest_zone);
+    if (it == ZONE_NAME_MAP.end()) {
+        return {false, Zone::ZONE_DEFAULT,0,0};   // el string no es una zona conocida
+    }
+    Zone dest = it->second;
+    return force_zone_change(player_name, dest);
+}
+

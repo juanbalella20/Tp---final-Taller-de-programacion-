@@ -56,6 +56,8 @@ class GameLoop : public Thread {
     void handle_attack(const ClientCmd& cmd);
     void handle_meditate(const ClientCmd& cmd);
     void handle_teleport(const ClientCmd& cmd);
+    void send_zone_transition(uint32_t client_id, const std::string& name,
+                              const TeleportResult& r);
     void handle_private(const ClientCmd& cmd);
     void handle_cheat_kill(const ClientCmd& cmd);
     void handle_cheat_inf_hp(const ClientCmd& cmd);

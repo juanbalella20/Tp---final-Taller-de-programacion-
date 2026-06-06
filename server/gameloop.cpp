@@ -115,9 +115,9 @@ void GameLoop::load_maps() {
     InitialState state_city = load_initial_state_hardcoded(ZONE_CITY);
     std::map<Zone, std::string> zone_paths = {
         //{ZONE_DESERT, "data/maps/desert/map.toml"},
-        {ZONE_DESERT, "data/maps/desert/map-test-1.bin"},
-        {ZONE_CITY,   "data/maps/city/city-map-test.bin"},
-        {ZONE_FOREST, "data/maps/forest/forest.bin"}
+        {ZONE_DESERT, "data/maps/desert/map-2.bin"},
+        {ZONE_CITY,   "data/maps/city/city-2.bin"},
+        {ZONE_FOREST, "data/maps/forest/forest2.bin"}
     };
     std::map<Zone, InitialState> initial_states = {
         {ZONE_DESERT, state_desert},
@@ -339,27 +339,34 @@ void GameLoop::handle_teleport(const ClientCmd& cmd) {
     Zone dest = static_cast<Zone>(cmd.get_zone());
     auto tp_result = game_map.force_zone_change(name, dest);
 
-    if (!tp_result.adyacente) {
+    if (!tp_result.on_tile) {
         GameMsg msg(MSG_CHAT);
         msg.set_chat_content("Zona no disponible");
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
         return;
     }
+    send_zone_transition(cmd.get_client_id(), name, tp_result);
+}
+
+void GameLoop::send_zone_transition(uint32_t client_id, const std::string& name,
+                                    const TeleportResult& r) {
+    // Cambio de zona fallido (zona no cargada o sin celda): no se envia nada.
+    if (!r.on_tile) return;
 
     // Transición a la nueva zona
     GameMsg zoneMsg(MSG_ZONE_CHANGE);
-    zoneMsg.set_zone(tp_result.dest_zone);
-    zoneMsg.set_coord_x(tp_result.x);
-    zoneMsg.set_coord_y(tp_result.y);
-    client_registry_monitor.notify_client(cmd.get_client_id(), zoneMsg);
+    zoneMsg.set_zone(r.dest_zone);
+    zoneMsg.set_coord_x(r.x);
+    zoneMsg.set_coord_y(r.y);
+    client_registry_monitor.notify_client(client_id, zoneMsg);
 
     // Nuevo terreno + actores/items de la nueva zona
     GameMsg mapMsg(MSG_SEND_MAP);
     mapMsg.set_map(game_map.get_map(name));
-    client_registry_monitor.notify_client(cmd.get_client_id(), mapMsg);
+    client_registry_monitor.notify_client(client_id, mapMsg);
 
-    send_npcs_snapshot_to(cmd.get_client_id());
-    send_items_snapshot_to(cmd.get_client_id());
+    send_npcs_snapshot_to(client_id);
+    send_items_snapshot_to(client_id);
 }
 
 void GameLoop::handle_move(const ClientCmd& cmd) {
@@ -385,6 +392,16 @@ void GameLoop::handle_move(const ClientCmd& cmd) {
         client_registry_monitor.notify_clients(msg);
         std::cout << "[DEBUG]: sended" << std::endl;
     // }
+
+    // Teleport automatico: si el player se movio y quedo parado sobre una celda
+    // teleport, se cambia de zona (mismo flujo que el cheat /tp)
+    // MSG_ZONE_CHANGE lo reubica en la zona destino
+    if (result.moved) {
+        auto tp = game_map.try_teleport_on_current_cell(name);
+        if (tp.on_tile) {
+            send_zone_transition(cmd.get_client_id(), name, tp);
+        }
+    }
 }
 
 void GameLoop::handle_attack(const ClientCmd& cmd) {

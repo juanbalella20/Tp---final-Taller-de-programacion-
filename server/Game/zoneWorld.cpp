@@ -246,10 +246,9 @@ NPChostile* ZoneWorld::hostile_at(int x, int y) {
     return nullptr;
 }
 
-const TeleportDef* ZoneWorld::teleport_adjacent_to(int x, int y) const {
-    positionCoord here{x, y};
+const TeleportDef* ZoneWorld::teleport_at(int x, int y) const {
     for (const auto& tp : teleports) {
-        if (is_adyacent(positionCoord{tp.x, tp.y}, here)) return &tp;
+        if (tp.x == x && tp.y == y) return &tp;
     }
     return nullptr;
 }

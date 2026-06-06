@@ -39,7 +39,7 @@ struct InitialState {
 };
 
 struct TeleportResult {
-        bool adyacente;
+        bool on_tile;
         Zone dest_zone;
         int x;
         int y;
@@ -125,10 +125,7 @@ public:
     Zone get_player_zone(const std::string& player_name) const;
 
 
-    // Si el player esta adyacente a un teleport, lo mueve a la zona destino y actualiza su tag.
-    TeleportResult teleport_player(const std::string& player_name);
-
-    // Fuerza el cambio del jugador a 'dest_zone' (sin chequear adyacencia),
+    // Fuerza el cambio del jugador a 'dest_zone',
     // ubicandolo en una celda libre de llegada. Devuelve {false,...} si la zona no esta
     // cargada o no hay celda libre.
     TeleportResult force_zone_change(const std::string& player_name, Zone dest_zone);
@@ -167,6 +164,9 @@ public:
     bool ban_member(const std::string& player_name, const std::string& member);
 
     bool same_clan(Player* player1, Player* player2);
+
+    // Busca al player y su zona, comprueba que esté parado en una celda de teleport
+    TeleportResult try_teleport_on_current_cell(const std::string& player_name);
 };
 
 #endif

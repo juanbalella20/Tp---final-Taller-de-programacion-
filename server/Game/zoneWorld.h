@@ -101,12 +101,13 @@ public:
 
     // --- Teleports ---
     const std::vector<TeleportDef>& get_teleports() const { return teleports; }
-    // Teleport cuya celda sea adyacente (Manhattan <= 1) a (x,y), o nullptr.
-    const TeleportDef* teleport_adjacent_to(int x, int y) const;
     // Celda libre (terreno empty, sin actor) adyacente a (tx,ty); si no hay
     // adyacente libre, cae a find_random_empty_cell. Devuelve {-1,-1} si nada.
     std::pair<int, int> free_cell_adjacent_to(
         int tx, int ty, const std::vector<const Player*>& players_here) const;
+    // Recorre teleports y devuelve el que coincide con (x,y)
+    const TeleportDef* teleport_at(int x, int y) const;
+
 };
 
 #endif
