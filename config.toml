@@ -330,3 +330,14 @@ allowed_npcs = ["spider", "skeleton"]
 [zones.dungeon]
 allowed_npcs = ["skeleton", "zombie", "orc", "golem"]
  
+# ------------------------------------------------------------
+# Clanes
+# ------------------------------------------------------------
+[clans]
+min_level_to_found = 6    # Nivel minimo para fundar un clan
+max_members = 16   # Incluye al fundador
+ 
+# Bonificacion de clan cuando hay jugadores cerca
+clan_defense_bonus_per_member = 0.05  # +5% defensa por miembro adicional
+clan_attack_bonus_per_member  = 0.05  # +5% ataque por miembro adicional
+ 

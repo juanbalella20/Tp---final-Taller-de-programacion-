@@ -66,13 +66,13 @@ public:
     // Level
     double xp_base;
     double xp_exponent;
-    int    xp_level_offset;
+    int xp_level_offset;
     double xp_kill_factor;
     double gold_base;
     double gold_exponent;
     double gold_excess_factor;
-    int    newbie_max_level;
-    int    level_diff_max;
+    int newbie_max_level;
+    int level_diff_max;
 
     // Combat
     double crit_chance;
@@ -125,6 +125,12 @@ public:
     NpcHostileConfig golem;
 
     std::vector<std::string> desert_npcs;
+
+    // Clan
+    int clan_min_level_to_found;
+    int clan_max_members;
+    double clan_defense_bonus_per_member;
+    double clan_attack_bonus_per_member;
 
     static GameConfig& instance();
     void load(const std::string& toml_path);

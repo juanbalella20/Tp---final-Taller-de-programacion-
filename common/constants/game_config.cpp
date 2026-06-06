@@ -229,4 +229,9 @@ void GameConfig::load(const std::string& toml_path) {
             }
         }
     }
+
+    clan_min_level_to_found       = root.at_path("clans.min_level_to_found").value_or(6);
+    clan_max_members               = root.at_path("clans.max_members").value_or(16);
+    clan_defense_bonus_per_member  = root.at_path("clans.clan_defense_bonus_per_member").value_or(0.05);
+    clan_attack_bonus_per_member   = root.at_path("clans.clan_attack_bonus_per_member").value_or(0.05);
 }
