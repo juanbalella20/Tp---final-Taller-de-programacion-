@@ -22,6 +22,14 @@ struct ClassConfig {
     float meditation_factor;
 };
 
+struct WeaponConfig {
+    std::string name;
+    int price;
+    int distance;
+    int damage_min;
+    int damage_max;
+};
+
 class GameConfig {
 public:
     // Level
@@ -51,6 +59,11 @@ public:
     ClassConfig cleric;
     ClassConfig paladin;
     ClassConfig warrior;
+
+    // Weapons
+    WeaponConfig espada;
+    WeaponConfig hacha;
+    WeaponConfig martillo;
 
     static GameConfig& instance();
     void load(const std::string& toml_path);

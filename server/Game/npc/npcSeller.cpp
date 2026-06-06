@@ -2,6 +2,7 @@
 #include "../player/player.h"
 #include "../item/item.h"
 #include "../item/arma.h"
+#include "game_config.h"
 
 NPCseller::NPCseller(int x, int y) : pos_x(x), pos_y(y) {
     name = "Comerciante";
@@ -10,9 +11,10 @@ NPCseller::NPCseller(int x, int y) : pos_x(x), pos_y(y) {
  
 // TODO: cargar desde ItemDataBase cuando este implementada (pociones, armaduras, etc)
 void NPCseller::init_store() {
-    store_items.push_back(std::make_unique<Arma>("espada",   "Espada",   100, 1, 2, 5));
-    store_items.push_back(std::make_unique<Arma>("hacha",    "Hacha",    150, 1, 4, 5));
-    store_items.push_back(std::make_unique<Arma>("martillo", "Martillo", 120, 1, 1, 9));
+    const auto& cfg = GameConfig::instance();
+    store_items.push_back(std::make_unique<Arma>("espada",   cfg.espada.name,   cfg.espada.price,   cfg.espada.distance,   cfg.espada.damage_min,   cfg.espada.damage_max));
+    store_items.push_back(std::make_unique<Arma>("hacha",    cfg.hacha.name,    cfg.hacha.price,    cfg.hacha.distance,    cfg.hacha.damage_min,    cfg.hacha.damage_max));
+    store_items.push_back(std::make_unique<Arma>("martillo", cfg.martillo.name, cfg.martillo.price, cfg.martillo.distance, cfg.martillo.damage_min, cfg.martillo.damage_max));
 }
 
 int NPCseller::get_coord_x() const { return pos_x; }

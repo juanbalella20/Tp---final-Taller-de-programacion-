@@ -94,4 +94,23 @@ void GameConfig::load(const std::string& toml_path) {
     warrior.life_factor = root.at_path("classes.warrior.life_factor").value_or(8);
     warrior.mana_factor = root.at_path("classes.warrior.mana_factor").value_or(0);
     warrior.meditation_factor = static_cast<float>(root.at_path("classes.warrior.meditation_factor").value_or(0.0));
-    }
+
+    // Weapons
+    espada.name = root.at_path("items.espada.name").value_or(std::string("Espada"));
+    espada.price = root.at_path("items.espada.price").value_or(100);
+    espada.distance = root.at_path("items.espada.distance").value_or(1);
+    espada.damage_min = root.at_path("items.espada.damage_min").value_or(2);
+    espada.damage_max = root.at_path("items.espada.damage_max").value_or(5);
+
+    hacha.name = root.at_path("items.hacha.name").value_or(std::string("Hacha"));
+    hacha.price = root.at_path("items.hacha.price").value_or(150);
+    hacha.distance = root.at_path("items.hacha.distance").value_or(1);
+    hacha.damage_min = root.at_path("items.hacha.damage_min").value_or(4);
+    hacha.damage_max = root.at_path("items.hacha.damage_max").value_or(5);
+
+    martillo.name = root.at_path("items.martillo.name").value_or(std::string("Martillo"));
+    martillo.price = root.at_path("items.martillo.price").value_or(120);
+    martillo.distance = root.at_path("items.martillo.distance").value_or(1);
+    martillo.damage_min = root.at_path("items.martillo.damage_min").value_or(1);
+    martillo.damage_max = root.at_path("items.martillo.damage_max").value_or(9);
+}

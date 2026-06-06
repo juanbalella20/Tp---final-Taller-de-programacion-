@@ -2,6 +2,7 @@
 #include "../game_exceptions.h"
 #include "item/arma.h"
 #include "item/escudo.h"
+#include "game_config.h"
 
 #include <algorithm>
 #include <iostream>
@@ -129,7 +130,7 @@ void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
     for (const auto& [zone_id, path] : zone_paths) {
         ZoneWorld world;
         world.load_terrain(path);
-
+        const auto& cfg = GameConfig::instance();
         auto state_it = initial_states.find(zone_id);
         if (state_it != initial_states.end()) {
             // spawn de npcs random segun los tipos permitidos en la zona
@@ -146,7 +147,8 @@ void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
         world.spawn_seller(1, 1);
 
         // Item de prueba hardcodeado. TODO: moverlo a state.items cuando este listo.
-        world.spawn_item(7, 7, std::make_unique<Arma>("espada", "espada", 50, 2, 2, 5));
+        
+        world.spawn_item(7, 7, std::make_unique<Arma>("espada", cfg.espada.name, cfg.espada.price, cfg.espada.distance, cfg.espada.damage_min, cfg.espada.damage_max));
 
         zones.emplace(zone_id, std::move(world));
     }

@@ -116,3 +116,42 @@ life_factor = 8
 mana_factor = 0    # El guerrero no usa magia
 meditation_factor = 0.0  # El guerrero no puede meditar
  
+ # ------------------------------------------------------------
+# Items: armas
+# (distance: 1 = cuerpo a cuerpo, >1 = rango)
+# ------------------------------------------------------------
+[items.weapons.espada]
+name = "Espada"
+price = 100
+distance = 1
+damage_min = 2
+damage_max = 5
+ 
+[items.weapons.hacha]
+name = "Hacha"
+price = 150
+distance = 1
+damage_min = 4
+damage_max = 5
+ 
+[items.weapons.martillo]
+name = "Martillo"
+price = 120
+distance = 1
+damage_min = 1
+damage_max = 9
+ 
+[items.weapons.arco_simple]
+name = "Arco simple"
+price = 80
+distance = 5
+damage_min = 1
+damage_max = 4
+ 
+[items.weapons.arco_compuesto]
+name = "Arco compuesto"
+price = 200
+distance = 7
+damage_min = 4
+damage_max = 16
+
