@@ -3,6 +3,16 @@
 
 #include <string>
 
+struct RaceConfig {
+    int inteligence;
+    int strength;
+    int agility;
+    float endurance;
+    int life_factor;
+    int mana_factor;
+};
+
+
 class GameConfig {
 public:
     // Level
@@ -20,6 +30,12 @@ public:
     double crit_chance;
     double dodge_threshold;
     double npc_gold_drop_max;
+
+    // Races
+    RaceConfig human;
+    RaceConfig elf;
+    RaceConfig dwarf;
+    RaceConfig gnome;
 
     static GameConfig& instance();
     void load(const std::string& toml_path);
