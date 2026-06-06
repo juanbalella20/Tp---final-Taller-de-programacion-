@@ -52,6 +52,18 @@ void Inventory::unequip_item() {
     equipped_item = nullptr;
 }
 
+bool Inventory::is_equipped(const std::string& item_id) const {
+    return equipped_item != nullptr && equipped_item->get_id() == item_id;
+}
+
+bool Inventory::has_weapon_equipped() const {
+    return equipped_item != nullptr;
+}
+
+std::string Inventory::get_equipped_weapon_id() const {
+    return equipped_item != nullptr ? equipped_item->get_id() : std::string();
+}
+
 bool Inventory::is_full() const {
     return (int)items.size() >= MAX_SLOTS;
 }

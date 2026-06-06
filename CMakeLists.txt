@@ -137,6 +137,8 @@ add_executable(server
     server/Game/player/level.cpp
     server/Game/player/alive_state.cpp
     server/Game/player/ghost_state.cpp
+    server/Game/player/meditate_state.cpp
+    server/Game/player/clan.cpp
     server/Game/inventory.cpp
     server/Game/defense_set.cpp
     server/Game/item/item.cpp

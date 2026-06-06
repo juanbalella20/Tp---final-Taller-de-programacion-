@@ -44,3 +44,10 @@ void AliveState::revive(Player& self) {
     // Ya está vivo: no hace nada.
     (void)self;
 }
+
+bool AliveState::toggle_meditation(Player& self) {
+    // Vivo y quieto: /meditar empieza la meditación si la clase lo permite.
+    if (!self.can_meditate()) return false;
+    self.to_meditate();
+    return true;
+}

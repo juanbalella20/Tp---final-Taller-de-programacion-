@@ -54,11 +54,32 @@ ServerDeserializer::ServerDeserializer() {
     handlers[MSG_CHEAT_INF_MANA] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_no_payload(payload, cmd);
     };
+    handlers[MSG_CHEAT_MANA] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        read_gold(payload, cmd);
+    };
     handlers[MSG_PRIVATE] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_private(payload, cmd);
     };
     handlers[MSG_TELEPORT] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_no_payload(payload, cmd);
+    };
+    handlers[MSG_FOUND_CLAN] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_clan(payload, cmd);
+    };
+    handlers[MSG_JOIN_CLAN] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_clan(payload, cmd);
+    };
+    handlers[MSG_CLAN_ACEP] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_clan(payload, cmd);
+    };
+    handlers[MSG_CLAN_RECH] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_clan(payload, cmd);
+    };
+    handlers[MSG_CLAN_KICK] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_clan(payload, cmd);
+    };
+    handlers[MSG_CLAN_BAN] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_clan(payload, cmd);
     };
 }
 
@@ -134,4 +155,11 @@ void ServerDeserializer::deserialize_cmd(uint8_t type, const std::vector<uint8_t
     if (it != handlers.end()) {
         it->second(payload, cmd);
     }
+}
+
+void ServerDeserializer::deserialize_clan(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+    uint8_t target_len = payload[0];
+    std::string target_name(payload.begin() + LEN_NAME_SIZE_FIELD,
+                            payload.begin() + LEN_NAME_SIZE_FIELD + target_len);
+    cmd.set_target_name(target_name);
 }

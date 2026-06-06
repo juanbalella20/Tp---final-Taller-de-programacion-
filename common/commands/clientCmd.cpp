@@ -8,7 +8,7 @@ ClientCmd::ClientCmd():
         target_type(ENTITY_PLAYER),
         target_name(),
         race("human"),
-        klass("mage"),
+        klass("wizard"),
         direction(DIR_NORTH),
         gold(0),
         coord_x(0),

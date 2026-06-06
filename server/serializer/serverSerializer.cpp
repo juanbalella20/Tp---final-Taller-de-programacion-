@@ -35,7 +35,7 @@ ServerSerializer::ServerSerializer() {
     handlers[MSG_PLAYERS_SNAPSHOT] = [this](const GameMsg& msg) { return serialize_players_snapshot(msg); };
     handlers[MSG_ZONE_CHANGE] = [this](const GameMsg& msg) {return serialize_zone(msg); };
     handlers[MSG_ATTACK] = [this](const GameMsg& msg) { return serialize_attack(msg); };
-    handlers[MSG_UPDATE_EQUIP] = [this](const GameMsg& msg) {return serialize_name(msg); };
+    handlers[MSG_UPDATE_EQUIP] = [this](const GameMsg& msg) {return serialize_update_equip(msg); };
 }
 
 // Appendea un uint16_t en big-endian al buffer (definido mas abajo).
@@ -176,6 +176,33 @@ std::vector<uint8_t> ServerSerializer::serialize_name(const GameMsg& msg) {
     write_header(buf, static_cast<uint8_t>(msg.get_type()), payload_len);
     buf.push_back(static_cast<uint8_t>(name.size()));
     buf.insert(buf.end(), name.begin(), name.end());
+    return buf;
+}
+
+// Formato MSG_UPDATE_EQUIP:
+//   [name_size:1B][name][equipped:1B][n_ids:1B] luego n veces: [id_size:1B][id]
+// 'equipped' indica si el jugador tiene un arma equipada (para el sprite);
+// 'n_ids'/ids son TODOS los items equipados (arma + defensas) para resaltar el inventario.
+std::vector<uint8_t> ServerSerializer::serialize_update_equip(const GameMsg& msg) {
+    const std::string& name = msg.get_player_name();
+    const std::vector<std::string>& ids = msg.get_equipped_ids();
+
+    uint16_t payload_len = LEN_NAME_SIZE_FIELD + static_cast<uint16_t>(name.size()) + 1 + 1;
+    for (const std::string& id : ids) {
+        payload_len += LEN_NAME_SIZE_FIELD + static_cast<uint16_t>(id.size());
+    }
+
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, static_cast<uint8_t>(msg.get_type()), payload_len);
+    buf.push_back(static_cast<uint8_t>(name.size()));
+    buf.insert(buf.end(), name.begin(), name.end());
+    buf.push_back(msg.get_equipped() ? 1 : 0);
+    buf.push_back(static_cast<uint8_t>(ids.size()));
+    for (const std::string& id : ids) {
+        buf.push_back(static_cast<uint8_t>(id.size()));
+        buf.insert(buf.end(), id.begin(), id.end());
+    }
     return buf;
 }
 

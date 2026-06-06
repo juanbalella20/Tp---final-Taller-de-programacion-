@@ -1,6 +1,9 @@
 #ifndef DEFENSE_SET_H_
 #define DEFENSE_SET_H_
 
+#include <string>
+#include <vector>
+
 #include "item/defense_item.h"
 
 // Conjunto de equipamiento defensivo de un jugador: un slot de armadura, uno
@@ -19,6 +22,17 @@ public:
     void equip_armadura(DefenseItem* item);
     void equip_casco(DefenseItem* item);
     void equip_escudo(DefenseItem* item);
+
+    // Desequipa el slot correspondiente.
+    void unequip_armadura();
+    void unequip_casco();
+    void unequip_escudo();
+
+    // ¿El item con ese id está equipado en alguno de los slots de defensa?
+    bool is_equipped(const std::string& item_id) const;
+
+    // Ids de los items equipados (armadura, casco, escudo); omite slots vacíos.
+    std::vector<std::string> get_equipped_ids() const;
 
     // Defensa = defensa(armadura) + defensa(casco) + defensa(escudo).
     // Los slots vacíos aportan 0.

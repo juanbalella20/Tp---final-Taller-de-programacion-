@@ -19,6 +19,17 @@ private:
         std::map<std::string, SDL_FRect> items_crops;
     };
 
+    // Cache de una textura de texto: evita re-rasterizar la fuente (caro:
+    // TTF_RenderText + subir surface a GPU) cada frame. Solo se regenera
+    // cuando el string o el color cambian respecto al frame anterior.
+    struct TextCache {
+        SDL_Texture* texture = nullptr;
+        std::string last_text;
+        SDL_Color last_color = {0, 0, 0, 0};
+        float w = 0.0f;
+        float h = 0.0f;
+    };
+
     SDL_Renderer* gui_renderer;
     TTF_Font* font;
     InventoryView inventory;
@@ -39,16 +50,24 @@ private:
     std::set<int> equipped_slots;
     std::string equipped_item_id;
 
+    // Texturas de texto cacheadas (una por cada valor que se dibuja como texto).
+    TextCache gold_text_cache;
+    TextCache hp_text_cache;
+    TextCache mana_text_cache;
+    TextCache xp_text_cache;
+
     float game_width;
     float panel_width;
     float canvas_height;
 
     void load_textures();
     void load_stat_texture(const std::string& path, SDL_Texture** texture);
-    void drawBigStat(SDL_Texture* tex, float pos_y, int current, int max);
-    void drawSmallStat(SDL_Texture* tex, float pos_y, int current, int max);
-    void displayValue(int current, int max, SDL_FRect& dest, float text_scale);
-    void drawText(const std::string& text, float x, float y, SDL_Color color);
+    void drawBigStat(SDL_Texture* tex, float pos_y, int current, int max, TextCache& cache);
+    void drawSmallStat(SDL_Texture* tex, float pos_y, int current, int max, TextCache& cache);
+    void displayValue(int current, int max, SDL_FRect& dest, float text_scale, TextCache& cache);
+    void drawText(const std::string& text, float x, float y, SDL_Color color, TextCache& cache);
+    // Regenera la textura del cache solo si el texto/color cambiaron; si no, la reusa.
+    void update_text_cache(TextCache& cache, const std::string& text, SDL_Color color);
     void drawItems();
     void drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float SLOT_SIZE);
 
@@ -72,6 +91,11 @@ public:
     // Equipa el slot dado: des-resalta cualquier otro slot del mismo tipo y
     // resalta este. Permite tener equipados varios items de distinto tipo.
     void set_equipped_slot(int slot_index);
+    // Alterna el resaltado de un slot: si estaba equipado lo desequipa, si no lo equipa.
+    void toggle_equipped_slot(int slot_index);
+    // Resalta exactamente los slots cuyos items tengan alguno de estos ids
+    // (estado real de equipo confirmado por el server).
+    void set_equipped_by_ids(const std::vector<std::string>& ids);
     void drawInventoryItems();
     void drawAttackButton();
     void drawHp();

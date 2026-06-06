@@ -1,5 +1,6 @@
 #include "npcHostile.h"
 #include "../player/player.h"
+#include <cstdlib>
 
 NPChostile::NPChostile(const std::string& type_id, const std::string& name,
                        int lifepoints, int attack_dmg, int ticks_to_spawn)
@@ -25,11 +26,14 @@ bool NPChostile::can_spawn() const {
 
 void NPChostile::set_state(State s) { this->state = s; }
 
-void NPChostile::drop() {}
+int NPChostile::drop() {
+    // Oro = rand(0, 0.2) * VidaMaxNPC
+    double factor = (std::rand() / static_cast<double>(RAND_MAX)) * 0.2;
+    return static_cast<int>(factor * max_lifepoints);
+}
 
 void NPChostile::death() {
     lifepoints = 0;
-    drop();
     set_state(State::DEAD);
     remaining_ticks_to_spawn = ticks_to_spawn;
 }
@@ -50,13 +54,16 @@ int NPChostile::receive_damage(int dmg, Player& atacante, bool is_critical) {
     (void)is_critical;  // los NPC no esquivan ni tienen defensa modelada aún
     lifepoints -= dmg;
     bool murio = false;
+    int gold_drop = 0;
     if (lifepoints <= 0) {
+        gold_drop = drop();  // oro a tirar; se retorna recién al final
         death();
         murio = true;
     }
     const int nivel_npc = 1;
+    // La XP se otorga SIEMPRE, haya muerto o no, antes de retornar el oro.
     atacante.ganar_xp(dmg, nivel_npc, murio, max_lifepoints);
-    return 0;
+    return gold_drop;
 }
 
 /*

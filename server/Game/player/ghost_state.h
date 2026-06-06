@@ -13,6 +13,8 @@ public:
     void revive(Player& self) override;
     bool is_ghost() const override { return true; }
     bool can_interact() const override { return false; }
+    // Un fantasma no puede meditar.
+    bool toggle_meditation(Player& self) override { (void)self; return false; }
 };
 
 #endif

@@ -220,17 +220,21 @@ const Player& GameMap::get_player(const std::string& name) {
     throw std::runtime_error("Player not found: " + name);
 }
 
+Player* GameMap::get_player_mut(const std::string& name) {
+    return find_player_by_name(name);
+}
+
 bool GameMap::player_exists(const std::string& name) {
     return find_player_by_name(name) != nullptr;
 }
 
-void GameMap::player_equip_item(const std::string& player_name, const std::string& item_id) {
+bool GameMap::player_equip_item(const std::string& player_name, const std::string& item_id) {
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) {
         throw std::runtime_error("Player not found: " + player_name);
     }
     player->equip_item(item_id);
-    // TODO: equipar item por id cuando Player::equip_item esté implementado.
+    return player->has_weapon_equipped();
 }
 // TODO: refactorizar funcion
 static int dir_to_dx(Direction dir) {
@@ -286,6 +290,23 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     return {true, player_name, new_x, new_y};
 }
 
+bool GameMap::same_clan(Player* player1, Player* player2) {
+    std::string name1 = player1->get_name();
+    std::string name2 = player2->get_name();
+
+    auto clan = std::find_if(clans.begin(), clans.end(), 
+        [&name1, &name2](auto& par) {
+            return par.second.same_clan(name1, name2);
+        }
+    );
+
+    if (clan != clans.end()) {
+        return true;
+    }
+
+    return false;
+}
+
 GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, int y) {
     Player* attacker = find_player_by_name(attacker_name);
     if (attacker == nullptr) throw AttackerNotFoundException();
@@ -319,6 +340,8 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
             throw AttackNotAllowedException("Los newbies no pueden atacar ni ser atacados");
         if (!attacker->can_attack_level(target_player->get_level()))
             throw AttackNotAllowedException("La diferencia de niveles es mayor a 10");
+        if (same_clan(attacker, target_player))
+            throw AttackNotAllowedException("No puede haber ataques entre miembros del mismo clan");
     }
 
     int gold_drop = attacker->attack(*target, x, y);
@@ -341,6 +364,16 @@ bool GameMap::update_npcs() {
         if (world.update_npcs()) respawned = true;
     }
     return respawned;
+}
+
+std::vector<std::string> GameMap::tick(double seconds) {
+    std::vector<std::string> meditating;
+    for (auto& player : players) {
+        if (player.tick(seconds)) {
+            meditating.push_back(player.get_name());
+        }
+    }
+    return meditating;
 }
 
 std::vector<NpcInfo> GameMap::build_npcs_snapshot(const std::string& player_name) {
@@ -421,6 +454,12 @@ uint32_t GameMap::get_player_hp(const std::string& name) {
     return player->get_lives();
 }
 
+void GameMap::cheat_lose_mana(const std::string& name, uint32_t amount) {
+    Player* player = find_player_by_name(name);
+    if (player == nullptr) return;
+    player->lose_mana(static_cast<int>(amount));
+}
+
 uint32_t GameMap::get_player_xp(const std::string& name) {
     Player* player = find_player_by_name(name);
     return player->get_xp();
@@ -442,4 +481,111 @@ std::vector<PlayerInfo> GameMap::build_players_snapshot(const std::string& playe
         snapshot.push_back({p.get_name(), p.get_race_name(), 0, p.get_coord_x(), p.get_coord_y()});
     }
     return snapshot;
+}
+
+bool GameMap::found_clan(const std::string& player_name, const std::string& clan_name) {
+    // TO-DO chequeo: solo 1 clan por player
+    auto [it, created] = clans.try_emplace(clan_name, player_name, clan_name);
+
+    return created;
+}
+
+bool GameMap::join_clan(const std::string& player_name, const std::string& clan_name) {
+    // TO-DO chequeo: solo 1 clan por player
+    auto clan = clans.find(clan_name);
+    if (clan == clans.end()) {
+        return false;
+    }
+
+    Clan& wanted_clan = clan->second;
+    if (!wanted_clan.join_request(player_name)) {
+        return false;
+    }
+    return true;
+}
+
+std::string GameMap::rev_clan(const std::string& player_name) {
+    auto clan = std::find_if(clans.begin(), clans.end(), 
+        [&player_name](auto& par) {
+            // par.first es el nombre del clan (la clave)
+            // par.second es el objeto Clan (el valor)
+            return par.second.is_founder(player_name);
+        }
+    );
+
+    if (clan == clans.end()) {
+        return "No eres fundador del clan " + clan->first;
+    }
+
+    Clan& wanted_clan = clan->second;
+    std::string review = wanted_clan.review();
+    return review;
+}
+
+void GameMap::accept_new_member(const std::string& player_name, const std::string& new_member) {
+    // TO-DO chequeo: solo 1 clan por player
+    auto clan = std::find_if(clans.begin(), clans.end(), 
+        [&player_name](auto& par) {
+            // par.first es el nombre del clan (la clave)
+            // par.second es el objeto Clan (el valor)
+            return par.second.is_founder(player_name);
+        }
+    );
+
+    Clan& wanted_clan = clan->second;
+    wanted_clan.accept_join_request(new_member);
+}
+
+bool GameMap::leave_clan(const std::string& player_name, std::string& clan_name) {
+    auto clan = std::find_if(clans.begin(), clans.end(), 
+        [&player_name](auto& par) {
+            // par.first es el nombre del clan (la clave)
+            // par.second es el objeto Clan (el valor)
+            return par.second.joined(player_name);
+        }
+    );
+
+    if (clan == clans.end()) {
+        return false;
+    }
+
+    Clan& wanted_clan = clan->second;
+    clan_name = wanted_clan.get_name();
+
+    if (!wanted_clan.leave(player_name)) {
+        return false;
+    }
+    return true;
+}
+
+bool GameMap::kick_member(const std::string& player_name, const std::string& member) {
+    auto clan = std::find_if(clans.begin(), clans.end(), 
+        [&player_name](auto& par) {
+            // par.first es el nombre del clan (la clave)
+            // par.second es el objeto Clan (el valor)
+            return par.second.is_founder(player_name);
+        }
+    );
+
+    Clan& wanted_clan = clan->second;
+    if (!wanted_clan.kick(member)) {
+        return false;
+    }
+    return true;
+}
+
+bool GameMap::ban_member(const std::string& player_name, const std::string& member) {
+    auto clan = std::find_if(clans.begin(), clans.end(), 
+        [&player_name](auto& par) {
+            // par.first es el nombre del clan (la clave)
+            // par.second es el objeto Clan (el valor)
+            return par.second.is_founder(player_name);
+        }
+    );
+
+    Clan& wanted_clan = clan->second;
+    if (!wanted_clan.ban(member)) {
+        return false;
+    }
+    return true;
 }

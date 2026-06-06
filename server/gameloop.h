@@ -30,6 +30,8 @@ class GameLoop : public Thread {
     void load_maps();
     void load_world();
     void update_npcs_in_map();
+    // Regenera maná de los players que meditan y les notifica MSG_MANA.
+    void regen_players_mana(double seconds);
     // Busca en la matriz de IntitialState (previamente parseada desde config.TOML)
     // y devulve el estado inicial por zona: cantidad de npcs, cantidad de items que genera esa zona
     InitialState load_initial_state_from_file(Zone zone);
@@ -60,6 +62,15 @@ class GameLoop : public Thread {
     void handle_cheat_kill(const ClientCmd& cmd);
     void handle_cheat_inf_hp(const ClientCmd& cmd);
     void handle_cheat_inf_mana(const ClientCmd& cmd);
+    void handle_cheat_mana(const ClientCmd& cmd);
+    void handle_clan_foundation(const ClientCmd& cmd);
+    void handle_clan_joining(const ClientCmd& cmd);
+    void handle_clan_reviewing(const ClientCmd& cmd);
+    void handle_clan_accepting(const ClientCmd& cmd);
+    void handle_clan_rejecting(const ClientCmd& cmd);
+    void handle_clan_leaving(const ClientCmd& cmd);
+    void handle_clan_kick(const ClientCmd& cmd);
+    void handle_clan_ban(const ClientCmd& cmd);
 };
 
 #endif  // SERVER_SRC_GAMELOOP_H_

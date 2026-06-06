@@ -13,6 +13,7 @@
 #include "npc/npcSeller.h"
 #include "item/item.h"
 #include "zoneWorld.h"
+#include "player/clan.h"
 
 #include <vector>
 #include <map>
@@ -54,6 +55,7 @@ private:
     std::map<Zone, ZoneWorld> zones;          // enum Zone -> mundo de esa zona
     std::vector<Player> players;              // players globales (atraviesan zonas)
     std::map<std::string, Zone> player_zone;  // player_name -> zona actual (tag)
+    std::map<std::string, Clan> clans;
 
     Player* find_player_by_name(const std::string& name);
 
@@ -110,6 +112,10 @@ public:
     // Respawn de NPCs en TODAS las zonas. Devuelve true si hubo alguno
     bool update_npcs();
 
+    // Avance de tiempo: hace tick() en todos los players. Devuelve los nombres
+    // de los que están meditando (su maná cambió: hay que notificarles MSG_MANA).
+    std::vector<std::string> tick(double seconds);
+
     // Snapshots de la zona del player indicado
     std::vector<NpcInfo> build_npcs_snapshot(const std::string& player_name);
     std::vector<ItemFloorInfo> build_items_snapshot(const std::string& player_name);
@@ -126,9 +132,14 @@ public:
     // Si el player esta adyacente a un teleport, lo mueve a la zona destino y actualiza su tag.
     TeleportResult teleport_player(const std::string& player_name);
 
-    void player_equip_item(const std::string& player_name, const std::string& item_id);
+    // Equipa/desequipa (toggle) el item del jugador.
+    // Devuelve true si, tras la operación, el jugador tiene un arma equipada.
+    bool player_equip_item(const std::string& player_name, const std::string& item_id);
     void spawn_player(const std::string& name, const std::string& race, const std::string& pclass);
     const Player& get_player(const std::string& name);
+    // Acceso mutable por nombre para handlers que cambian estado del player
+    // (p. ej. meditar). Devuelve nullptr si no existe.
+    Player* get_player_mut(const std::string& name);
     bool player_exists(const std::string& name);
 
     std::unique_ptr<Item> pick_up_item(const std::string& player_name);
@@ -139,6 +150,9 @@ public:
     uint32_t get_player_xp(const std::string& name);
     uint32_t get_player_mana(const std::string& name);
 
+    // Cheat /mana: resta `amount` de maná al player (para testear /meditar).
+    void cheat_lose_mana(const std::string& name, uint32_t amount);
+
     /*
      * Carga TODAS las zonas al iniciar el server. Por cada (zone_id, path):
      * crea la ZoneWorld, carga su terreno y spawnea sus actores segun el
@@ -148,6 +162,16 @@ public:
                     const std::map<Zone, InitialState>& initial_states);
 
     bool pick_up_gold(const std::string& player_name);
+
+    bool found_clan(const std::string& player_name, const std::string& clan_name);
+    bool join_clan(const std::string& player_name, const std::string& clan_name);
+    std::string rev_clan(const std::string& player_name);
+    void accept_new_member(const std::string& player_name, const std::string& new_member);
+    bool leave_clan(const std::string& player_name, std::string& clan_name);
+    bool kick_member(const std::string& player_name, const std::string& member);
+    bool ban_member(const std::string& player_name, const std::string& member);
+
+    bool same_clan(Player* player1, Player* player2);
 };
 
 #endif

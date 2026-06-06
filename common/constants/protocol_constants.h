@@ -71,6 +71,7 @@ enum MessageType : uint8_t {
     MSG_TELEPORT       = 0x29, // Cliente->server: pedido de /tp (sin payload)
     MSG_ZONE_CHANGE = 0x30, // Server -> cliente: zona a cargar
     MSG_UPDATE_EQUIP = 0x31, // Server -> cliente: actualizar equip de item
+    MSG_CHEAT_MANA = 0x32,  // Cheat: restar N de maná (para testear /meditar)
 };
 
 enum Direction : uint8_t {
@@ -161,14 +162,14 @@ const std::unordered_map<uint8_t, std::string> RACE_MAP_INV = {
 };
 
 const std::unordered_map<std::string, Class> CLASS_MAP = {
-    {"mage",    MAGE},
+    {"wizard",  MAGE},
     {"cleric",  CLERIC},
     {"paladin", PALADIN},
     {"warrior", WARRIOR},
 };
 
 const std::unordered_map<uint8_t, std::string> CLASS_MAP_INV = {
-    {MAGE,    "mage"},
+    {MAGE,    "wizard"},
     {CLERIC,  "cleric"},
     {PALADIN, "paladin"},
     {WARRIOR, "warrior"},

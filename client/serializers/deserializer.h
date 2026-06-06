@@ -16,6 +16,7 @@ class ClientDeserializer {
     void deserialize_map(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_text(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_name(const std::vector<uint8_t>& payload, GameMsg& msg);
+    void deserialize_update_equip(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_gold(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_hp(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_xp(const std::vector<uint8_t>& payload, GameMsg& msg);

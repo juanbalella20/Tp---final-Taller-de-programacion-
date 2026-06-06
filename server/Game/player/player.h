@@ -9,6 +9,7 @@
 #include "../defense_set.h"
 #include "level.h"
 #include "player_state.h"
+#include "clan.h"
 
 #include <string>
 #include <memory>
@@ -20,6 +21,7 @@ class Player : public Entity {
     // transición de estado) al ejecutar las acciones que gobiernan.
     friend class AliveState;
     friend class GhostState;
+    friend class MeditateState;
 
 private:
     std::string name;
@@ -30,7 +32,6 @@ private:
     int id_clan;
     int coord_x;
     int coord_y;
-    bool meditating;
     std::unique_ptr<PlayerState> state;
     std::shared_ptr<Item> equipped_item;
 
@@ -46,8 +47,10 @@ private:
 
     // Transiciones de estado internas (las disparan los propios estados).
     // to_ghost: pasa a fantasma (muerto). to_alive: vuelve a vivo.
+    // to_meditate: pasa a meditar.
     void to_ghost();
     void to_alive();
+    void to_meditate();
 
 public:
     Player(const std::string name, PlayerRace& player_race, PlayerClass& player_class);
@@ -60,7 +63,14 @@ public:
     std::vector<std::unique_ptr<Item>> drop_inventory();
 
     // Equipa el item (por id) en el slot que corresponde a su tipo.
+    // Para armas funciona como toggle: si ya está equipada, la desequipa.
     void equip_item(std::string item_id);
+
+    // ¿El jugador tiene un arma equipada?
+    bool has_weapon_equipped() const;
+
+    // Ids de todos los items equipados (arma + defensas). Para resaltar el inventario.
+    std::vector<std::string> get_equipped_ids() const;
 
     // Defensa total que aportan los items de defensa equipados.
     int calculate_defense();
@@ -79,6 +89,9 @@ public:
     void heal_life(const int healthy_life);
 
     void heal_mana(const int healthy_mana);
+
+    // Resta maná (no baja de 0). Usado por el cheat /mana para testear /meditar.
+    void lose_mana(const int amount);
 
     void heal(const int healthy_life, const int healthy_mana);
 
@@ -106,13 +119,23 @@ public:
     
     void set_ghost();
 
-    bool is_meditating() const;
-
-    void change_meditation();
-
+    // Deja de meditar (no-op si no estaba meditando). Cualquier acción debe
+    // llamarlo: meditar se interrumpe ante cualquier interacción.
     void stop_meditation();
 
+    // Alterna meditación (comando /meditar). Devuelve true si tras el toggle el
+    // jugador quedó meditando, false si dejó de meditar o no pudo empezar.
+    bool toggle_meditation();
+
     bool can_meditate() const;
+
+    // Avance de tiempo del game loop: delega en el estado. Devuelve true si el
+    // jugador está meditando (maná actualizado, hay que notificar al cliente).
+    bool tick(double seconds);
+
+    // Recupera maná por meditación: FClaseMeditacion * Inteligencia * segundos,
+    // tope en max_mana(). Lo invoca MeditateState desde tick().
+    void recover_meditation_mana(double seconds);
 
     uint32_t get_lives() const;
 

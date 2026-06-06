@@ -170,37 +170,7 @@ void ClientGUI::selectCoord(int tile_x, int tile_y) {
 
 void ClientGUI::handleEvents() {
     while (SDL_PollEvent(&event)) {
-/*
-GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_name) {
-    Player* player = find_player_by_name(player_name);
-    if (player == nullptr) {
-        return {false, player_name, 0, 0};
-    }
 
-    int new_x = player->get_coord_x() + dir_to_dx(dir);
-    int new_y = player->get_coord_y() + dir_to_dy(dir);
-
-    std::cout << "[DEBUG: try_move " << player_name
-              << "] (" << new_x << "," << new_y << ")" << std::endl;
-
-    // Limites del mapa.
-    if (new_x < 0 || new_y < 0 || new_x >= width || new_y >= height) {
-        return {false, player_name, 0, 0};
-    }
-    // Terreno bloqueado (edificio).
-    if (map[new_y][new_x] != elements::empty) {
-    // VER
-        return {false, player_name, 0, 0};
-    }
-    // Actor en la celda destino.
-    if (has_actor_at(new_x, new_y)) {
-        return {false, player_name, 0, 0};
-    }
-     for (const auto& gi : ground_items) {
-        if (gi.pos.x == new_x && gi.pos.y == new_y) {
-            return {false, player_name, 0, 0};
-        }
-    */
         
         if (mini_chat->handle_event(event)) {
             continue;
@@ -283,11 +253,9 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
                             if (mx >= slot_x && mx <= slot_x + slot_size &&
                                 my >= slot_y && my <= slot_y + slot_size) {
                                 std::cout << "DEBUG mx: " << mx << " my: " << my << std::endl;
-                                hud->set_equipped_slot(slot_index);
-                                // El personaje solo "lleva arma" si el item es un arma (tipo 0).
-                                if (item.get_type() == 0) {
-                                    player->set_equipped_weapon(true);
-                                }
+                                // Sólo pedimos el toggle al server. Él responde con
+                                // MSG_UPDATE_EQUIP y de ahí derivamos el halo amarillo
+                                // y el arma del personaje (estado real, no optimista).
                                 sendEquipCmd(item.get_id());
                                 break;
                             }
@@ -353,7 +321,7 @@ void ClientGUI::update() {
         }
         GameMsg msg(0);
         while (receiving.try_pop(msg)) {
-            std::cout << "Mesaje recibido tipo: " << (int)msg.get_type() << std::endl;
+            // std::cout << "Mesaje recibido tipo: " << (int)msg.get_type() << std::endl;  // hot path: floodea la consola cada frame
             switch (msg.get_type()) {
                 case MSG_ZONE_CHANGE : {
                     Zone z = msg.get_zone();
@@ -395,7 +363,7 @@ void ClientGUI::update() {
                     items_on_floor = msg.get_items_on_floor();
                     break;
                 case MSG_PLAYERS_SNAPSHOT: {
-                    std::cout << "Received players snapshot with " << msg.get_players().size() << " players." << std::endl;
+                    // std::cout << "Received players snapshot with " << msg.get_players().size() << " players." << std::endl;  // hot path: floodea la consola cada frame
                     for (const auto& incoming : msg.get_players()) {
                         auto it = std::find_if(other_players.begin(), other_players.end(),
                             [&incoming](const PlayerInfo& p) { return p.name == incoming.name; });
@@ -497,10 +465,18 @@ void ClientGUI::update() {
                     if (hud) hud->set_mana(msg.get_mana());
                     break;
                 case MSG_UPDATE_EQUIP:
-                    for (auto& p : other_players) {
-                        if (p.name == msg.get_player_name()) {
-                            p.has_equipped_weapon = true;
-                            break;
+                    // El server confirma el estado real del equipo.
+                    if (msg.get_player_name() == own_name) {
+                        // Arma del personaje + halos del inventario (todos los items
+                        // equipados, arma y defensas) según el estado real del server.
+                        if (player) player->set_equipped_weapon(msg.get_equipped());
+                        if (hud) hud->set_equipped_by_ids(msg.get_equipped_ids());
+                    } else {
+                        for (auto& p : other_players) {
+                            if (p.name == msg.get_player_name()) {
+                                p.has_equipped_weapon = msg.get_equipped();
+                                break;
+                            }
                         }
                     }
                     break;
@@ -768,13 +744,13 @@ void ClientGUI::init_draw() {
 
 void ClientGUI::run() {
     try {
-        // protocol.get_mapa();
+        
         init_draw();
         while (is_running && should_keep_running()) {
             handleEvents();
             update();
             draw();
-            SDL_Delay(16);
+            SDL_Delay(16);  // ~60 FPS: cede CPU para no saturar un core al 100%
         }
     } catch (const std::exception& e) {
         std::cerr << "ClientGUI error: " << e.what() << std::endl;
