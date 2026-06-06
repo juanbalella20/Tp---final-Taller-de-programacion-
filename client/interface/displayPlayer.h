@@ -9,6 +9,13 @@
 // para testing:
 #define PLAYER_VEL 8.0f
 
+enum class ViewDirection {
+    BACK = 0,    // Norte
+    FRONT = 1,   // Sur
+    RIGHT = 2,   // Este
+    LEFT = 3     // Oeste
+};
+
 class PlayerDisplay : public WorldEntity {
 private:
     SDL_Renderer* renderer;
@@ -31,6 +38,8 @@ private:
     float hat_dy = 0.0f;
     int walk_frame = 0;
     bool has_equipped_weapon = false;
+
+    ViewDirection current_direction = ViewDirection::BACK;
 
     void load_heads();
 
@@ -68,10 +77,10 @@ public:
     bool is_ghost() const;
     void set_equipped_weapon(bool has_weapon);
     void draw(const Camera& camera, SDL_FRect crop_pov) const override;
-    SDL_FRect right_pov();
-    SDL_FRect left_pov();
-    SDL_FRect front_pov();
-    SDL_FRect back_pov();
+    SDL_FRect right_pov(ViewDirection direction);
+    SDL_FRect left_pov(ViewDirection direction);
+    SDL_FRect front_pov(ViewDirection direction);
+    SDL_FRect back_pov(ViewDirection direction);
 
     void move_up();
     void move_down();

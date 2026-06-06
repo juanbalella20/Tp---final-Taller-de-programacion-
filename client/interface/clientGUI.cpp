@@ -392,10 +392,10 @@ void ClientGUI::update() {
                         // Jugador local: usar las coords absolutas del server.
                         player->setTilePosition(x, y);
                         switch (msg.get_direction()) {
-                            case DIR_NORTH: player_pov = player->back_pov();  break;
-                            case DIR_SOUTH: player_pov = player->front_pov(); break;
-                            case DIR_EAST:  player_pov = player->right_pov(); break;
-                            case DIR_WEST:  player_pov = player->left_pov();  break;
+                            case DIR_NORTH: player_pov = player->back_pov(ViewDirection::BACK);  break;
+                            case DIR_SOUTH: player_pov = player->front_pov(ViewDirection::FRONT); break;
+                            case DIR_EAST:  player_pov = player->right_pov(ViewDirection::RIGHT); break;
+                            case DIR_WEST:  player_pov = player->left_pov(ViewDirection::LEFT);  break;
                             default: break;
                         }
                     } else {
@@ -526,11 +526,11 @@ void ClientGUI::drawOtherPlayers() {
             pd.set_equipped_weapon(p.has_equipped_weapon);
             SDL_FRect pov;
             switch (p.direction) {
-                case DIR_NORTH: pov = pd.back_pov();  break;
-                case DIR_SOUTH: pov = pd.front_pov(); break;
-                case DIR_EAST:  pov = pd.right_pov(); break;
-                case DIR_WEST:  pov = pd.left_pov();  break;
-                default:        pov = pd.front_pov(); break;
+                case DIR_NORTH: pov = pd.back_pov(ViewDirection::BACK);  break;
+                case DIR_SOUTH: pov = pd.front_pov(ViewDirection::FRONT); break;
+                case DIR_EAST:  pov = pd.right_pov(ViewDirection::RIGHT); break;
+                case DIR_WEST:  pov = pd.left_pov(ViewDirection::LEFT);  break;
+                default:        pov = pd.front_pov(ViewDirection::FRONT); break;
             }
             pd.draw(camera, pov);
         } catch (const std::runtime_error& e) {
@@ -729,7 +729,7 @@ void ClientGUI::init_draw() {
     int tileSize = tilemap->getTileSize();
     try {
         player = std::make_unique<PlayerDisplay>(renderer, "imagenes/1005.png", tileSize, race);
-        player_pov = player->back_pov();
+        player_pov = player->back_pov(ViewDirection::BACK);
     } catch (const std::runtime_error& e) {
         std::cout << "[DEBUG] imagenes/1005.png failed: " << e.what() << std::endl;
     }

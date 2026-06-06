@@ -191,7 +191,9 @@ void PlayerDisplay::head_back_pov() {
     }
 }
 
-SDL_FRect PlayerDisplay::back_pov() {
+SDL_FRect PlayerDisplay::back_pov(ViewDirection direction) {
+    current_direction = direction;
+
     static const SDL_FRect frames[] = {
         {255.0f, 51.0f, 30.0f, 40.0f},
         {285.0f, 51.0f, 30.0f, 40.0f},
@@ -236,7 +238,9 @@ void PlayerDisplay::head_front_pov() {
     }
 }
 
-SDL_FRect PlayerDisplay::front_pov() {
+SDL_FRect PlayerDisplay::front_pov(ViewDirection direction) {
+    current_direction = direction;
+
     static const SDL_FRect frames[] = {
         {255.0f, 5.0f, 30.0f, 40.0f},
         {285.0f, 5.0f, 30.0f, 40.0f},
@@ -280,7 +284,9 @@ void PlayerDisplay::head_right_pov() {
     }
 }
 
-SDL_FRect PlayerDisplay::right_pov() {
+SDL_FRect PlayerDisplay::right_pov(ViewDirection direction) {
+    current_direction = direction;
+
     static const SDL_FRect frames[] = {
         {259.0f, 147.0f, 30.0f, 40.0f},
         {278.0f, 147.0f, 30.0f, 40.0},
@@ -325,7 +331,9 @@ void PlayerDisplay::head_left_pov() {
     }
 }
 
-SDL_FRect PlayerDisplay::left_pov() {
+SDL_FRect PlayerDisplay::left_pov(ViewDirection direction) {
+    current_direction = direction;
+
     static const SDL_FRect frames[] = {
         {252.0f, 100.0f, 30.0f, 40.0f},
         {278.0f, 100.0f, 30.0f, 40.0},
@@ -432,10 +440,16 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) const {
     set_transparency(image);
     set_transparency(head_image);
 
+    if (current_direction == ViewDirection::BACK || current_direction == ViewDirection::LEFT) {
+        draw_equipped_item(camera);
+    }
+
     draw_player(camera, body_pov);
     draw_player_head(camera);
 
-    draw_equipped_item(camera);
+    if (current_direction == ViewDirection::FRONT || current_direction == ViewDirection::RIGHT) {
+        draw_equipped_item(camera);
+    }
 }
 
 int PlayerDisplay::get_x() {
