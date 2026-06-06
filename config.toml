@@ -1,0 +1,30 @@
+# ============================================================
+#  Argentum Online - Archivo de Configuracion del Juego
+#  Todos los valores numericos del juego viven aqui.
+#  Modificar sin necesidad de recompilar.
+# ============================================================
+ 
+# ------------------------------------------------------------
+# Formulas de nivel y experiencia
+# ------------------------------------------------------------
+
+[level]
+# Limite de XP para subir de nivel: 1000 * nivel^exp_exponent
+xp_base        = 1000
+xp_exponent    = 1.8
+
+# XP por ataque: dano * max(nivelOtro - nivel + xp_level_offset, 0)
+xp_level_offset = 10
+ 
+# XP bonus al matar: rand(0, xp_kill_factor) * VidaMaxOtro * factor
+xp_kill_factor = 0.1
+ 
+# Oro maximo seguro: gold_base * nivel^gold_exponent
+gold_base      = 100
+gold_exponent  = 1.1
+# Un jugador puede tener hasta gold_max * gold_excess_factor antes de perder oro
+gold_excess_factor = 1.5
+ 
+# Fair play
+newbie_max_level   = 12   # Nivel 12 o menor es considerado newbie
+level_diff_max     = 10   # Diferencia maxima de nivel para poder atacar

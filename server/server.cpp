@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include "game_config.h" 
 
 int main(int argc, char* argv[]) {
 
@@ -13,6 +14,7 @@ int main(int argc, char* argv[]) {
     // Semilla del RNG una sola vez al arrancar. Sin esto, std::rand() repite
     // siempre la misma secuencia (daño, esquive, crítico, defensa) en cada
     // ejecución del servidor.
+    GameConfig::instance().load("config.toml"); 
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
     const char* port = argv[1];

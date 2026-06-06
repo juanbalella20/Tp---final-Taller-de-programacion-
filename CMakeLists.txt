@@ -69,6 +69,7 @@ add_library(common STATIC
     common/commands/clientCmd.cpp
     common/commands/gameMsg.cpp
     common/mapLoader.cpp
+    common/constants/game_config.cpp
 )
 target_include_directories(common PUBLIC
     common
@@ -77,6 +78,7 @@ target_include_directories(common PUBLIC
     common/constants
     common/info
     common/utility
+    vendored/tomlplusplus
 )
 
 # ── Client ──────────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <algorithm>
+#include "game_config.h"
 
 Level::Level(int number) : number(number) {}
 
@@ -10,7 +11,8 @@ int Level::get_number() const {
 }
 
 bool Level::try_level_up(uint32_t experience) {
-    int limit = static_cast<int>(1000 * std::pow(number, 1.8));
+    const auto& cfg = GameConfig::instance();
+    int limit = static_cast<int>(cfg.xp_base * std::pow(number, cfg.xp_exponent));
     if (experience >= static_cast<uint32_t>(limit)) {
         number += 1;
         return true;
@@ -19,7 +21,8 @@ bool Level::try_level_up(uint32_t experience) {
 }
 
 uint32_t Level::max_gold() const {
-    return static_cast<uint32_t>(100 * std::pow(number, 1.1));
+    const auto& cfg = GameConfig::instance();
+    return static_cast<uint32_t>(cfg.gold_base * std::pow(number, cfg.gold_exponent));
 }
 
 uint32_t Level::calculate_gold_drop(uint32_t gold) const {
@@ -29,20 +32,23 @@ uint32_t Level::calculate_gold_drop(uint32_t gold) const {
 }
 
 int Level::xp_per_attack(int damage, int target_level) const {
-    int factor = std::max(target_level - number + 10, 0);
+    const auto& cfg = GameConfig::instance();
+    int factor = std::max(target_level - number + cfg.xp_level_offset, 0);
     return damage * factor;
 }
 
 int Level::xp_per_kill(int target_max_life, int target_level) const {
-    int factor = std::max(target_level - number + 10, 0);
-    double rnd = (std::rand() / static_cast<double>(RAND_MAX)) * 0.1;
-    return static_cast<int>(rnd * target_max_life * factor);
+    const auto& cfg = GameConfig::instance();
+    int factor = std::max(target_level - number + cfg.xp_level_offset, 0);
+    double rnd = (std::rand() / static_cast<double>(RAND_MAX)) * cfg.xp_kill_factor;
 }
 
 bool Level::is_newbie() const {
-    return number <= 12;
+    const auto& cfg = GameConfig::instance();
+    return number <= cfg.newbie_max_level;
 }
 
 bool Level::can_attack_level(int other_level) const {
-    return std::abs(number - other_level) <= 10;
+    const auto& cfg = GameConfig::instance();
+    return std::abs(number - other_level) <= cfg.level_diff_max;
 }
