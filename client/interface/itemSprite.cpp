@@ -8,7 +8,7 @@ ItemSprite::ItemSprite(SDL_Renderer* renderer, SDL_Texture* texture, int tile_x,
             tile_y(tile_y), 
             tile_size(tile_size) {}
 
-void ItemSprite::draw(const Camera& camera, SDL_FRect src_crop) const {
+void ItemSprite::draw(const Camera& camera, SDL_FRect src_crop) {
     const float wx = static_cast<float>(tile_x * tile_size);
     const float wy = static_cast<float>(tile_y * tile_size);
 
