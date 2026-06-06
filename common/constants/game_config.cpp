@@ -230,8 +230,12 @@ void GameConfig::load(const std::string& toml_path) {
         }
     }
 
-    clan_min_level_to_found       = root.at_path("clans.min_level_to_found").value_or(6);
-    clan_max_members               = root.at_path("clans.max_members").value_or(16);
-    clan_defense_bonus_per_member  = root.at_path("clans.clan_defense_bonus_per_member").value_or(0.05);
-    clan_attack_bonus_per_member   = root.at_path("clans.clan_attack_bonus_per_member").value_or(0.05);
+    clan_min_level_to_found = root.at_path("clans.min_level_to_found").value_or(6);
+    clan_max_members = root.at_path("clans.max_members").value_or(16);
+    clan_defense_bonus_per_member = root.at_path("clans.clan_defense_bonus_per_member").value_or(0.05);
+    clan_attack_bonus_per_member = root.at_path("clans.clan_attack_bonus_per_member").value_or(0.05);
+
+    // Gameloop
+    tick_rate_ms = root.at_path("gameloop.tick_rate_ms").value_or(50);
+    ticks_per_second = root.at_path("gameloop.ticks_per_second").value_or(20);    
 }

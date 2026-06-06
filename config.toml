@@ -340,4 +340,12 @@ max_members = 16   # Incluye al fundador
 # Bonificacion de clan cuando hay jugadores cerca
 clan_defense_bonus_per_member = 0.05  # +5% defensa por miembro adicional
 clan_attack_bonus_per_member  = 0.05  # +5% ataque por miembro adicional
+
+# ------------------------------------------------------------
+# Gameloop
+# ------------------------------------------------------------
+[gameloop]
+tick_rate_ms = 50
+ticks_per_second = 20   
+
  

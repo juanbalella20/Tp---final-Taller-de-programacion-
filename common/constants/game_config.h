@@ -132,6 +132,10 @@ public:
     double clan_defense_bonus_per_member;
     double clan_attack_bonus_per_member;
 
+    //Gameloop
+    int tick_rate_ms;
+    int ticks_per_second;
+
     static GameConfig& instance();
     void load(const std::string& toml_path);
 
