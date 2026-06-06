@@ -176,6 +176,28 @@ bool PlayerDisplay::is_ghost() const {
 
 void PlayerDisplay::set_equipped_weapon(bool has_weapon) {
     has_equipped_weapon = has_weapon;
+    if (has_weapon) {
+        reset_frame();
+        int current_frame;
+        switch(current_direction) {
+            case ViewDirection::BACK:
+                current_frame = walk_frame % 6;
+                weapon_back_offset(current_frame);
+                break;
+            case ViewDirection::FRONT:
+                current_frame = walk_frame % 6;
+                weapon_front_offset(current_frame);
+                break;
+            case ViewDirection::LEFT:
+                current_frame = walk_frame % 5;
+                weapon_left_offset(current_frame);
+                break;
+            case ViewDirection::RIGHT:
+                current_frame = walk_frame % 5;
+                weapon_right_offset(current_frame);
+                break;
+        }
+    }
 }
 
 void PlayerDisplay::head_back_pov() {
@@ -213,15 +235,19 @@ SDL_FRect PlayerDisplay::back_pov(ViewDirection direction) {
     head_back_pov();
 
     if(has_equipped_weapon) {
-        static const float dx[] = { 0.1f, 0.2f, 0.1f, 0.2f, 0.1f, 0.1f };
-        static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f, 0.0f };
-        weapon_dx = dx[current_frame];
-        weapon_dy = dy[current_frame];
+        weapon_back_offset(current_frame);
     }
 
     SDL_FRect frame = frames[current_frame];
     walk_frame = (walk_frame + 1) % 6;
     return frame;
+}
+
+void PlayerDisplay::weapon_back_offset(int current_frame) {
+    static const float dx[] = { 0.6f, 0.5f, 0.6f, 0.6f, 0.5f, 0.5f };
+    static const float dy[] = { 0.1f, 0.05f, 0.0f, 0.1f, 0.0f, 0.0f };
+    weapon_dx = dx[current_frame];
+    weapon_dy = dy[current_frame];
 }
 
 void PlayerDisplay::head_front_pov() {
@@ -260,15 +286,19 @@ SDL_FRect PlayerDisplay::front_pov(ViewDirection direction) {
     head_front_pov();
 
     if(has_equipped_weapon) {
-        static const float dx[] = { 0.0f, 0.05f, 0.15f, 0.05f, -0.05f, -0.1f };
-        static const float dy[] = { 0.0f, 0.0f, -0.05f, 0.0f, 0.0f, 0.0f};
-        weapon_dx = dx[current_frame];
-        weapon_dy = dy[current_frame];
+        weapon_front_offset(current_frame);
     }
 
     SDL_FRect frame = frames[current_frame];
     walk_frame = (walk_frame + 1) % 6;
     return frame;
+}
+
+void PlayerDisplay::weapon_front_offset(int current_frame) {
+    static const float dx[] = { -0.15f, -0.1f, 0.0f, -0.15f, -0.2f, -0.3f };
+    static const float dy[] = { 0.05f, 0.05f, 0.0f, 0.05f, 0.0f, 0.0f};
+    weapon_dx = dx[current_frame];
+    weapon_dy = dy[current_frame];
 }
 
 void PlayerDisplay::head_right_pov() {
@@ -305,15 +335,19 @@ SDL_FRect PlayerDisplay::right_pov(ViewDirection direction) {
     head_right_pov();
 
     if(has_equipped_weapon) {
-        static const float dx[] = { 0.2f, 0.5f, 0.2f, 0.2f, 0.2f };
-        static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
-        weapon_dx = dx[current_frame];
-        weapon_dy = dy[current_frame];
+        weapon_right_offset(current_frame);
     }
 
     SDL_FRect frame = frames[current_frame];
     walk_frame = (walk_frame + 1) % 5;
     return frame;
+}
+
+void PlayerDisplay::weapon_right_offset(int current_frame) {
+    static const float dx[] = { 0.2f, 0.5f, 0.2f, 0.2f, 0.2f };
+    static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
+    weapon_dx = dx[current_frame];
+    weapon_dy = dy[current_frame];
 }
 
 void PlayerDisplay::head_left_pov() {
@@ -352,16 +386,21 @@ SDL_FRect PlayerDisplay::left_pov(ViewDirection direction) {
     head_left_pov();
 
     if(has_equipped_weapon) {
-        static const float dx[] = { 0.5f, 0.5f, 0.4f, 0.4f, 0.1f };
-        static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
-        weapon_dx = dx[current_frame];
-        weapon_dy = dy[current_frame];
+        weapon_left_offset(current_frame);
     }
 
     SDL_FRect frame = frames[current_frame];
     walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
+
+void PlayerDisplay::weapon_left_offset(int current_frame) {
+    static const float dx[] = { 0.1f, 0.0f, -0.1f, -0.1f, -0.2f };
+    static const float dy[] = { -0.05f, -0.05f, 0.0f, 0.0f, -0.05f };
+    weapon_dx = dx[current_frame];
+    weapon_dy = dy[current_frame];
+}
+
 //E VEZ DE QUE LO TRASNPARENZCA, LO QUE TENGO QUE HACER ES PONERLE LA SKIN DEL FANTASMA
 
 void PlayerDisplay::set_transparency(SDL_Texture* img) const {
@@ -424,15 +463,22 @@ void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_d
 void PlayerDisplay::draw_equipped_item(const Camera& camera) const {
     if (has_equipped_weapon) {
         set_transparency(weapon_image);
-        //SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};
         float weapon_size = rect.w * 0.5f;
+
+        double angle = 0.0;
+        SDL_FlipMode flip = SDL_FLIP_NONE;
+        
+        if (current_direction == ViewDirection::FRONT || current_direction == ViewDirection::LEFT) {
+            angle = 270.0;
+        }
+
         SDL_FRect weapon_dst = {
             camera.world_to_screen_x(rect.x) + rect.w * weapon_dx,
             camera.world_to_screen_y(rect.y) + rect.h * weapon_dy,
             weapon_size,
             weapon_size
         };
-        SDL_RenderTexture(renderer, weapon_image, nullptr, &weapon_dst);
+        SDL_RenderTextureRotated(renderer, weapon_image, nullptr, &weapon_dst, angle, nullptr, flip);
     }
 }
 

@@ -54,6 +54,11 @@ private:
     void draw_gnome_hat(const Camera& camera, const SDL_FRect& head_dst) const;
     void draw_equipped_item(const Camera& camera) const;
 
+    void weapon_back_offset(int current_frame);
+    void weapon_front_offset(int current_frame);
+    void weapon_right_offset(int current_frame);
+    void weapon_left_offset(int current_frame);
+
 public:
     // Carga la imagen. La posicion inicial es (0, 0). Tile size en pixels.
     PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize, const std::string& race);
