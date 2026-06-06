@@ -61,4 +61,37 @@ void GameConfig::load(const std::string& toml_path) {
     gnome.endurance = static_cast<float>(root.at_path("races.gnome.endurance").value_or(0.6));
     gnome.life_factor = root.at_path("races.gnome.life_factor").value_or(2);
     gnome.mana_factor = root.at_path("races.gnome.mana_factor").value_or(4);
-}
+
+    // Classes
+    wizard.inteligence = root.at_path("classes.wizard.inteligence").value_or(8);
+    wizard.strength = root.at_path("classes.wizard.strength").value_or(3);
+    wizard.agility = root.at_path("classes.wizard.agility").value_or(8);
+    wizard.endurance = root.at_path("classes.wizard.endurance").value_or(4);
+    wizard.life_factor = root.at_path("classes.wizard.life_factor").value_or(2);
+    wizard.mana_factor = root.at_path("classes.wizard.mana_factor").value_or(8);
+    wizard.meditation_factor = static_cast<float>(root.at_path("classes.wizard.meditation_factor").value_or(0.10));
+
+    cleric.inteligence = root.at_path("classes.cleric.inteligence").value_or(6);
+    cleric.strength = root.at_path("classes.cleric.strength").value_or(8);
+    cleric.agility = root.at_path("classes.cleric.agility").value_or(6);
+    cleric.endurance = root.at_path("classes.cleric.endurance").value_or(8);
+    cleric.life_factor = root.at_path("classes.cleric.life_factor").value_or(7);
+    cleric.mana_factor = root.at_path("classes.cleric.mana_factor").value_or(6);
+    cleric.meditation_factor = static_cast<float>(root.at_path("classes.cleric.meditation_factor").value_or(0.07));
+
+    paladin.inteligence = root.at_path("classes.paladin.inteligence").value_or(5);
+    paladin.strength = root.at_path("classes.paladin.strength").value_or(8);
+    paladin.agility = root.at_path("classes.paladin.agility").value_or(7);
+    paladin.endurance = root.at_path("classes.paladin.endurance").value_or(8);
+    paladin.life_factor = root.at_path("classes.paladin.life_factor").value_or(8);
+    paladin.mana_factor = root.at_path("classes.paladin.mana_factor").value_or(8);
+    paladin.meditation_factor = static_cast<float>(root.at_path("classes.paladin.meditation_factor").value_or(0.04));
+
+    warrior.inteligence = root.at_path("classes.warrior.inteligence").value_or(4);
+    warrior.strength = root.at_path("classes.warrior.strength").value_or(9);
+    warrior.agility = root.at_path("classes.warrior.agility").value_or(7);
+    warrior.endurance = root.at_path("classes.warrior.endurance").value_or(8);
+    warrior.life_factor = root.at_path("classes.warrior.life_factor").value_or(8);
+    warrior.mana_factor = root.at_path("classes.warrior.mana_factor").value_or(0);
+    warrior.meditation_factor = static_cast<float>(root.at_path("classes.warrior.meditation_factor").value_or(0.0));
+    }

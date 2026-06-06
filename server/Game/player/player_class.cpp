@@ -1,5 +1,7 @@
 #include "player_class.h"
 
+#include "game_config.h"
+
 int PlayerClass::class_inteligence() {
     return inteligence; 
 }
@@ -29,41 +31,45 @@ bool PlayerClass::class_can_meditate() const {
 }
 
 void PlayerClass::set_wizard() {
-    inteligence = 8;
-    strength = 3;
-    agility = 8;
-    endurance = 4;
-    life_factor = 2;
-    mana_factor = 8;
-    meditation_factor = 0.10f;  // FClaseMeditacion, TODO balancear
+    const auto& cfg = GameConfig::instance();
+    inteligence = cfg.wizard.inteligence;
+    strength = cfg.wizard.strength;
+    agility = cfg.wizard.agility;
+    endurance = cfg.wizard.endurance;
+    life_factor = cfg.wizard.life_factor;
+    mana_factor = cfg.wizard.mana_factor;
+    meditation_factor = cfg.wizard.meditation_factor; // FClaseMeditacion, TODO balancear 
 }
 
-void PlayerClass::set_cleric() {
-    inteligence = 6;
-    strength = 8;
-    agility = 6;
-    endurance = 8;
-    life_factor = 7;
-    mana_factor = 6;
-    meditation_factor = 0.07f;  // FClaseMeditacion, TODO balancear
+void PlayerClass::set_cleric() { 
+    const auto& cfg = GameConfig::instance();
+    inteligence = cfg.cleric.inteligence;
+    strength = cfg.cleric.strength;
+    agility = cfg.cleric.agility;
+    endurance = cfg.cleric.endurance;
+    life_factor = cfg.cleric.life_factor;
+    mana_factor = cfg.cleric.mana_factor;
+    meditation_factor = cfg.cleric.meditation_factor; // FClaseMeditacion, TODO balancear
 }
 
 void PlayerClass::set_paladin() {
-    inteligence = 5;
-    strength = 8;
-    agility = 7;
-    endurance = 8;
-    life_factor = 8;
-    mana_factor = 8;
-    meditation_factor = 0.04f;  // FClaseMeditacion, TODO balancear
+    const auto& cfg = GameConfig::instance();
+    inteligence = cfg.paladin.inteligence;
+    strength = cfg.paladin.strength;
+    agility = cfg.paladin.agility;
+    endurance = cfg.paladin.endurance;
+    life_factor = cfg.paladin.life_factor;
+    mana_factor = cfg.paladin.mana_factor;
+    meditation_factor = cfg.paladin.meditation_factor; // FClaseMeditacion, TODO balancear
 }
 
 void PlayerClass::set_warrior() {
-    inteligence = 4;
-    strength = 9;
-    agility = 7;
-    endurance = 8;
-    life_factor = 8;
-    mana_factor = 0;  // El guerrero no usa magia: su maná es siempre 0
-    meditation_factor = 0.0f;  // El guerrero no puede meditar
+    const auto& cfg = GameConfig::instance();
+    inteligence = cfg.warrior.inteligence;
+    strength = cfg.warrior.strength;
+    agility = cfg.warrior.agility;
+    endurance = cfg.warrior.endurance;
+    life_factor = cfg.warrior.life_factor;
+    mana_factor = cfg.warrior.mana_factor; // El guerrero no usa magia: su maná es siempre 0
+    meditation_factor = cfg.warrior.meditation_factor; // El guerrero no puede meditar
 }

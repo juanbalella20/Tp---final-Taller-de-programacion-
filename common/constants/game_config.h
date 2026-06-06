@@ -12,6 +12,15 @@ struct RaceConfig {
     int mana_factor;
 };
 
+struct ClassConfig {
+    int inteligence;
+    int strength;
+    int agility;
+    int endurance;
+    int life_factor;
+    int mana_factor;
+    float meditation_factor;
+};
 
 class GameConfig {
 public:
@@ -36,6 +45,12 @@ public:
     RaceConfig elf;
     RaceConfig dwarf;
     RaceConfig gnome;
+
+    // Classes
+    ClassConfig wizard;
+    ClassConfig cleric;
+    ClassConfig paladin;
+    ClassConfig warrior;
 
     static GameConfig& instance();
     void load(const std::string& toml_path);
