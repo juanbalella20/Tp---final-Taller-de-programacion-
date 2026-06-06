@@ -3,6 +3,7 @@
 #include "../player/player.h"
 #include <cmath>
 #include <cstdlib>
+#include "game_config.h"
 
 Arma::Arma(const std::string& id, const std::string& name, int price, int disntance_min_attack,
            int damage_min, int damage_max):
@@ -24,8 +25,8 @@ int Arma::use_item(Entity& target, Player& atacante, int attacker_x, int attacke
     int damage = atacante.damage_attack() * (damage_min + roll);
 
     // Crítico: probabilidad 10%, daño doble, no puede ser esquivado
-    static constexpr double CRIT_CHANCE = 0.1;
-    bool critical = is_critical || ((std::rand() / static_cast<double>(RAND_MAX)) < CRIT_CHANCE);
+    const auto& cfg = GameConfig::instance();
+    bool critical = is_critical || ((std::rand() / static_cast<double>(RAND_MAX)) < cfg.crit_chance);
     if (critical) damage *= 2;
 
     return target.receive_damage(damage, atacante, critical);

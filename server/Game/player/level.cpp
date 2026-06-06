@@ -41,6 +41,7 @@ int Level::xp_per_kill(int target_max_life, int target_level) const {
     const auto& cfg = GameConfig::instance();
     int factor = std::max(target_level - number + cfg.xp_level_offset, 0);
     double rnd = (std::rand() / static_cast<double>(RAND_MAX)) * cfg.xp_kill_factor;
+    return static_cast<int>(rnd * target_max_life * factor);
 }
 
 bool Level::is_newbie() const {

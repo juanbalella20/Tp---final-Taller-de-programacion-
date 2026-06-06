@@ -1,6 +1,7 @@
 #include "npcHostile.h"
 #include "../player/player.h"
 #include <cstdlib>
+#include "game_config.h"
 
 NPChostile::NPChostile(const std::string& type_id, const std::string& name,
                        int lifepoints, int attack_dmg, int ticks_to_spawn)
@@ -28,7 +29,8 @@ void NPChostile::set_state(State s) { this->state = s; }
 
 int NPChostile::drop() {
     // Oro = rand(0, 0.2) * VidaMaxNPC
-    double factor = (std::rand() / static_cast<double>(RAND_MAX)) * 0.2;
+    const auto& cfg = GameConfig::instance();
+    double factor = (std::rand() / static_cast<double>(RAND_MAX)) * cfg.npc_gold_drop_max;
     return static_cast<int>(factor * max_lifepoints);
 }
 

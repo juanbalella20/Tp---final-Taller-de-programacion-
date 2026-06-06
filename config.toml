@@ -28,3 +28,18 @@ gold_excess_factor = 1.5
 # Fair play
 newbie_max_level   = 12   # Nivel 12 o menor es considerado newbie
 level_diff_max     = 10   # Diferencia maxima de nivel para poder atacar
+
+ 
+# ------------------------------------------------------------
+# Combate
+# ------------------------------------------------------------
+[combat]
+# Probabilidad de critico (daño doble, no esquivable)
+crit_chance    = 0.1
+ 
+# Esquive: rand(0,1)^Agilidad < dodge_threshold
+dodge_threshold = 0.001
+ 
+# Oro que droppea un NPC al morir: rand(0, npc_gold_drop_max) * VidaMaxNPC
+npc_gold_drop_max = 0.2
+ 

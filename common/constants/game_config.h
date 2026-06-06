@@ -16,6 +16,11 @@ public:
     int    newbie_max_level;
     int    level_diff_max;
 
+    // Combat
+    double crit_chance;
+    double dodge_threshold;
+    double npc_gold_drop_max;
+
     static GameConfig& instance();
     void load(const std::string& toml_path);
 

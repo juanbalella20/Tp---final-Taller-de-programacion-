@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <algorithm>
+#include "game_config.h"
 
 int AliveState::attack(Player& self, Entity& target, int target_x, int target_y) {
     return self.player_inventory.use_equipped(target, self, self.coord_x, self.coord_y,
@@ -14,7 +15,8 @@ int AliveState::receive_damage(Player& self, int damage, Player& attacker, bool 
     if (!is_critical) {
         int agility = self.player_race.race_agility() + self.player_class.class_agility();
         double rnd = std::rand() / static_cast<double>(RAND_MAX);
-        if (std::pow(rnd, agility) < 0.001) return 0;  // esquivó
+        const auto& cfg = GameConfig::instance();
+        if (std::pow(rnd, agility) < cfg.dodge_threshold) return 0;  // esquivó
 
         // Defensa: armadura + escudo + casco
         int defense = self.calculate_defense();
