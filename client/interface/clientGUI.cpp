@@ -12,7 +12,7 @@ ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, cons
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
       hud(nullptr), own_name(player_name), race(player_race), player(nullptr), tilemap(nullptr),
       enemy_texture(nullptr), frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
-      camera((float)GAME_WIDTH, (float)CANVAS_HEIGHT),
+      camera((float)GAME_VIEW_W, (float)GAME_VIEW_H),
       current_zone(static_cast<Zone>(0xFF)),  
       selected_npc_tile_x(-1), selected_npc_tile_y(-1) {}
     
@@ -58,19 +58,21 @@ void ClientGUI::loadMedia(Zone zone) {
     {
     case ZONE_DESERT : {
         tilemap = std::make_unique<TileMap>(renderer);
-        tilemap->load_map_bin("data/maps/desert/map-test-1.bin");
+        //tilemap->load_map_bin("data/maps/desert/map-test-1.bin");
+        tilemap->load_map_bin("data/maps/desert/map-2.bin");
         //tilemap->load_map_toml("data/maps/desert/map.toml");
         break;
     }
     case ZONE_CITY : {
         tilemap = std::make_unique<TileMap>(renderer);
-        tilemap->load_map_bin("data/maps/city/city-map-test.bin");
+        //tilemap->load_map_bin("data/maps/city/city-map-test.bin");
+        tilemap->load_map_bin("data/maps/city/city-2.bin");
         //tilemap->load_map_toml("data/maps/city/map.toml");
         break;
     }
     case ZONE_FOREST : {
         tilemap = std::make_unique<TileMap>(renderer);
-        tilemap->load_map_bin("data/maps/forest/forest.bin");
+        tilemap->load_map_bin("data/maps/forest/forest2.bin");
         break;
     }
     default:
@@ -123,8 +125,10 @@ void ClientGUI::freeSDL() {
 
 std::vector<int> ClientGUI::translate_tile_to_coord(int pixel_x, int pixel_y) const {
     int tileSize = tilemap ? tilemap->getTileSize() : 64;
-    int world_x = static_cast<int>(camera.screen_to_world_x(pixel_x));
-    int world_y = static_cast<int>(camera.screen_to_world_y(pixel_y));
+    // El mundo se dibuja dentro del viewport del hueco, asi que hay que restar
+    // su origen para pasar de coordenadas logicas a coordenadas del viewport.
+    int world_x = static_cast<int>(camera.screen_to_world_x(pixel_x - GAME_VIEW_X));
+    int world_y = static_cast<int>(camera.screen_to_world_y(pixel_y - GAME_VIEW_Y));
     return {world_x / tileSize, world_y / tileSize};
 }
 
@@ -273,8 +277,9 @@ void ClientGUI::handleEvents() {
                             ++slot_index;
                         }
                     }
-                } else {
-                    // Click en el area del juego
+                } else if (mx >= GAME_VIEW_X && mx < GAME_VIEW_X + GAME_VIEW_W &&
+                           my >= GAME_VIEW_Y && my < GAME_VIEW_Y + GAME_VIEW_H) {
+                    // Click dentro del hueco visible del mundo (no en el chat ni los bordes).
                     auto coords = translate_tile_to_coord(mx, my);
                     selectCoord(coords[0], coords[1]);
                 }
@@ -610,9 +615,11 @@ void ClientGUI::draw() {
 
     SDL_RenderClear(renderer);
 
-    // Limita el rendering del mapa y entidades al area del juego (excluye panel derecho)
-    // SDL_Rect game_clip = {0, 0, GAME_WIDTH, CANVAS_HEIGHT};
-    // SDL_SetRenderClipRect(renderer, &game_clip);
+    // El mundo se dibuja dentro del hueco transparente del frame. El viewport
+    // desplaza el origen al hueco y recorta todo lo que se salga, asi el player
+    // nunca queda dibujado debajo del chat o de los bordes del frame.
+    SDL_Rect game_view = {GAME_VIEW_X, GAME_VIEW_Y, GAME_VIEW_W, GAME_VIEW_H};
+    SDL_SetRenderViewport(renderer, &game_view);
 
     if (tilemap) {
         tilemap->render(camera.get_x(), camera.get_y());
@@ -627,12 +634,12 @@ void ClientGUI::draw() {
     draw_npc_friends();
     draw_damage_numbers();
 
+    // Se restaura el viewport completo para dibujar el frame (HUD) y el chat encima.
+    SDL_SetRenderViewport(renderer, nullptr);
+
     if (hud) {
         hud->render();
     }
-
-    // Levanta el clip para dibujar el panel y el chat encima
-    // SDL_SetRenderClipRect(renderer, nullptr);
 
     mini_chat->render(GAME_WIDTH, CANVAS_HEIGHT);
     SDL_RenderPresent(renderer);

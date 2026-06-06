@@ -86,6 +86,13 @@ private:
     static constexpr int GAME_WIDTH   = LOGICAL_WIDTH - PANEL_WIDTH;
     static constexpr int CANVAS_HEIGHT = LOGICAL_HEIGHT;
 
+    // Recorte transparente ("hueco") del frame en_ventanaprincipal.png donde se
+    // ve el mundo, en coordenadas logicas.
+    static constexpr int GAME_VIEW_X = 12;
+    static constexpr int GAME_VIEW_Y = 113;
+    static constexpr int GAME_VIEW_W = 732;
+    static constexpr int GAME_VIEW_H = 456;
+
     void initSDL();
     void loadMedia(Zone zone);
     void freeSDL();
