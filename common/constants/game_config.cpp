@@ -221,4 +221,12 @@ void GameConfig::load(const std::string& toml_path) {
     golem.lifepoints = root.at_path("npcs.golem.lifepoints").value_or(80);
     golem.attack_dmg = root.at_path("npcs.golem.attack_dmg").value_or(15);
     golem.ticks_to_spawn = root.at_path("npcs.golem.ticks_to_spawn").value_or(200);
+
+    if (auto arr = root.at_path("zones.desert.allowed_npcs").as_array()) {
+        for (auto& elem : *arr) {
+            if (auto s = elem.value<std::string>()) {
+                desert_npcs.push_back(*s);
+            }
+        }
+    }
 }

@@ -316,3 +316,17 @@ prob_item = 0.01   # 0.89 < r <= 0.90
 # Oro drop de NPC: rand(gold_drop_min, gold_drop_max) * VidaMaxNPC
 npc_gold_drop_min = 0.01
 npc_gold_drop_max = 0.2
+
+# ------------------------------------------------------------
+# Zonas: tipos de NPC permitidos por zona
+# (coinciden con las claves de npcs)
+# ------------------------------------------------------------
+[zones.desert]
+allowed_npcs = ["goblin", "spider"]
+ 
+[zones.forest]
+allowed_npcs = ["spider", "skeleton"]
+ 
+[zones.dungeon]
+allowed_npcs = ["skeleton", "zombie", "orc", "golem"]
+ 

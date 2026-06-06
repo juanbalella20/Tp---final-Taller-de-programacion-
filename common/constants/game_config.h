@@ -2,6 +2,7 @@
 #define GAME_CONFIG_H_
 
 #include <string>
+#include <vector>
 
 struct RaceConfig {
     int inteligence;
@@ -122,6 +123,8 @@ public:
     NpcHostileConfig zombie;
     NpcHostileConfig orc;
     NpcHostileConfig golem;
+
+    std::vector<std::string> desert_npcs;
 
     static GameConfig& instance();
     void load(const std::string& toml_path);

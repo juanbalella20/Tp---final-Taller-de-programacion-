@@ -16,7 +16,7 @@ namespace {
 // coincidir con los que reconoce make_npc_from_spawn
 // TODO: mover a archivo de config.toml mas adelante.
 const std::map<Zone, std::vector<std::string>> ZONE_NPC_TYPES = {
-    {ZONE_DESERT, {"goblin", "spider"}},
+    {ZONE_DESERT, GameConfig::instance().desert_npcs},
     // ZONE_CITY/FOREST/TOWN: sin NPCs hostiles por ahora.
 };
 }  // namespace
