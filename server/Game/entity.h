@@ -14,6 +14,7 @@ struct DamageOutcome {
     int  damage = 0;
     int  gold_drop = 0;
     bool dodged = false;
+    bool level_up = false;
 };
 
 class Entity {

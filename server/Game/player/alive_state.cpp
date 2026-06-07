@@ -29,15 +29,15 @@ DamageOutcome AliveState::receive_damage(Player& self, int damage, Player& attac
         self.lives -= static_cast<uint32_t>(damage);
     }
 
-    attacker.ganar_xp(damage, self.level.get_number(), murio, static_cast<int>(self.max_life()));
+    bool level_up =attacker.ganar_xp(damage, self.level.get_number(), murio, static_cast<int>(self.max_life()));
 
     if (murio) {
         uint32_t drop = self.level.calculate_gold_drop(self.gold);
         self.gold -= drop;
         self.to_ghost();
-        return {damage, static_cast<int>(drop), false};
+        return {damage, static_cast<int>(drop), false, level_up};
     }
-    return {damage, 0, false};
+    return {damage, 0, false, level_up};
 }
 
 void AliveState::revive(Player& self) {
