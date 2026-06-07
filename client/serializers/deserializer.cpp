@@ -86,6 +86,9 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_ATTACK] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_attack(payload, msg);
     };
+    handlers[MSG_CONFIRM_SESSION] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_confirm_session(payload, msg);
+    };
 }
 
 
@@ -220,6 +223,17 @@ void ClientDeserializer::deserialize_text(const std::vector<uint8_t>& payload, G
 void ClientDeserializer::deserialize_name(const std::vector<uint8_t>& payload, GameMsg& msg) {
     size_t offset = 0;
     msg.set_player_name(read_string(payload, offset));
+}
+
+// Formato MSG_CONFIRM_SESSION (auth EXITOSO):
+//   [name_len:1B][name][race_len:1B][race][class_len:1B][class]
+// El cliente lo usa para elegir el sprite de la raza real antes de entrar al
+// juego (sobre todo en login, donde la raza/clase viven en el server).
+void ClientDeserializer::deserialize_confirm_session(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    size_t offset = 0;
+    msg.set_player_name(read_string(payload, offset));
+    msg.set_race(read_string(payload, offset));
+    msg.set_class(read_string(payload, offset));
 }
 
 // Formato MSG_UPDATE_EQUIP:

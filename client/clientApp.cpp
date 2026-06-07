@@ -1,44 +1,49 @@
 #include "clientApp.h"
-#include <stdexcept>
+
 #include <utility>
 
-ClientApp::ClientApp(const std::string& host,
-                     const std::string& port,
-                     const std::string& player_name,
-                     const std::string& race,
-                     const std::string& klass):
-        host_(host), port_(port), player_name_(player_name), race_(race), class_(klass) {}
+#include "interface/screen_manager.h"
+#include "interface/auth_session.h"
 
-void ClientApp::initialize_connection(ClientProtocol& protocol) {
-    ClientCmd cmd;
-    cmd.set_message_type(MSG_REGISTER);
-    cmd.set_player_name(player_name_);
-    cmd.set_race(race_);
-    cmd.set_class(class_);
-    protocol.send_command(cmd);
-}
+ClientApp::ClientApp(const std::string& host, const std::string& port):
+        host_(host), port_(port) {}
 
 void ClientApp::run() {
-    Socket skt(host_.c_str(), port_.c_str());
-    ClientProtocol protocol(std::move(skt));
-    initialize_connection(protocol);
+    // 1) Pantallas pre-juego (config + login/registro). La conexion al server
+    //    esta DIFERIDA: el ScreenManager/las screens crean el ClientProtocol
+    //    recien al primer intento de auth y lo dejan en la AuthSession.
+    ScreenManager screen_manager(host_, port_);
+    AuthSession session;
+    ScreenState result = screen_manager.run(session);
 
-    NetworkSenderThread sender(protocol, sendingQueue);
-    NetworkReceiverThread receiver(protocol, receivingQueue);
-    ClientGUI gui(sendingQueue, receivingQueue, player_name_, race_);
+    if (result != ScreenState::GAME || !session.authenticated || !session.protocol) {
+        return;  // el usuario cerro antes de autenticarse.
+    }
+
+    // 2) Auth OK: tomamos la conexion ya abierta de la sesion y arrancamos los
+    //    threads de red sobre ella. El world snapshot llega por el socket DESPUES
+    //    del MSG_CONFIRM_SESSION y lo lee directamente el NetworkReceiverThread
+    //    (no hay nada que re-encolar).
+    std::unique_ptr<ClientProtocol> protocol = std::move(session.protocol);
+    session.password.clear();  // descartar la contrasena en claro tras autenticar.
+
+    NetworkSenderThread sender(*protocol, sendingQueue);
+    NetworkReceiverThread receiver(*protocol, receivingQueue);
+
+    // 3) Juego sobre el MISMO window/renderer/font del ScreenManager.
+    ClientGUI gui(screen_manager.get_window(), screen_manager.get_renderer(),
+                  screen_manager.get_font(), sendingQueue, receivingQueue,
+                  session.name, session.race);
 
     sender.start();
     receiver.start();
-    // gui.start();
-
-    // gui.join();
 
     gui.run();
-    
+
     sendingQueue.close();
     receivingQueue.close();
 
-    protocol.shutdown();
+    protocol->shutdown();
 
     sender.join();
     receiver.join();

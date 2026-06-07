@@ -59,6 +59,11 @@ class GameLoop : public Thread {
 
     // Envia un error de auth (register/login fallido) al cliente.
     void send_auth_error(uint32_t client_id, const std::string& reason);
+    // Envia la confirmacion de auth EXITOSO (MSG_CONFIRM_SESSION) con name/race/
+    // class, justo antes del world snapshot. El cliente lo usa para elegir el
+    // sprite de la raza real antes de entrar al juego.
+    void send_confirm_session(uint32_t client_id, const std::string& name,
+                              const std::string& race, const std::string& klass);
     // Arma y envia todo el estado inicial del mundo al cliente recien autenticado
     // (mapa, stats, items, snapshots de NPCs/players, zona). Compartido por
     // register y login.

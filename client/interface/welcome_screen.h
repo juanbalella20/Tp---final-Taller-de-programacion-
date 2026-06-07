@@ -4,6 +4,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
+#include "Screen.h"
+
 struct WindowSettings {
     int width = 1280;
     int height = 720;
@@ -15,7 +17,12 @@ struct LauncherResult {
     WindowSettings settings;
 };
 
-class WelcomeScreen {
+// Pantalla de configuracion/launcher. Implementa Screen: NO crea ni destruye el
+// window/renderer (los recibe del ScreenManager); solo carga sus propias
+// texturas y su fuente de tamano fijo. Al confirmar transiciona a LOGIN_SIGNUP;
+// al cerrar, a EXIT. Los WindowSettings elegidos quedan accesibles via
+// get_result() para que el ScreenManager los aplique a la ventana compartida.
+class WelcomeScreen : public Screen {
  private:
     static constexpr char WINDOW_NAME[] = "Argentum Online";
     static constexpr char BACKGROUND_PATH[] =
@@ -51,32 +58,29 @@ class WelcomeScreen {
     static constexpr SDL_FRect FULLSCREEN_BUTTON{
         629.0f, 612.0f, 82.0f, 82.0f};
 
+    // No-owning: pertenecen al ScreenManager.
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
+
     SDL_Texture* background = nullptr;
     SDL_Texture* config = nullptr;
-    TTF_Font* config_font = nullptr;
-    SDL_Event event{};
-    bool video_initialized = false;
-    bool ttf_initialized = false;
+    TTF_Font* config_font = nullptr;  // propia (tamano fijo); cerrada en el dtor.
+    bool media_loaded = false;
     bool showing_config = false;
     bool resolution_dropdown_open = false;
     LauncherResult result;
     WindowSettings pending_settings;
     int selected_resolution_index = 0;
     int pending_resolution_index = 0;
+    ScreenState next = ScreenState::WELCOME;
 
     static bool contains(const SDL_FRect& rect, float x, float y);
     static bool toConfigCoordinates(float x, float y, float& config_x, float& config_y);
     static SDL_FRect toPopupRect(const SDL_FRect& config_rect);
-    void initSDL();
-    void freeSDL();
     void loadMedia();
     void freeMedia();
-    void handleEvent(const SDL_Event& event, bool& is_running);
-    void handleMainEvent(const SDL_Event& event, bool& is_running);
-    void handleConfigEvent(const SDL_Event& event, bool& is_running);
-    void render();
+    void handleMainEvent(const SDL_Event& event);
+    void handleConfigEvent(const SDL_Event& event);
     void showMainScreen();
     void showConfigScreen();
     void set_fullscreen(bool fs);
@@ -92,13 +96,21 @@ class WelcomeScreen {
     void drawText(const char* text, float x, float y, SDL_Color color);
 
  public:
-    WelcomeScreen() = default;
-    ~WelcomeScreen();
+    // win/rend NO-owning. La fuente compartida del manager se ignora aca: esta
+    // pantalla usa una fuente propia de tamano fijo por su layout.
+    WelcomeScreen(SDL_Renderer* renderer, SDL_Window* window, TTF_Font* font);
+    ~WelcomeScreen() override;
 
     WelcomeScreen(const WelcomeScreen&) = delete;
     WelcomeScreen& operator=(const WelcomeScreen&) = delete;
 
-    LauncherResult run();
+    void handleEvent(const SDL_Event& event) override;
+    void update() override;
+    void render() override;
+    ScreenState nextState() const override;
+
+    // WindowSettings elegidos por el usuario (para que el manager los aplique).
+    const LauncherResult& get_result() const { return result; }
 };
 
 #endif

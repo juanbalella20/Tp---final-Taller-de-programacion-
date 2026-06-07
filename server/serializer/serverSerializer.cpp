@@ -39,6 +39,7 @@ ServerSerializer::ServerSerializer() {
     // MSG_AUTH_ERROR: mismo formato que un texto ([len][texto]); el motivo viaja
     // en chat_content del GameMsg y el header lleva el tipo MSG_AUTH_ERROR.
     handlers[MSG_AUTH_ERROR] = [this](const GameMsg& msg) { return serialize_text(msg); };
+    handlers[MSG_CONFIRM_SESSION] = [this](const GameMsg& msg) { return serialize_confirm_session(msg); };
 }
 
 // Appendea un uint16_t en big-endian al buffer (definido mas abajo).
@@ -164,11 +165,38 @@ std::vector<uint8_t> ServerSerializer::serialize_text(const GameMsg& msg) {
     uint16_t payload_len = 1 + sender.size() + 1 + content.size();
     std::vector<uint8_t> buf;
     buf.reserve(LEN_HEADER + payload_len);
-    write_header(buf, MSG_CHEAT_KILL, payload_len);
+    // El header debe llevar el tipo REAL del mensaje (MSG_CHAT, MSG_AUTH_ERROR,
+    // los cheats, etc.); todos comparten el formato [len][sender][len][content].
+    write_header(buf, static_cast<uint8_t>(msg.get_type()), payload_len);
     buf.push_back(static_cast<uint8_t>(sender.size()));
     buf.insert(buf.end(), sender.begin(), sender.end());
     buf.push_back(static_cast<uint8_t>(content.size()));
     buf.insert(buf.end(), content.begin(), content.end());
+    return buf;
+}
+
+// Formato MSG_CONFIRM_SESSION (server -> cliente, auth EXITOSO):
+//   [name_len:1B][name][race_len:1B][race][class_len:1B][class]
+// El cliente lo usa para elegir el sprite de la raza real antes de entrar al
+// juego (sobre todo en login, donde la raza vive en el server).
+std::vector<uint8_t> ServerSerializer::serialize_confirm_session(const GameMsg& msg) {
+    const std::string& name = msg.get_player_name();
+    const std::string& race = msg.get_race();
+    const std::string& klass = msg.get_class();
+
+    uint16_t payload_len = 1 + static_cast<uint16_t>(name.size())
+                         + 1 + static_cast<uint16_t>(race.size())
+                         + 1 + static_cast<uint16_t>(klass.size());
+
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, MSG_CONFIRM_SESSION, payload_len);
+    buf.push_back(static_cast<uint8_t>(name.size()));
+    buf.insert(buf.end(), name.begin(), name.end());
+    buf.push_back(static_cast<uint8_t>(race.size()));
+    buf.insert(buf.end(), race.begin(), race.end());
+    buf.push_back(static_cast<uint8_t>(klass.size()));
+    buf.insert(buf.end(), klass.begin(), klass.end());
     return buf;
 }
 

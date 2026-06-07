@@ -40,7 +40,6 @@ struct DamageNumber {
     uint64_t expire_ms;
 };
 
-struct WindowSettings;
 // Catalogo de un efecto visual de hechizo: spritesheet animado por frames.
 struct SpellEffectDef {
     SDL_Texture* texture = nullptr;
@@ -118,7 +117,10 @@ private:
     static constexpr int GAME_VIEW_W = 732;
     static constexpr int GAME_VIEW_H = 456;
 
-    void initSDL(const WindowSettings& settings);
+    // Inicializa el estado grafico de ClientGUI sobre el window/renderer/font
+    // COMPARTIDOS (propiedad del ScreenManager): fija la presentacion logica,
+    // el icono y el mini chat. No crea ni destruye window/renderer/TTF.
+    void initSDL();
     void loadMedia(Zone zone);
     void freeSDL();
 
@@ -153,7 +155,7 @@ private:
     void sendChatCmd(const std::string& msg);
 
     // recibe mensaje del server y hace el dibujo inicial
-    void init_draw(const WindowSettings& settings);
+    void init_draw();
     //PRE: SE RECIBEM LAS COORDENADAS DE DONDE ESTAN
     //POS ESAS COORDENADAS SE ENVIAN AL SERVIDOR PARA QUE SE MUEVA EL JUGADOR A ESA POS
     void sendCoord(int x, int y);
@@ -179,7 +181,11 @@ private:
     void draw_spell_animations();
 
 public:
-    ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name, const std::string& player_race);
+    // window/renderer/font son COMPARTIDOS (propiedad del ScreenManager): se
+    // reciben, no se crean ni se destruyen aca.
+    ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
+              Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving,
+              const std::string& player_name, const std::string& player_race);
     ~ClientGUI();
 
     ClientGUI(const ClientGUI&) = delete;

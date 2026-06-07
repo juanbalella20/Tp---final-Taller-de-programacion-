@@ -172,6 +172,15 @@ void GameLoop::send_auth_error(uint32_t client_id, const std::string& reason) {
     client_registry_monitor.notify_client(client_id, msg);
 }
 
+void GameLoop::send_confirm_session(uint32_t client_id, const std::string& name,
+                                    const std::string& race, const std::string& klass) {
+    GameMsg msg(MSG_CONFIRM_SESSION);
+    msg.set_player_name(name);
+    msg.set_race(race);
+    msg.set_class(klass);
+    client_registry_monitor.notify_client(client_id, msg);
+}
+
 void GameLoop::send_world_snapshot_to(uint32_t client_id, const std::string& name,
                                       const std::string& race) {
     GameMsg registerMsg(MSG_REGISTER);
@@ -225,6 +234,9 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
             game_map.get_player(name), game_map.get_player_zone(name), cmd.get_password()));
     std::cout << "[REGISTER] nuevo personaje creado y persistido: " << name << std::endl;
 
+    // Confirmacion de auth EXITOSO antes del world snapshot: el cliente lee
+    // exactamente un mensaje de auth (MSG_AUTH_ERROR o MSG_CONFIRM_SESSION).
+    send_confirm_session(client_id, name, cmd.get_race(), cmd.get_class());
     send_world_snapshot_to(client_id, name, cmd.get_race());
 }
 
@@ -251,7 +263,15 @@ void GameLoop::handle_login(const ClientCmd& cmd) {
         std::cout << "[LOGIN] personaje reutilizado de memoria: " << name << std::endl;
     }
 
-    send_world_snapshot_to(client_id, name, game_map.get_player(name).get_race_name());
+    const Player& player = game_map.get_player(name);
+    const std::string& race = player.get_race_name();
+    // La clase vive en el server (enum del dominio); la traducimos al string del
+    // protocolo para que el cliente la reciba en el confirm.
+    std::string klass = CLASS_MAP_INV.at(static_cast<uint8_t>(player.get_class_id()));
+
+    // Confirmacion de auth EXITOSO antes del world snapshot (ver handle_register).
+    send_confirm_session(client_id, name, race, klass);
+    send_world_snapshot_to(client_id, name, race);
 }
 
 void GameLoop::handle_list(const ClientCmd& cmd) {

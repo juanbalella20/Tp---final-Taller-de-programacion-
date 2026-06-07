@@ -74,6 +74,7 @@ add_library(common STATIC
     common/binaryMap/byteReader.cpp
     common/utility/paths.cpp
     common/constants/game_config.cpp
+    common/constants/network_config.cpp
 )
 target_include_directories(common PUBLIC
     common
@@ -97,6 +98,9 @@ add_executable(client
     client/parser.cpp
     client/interface/clientGUI.cpp
     client/interface/welcome_screen.cpp
+    client/interface/screen_manager.cpp
+    client/interface/login_signup_screen.cpp
+    client/interface/character_creation_screen.cpp
     client/interface/tileMap.cpp
     client/interface/displayPlayer.cpp
     client/interface/camera.cpp

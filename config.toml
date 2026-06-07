@@ -346,6 +346,13 @@ clan_attack_bonus_per_member  = 0.05  # +5% ataque por miembro adicional
 # ------------------------------------------------------------
 [gameloop]
 tick_rate_ms = 50
-ticks_per_second = 20   
+ticks_per_second = 20
+
+# ------------------------------------------------------------
+# Red (cliente): host/puerto al que se conecta ./client
+# ------------------------------------------------------------
+[network]
+host = "localhost"
+port = "8080"
 
  

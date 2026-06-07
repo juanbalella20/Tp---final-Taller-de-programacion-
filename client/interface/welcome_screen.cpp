@@ -33,45 +33,22 @@ SDL_FRect WelcomeScreen::toPopupRect(const SDL_FRect& config_rect) {
     };
 }
 
-WelcomeScreen::~WelcomeScreen() {
-    freeMedia();
-    freeSDL();
-}
-
-void WelcomeScreen::initSDL() {
-    if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
-        throw std::runtime_error(std::string("SDL_InitSubSystem: ") + SDL_GetError());
-    }
-    video_initialized = true;
-
-    window = SDL_CreateWindow(WINDOW_NAME, LAUNCHER_WIDTH, LAUNCHER_HEIGHT, 0);
-    if (!window) {
-        throw std::runtime_error(std::string("SDL_CreateWindow: ") + SDL_GetError());
-    }
-
-    renderer = SDL_CreateRenderer(window, nullptr);
-    if (!renderer) {
-        throw std::runtime_error(std::string("SDL_CreateRenderer: ") + SDL_GetError());
-    }
-
+WelcomeScreen::WelcomeScreen(SDL_Renderer* renderer, SDL_Window* window, TTF_Font* /*font*/)
+    : window(window), renderer(renderer) {
+    // No creamos el window/renderer: son del ScreenManager. Solo fijamos la
+    // presentacion logica de esta pantalla y cargamos sus texturas/fuente.
     SDL_SetRenderLogicalPresentation(
         renderer, LAUNCHER_WIDTH, LAUNCHER_HEIGHT,
         SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+    result = LauncherResult{};
+    pending_settings = result.settings;
+
+    loadMedia();
 }
 
-void WelcomeScreen::freeSDL() {
-    if (renderer) {
-        SDL_DestroyRenderer(renderer);
-        renderer = nullptr;
-    }
-    if (window) {
-        SDL_DestroyWindow(window);
-        window = nullptr;
-    }
-    if (video_initialized) {
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        video_initialized = false;
-    }
+WelcomeScreen::~WelcomeScreen() {
+    freeMedia();
 }
 
 void WelcomeScreen::loadMedia() {
@@ -102,17 +79,16 @@ void WelcomeScreen::loadMedia() {
             std::string("SDL_CreateTextureFromSurface: ") + SDL_GetError());
     }
 
-    if (!TTF_Init()) {
-        throw std::runtime_error(std::string("TTF_Init: ") + SDL_GetError());
-    }
-    ttf_initialized = true;
-
+    // TTF ya fue inicializado por el ScreenManager; aca solo abrimos la fuente
+    // propia (tamano 11 fijo, ligada al layout de esta pantalla).
     const std::string font_path = paths::asset(FONT_PATH);
     config_font = TTF_OpenFont(font_path.c_str(), 11);
     if (!config_font) {
         throw std::runtime_error(
             "No se pudo cargar " + font_path + ": " + SDL_GetError());
     }
+
+    media_loaded = true;
 }
 
 void WelcomeScreen::freeMedia() {
@@ -128,33 +104,32 @@ void WelcomeScreen::freeMedia() {
         TTF_CloseFont(config_font);
         config_font = nullptr;
     }
-    if (ttf_initialized) {
-        TTF_Quit();
-        ttf_initialized = false;
-    }
+    media_loaded = false;
 }
 
-void WelcomeScreen::handleEvent(const SDL_Event& event, bool& is_running) {
+void WelcomeScreen::handleEvent(const SDL_Event& event) {
     if (showing_config) {
-        handleConfigEvent(event, is_running);
+        handleConfigEvent(event);
         return;
     }
 
-    handleMainEvent(event, is_running);
+    handleMainEvent(event);
 }
 
-void WelcomeScreen::handleMainEvent(const SDL_Event& event, bool& is_running) {
+void WelcomeScreen::update() {}
+
+void WelcomeScreen::handleMainEvent(const SDL_Event& event) {
     switch (event.type) {
         case SDL_EVENT_QUIT:
-            is_running = false;
+            next = ScreenState::EXIT;
             break;
         case SDL_EVENT_KEY_DOWN:
             if (event.key.scancode == SDL_SCANCODE_RETURN ||
                 event.key.scancode == SDL_SCANCODE_SPACE) {
                 result.start_game = true;
-                is_running = false;
+                next = ScreenState::LOGIN_SIGNUP;
             } else if (event.key.scancode == SDL_SCANCODE_ESCAPE) {
-                is_running = false;
+                next = ScreenState::EXIT;
             }
             break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN: {
@@ -169,9 +144,9 @@ void WelcomeScreen::handleMainEvent(const SDL_Event& event, bool& is_running) {
 
             if (contains(START_BUTTON, x, y)) {
                 result.start_game = true;
-                is_running = false;
+                next = ScreenState::LOGIN_SIGNUP;
             } else if (contains(CLOSE_BUTTON, x, y)) {
-                is_running = false;
+                next = ScreenState::EXIT;
             } else if (contains(SETTINGS_BUTTON, x, y)) {
                 showConfigScreen();
             }
@@ -182,10 +157,10 @@ void WelcomeScreen::handleMainEvent(const SDL_Event& event, bool& is_running) {
     }
 }
 
-void WelcomeScreen::handleConfigEvent(const SDL_Event& event, bool& is_running) {
+void WelcomeScreen::handleConfigEvent(const SDL_Event& event) {
     switch (event.type) {
         case SDL_EVENT_QUIT:
-            is_running = false;
+            next = ScreenState::EXIT;
             break;
         case SDL_EVENT_KEY_DOWN:
             if (event.key.scancode == SDL_SCANCODE_ESCAPE) {
@@ -248,8 +223,11 @@ void WelcomeScreen::render() {
         drawConfigControls();
         SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
     }
+    // El SDL_RenderPresent lo hace el ScreenManager (dueño del frame).
+}
 
-    SDL_RenderPresent(renderer);
+ScreenState WelcomeScreen::nextState() const {
+    return next;
 }
 
 void WelcomeScreen::showMainScreen() {
@@ -425,36 +403,4 @@ void WelcomeScreen::drawText(const char* text, float x, float y, SDL_Color color
     SDL_DestroySurface(surface);
     SDL_RenderTexture(renderer, texture, nullptr, &dst);
     SDL_DestroyTexture(texture);
-}
-
-LauncherResult WelcomeScreen::run() {
-    result = LauncherResult{};
-    pending_settings = result.settings;
-    selected_resolution_index = 0;
-    pending_resolution_index = 0;
-    resolution_dropdown_open = false;
-    showing_config = false;
-
-    try {
-        initSDL();
-        loadMedia();
-
-        bool is_running = true;
-        while (is_running) {
-            while (SDL_PollEvent(&event)) {
-                handleEvent(event, is_running);
-            }
-
-            render();
-            SDL_Delay(16);
-        }
-    } catch (...) {
-        freeMedia();
-        freeSDL();
-        throw;
-    }
-
-    freeMedia();
-    freeSDL();
-    return result;
 }

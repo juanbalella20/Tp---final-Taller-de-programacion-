@@ -31,6 +31,7 @@ class ClientDeserializer {
     uint32_t deserialize_value(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_zone(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_attack(const std::vector<uint8_t>& payload, GameMsg& msg);
+    void deserialize_confirm_session(const std::vector<uint8_t>& payload, GameMsg& msg);
 
  public:
     ClientDeserializer();

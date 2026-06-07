@@ -1,61 +1,38 @@
 #include "clientGUI.h"
 #include "npcSprite.h"
 #include "itemSprite.h"
-#include "welcome_screen.h"
 #include <SDL3_image/SDL_image.h>
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
 
-ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name,
+ClientGUI::ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
+    Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name,
     const std::string& player_race)
-    : window(nullptr), renderer(nullptr), event{}, chat_font(nullptr),
+    : window(window), renderer(renderer), event{}, chat_font(font),
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
       hud(nullptr), own_name(player_name), race(player_race), player(nullptr), tilemap(nullptr),
       enemy_texture(nullptr), frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
       camera((float)GAME_VIEW_W, (float)GAME_VIEW_H),
-      current_zone(static_cast<Zone>(0xFF)),  
+      current_zone(static_cast<Zone>(0xFF)),
       selected_npc_tile_x(-1), selected_npc_tile_y(-1) {}
-    
+
 
 ClientGUI::~ClientGUI() {
     freeSDL();
-    if (chat_font) {
-        TTF_CloseFont(chat_font);
-        chat_font = nullptr;
-    }
+    // chat_font, window y renderer son del ScreenManager: no se liberan aca.
 }
 
-void ClientGUI::initSDL(const WindowSettings& settings) {
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
-        throw std::runtime_error(std::string("SDL_Init: ") + SDL_GetError());
-    }
-    window = SDL_CreateWindow(WIN_NAME, settings.width, settings.height, 0);
-    if (!window) {
-        throw std::runtime_error(std::string("SDL_CreateWindow: ") + SDL_GetError());
-    }
-    if (settings.fullscreen && !SDL_SetWindowFullscreen(window, true)) {
-        throw std::runtime_error(std::string("SDL_SetWindowFullscreen: ") + SDL_GetError());
-    }
-
-    renderer = SDL_CreateRenderer(window, nullptr);
-    if (!renderer) {
-        throw std::runtime_error(std::string("SDL_CreateRenderer: ") + SDL_GetError());
-    }
-
-    SDL_SetRenderLogicalPresentation(renderer, LOGICAL_WIDTH, LOGICAL_HEIGHT,SDL_LOGICAL_PRESENTATION_LETTERBOX);
+void ClientGUI::initSDL() {
+    // window/renderer/font ya existen (del ScreenManager). Solo configuramos la
+    // presentacion logica del juego, el icono y el mini chat.
+    SDL_SetRenderLogicalPresentation(renderer, LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
     SDL_Surface* icon = IMG_Load("imagenes/logo.jpeg");
     if (icon) {
         SDL_SetWindowIcon(window, icon);
         SDL_DestroySurface(icon);
     }
-
-    if (!TTF_Init() == -1) {
-        throw std::runtime_error(std::string("TTF_Init: ") + SDL_GetError());
-    }
-
-    chat_font = TTF_OpenFont("fonts/StackSansText-Medium.ttf", 12);
 
     mini_chat = std::make_unique<MiniChat>(renderer, chat_font, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
 }
@@ -125,15 +102,7 @@ void ClientGUI::freeSDL() {
         gold_texture = nullptr;
     }
 
-    if (renderer) {
-        SDL_DestroyRenderer(renderer);
-        renderer = nullptr;
-    }
-    if (window) {
-        SDL_DestroyWindow(window);
-        window = nullptr;
-    }
-    SDL_Quit();
+    // window/renderer NO se destruyen: son del ScreenManager. Tampoco SDL_Quit.
 }
 
 std::vector<int> ClientGUI::translate_tile_to_coord(int pixel_x, int pixel_y) const {
@@ -829,8 +798,8 @@ void ClientGUI::draw() {
     SDL_RenderPresent(renderer);
 }
 
-void ClientGUI::init_draw(const WindowSettings& settings) {
-    initSDL(settings);
+void ClientGUI::init_draw() {
+    initSDL();
     SDL_SetRenderLogicalPresentation(
         renderer, LOGICAL_WIDTH, LOGICAL_HEIGHT,
         SDL_LOGICAL_PRESENTATION_LETTERBOX);
@@ -946,18 +915,16 @@ void ClientGUI::init_draw(const WindowSettings& settings) {
 }
 
 void ClientGUI::run() {
+    // El launcher/login ya corrieron en el ScreenManager: aca solo entramos al
+    // juego sobre el window/renderer compartidos. La conexion ya esta abierta y
+    // los threads de red ya estan andando.
     try {
-        WelcomeScreen welcome_screen;
-        LauncherResult launcher_result = welcome_screen.run();
-
-        if (launcher_result.start_game) {
-            init_draw(launcher_result.settings);
-            while (is_running && should_keep_running()) {
-                handleEvents();
-                update();
-                draw();
-                SDL_Delay(16);
-            }
+        init_draw();
+        while (is_running && should_keep_running()) {
+            handleEvents();
+            update();
+            draw();
+            SDL_Delay(16);
         }
     } catch (const std::exception& e) {
         std::cerr << "ClientGUI error: " << e.what() << std::endl;
