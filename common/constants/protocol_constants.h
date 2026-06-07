@@ -61,17 +61,18 @@ enum MessageType : uint8_t {
     MSG_CHEAT_KILL   = 0x1F,  // Cheat para morir automáticamente
     MSG_CHEAT_INF_HP = 0x20,  // Cheat para vida infinita
     MSG_CHEAT_INF_MANA = 0x21, // Cheat para maná infinito
-    MSG_GOLD = 0x22,          // Actualizar oro del jugador
-    MSG_HP = 0x23,            // Actualizar hp del jugador
-    MSG_XP = 0x24,            // Actualizar xp del jugador
-    MSG_MANA = 0x25,            // Actualizar mana del jugador
+    MSG_GOLD = 0x22,           // Actualizar oro del jugador
+    MSG_HP = 0x23,             // Actualizar hp del jugador
+    MSG_XP = 0x24,             // Actualizar xp del jugador
+    MSG_MANA = 0x25,           // Actualizar mana del jugador
     MSG_NPCS_SNAPSHOT  = 0x26, // Snapshot de NPCs vivos: vector<NpcInfo>
     MSG_ITEMS_SNAPSHOT = 0x27, // Snapshot de items en el piso: vector<ItemFloorInfo>
     MSG_PLAYERS_SNAPSHOT = 0x28, // Snapshot de players vivos: vector<PlayerInfo>
-    MSG_TELEPORT       = 0x29, // Cliente->server: pedido de /tp (sin payload)
-    MSG_ZONE_CHANGE = 0x30, // Server -> cliente: zona a cargar
-    MSG_UPDATE_EQUIP = 0x31, // Server -> cliente: actualizar equip de item
-    MSG_CHEAT_MANA = 0x32,  // Cheat: restar N de maná (para testear /meditar)
+    MSG_TELEPORT       = 0x29,   // Cliente->server: pedido de /tp (sin payload)
+    MSG_ZONE_CHANGE = 0x30,      // Server -> cliente: zona a cargar
+    MSG_UPDATE_EQUIP = 0x31,     // Server -> cliente: actualizar equip de item
+    MSG_CHEAT_MANA = 0x32,       // Cheat: restar N de maná (para testear /meditar)
+    MSG_UPDATE_LEVEL = 0x33,     
 };
 
 enum Direction : uint8_t {
