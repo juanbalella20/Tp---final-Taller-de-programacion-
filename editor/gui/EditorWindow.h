@@ -6,9 +6,11 @@
 
 #include "../document/EditorDocument.h"
 
-class TilePalette;
-class MapCanvasWidget;
 class QAction;
+class QComboBox;
+class QGraphicsView;
+class MapEditorScene;
+class TilesetSelectorView;
 
 class EditorWindow : public QMainWindow {
     Q_OBJECT
@@ -21,20 +23,23 @@ private slots:
     void on_open();
     void on_save();
     void on_save_as();
+    void load_tileset();
 
 private:
     // Crea menu: archivo,nuevo,abrir,guardar, guardar como, salir
     void build_menus();
-    // Crea widget de tiles
-    void build_palette_dock();
-    // Crea el grid del mapa
-    void build_canvas();
+    // Crea el splitter central con la paleta y el canvas scrolleable.
+    void build_workspace();
+    void build_tileset_toolbar();
     // Crea la toolbar: herramientas (lapiz/goma/relleno) y capa activa.
     void build_tools_toolbar();
     // Crea menu Editar (deshacer/rehacer) y guarda las acciones.
     void build_edit_menu();
     // Habilita/deshabilita deshacer/rehacer segun el estado del document.
     void update_undo_actions();
+    bool load_tileset_path(const QString& path);
+    void refresh_tileset_combo();
+    void select_tileset(int index);
 
     // Serializa el Map actual a 'path' (.bin via BinaryMapSaver). Muestra el
     // resultado en la status bar; devuelve true si se guardo bien.
@@ -42,8 +47,10 @@ private:
 
     // Controlador: dueno del Map, del estado de edicion y del undo/redo.
     EditorDocument doc_;
-    TilePalette* palette_ = nullptr;
-    MapCanvasWidget* canvas_ = nullptr;
+    TilesetSelectorView* selector_ = nullptr;
+    MapEditorScene* map_scene_ = nullptr;
+    QGraphicsView* map_view_ = nullptr;
+    QComboBox* tileset_combo_ = nullptr;
     QAction* undo_action_ = nullptr;
     QAction* redo_action_ = nullptr;
     // Accion que envuelve el combo de zona destino (label + combo). Visible solo

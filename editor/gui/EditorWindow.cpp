@@ -3,26 +3,35 @@
 #include <QAction>
 #include <QActionGroup>
 #include <QComboBox>
-#include <QDockWidget>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QGraphicsView>
 #include <QHBoxLayout>
 #include <QKeySequence>
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QPainter>
+#include <QSignalBlocker>
+#include <QSplitter>
 #include <QStatusBar>
 #include <QToolBar>
 #include <QWidget>
 
+#include <algorithm>
 #include <exception>
 
 #include "../model/Map.h"
-#include "../render/MapCanvasWidget.h"
-#include "TilePalette.h"
+#include "../render/MapEditorScene.h"
+#include "../render/TileLibrary.h"
+#include "TilesetSelectorView.h"
 #include "binaryMap/binaryMapSaver.h"
 #include "protocol_constants.h"  // Zone, ZONE_NAME_MAP_INV
+
+#ifndef EDITOR_DEFAULT_TILESET_PATH
+#define EDITOR_DEFAULT_TILESET_PATH ""
+#endif
 
 EditorWindow::EditorWindow(QWidget* parent) : QMainWindow(parent) {
     setWindowTitle("Editor de Mapas - Argentum Online");
@@ -30,42 +39,123 @@ EditorWindow::EditorWindow(QWidget* parent) : QMainWindow(parent) {
 
     build_menus();
     build_edit_menu();
-    build_canvas();
-    build_palette_dock();
+    build_workspace();
+    build_tileset_toolbar();
     build_tools_toolbar();
-
     update_undo_actions();
-    statusBar()->showMessage("Listo");
 }
 
-void EditorWindow::build_canvas() {
-    // El canvas se escala solo para que el mapa entre siempre en pantalla, sin
-    // scroll: va directo como widget central.
-    canvas_ = new MapCanvasWidget(&doc_, this);
-    setCentralWidget(canvas_);
-}
+void EditorWindow::build_workspace() {
+    auto* splitter = new QSplitter(Qt::Horizontal, this);
+    splitter->setChildrenCollapsible(false);
 
-void EditorWindow::build_palette_dock() {
-    palette_ = new TilePalette(this);
-    auto* dock = new QDockWidget("Tiles", this);
-    dock->setWidget(palette_);
-    addDockWidget(Qt::LeftDockWidgetArea, dock);
+    selector_ = new TilesetSelectorView(splitter);
+    selector_->setMinimumWidth(250);
+    selector_->setMaximumWidth(250);
 
-    // El tile seleccionado en la paleta pasa a ser el brush activo del document.
-    connect(palette_, &TilePalette::tileSelected, this, [this](int gid) {
+    map_scene_ = new MapEditorScene(&doc_, this);
+    map_view_ = new QGraphicsView(map_scene_, splitter);
+    map_view_->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    map_view_->setDragMode(QGraphicsView::NoDrag);
+    map_view_->setInteractive(true);
+    map_view_->setBackgroundBrush(QColor(30, 30, 30));
+    map_view_->setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing,
+                                   true);
+    map_view_->setRenderHint(QPainter::Antialiasing, false);
+    map_view_->setRenderHint(QPainter::SmoothPixmapTransform, false);
+    map_view_->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+
+    splitter->addWidget(selector_);
+    splitter->addWidget(map_view_);
+    splitter->setCollapsible(0, false);
+    splitter->setCollapsible(1, false);
+    splitter->setStretchFactor(0, 0);
+    splitter->setStretchFactor(1, 1);
+    splitter->setSizes({250, 774});
+    setCentralWidget(splitter);
+
+    connect(selector_, &TilesetSelectorView::tileSelected, this,
+            [this](int gid, const QPixmap&) {
         doc_.set_active_gid(gid);
         statusBar()->showMessage(QString("Tile seleccionado: gid %1").arg(gid));
     });
+}
 
-    // Al cargar un PNG, registrar el tileset en el Map (via document) y refrescar.
-    connect(palette_, &TilePalette::tilesetLoaded, this,
-            [this](const QString& name, const QString& file_path, int columns,
-                   int tile_count, bool collidable) {
-                doc_.map().add_tileset(name.toStdString(),
-                                       file_path.toStdString(), columns,
-                                       tile_count, collidable);
-                if (canvas_) canvas_->refresh();
-            });
+void EditorWindow::build_tileset_toolbar() {
+    auto* toolbar = addToolBar("Tilesets");
+    toolbar->setObjectName("tilesetToolbar");
+    toolbar->addWidget(new QLabel("Tileset: ", toolbar));
+
+    tileset_combo_ = new QComboBox(toolbar);
+    tileset_combo_->setMinimumContentsLength(16);
+    toolbar->addWidget(tileset_combo_);
+    toolbar->addAction("Cargar PNG...", this, &EditorWindow::load_tileset);
+
+    connect(tileset_combo_, &QComboBox::currentIndexChanged, this,
+            &EditorWindow::select_tileset);
+    connect(&doc_, &EditorDocument::tilesetsChanged, this,
+            &EditorWindow::refresh_tileset_combo);
+    refresh_tileset_combo();
+}
+
+void EditorWindow::load_tileset() {
+    const QString path = QFileDialog::getOpenFileName(
+        this, "Elegir tileset", QString(), "Imagenes PNG (*.png *.PNG)");
+    if (!path.isEmpty()) load_tileset_path(path);
+}
+
+bool EditorWindow::load_tileset_path(const QString& path) {
+    TileLibrary library;
+    if (!library.loadTileset(path, doc_.map().tile_size())) {
+        statusBar()->showMessage(
+            QString("Tileset invalido o sin tiles completos: %1").arg(path));
+        return false;
+    }
+
+    const QFileInfo info(path);
+    const int index = doc_.register_tileset(
+        info.baseName(), info.absoluteFilePath(), library.columns(),
+        library.tileCount(), false);
+    refresh_tileset_combo();
+    tileset_combo_->setCurrentIndex(index);
+    select_tileset(index);
+    statusBar()->showMessage(
+        QString("Tileset cargado: %1 (%2 tiles)")
+            .arg(info.fileName())
+            .arg(library.tileCount()));
+    return true;
+}
+
+void EditorWindow::refresh_tileset_combo() {
+    if (!tileset_combo_) return;
+
+    const int previousIndex = tileset_combo_->currentIndex();
+    const QSignalBlocker blocker(tileset_combo_);
+    tileset_combo_->clear();
+    for (const Tileset& tileset : doc_.map().tilesets()) {
+        tileset_combo_->addItem(QString::fromStdString(tileset.name));
+    }
+
+    if (tileset_combo_->count() == 0) {
+        selector_->clearTileset();
+        return;
+    }
+    tileset_combo_->setCurrentIndex(
+        std::clamp(previousIndex, 0, tileset_combo_->count() - 1));
+}
+
+void EditorWindow::select_tileset(int index) {
+    const auto& tilesets = doc_.map().tilesets();
+    if (index < 0 || index >= static_cast<int>(tilesets.size())) return;
+
+    const Tileset& tileset = tilesets[static_cast<std::size_t>(index)];
+    if (!selector_->setTileset(QString::fromStdString(tileset.file_path),
+                               doc_.map().tile_size(), tileset.firstgid)) {
+        selector_->clearTileset();
+        statusBar()->showMessage(
+            QString("No se pudo abrir el tileset: %1")
+                .arg(QString::fromStdString(tileset.file_path)));
+    }
 }
 
 void EditorWindow::build_tools_toolbar() {

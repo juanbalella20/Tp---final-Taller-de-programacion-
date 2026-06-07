@@ -35,6 +35,19 @@ const std::string& EditorDocument::active_dest_zone() const {
     return active_dest_zone_;
 }
 
+int EditorDocument::register_tileset(const QString& name,
+                                     const QString& file_path, int columns,
+                                     int tile_count, bool collidable) {
+    const int index = map_.add_tileset(name.toStdString(),
+                                       file_path.toStdString(), columns,
+                                       tile_count, collidable);
+    redo_stack_.clear();
+    set_dirty(true);
+    emit tilesetsChanged();
+    emit undoStackChanged();
+    return index;
+}
+
 std::unique_ptr<Tool> EditorDocument::make_tool(ToolType t) const {
     switch (t) {
         case ToolType::Pencil: return std::make_unique<PencilTool>();
@@ -51,15 +64,23 @@ std::unique_ptr<Tool> EditorDocument::make_tool(ToolType t) const {
 // --- Punto de entrada de las herramientas (lo llama el canvas) ---------------
 
 void EditorDocument::apply_tool_press(int x, int y) {
+    begin_tool_gesture(tool_, x, y);
+}
+
+void EditorDocument::apply_tool_press(int x, int y, ToolType tool_override) {
+    begin_tool_gesture(tool_override, x, y);
+}
+
+void EditorDocument::begin_tool_gesture(ToolType tool, int x, int y) {
     // La herramienta Teleport no usa el flujo de gids: es un toggle de 1 celda
     // sobre el vector de teleports del Map (sin gesto press-drag-release).
-    if (tool_ == ToolType::Teleport) {
+    if (tool == ToolType::Teleport) {
         toggle_teleport(x, y);
         return;
     }
     // Colision: trazo de pintura sobre la grilla booleana. El valor a pintar se
     // fija ahora (el inverso de la celda inicial) y se mantiene durante el drag.
-    if (tool_ == ToolType::Collision) {
+    if (tool == ToolType::Collision) {
         if (!map_.in_bounds(x, y)) return;
         collision_gesture_active_ = true;
         collision_paint_value_ = !map_.is_blocked_cell(x, y);
@@ -68,9 +89,10 @@ void EditorDocument::apply_tool_press(int x, int y) {
         return;
     }
     // Resto: abre un gesto nuevo, fabrica la Tool y acumula sus primeros deltas.
-    gesture_tool_ = make_tool(tool_);
+    gesture_layer_ = active_layer_;
+    gesture_tool_ = make_tool(tool);
     gesture_changes_.clear();
-    apply_changes_live(gesture_tool_->on_press(map_, active_layer_, x, y,
+    apply_changes_live(gesture_tool_->on_press(map_, gesture_layer_, x, y,
                                                active_gid_));
 }
 
@@ -82,7 +104,7 @@ void EditorDocument::apply_tool_drag(int x, int y) {
     }
     // Solo las herramientas que pintan al arrastrar (lapiz/goma) actuan aca.
     if (!gesture_tool_ || !gesture_tool_->paints_on_drag()) return;
-    apply_changes_live(gesture_tool_->on_drag(map_, active_layer_, x, y,
+    apply_changes_live(gesture_tool_->on_drag(map_, gesture_layer_, x, y,
                                               active_gid_));
 }
 
@@ -103,7 +125,7 @@ void EditorDocument::apply_tool_release(int /*x*/, int /*y*/) {
     // Cierra el gesto. Si toco al menos una celda, lo apila como UN solo
     // Command (sin re-ejecutar: los cambios ya se aplicaron en vivo).
     if (gesture_tool_ && !gesture_changes_.empty()) {
-        push_committed_changes(active_layer_, std::move(gesture_changes_));
+        push_committed_changes(gesture_layer_, std::move(gesture_changes_));
     }
     gesture_tool_.reset();
     gesture_changes_.clear();
@@ -136,8 +158,8 @@ void EditorDocument::apply_changes_live(std::vector<CellChange> changes) {
     // Aplica cada delta al Map y avisa al canvas; los acumula para el Command
     // que se arma al soltar.
     for (const CellChange& c : changes) {
-        map_.set_cell(active_layer_, c.x, c.y, c.new_gid);
-        emit cellChanged(active_layer_, c.x, c.y);
+        map_.set_cell(gesture_layer_, c.x, c.y, c.new_gid);
+        emit cellChanged(gesture_layer_, c.x, c.y);
         gesture_changes_.push_back(c);
     }
     if (!changes.empty()) set_dirty(true);
@@ -190,6 +212,7 @@ void EditorDocument::new_map() {
     redo_stack_.clear();
     path_.clear();
     set_dirty(false);
+    emit tilesetsChanged();
     emit mapReset();
     emit undoStackChanged();
 }

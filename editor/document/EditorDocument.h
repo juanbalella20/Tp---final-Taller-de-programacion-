@@ -49,10 +49,17 @@ public:
     void set_active_dest_zone(const std::string& zone);
     const std::string& active_dest_zone() const;
 
+    // Registra un tileset en el modelo y avisa a las vistas para que
+    // reconstruyan sus caches de pixmaps.
+    int register_tileset(const QString& name, const QString& file_path,
+                         int columns, int tile_count, bool collidable);
+
     // Punto de entrada de las herramientas
     // Aplican la herramienta activa en (x,y). Internamente acumulan CellChange
     // y, al soltar, arman un unico SetTilesCommand y lo apilan en el undo stack.
     void apply_tool_press(int x, int y);
+    // Gesto temporal sin cambiar la herramienta seleccionada en la toolbar.
+    void apply_tool_press(int x, int y, ToolType tool_override);
     void apply_tool_drag(int x, int y);
     void apply_tool_release(int x, int y);
 
@@ -79,6 +86,7 @@ signals:
     void cellChanged(int layer, int x, int y);
     void dirtyChanged(bool dirty);
     void activeLayerChanged(int idx);
+    void tilesetsChanged();
     // Las pilas de undo/redo cambiaron: la GUI actualiza el enable de sus acciones.
     void undoStackChanged();
 
@@ -98,6 +106,7 @@ private:
     // del gesto para armar UN solo SetTilesCommand al soltar.
     std::unique_ptr<Tool> gesture_tool_;
     std::vector<CellChange> gesture_changes_;
+    int gesture_layer_ = 0;
 
     // Estado del gesto de la herramienta Colision. Es un trazo de pintura sobre
     // la grilla booleana (no gids): el valor a pintar se fija en el press (el
@@ -115,6 +124,7 @@ private:
     void paint_collision(int x, int y);
     // Fabrica la Tool concreta segun tool_.
     std::unique_ptr<Tool> make_tool(ToolType t) const;
+    void begin_tool_gesture(ToolType tool, int x, int y);
     // Aplica los deltas al Map en vivo, emite cellChanged y los acumula en
     // gesture_changes_ (para el Command que se arma al soltar).
     void apply_changes_live(std::vector<CellChange> changes);
