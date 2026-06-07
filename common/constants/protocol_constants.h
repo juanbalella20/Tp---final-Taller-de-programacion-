@@ -125,6 +125,7 @@ enum Zone : uint8_t {
     ZONE_CITY = 0x01,
     ZONE_FOREST = 0x02,
     ZONE_TOWN = 0x03,
+    ZONE_DUNGEON = 0x04
 };
 
 // Nombre de zona (usado en el TOML para dest_zone y en el label del cliente).
@@ -133,6 +134,7 @@ const std::unordered_map<std::string, Zone> ZONE_NAME_MAP = {
     {"city",   ZONE_CITY},
     {"forest", ZONE_FOREST},
     {"town",   ZONE_TOWN},
+    {"dungeon", ZONE_DUNGEON},
 };
 
 const std::unordered_map<uint8_t, std::string> ZONE_NAME_MAP_INV = {
@@ -140,6 +142,7 @@ const std::unordered_map<uint8_t, std::string> ZONE_NAME_MAP_INV = {
     {ZONE_CITY,   "city"},
     {ZONE_FOREST, "forest"},
     {ZONE_TOWN,   "town"},
+    {ZONE_DUNGEON, "dungeon"},
 };
 
 // Solo buildings/empty viven en la matriz (terreno estatico).

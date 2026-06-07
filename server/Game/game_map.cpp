@@ -24,7 +24,7 @@ std::map<Zone, std::vector<std::string>> zone_npc_types() {
     return {
         {ZONE_DESERT, GameConfig::instance().desert_npcs},
         {ZONE_FOREST, GameConfig::instance().forest_npcs},
-        //{ZONE_DUNGEON, GameConfig::instance().dungeon_npcs}
+        {ZONE_DUNGEON, GameConfig::instance().dungeon_npcs}
     };
 }
 }  // namespace

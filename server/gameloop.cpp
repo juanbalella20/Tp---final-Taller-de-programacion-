@@ -66,6 +66,8 @@ InitialState GameLoop::load_initial_state_hardcoded(Zone zone) {
     case ZONE_DESERT:
         is.num_items = 6;
         is.num_npc = 7;
+    case ZONE_DUNGEON: 
+        is.num_npc = 12;
     default:
         break;
     }
@@ -119,16 +121,19 @@ void GameLoop::load_maps() {
     // harcoded:
     InitialState state_desert = load_initial_state_hardcoded(ZONE_DESERT);
     InitialState state_city = load_initial_state_hardcoded(ZONE_CITY);
+    InitialState state_dungeon = load_initial_state_hardcoded(ZONE_DUNGEON);
     std::map<Zone, std::string> zone_paths = {
         //{ZONE_DESERT, "data/maps/desert/map.toml"},
         {ZONE_DESERT, "data/maps/desert/map-2.bin"},
         {ZONE_CITY,   "data/maps/city/city-2.bin"},
-        {ZONE_FOREST, "data/maps/forest/forest2.bin"}
+        {ZONE_FOREST, "data/maps/forest/forest2.bin"},
+        {ZONE_DUNGEON, "data/maps/dungeon/dungeon-v1.bin"},
     };
     std::map<Zone, InitialState> initial_states = {
         {ZONE_DESERT, state_desert},
         {ZONE_CITY,   state_city},
         {ZONE_FOREST, state_city},
+        {ZONE_DUNGEON, state_dungeon},
     };
     game_map.init_world(zone_paths, initial_states);
 }

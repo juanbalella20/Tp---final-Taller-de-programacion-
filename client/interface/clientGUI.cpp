@@ -83,6 +83,11 @@ void ClientGUI::loadMedia(Zone zone) {
         tilemap->load_map_bin("data/maps/forest/forest2.bin");
         break;
     }
+    case ZONE_DUNGEON : {
+        tilemap = std::make_unique<TileMap>(renderer);
+        tilemap->load_map_bin("data/maps/dungeon/dungeon-v1.bin");
+        break;
+    }
     default:
         break;
     }
