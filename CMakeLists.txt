@@ -73,6 +73,7 @@ add_library(common STATIC
     common/binaryMap/binaryMapSaver.cpp
     common/binaryMap/byteReader.cpp
     common/utility/paths.cpp
+    common/constants/game_config.cpp
 )
 target_include_directories(common PUBLIC
     common
@@ -82,6 +83,7 @@ target_include_directories(common PUBLIC
     common/info
     common/utility
     common/binaryMap
+    vendored/tomlplusplus
 )
 
 # ── Client ──────────────────────────────────────────────────────────────────

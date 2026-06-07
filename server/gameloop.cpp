@@ -10,6 +10,7 @@
 #include "../common/commands/gameMsg.h"
 #include "../common/info/item_info.h"
 #include "Game/item/item.h"
+#include "../common/constants/game_config.h"
 
 GameLoop::GameLoop(Queue<ClientCmd>& receiving_queue,
                    ClientRegistryMonitor& client_registry_monitor):
@@ -773,14 +774,14 @@ void GameLoop::update_npcs_in_map(){
 //   A diferencia de sleep_for(50ms), no acumula drift entre ticks.
 void GameLoop::run() {
     load_world();
-
-    const auto tick_rate = std::chrono::milliseconds(50); // 20 ticks/s
+    const auto& cfg = GameConfig::instance();
+    const auto tick_rate = std::chrono::milliseconds(cfg.tick_rate_ms);// 20 ticks/s
     auto next_tick = std::chrono::steady_clock::now();
 
     // Acumulamos ticks para resolver la regeneracion (maná al meditar) una vez
     // por segundo: evita spamear MSG_MANA cada 50ms.
     int ticks_accumulated = 0;
-    const int ticks_per_second = 20; // 1000ms / 50ms
+    const int ticks_per_second = cfg.ticks_per_second; // 1000ms / 50ms
 
     while (should_keep_running()) {
         next_tick += tick_rate;
