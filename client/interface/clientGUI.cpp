@@ -493,7 +493,11 @@ void ClientGUI::update() {
                     if (msg.get_player_name() == own_name) {
                         // Arma del personaje + halos del inventario (todos los items
                         // equipados, arma y defensas) según el estado real del server.
-                        if (player) player->set_equipped_weapon(msg.get_equipped());
+                        if (player) {
+                            player->set_equipped_weapon(msg.get_equipped());
+                            // Sprite del personaje con cada item equipado (arma/báculo + escudo).
+                            player->set_equipped_items(msg.get_equipped_ids());
+                        }
                         if (hud) hud->set_equipped_by_ids(msg.get_equipped_ids());
                         // ¿Equipó un báculo? Lo recordamos para animar su efecto.
                         equipped_spell_id.clear();

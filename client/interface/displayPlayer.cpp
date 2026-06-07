@@ -39,6 +39,31 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
     }
 
     load_heads();
+    load_equip_sprites();
+}
+
+void PlayerDisplay::load_equip_sprites() {
+    // Sprite que se dibuja sobre el jugador por cada item equipado. La clave es
+    // el id del item (igual que en el server/HUD). Crop = recorte dentro de su
+    // spritesheet (toda la imagen para los íconos ya recortados).
+    struct Def { const char* id; const char* path; SDL_FRect crop; };
+    const Def defs[] = {
+        {"espada",            "imagenes/101.png",                   {224.0f, 96.0f, 30.0f, 30.0f}},
+        {"escudo",            "imagenes/2141.png",                  {0.0f, 0.0f, 32.0f, 32.0f}},
+        {"vara_fresno",       "imagenes/icon_vara_fresno.png",      {0.0f, 0.0f, 27.0f, 29.0f}},
+        {"baculo_nudoso",     "imagenes/icon_baculo_nudoso.png",    {0.0f, 0.0f, 30.0f, 29.0f}},
+        {"baculo_engarzado",  "imagenes/icon_baculo_engarzado.png", {0.0f, 0.0f, 34.0f, 40.0f}},
+        {"flauta_elfica",     "imagenes/icon_flauta_elfica.png",    {0.0f, 0.0f, 40.0f, 40.0f}},
+    };
+    for (const auto& d : defs) {
+        SDL_Surface* surf = IMG_Load(d.path);
+        if (!surf) continue;
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+        SDL_DestroySurface(surf);
+        if (!tex) continue;
+        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+        equip_sprites[d.id] = {tex, d.crop};
+    }
 }
 
 PlayerDisplay::~PlayerDisplay() {
@@ -54,16 +79,22 @@ PlayerDisplay::~PlayerDisplay() {
     if (hat_image) {
         SDL_DestroyTexture(hat_image);
     }
+    for (auto& kv : equip_sprites) {
+        if (kv.second.texture) SDL_DestroyTexture(kv.second.texture);
+    }
 }
 
 PlayerDisplay::PlayerDisplay(PlayerDisplay&& other) noexcept
     : renderer(other.renderer), image(other.image), weapon_image(other.weapon_image),
       head_image(other.head_image), hat_image(other.hat_image), rect(other.rect), head_pov(other.head_pov),
-      tileSize(other.tileSize), keystate(other.keystate), race(other.race) {
+      tileSize(other.tileSize), keystate(other.keystate), race(other.race),
+      equip_sprites(std::move(other.equip_sprites)),
+      equipped_item_ids(std::move(other.equipped_item_ids)) {
     other.image = nullptr;
     other.weapon_image = nullptr;
     other.head_image = nullptr;
     other.hat_image = nullptr;
+    other.equip_sprites.clear();
 }
 
 PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
@@ -72,6 +103,9 @@ PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
         if (weapon_image) SDL_DestroyTexture(weapon_image);
         if (head_image) SDL_DestroyTexture(head_image);
         if (hat_image) SDL_DestroyTexture(hat_image);
+        for (auto& kv : equip_sprites) {
+            if (kv.second.texture) SDL_DestroyTexture(kv.second.texture);
+        }
         renderer = other.renderer;
         image = other.image;
         weapon_image = other.weapon_image;
@@ -82,10 +116,13 @@ PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
         tileSize = other.tileSize;
         keystate = other.keystate;
         race = other.race;
+        equip_sprites = std::move(other.equip_sprites);
+        equipped_item_ids = std::move(other.equipped_item_ids);
         other.image = nullptr;
         other.weapon_image = nullptr;
         other.head_image = nullptr;
         other.hat_image = nullptr;
+        other.equip_sprites.clear();
     }
     return *this;
 }
@@ -176,6 +213,10 @@ bool PlayerDisplay::is_ghost() const {
 
 void PlayerDisplay::set_equipped_weapon(bool has_weapon) {
     has_equipped_weapon = has_weapon;
+}
+
+void PlayerDisplay::set_equipped_items(const std::vector<std::string>& ids) {
+    equipped_item_ids = ids;
 }
 
 void PlayerDisplay::head_back_pov() {
@@ -414,17 +455,38 @@ void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_d
 }
 
 void PlayerDisplay::draw_equipped_item(const Camera& camera) const {
-    if (has_equipped_weapon) {
-        set_transparency(weapon_image);
-        SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};
-        float weapon_size = rect.w * 0.5f;
-        SDL_FRect weapon_dst = {
-            camera.world_to_screen_x(rect.x) + rect.w * weapon_dx,
-            camera.world_to_screen_y(rect.y) + rect.h * weapon_dy,
-            weapon_size,
-            weapon_size
+    // Dibuja cada item equipado con su sprite real. Arma/báculo van en la mano
+    // (siguen la animación de caminata con weapon_dx/dy); el escudo en el otro
+    // lado. Si no hay sprite registrado para el id, no se dibuja nada.
+    for (const auto& id : equipped_item_ids) {
+        auto it = equip_sprites.find(id);
+        if (it == equip_sprites.end()) continue;
+        const EquipSprite& sprite = it->second;
+        set_transparency(sprite.texture);
+
+        float off_x, off_y, size;
+        if (id == "escudo") {
+            // El escudo va FIJO sobre el pecho/torso (no sigue la mano: con offset
+            // animado terminaba cayendo en la pierna en algunos frames de caminata).
+            // El cuerpo se dibuja en rect.y..rect.y+rect.h (la cabeza va aparte y
+            // arriba), así que el torso está cerca del top del cuerpo.
+            size = rect.w * 0.4f;
+            off_x = 0.30f;
+            off_y = 0.05f;
+        } else {
+            // Arma/báculo: en la mano, animado con la caminata.
+            size = rect.w * 0.5f;
+            off_x = weapon_dx;
+            off_y = weapon_dy;
+        }
+
+        SDL_FRect dst = {
+            camera.world_to_screen_x(rect.x) + rect.w * off_x,
+            camera.world_to_screen_y(rect.y) + rect.h * off_y,
+            size,
+            size
         };
-        SDL_RenderTexture(renderer, weapon_image, &crop, &weapon_dst);
+        SDL_RenderTexture(renderer, sprite.texture, &sprite.crop, &dst);
     }
 }
 
