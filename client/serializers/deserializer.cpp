@@ -213,6 +213,7 @@ static std::string read_string(const std::vector<uint8_t>& payload, size_t& offs
 
 void ClientDeserializer::deserialize_text(const std::vector<uint8_t>& payload, GameMsg& msg) {
     size_t offset = 0;
+    msg.set_player_name(read_string(payload, offset));
     msg.set_chat_content(read_string(payload, offset));
 }
 
@@ -422,10 +423,31 @@ void ClientDeserializer::deserialize_players_snapshot(const std::vector<uint8_t>
     players.reserve(count);
     for (uint16_t i = 0; i < count; ++i) {
         std::string name = read_string(payload, offset);
+
+        if (offset >= payload.size()) {
+            throw std::invalid_argument("Payload demasiado corto leyendo raza en MSG_PLAYERS_SNAPSHOT");
+        }
+        uint8_t race_code = payload[offset++];
+        std::string race;
+        switch (race_code) {
+            case RACE_HUMAN: race = "human"; break;
+            case RACE_ELF:   race = "elf";   break;
+            case RACE_DWARF: race = "dwarf"; break;
+            case RACE_GNOME: race = "gnome"; break;
+            default: throw std::invalid_argument("Raza invalida en MSG_PLAYERS_SNAPSHOT");
+        }
+
         int x = static_cast<int>(read_uint16_be(payload, offset));
         int y = static_cast<int>(read_uint16_be(payload, offset));
-        // race y klass no viajan en este snapshot (solo posicion y nombre)
-        players.push_back({std::move(name), "human", 0, x, y});
+
+        if (offset >= payload.size()) {
+            throw std::invalid_argument("Payload demasiado corto leyendo ghost en MSG_PLAYERS_SNAPSHOT");
+        }
+
+        bool is_ghost = (payload[offset++] != 0);
+        PlayerInfo pi{std::move(name), race, 0, x, y};
+        pi.ghost = is_ghost;
+        players.push_back(pi);
     }
 
     msg.set_players(players);
