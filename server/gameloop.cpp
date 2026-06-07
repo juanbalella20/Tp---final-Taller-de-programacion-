@@ -142,7 +142,9 @@ void GameLoop::send_player_snapshot_to_other_players(uint32_t client_id, const s
     // Solo incluye al jugador recién registrado, no a todos.
     const Player& p = game_map.get_player(player_name);
     GameMsg msg(MSG_PLAYERS_SNAPSHOT);
-    msg.set_player({player_name, player_race, 0, p.get_coord_x(), p.get_coord_y()});
+    PlayerInfo pi{player_name, player_race, 0, p.get_coord_x(), p.get_coord_y()};
+    pi.ghost = p.is_ghost();
+    msg.set_player(pi);
     std::cout << "[DEBUG: MSG_PLAYERS_SNAPSHOT] Notificando a otros jugadores sobre nuevo jugador " << msg.get_players().front().name << std::endl;
     client_registry_monitor.notify_clients_less_client(client_id, msg);
 }
@@ -479,8 +481,9 @@ void GameLoop::handle_cheat_kill(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     // game_map.kill_player(name);
     GameMsg msg(MSG_CHEAT_KILL);
-    msg.set_chat_content("Moriste instantáneamente.");
-    client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    msg.set_player_name(name);
+    msg.set_chat_content(name + " murió instantáneamente.");
+    client_registry_monitor.notify_clients(msg);
 }
 
 void GameLoop::handle_cheat_inf_hp(const ClientCmd& cmd) {
