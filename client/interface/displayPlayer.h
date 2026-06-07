@@ -11,13 +11,20 @@
 // para testing:
 #define PLAYER_VEL 8.0f
 
+enum class ViewDirection {
+    BACK = 0,    // Norte
+    FRONT = 1,   // Sur
+    RIGHT = 2,   // Este
+    LEFT = 3     // Oeste
+};
+
 class PlayerDisplay : public WorldEntity {
 private:
     SDL_Renderer* renderer;
     SDL_Texture* image;
-    SDL_Texture* weapon_image;
     SDL_Texture* head_image;
     SDL_Texture* hat_image;
+    SDL_Texture* ghost_image;
     SDL_FRect rect;
     SDL_FRect head_pov;
     int tileSize;
@@ -34,10 +41,12 @@ private:
     int walk_frame = 0;
     bool has_equipped_weapon = false;
 
+    ViewDirection current_direction = ViewDirection::BACK;
     // Sprite de cada item equipable, por id (textura + recorte en su spritesheet).
     struct EquipSprite {
         SDL_Texture* texture;
         SDL_FRect crop;
+        bool use_crop;
     };
     std::map<std::string, EquipSprite> equip_sprites;
     // Ids de los items actualmente equipados, para dibujarlos sobre el jugador.
@@ -51,11 +60,15 @@ private:
     void head_right_pov();
     void head_left_pov();
 
-    void set_transparency(SDL_Texture* img) const;
-    void draw_player(const Camera& camera, SDL_FRect body_pov) const;
-    void draw_player_head(const Camera& camera) const;
-    void draw_gnome_hat(const Camera& camera, const SDL_FRect& head_dst) const;
-    void draw_equipped_item(const Camera& camera) const;
+    void draw_player(const Camera& camera, SDL_FRect body_pov);
+    void draw_player_head(const Camera& camera);
+    void draw_gnome_hat(const Camera& camera, const SDL_FRect& head_dst);
+    void draw_equipped_item(const Camera& camera);
+
+    void weapon_back_offset(int current_frame);
+    void weapon_front_offset(int current_frame);
+    void weapon_right_offset(int current_frame);
+    void weapon_left_offset(int current_frame);
 
 public:
     // Carga la imagen. La posicion inicial es (0, 0). Tile size en pixels.
@@ -79,15 +92,13 @@ public:
     void set_ghost(bool ghost);
     bool is_ghost() const;
     void set_equipped_weapon(bool has_weapon);
-    // Setea la lista de ids equipados (arma/báculo + defensas) para que el sprite
-    // del jugador muestre cada item con su gráfico correcto.
     void set_equipped_items(const std::vector<std::string>& ids);
-    void draw(const Camera& camera, SDL_FRect crop_pov) const override;
-    SDL_FRect right_pov();
-    SDL_FRect left_pov();
-    SDL_FRect front_pov();
-    SDL_FRect back_pov();
-
+    void draw(const Camera& camera, SDL_FRect crop) override;
+    SDL_FRect right_pov(ViewDirection direction);
+    SDL_FRect left_pov(ViewDirection direction);
+    SDL_FRect front_pov(ViewDirection direction);
+    SDL_FRect back_pov(ViewDirection direction);
+    SDL_FRect ghost_frame();
     void move_up();
     void move_down();
     void move_left();

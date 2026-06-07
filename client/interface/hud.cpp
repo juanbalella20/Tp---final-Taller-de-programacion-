@@ -13,6 +13,7 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       max_mana(100),
       player_xp(0),
       player_mana(0),
+      player_level(1),
       hp_bar_texture(nullptr),
       xp_bar_texture(nullptr),
       mana_bar_texture(nullptr),
@@ -22,6 +23,12 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       panel_width(panel_width),
       canvas_height(canvas_height) {
     
+    image_w = 1021.0f;
+    image_h = 767.0f;
+
+    scale_x = static_cast<float>(game_width + panel_width) / image_w;
+    scale_y = static_cast<float>(canvas_height) / image_h;
+
     load_textures();
 }
 
@@ -55,6 +62,12 @@ HUD::~HUD() {
     }
     if (xp_text_cache.texture) {
         SDL_DestroyTexture(xp_text_cache.texture);
+    }
+    if (name_text_cache.texture) {
+        SDL_DestroyTexture(name_text_cache.texture);
+    }
+    if (level_text_cache.texture) {
+        SDL_DestroyTexture(level_text_cache.texture);
     }
 
     if (font) {
@@ -95,6 +108,10 @@ void HUD::set_mana(uint32_t mana) {
 
 void HUD::set_equipped_item(const std::string& id) {
     equipped_item_id = id;
+}
+
+void HUD::set_level(int level) {
+    player_level = level;
 }
 
 void HUD::set_equipped_slot(int slot_index) {
@@ -172,12 +189,6 @@ void HUD::drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float S
 }
 
 void HUD::drawItems() {
-    float image_w = 1021.0f;
-    float image_h = 767.0f;
-
-    float scale_x = static_cast<float>(game_width + panel_width) / image_w;
-    float scale_y = static_cast<float>(canvas_height) / image_h;
-
     float slot_start_size = 48.0f;
     float slot_margin = 4.0f;
     float padding = 6.0f;
@@ -236,12 +247,6 @@ void HUD::drawBigStat(SDL_Texture* tex, float pos_y, int current, int max, TextC
     float tex_w, tex_h;
     SDL_GetTextureSize(tex, &tex_w, &tex_h);
 
-    float image_w = 1021.0f;
-    float image_h = 767.0f;
-
-    float scale_x = static_cast<float>(game_width + panel_width) / image_w;
-    float scale_y = static_cast<float>(canvas_height) / image_h;
-
     float start_x = 788.0f;
     const float bar_w = 217.0f;
     const float bar_h = 18.0f;
@@ -269,12 +274,6 @@ void HUD::drawBigStat(SDL_Texture* tex, float pos_y, int current, int max, TextC
 void HUD::drawSmallStat(SDL_Texture* tex, float pos_y, int current, int max, TextCache& cache) {
     float tex_w, tex_h;
     SDL_GetTextureSize(tex, &tex_w, &tex_h);
-
-    float image_w = 1021.0f;
-    float image_h = 767.0f;
-
-    float scale_x = static_cast<float>(game_width + panel_width) / image_w;
-    float scale_y = static_cast<float>(canvas_height) / image_h;
 
     float start_x = 788.0f;
     const float bar_w = 89.0f;
@@ -343,12 +342,6 @@ void HUD::drawGold() {
     std::string gold_text = std::to_string(player_gold);
     SDL_Color gold_color = {255, 215, 0, 255};
 
-    float image_w = 1021.0f;
-    float image_h = 767.0f;
-
-    float scale_x = static_cast<float>(game_width + panel_width) / image_w;
-    float scale_y = static_cast<float>(canvas_height) / image_h;
-
     float text_start_x = 788.0f * scale_x;
     float text_start_y = 558.0f * scale_y;
 
@@ -386,6 +379,36 @@ void HUD::drawXp() {
 void HUD::drawMana() {
     if (mana_bar_texture) {
         drawBigStat(mana_bar_texture, 629.0f, player_mana, max_mana, mana_text_cache);
+    }
+}
+
+void HUD::display_player_info(const std::string& player_name) {
+    if (!font) return;
+    
+    SDL_Color color = {255, 255, 255, 255};
+
+    float center_x = 878.0f * scale_x;
+    float text_start_y = 46.0f * scale_y;
+
+    update_text_cache(name_text_cache, player_name, color);
+    if (name_text_cache.texture) {
+        float scale = 0.90f;
+        float text_width = name_text_cache.w * scale;
+        float text_start_x = center_x - (text_width / 2.0f);
+        SDL_FRect dest = { text_start_x, text_start_y, text_width, name_text_cache.h * scale };
+        SDL_RenderTexture(gui_renderer, name_text_cache.texture, nullptr, &dest);
+    }
+
+    std::string level_text = "Level: " + std::to_string(player_level);
+    text_start_y = 75.0f * scale_y;
+
+    update_text_cache(level_text_cache, level_text, color);
+    if (level_text_cache.texture) {
+        float scale = 0.70f;
+        float text_width = level_text_cache.w * scale;
+        float text_start_x = center_x - (text_width / 2.0f);
+        SDL_FRect dest = { text_start_x, text_start_y, text_width, level_text_cache.h * scale };
+        SDL_RenderTexture(gui_renderer, level_text_cache.texture, nullptr, &dest);
     }
 }
 

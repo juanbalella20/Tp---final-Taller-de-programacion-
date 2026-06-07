@@ -27,14 +27,14 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
         throw std::runtime_error(std::string("Creating player texture: ") + SDL_GetError());
     }
     SDL_SetTextureBlendMode(image, SDL_BLENDMODE_BLEND);
-    
-    SDL_Surface* item_surf = IMG_Load("imagenes/101.png");
-    if (!item_surf) {
+
+    SDL_Surface* ghost_surf = IMG_Load("imagenes/ghost.png");
+    if (!ghost_surf) {
         throw std::runtime_error(std::string("Loading weapon surface: ") + SDL_GetError());
     }
-    weapon_image = SDL_CreateTextureFromSurface(renderer, item_surf);
-    SDL_DestroySurface(item_surf);
-    if (!weapon_image) {
+    ghost_image = SDL_CreateTextureFromSurface(renderer, ghost_surf);
+    SDL_DestroySurface(ghost_surf);
+    if (!ghost_image) {
         throw std::runtime_error(std::string("Creating weapon texture: ") + SDL_GetError());
     }
 
@@ -46,14 +46,14 @@ void PlayerDisplay::load_equip_sprites() {
     // Sprite que se dibuja sobre el jugador por cada item equipado. La clave es
     // el id del item (igual que en el server/HUD). Crop = recorte dentro de su
     // spritesheet (toda la imagen para los íconos ya recortados).
-    struct Def { const char* id; const char* path; SDL_FRect crop; };
+    struct Def { const char* id; const char* path; SDL_FRect crop; bool use_crop; };
     const Def defs[] = {
-        {"espada",            "imagenes/101.png",                   {224.0f, 96.0f, 30.0f, 30.0f}},
-        {"escudo",            "imagenes/2141.png",                  {0.0f, 0.0f, 32.0f, 32.0f}},
-        {"vara_fresno",       "imagenes/icon_vara_fresno.png",      {0.0f, 0.0f, 27.0f, 29.0f}},
-        {"baculo_nudoso",     "imagenes/icon_baculo_nudoso.png",    {0.0f, 0.0f, 30.0f, 29.0f}},
-        {"baculo_engarzado",  "imagenes/icon_baculo_engarzado.png", {0.0f, 0.0f, 34.0f, 40.0f}},
-        {"flauta_elfica",     "imagenes/icon_flauta_elfica.png",    {0.0f, 0.0f, 40.0f, 40.0f}},
+        {"espada",            "imagenes/espada.png",                   {}, false},
+        {"escudo",            "imagenes/2141.png",                  {0.0f, 0.0f, 32.0f, 32.0f}, true},
+        {"vara_fresno",       "imagenes/icon_vara_fresno.png",      {0.0f, 0.0f, 27.0f, 29.0f}, true},
+        {"baculo_nudoso",     "imagenes/icon_baculo_nudoso.png",    {0.0f, 0.0f, 30.0f, 29.0f}, true},
+        {"baculo_engarzado",  "imagenes/icon_baculo_engarzado.png", {0.0f, 0.0f, 34.0f, 40.0f}, true},
+        {"flauta_elfica",     "imagenes/icon_flauta_elfica.png",    {0.0f, 0.0f, 40.0f, 40.0f}, true},
     };
     for (const auto& d : defs) {
         SDL_Surface* surf = IMG_Load(d.path);
@@ -62,7 +62,7 @@ void PlayerDisplay::load_equip_sprites() {
         SDL_DestroySurface(surf);
         if (!tex) continue;
         SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
-        equip_sprites[d.id] = {tex, d.crop};
+        equip_sprites[d.id] = {tex, d.crop, d.use_crop};
     }
 }
 
@@ -70,14 +70,14 @@ PlayerDisplay::~PlayerDisplay() {
     if (image) {
         SDL_DestroyTexture(image);
     }
-    if (weapon_image) {
-        SDL_DestroyTexture(weapon_image);
-    }
     if (head_image) {
         SDL_DestroyTexture(head_image);
     }
     if (hat_image) {
         SDL_DestroyTexture(hat_image);
+    }
+    if (ghost_image) {
+        SDL_DestroyTexture(ghost_image);
     }
     for (auto& kv : equip_sprites) {
         if (kv.second.texture) SDL_DestroyTexture(kv.second.texture);
@@ -85,30 +85,29 @@ PlayerDisplay::~PlayerDisplay() {
 }
 
 PlayerDisplay::PlayerDisplay(PlayerDisplay&& other) noexcept
-    : renderer(other.renderer), image(other.image), weapon_image(other.weapon_image),
-      head_image(other.head_image), hat_image(other.hat_image), rect(other.rect), head_pov(other.head_pov),
+    : renderer(other.renderer), image(other.image),
+      head_image(other.head_image), hat_image(other.hat_image), ghost_image(other.ghost_image), rect(other.rect), head_pov(other.head_pov),
       tileSize(other.tileSize), keystate(other.keystate), race(other.race),
       equip_sprites(std::move(other.equip_sprites)),
       equipped_item_ids(std::move(other.equipped_item_ids)) {
     other.image = nullptr;
-    other.weapon_image = nullptr;
     other.head_image = nullptr;
     other.hat_image = nullptr;
+    other.ghost_image = nullptr;
     other.equip_sprites.clear();
 }
 
 PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
     if (this != &other) {
         if (image) SDL_DestroyTexture(image);
-        if (weapon_image) SDL_DestroyTexture(weapon_image);
         if (head_image) SDL_DestroyTexture(head_image);
         if (hat_image) SDL_DestroyTexture(hat_image);
+        if (ghost_image) SDL_DestroyTexture(ghost_image);
         for (auto& kv : equip_sprites) {
             if (kv.second.texture) SDL_DestroyTexture(kv.second.texture);
         }
         renderer = other.renderer;
         image = other.image;
-        weapon_image = other.weapon_image;
         head_image = other.head_image;
         hat_image = other.hat_image;
         rect = other.rect;
@@ -119,9 +118,9 @@ PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
         equip_sprites = std::move(other.equip_sprites);
         equipped_item_ids = std::move(other.equipped_item_ids);
         other.image = nullptr;
-        other.weapon_image = nullptr;
         other.head_image = nullptr;
         other.hat_image = nullptr;
+        other.ghost_image = nullptr;
         other.equip_sprites.clear();
     }
     return *this;
@@ -213,6 +212,28 @@ bool PlayerDisplay::is_ghost() const {
 
 void PlayerDisplay::set_equipped_weapon(bool has_weapon) {
     has_equipped_weapon = has_weapon;
+    if (has_weapon) {
+        reset_frame();
+        int current_frame;
+        switch(current_direction) {
+            case ViewDirection::BACK:
+                current_frame = walk_frame % 6;
+                weapon_back_offset(current_frame);
+                break;
+            case ViewDirection::FRONT:
+                current_frame = walk_frame % 6;
+                weapon_front_offset(current_frame);
+                break;
+            case ViewDirection::LEFT:
+                current_frame = walk_frame % 5;
+                weapon_left_offset(current_frame);
+                break;
+            case ViewDirection::RIGHT:
+                current_frame = walk_frame % 5;
+                weapon_right_offset(current_frame);
+                break;
+        }
+    }
 }
 
 void PlayerDisplay::set_equipped_items(const std::vector<std::string>& ids) {
@@ -232,7 +253,9 @@ void PlayerDisplay::head_back_pov() {
     }
 }
 
-SDL_FRect PlayerDisplay::back_pov() {
+SDL_FRect PlayerDisplay::back_pov(ViewDirection direction) {
+    current_direction = direction;
+
     static const SDL_FRect frames[] = {
         {255.0f, 51.0f, 30.0f, 40.0f},
         {285.0f, 51.0f, 30.0f, 40.0f},
@@ -252,15 +275,19 @@ SDL_FRect PlayerDisplay::back_pov() {
     head_back_pov();
 
     if(has_equipped_weapon) {
-        static const float dx[] = { 0.1f, 0.2f, 0.1f, 0.2f, 0.1f, 0.1f };
-        static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f, 0.0f };
-        weapon_dx = dx[current_frame];
-        weapon_dy = dy[current_frame];
+        weapon_back_offset(current_frame);
     }
 
     SDL_FRect frame = frames[current_frame];
     walk_frame = (walk_frame + 1) % 6;
     return frame;
+}
+
+void PlayerDisplay::weapon_back_offset(int current_frame) {
+    static const float dx[] = { 0.6f, 0.5f, 0.6f, 0.6f, 0.5f, 0.5f };
+    static const float dy[] = { 0.1f, 0.05f, 0.0f, 0.1f, 0.0f, 0.0f };
+    weapon_dx = dx[current_frame];
+    weapon_dy = dy[current_frame];
 }
 
 void PlayerDisplay::head_front_pov() {
@@ -277,7 +304,9 @@ void PlayerDisplay::head_front_pov() {
     }
 }
 
-SDL_FRect PlayerDisplay::front_pov() {
+SDL_FRect PlayerDisplay::front_pov(ViewDirection direction) {
+    current_direction = direction;
+
     static const SDL_FRect frames[] = {
         {255.0f, 5.0f, 30.0f, 40.0f},
         {285.0f, 5.0f, 30.0f, 40.0f},
@@ -297,15 +326,19 @@ SDL_FRect PlayerDisplay::front_pov() {
     head_front_pov();
 
     if(has_equipped_weapon) {
-        static const float dx[] = { 0.1f, 0.1f, 0.2f, 0.2f, 0.1f, 0.1f };
-        static const float dy[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-        weapon_dx = dx[current_frame];
-        weapon_dy = dy[current_frame];
+        weapon_front_offset(current_frame);
     }
 
     SDL_FRect frame = frames[current_frame];
     walk_frame = (walk_frame + 1) % 6;
     return frame;
+}
+
+void PlayerDisplay::weapon_front_offset(int current_frame) {
+    static const float dx[] = { -0.15f, -0.1f, 0.0f, -0.15f, -0.2f, -0.3f };
+    static const float dy[] = { 0.05f, 0.05f, 0.0f, 0.05f, 0.0f, 0.0f};
+    weapon_dx = dx[current_frame];
+    weapon_dy = dy[current_frame];
 }
 
 void PlayerDisplay::head_right_pov() {
@@ -321,7 +354,9 @@ void PlayerDisplay::head_right_pov() {
     }
 }
 
-SDL_FRect PlayerDisplay::right_pov() {
+SDL_FRect PlayerDisplay::right_pov(ViewDirection direction) {
+    current_direction = direction;
+
     static const SDL_FRect frames[] = {
         {259.0f, 147.0f, 30.0f, 40.0f},
         {278.0f, 147.0f, 30.0f, 40.0},
@@ -340,15 +375,19 @@ SDL_FRect PlayerDisplay::right_pov() {
     head_right_pov();
 
     if(has_equipped_weapon) {
-        static const float dx[] = { 0.2f, 0.5f, 0.2f, 0.2f, 0.2f };
-        static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
-        weapon_dx = dx[current_frame];
-        weapon_dy = dy[current_frame];
+        weapon_right_offset(current_frame);
     }
 
     SDL_FRect frame = frames[current_frame];
     walk_frame = (walk_frame + 1) % 5;
     return frame;
+}
+
+void PlayerDisplay::weapon_right_offset(int current_frame) {
+    static const float dx[] = { 0.2f, 0.5f, 0.2f, 0.2f, 0.2f };
+    static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
+    weapon_dx = dx[current_frame];
+    weapon_dy = dy[current_frame];
 }
 
 void PlayerDisplay::head_left_pov() {
@@ -366,7 +405,9 @@ void PlayerDisplay::head_left_pov() {
     }
 }
 
-SDL_FRect PlayerDisplay::left_pov() {
+SDL_FRect PlayerDisplay::left_pov(ViewDirection direction) {
+    current_direction = direction;
+
     static const SDL_FRect frames[] = {
         {252.0f, 100.0f, 30.0f, 40.0f},
         {278.0f, 100.0f, 30.0f, 40.0},
@@ -385,27 +426,38 @@ SDL_FRect PlayerDisplay::left_pov() {
     head_left_pov();
 
     if(has_equipped_weapon) {
-        static const float dx[] = { 0.5f, 0.5f, 0.4f, 0.4f, 0.1f };
-        static const float dy[] = { 0.1f, 0.1f, 0.1f, 0.1f, 0.0f };
-        weapon_dx = dx[current_frame];
-        weapon_dy = dy[current_frame];
+        weapon_left_offset(current_frame);
     }
 
     SDL_FRect frame = frames[current_frame];
     walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
-//E VEZ DE QUE LO TRASNPARENZCA, LO QUE TENGO QUE HACER ES PONERLE LA SKIN DEL FANTASMA
 
-void PlayerDisplay::set_transparency(SDL_Texture* img) const {
-    if (ghost) {
-        SDL_SetTextureAlphaMod(img, 140);
-    } else {
-        SDL_SetTextureAlphaMod(img, 255);
-    }
+void PlayerDisplay::weapon_left_offset(int current_frame) {
+    static const float dx[] = { 0.1f, 0.0f, -0.1f, -0.1f, -0.2f };
+    static const float dy[] = { -0.05f, -0.05f, 0.0f, 0.0f, -0.05f };
+    weapon_dx = dx[current_frame];
+    weapon_dy = dy[current_frame];
 }
 
-void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect body_pov) const {
+SDL_FRect PlayerDisplay::ghost_frame() {
+    static const SDL_FRect frames[] = {
+        { 1.0f, 1.0f, 31.0f, 46.0f},
+        {32.0f, 1.0f, 32.0f, 46.0},
+        {64.0f, 0.0f, 32.0f, 47.0},
+        {96.0f, 0.0f, 32.0f, 47.0},
+        {128.0f, 1.0f, 32.0f, 46.0}
+    };
+
+    int current_frame = walk_frame % 5;
+
+    SDL_FRect frame = frames[current_frame];
+    walk_frame = (walk_frame + 1) % 5;
+    return frame;
+}
+
+void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect crop) {
     SDL_FRect dst {
         camera.world_to_screen_x(rect.x),
         camera.world_to_screen_y(rect.y),
@@ -413,10 +465,14 @@ void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect body_pov) const 
         rect.h
     };
 
-    SDL_RenderTexture(renderer, image, &body_pov, &dst);
+    SDL_Texture* current_image = ghost ? ghost_image : image;
+    SDL_RenderTexture(renderer, current_image, &crop, &dst);
+    if (!ghost) {
+        draw_player_head(camera);
+    }
 }
 
-void PlayerDisplay::draw_player_head(const Camera& camera) const {
+void PlayerDisplay::draw_player_head(const Camera& camera) {
     float head_width = rect.w * 0.5f;
     float aspect_ratio = head_pov.h / head_pov.w;
     float head_height = head_width * aspect_ratio;
@@ -436,10 +492,8 @@ void PlayerDisplay::draw_player_head(const Camera& camera) const {
     draw_gnome_hat(camera, head_dst);
 }
 
-void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_dst) const {
+void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_dst) {
     if (race == "gnome") {
-        set_transparency(hat_image);
-
         SDL_FRect crop = {194.0f, 66.0f, 19.0f, 18.0f};
         float hat_width = head_dst.w * 1.1f;
         float hat_aspect_ratio = crop.h / crop.w;
@@ -454,7 +508,7 @@ void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_d
     }
 }
 
-void PlayerDisplay::draw_equipped_item(const Camera& camera) const {
+void PlayerDisplay::draw_equipped_item(const Camera& camera) {
     // Dibuja cada item equipado con su sprite real. Arma/báculo van en la mano
     // (siguen la animación de caminata con weapon_dx/dy); el escudo en el otro
     // lado. Si no hay sprite registrado para el id, no se dibuja nada.
@@ -462,9 +516,11 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera) const {
         auto it = equip_sprites.find(id);
         if (it == equip_sprites.end()) continue;
         const EquipSprite& sprite = it->second;
-        set_transparency(sprite.texture);
 
         float off_x, off_y, size;
+        double angle = 0.0;
+        SDL_FlipMode flip = SDL_FLIP_NONE;
+
         if (id == "escudo") {
             // El escudo va FIJO sobre el pecho/torso (no sigue la mano: con offset
             // animado terminaba cayendo en la pierna en algunos frames de caminata).
@@ -478,6 +534,9 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera) const {
             size = rect.w * 0.5f;
             off_x = weapon_dx;
             off_y = weapon_dy;
+            if (current_direction == ViewDirection::FRONT || current_direction == ViewDirection::LEFT) {
+                angle = 270.0;
+            }
         }
 
         SDL_FRect dst = {
@@ -486,18 +545,21 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera) const {
             size,
             size
         };
-        SDL_RenderTexture(renderer, sprite.texture, &sprite.crop, &dst);
+        const SDL_FRect* crop = sprite.use_crop ? &sprite.crop : nullptr;
+        SDL_RenderTextureRotated(renderer, sprite.texture, crop, &dst, angle, nullptr, flip);
     }
 }
 
-void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) const {
-    set_transparency(image);
-    set_transparency(head_image);
+void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) {
+    if (current_direction == ViewDirection::BACK || current_direction == ViewDirection::LEFT) {
+        draw_equipped_item(camera);
+    }
 
     draw_player(camera, body_pov);
-    draw_player_head(camera);
 
-    draw_equipped_item(camera);
+    if (current_direction == ViewDirection::FRONT || current_direction == ViewDirection::RIGHT) {
+        draw_equipped_item(camera);
+    }
 }
 
 int PlayerDisplay::get_x() {

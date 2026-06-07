@@ -86,7 +86,7 @@ public:
     void cast_on_self();
 
     // Suma a este jugador (atacante) la XP por golpear/matar a un target.
-    void ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target);
+    bool ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target);
 
     void revive();
 
@@ -162,7 +162,7 @@ public:
 
     void add_experience(int exp);
 
-    void check_level_up();
+    bool check_level_up();
 
     uint32_t get_xp() const;
 

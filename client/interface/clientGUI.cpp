@@ -362,7 +362,6 @@ void ClientGUI::update() {
         }
         GameMsg msg(0);
         while (receiving.try_pop(msg)) {
-            // std::cout << "Mesaje recibido tipo: " << (int)msg.get_type() << std::endl;  // hot path: floodea la consola cada frame
             switch (msg.get_type()) {
                 case MSG_ZONE_CHANGE : {
                     Zone z = msg.get_zone();
@@ -383,6 +382,7 @@ void ClientGUI::update() {
                         hud->set_max_mana(msg.get_mana());
                         hud->set_xp(msg.get_xp());
                         hud->set_mana(msg.get_mana());
+                        hud->set_level(msg.get_level());
                     }
                     if (player) {//spawn
                         player->setTilePosition(msg.get_coord_x(), msg.get_coord_y());
@@ -422,21 +422,43 @@ void ClientGUI::update() {
                     int y = msg.get_coord_y();
                     int old_x = player->getTileX();
                     int old_y = player->getTileY();
-
                     
                     bool moved = (old_x != x || old_y != y);
                     if (!moved) player->reset_frame();
-                    
 
                     // Nombre vacio = compatibilidad: tratar como jugador local.
                     if (mover.empty() || mover == own_name) {
                         // Jugador local: usar las coords absolutas del server.
                         player->setTilePosition(x, y);
                         switch (msg.get_direction()) {
-                            case DIR_NORTH: player_pov = player->back_pov();  break;
-                            case DIR_SOUTH: player_pov = player->front_pov(); break;
-                            case DIR_EAST:  player_pov = player->right_pov(); break;
-                            case DIR_WEST:  player_pov = player->left_pov();  break;
+                            case DIR_NORTH: 
+                                if (player->is_ghost()) {
+                                    player_pov = player->ghost_frame();
+                                } else {
+                                    player_pov = player->back_pov(ViewDirection::BACK);
+                                }
+                                break;
+                            case DIR_SOUTH:
+                                if (player->is_ghost()) {
+                                    player_pov = player->ghost_frame();
+                                } else {
+                                    player_pov = player->front_pov(ViewDirection::FRONT);
+                                } 
+                                break;
+                            case DIR_EAST:
+                                if (player->is_ghost()) {
+                                    player_pov = player->ghost_frame();
+                                } else {
+                                    player_pov = player->right_pov(ViewDirection::RIGHT);
+                                }  
+                                break;
+                            case DIR_WEST:
+                                if (player->is_ghost()) {
+                                    player_pov = player->ghost_frame();
+                                } else {
+                                    player_pov = player->left_pov(ViewDirection::LEFT);
+                                }   
+                                break;
                             default: break;
                         }
                     } else {
@@ -445,11 +467,14 @@ void ClientGUI::update() {
                             [&mover](const PlayerInfo& p) { return p.name == mover; });
                         Direction dir = static_cast<Direction>(msg.get_direction());
                         if (it != other_players.end()) {
+                            bool ghost = it->ghost;
                             it->x = x;
                             it->y = y;
                             it->direction = dir;
+                            it->ghost = ghost;
                         } else {
                             PlayerInfo pi{mover, msg.get_race(), 0, x, y, dir};
+                            pi.ghost = false;
                             other_players.push_back(pi);
                         }
                     }
@@ -480,11 +505,23 @@ void ClientGUI::update() {
                 case MSG_CHEAT_INF_MANA:
                     chat_inbox.push(msg.get_chat_content());
                     break;
-                case MSG_CHEAT_KILL:
+                case MSG_CHEAT_KILL: {
                     std::cout << "DEBUG murió" << std::endl;
-                    player->set_ghost(true);
+
+                    if (msg.get_player_name() == own_name) {
+                        player->set_ghost(true);
+                        player_pov = player->ghost_frame();
+                    } else {
+                        for (auto& p : other_players) {
+                            if (p.name == msg.get_player_name()) {
+                                p.ghost = true;
+                                break;
+                            }
+                        }
+                    }
                     chat_inbox.push(msg.get_chat_content());
                     break;
+                }
                 case MSG_GOLD:
                     if (hud) hud->set_gold(msg.get_gold());
                     break;
@@ -540,6 +577,9 @@ void ClientGUI::update() {
                         }
                     }
                     break;
+                case MSG_UPDATE_LEVEL: {
+                    if (hud) hud->set_level(msg.get_level());
+                }
                 default:
                     break;
             }
@@ -584,13 +624,38 @@ void ClientGUI::drawOtherPlayers() {
             PlayerDisplay pd(renderer, "imagenes/1005.png", tileSize, p.race);
             pd.setTilePosition(p.x, p.y);
             pd.set_equipped_weapon(p.has_equipped_weapon);
+            pd.set_ghost(p.ghost);
             SDL_FRect pov;
             switch (p.direction) {
-                case DIR_NORTH: pov = pd.back_pov();  break;
-                case DIR_SOUTH: pov = pd.front_pov(); break;
-                case DIR_EAST:  pov = pd.right_pov(); break;
-                case DIR_WEST:  pov = pd.left_pov();  break;
-                default:        pov = pd.front_pov(); break;
+                case DIR_NORTH: 
+                    if (pd.is_ghost()) {
+                        pov = pd.ghost_frame();
+                    } else {
+                        pov = pd.back_pov(ViewDirection::BACK);
+                    }
+                    break;
+                case DIR_SOUTH:
+                    if (pd.is_ghost()) {
+                        pov = pd.ghost_frame();
+                    } else {
+                        pov = pd.front_pov(ViewDirection::FRONT);
+                    } 
+                    break;
+                case DIR_EAST:
+                    if (pd.is_ghost()) {
+                        pov = pd.ghost_frame();
+                    } else {
+                        pov = pd.right_pov(ViewDirection::RIGHT);
+                    }  
+                    break;
+                case DIR_WEST:
+                    if (pd.is_ghost()) {
+                        pov = pd.ghost_frame();
+                    } else {
+                        pov = pd.left_pov(ViewDirection::LEFT);
+                    }   
+                    break;
+                default: break;
             }
             pd.draw(camera, pov);
         } catch (const std::runtime_error& e) {
@@ -757,6 +822,7 @@ void ClientGUI::draw() {
 
     if (hud) {
         hud->render();
+        hud->display_player_info(own_name);
     }
 
     mini_chat->render(GAME_WIDTH, CANVAS_HEIGHT);
@@ -866,7 +932,7 @@ void ClientGUI::init_draw(const WindowSettings& settings) {
     int tileSize = tilemap->getTileSize();
     try {
         player = std::make_unique<PlayerDisplay>(renderer, "imagenes/1005.png", tileSize, race);
-        player_pov = player->back_pov();
+        player_pov = player->back_pov(ViewDirection::BACK);
     } catch (const std::runtime_error& e) {
         std::cout << "[DEBUG] imagenes/1005.png failed: " << e.what() << std::endl;
     }

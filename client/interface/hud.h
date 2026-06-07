@@ -40,6 +40,7 @@ private:
     uint32_t max_mana;
     uint32_t player_xp;
     uint32_t player_mana;
+    int player_level;
     SDL_Texture* hp_bar_texture;
     SDL_Texture* xp_bar_texture;
     SDL_Texture* mana_bar_texture;
@@ -55,10 +56,16 @@ private:
     TextCache hp_text_cache;
     TextCache mana_text_cache;
     TextCache xp_text_cache;
+    TextCache name_text_cache;
+    TextCache level_text_cache;
 
     float game_width;
     float panel_width;
     float canvas_height;
+    float image_w;
+    float image_h;
+    float scale_x;
+    float scale_y;
 
     void load_textures();
     void load_stat_texture(const std::string& path, SDL_Texture** texture);
@@ -88,6 +95,7 @@ public:
     void set_xp(uint32_t xp);
     void set_mana(uint32_t mana);
     void set_equipped_item(const std::string& item_id);
+    void set_level(int level);
     // Equipa el slot dado: des-resalta cualquier otro slot del mismo tipo y
     // resalta este. Permite tener equipados varios items de distinto tipo.
     void set_equipped_slot(int slot_index);
@@ -102,6 +110,7 @@ public:
     void drawMana();
     void drawGold();
     void drawXp();
+    void display_player_info(const std::string& player_name);
     void render();
 };
 

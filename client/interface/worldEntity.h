@@ -8,7 +8,7 @@
 class WorldEntity {
 public:
     virtual ~WorldEntity() = default;
-    virtual void draw(const Camera& camera, SDL_FRect crop_pov) const = 0;
+    virtual void draw(const Camera& camera, SDL_FRect crop_pov) = 0;
 };
 
 #endif

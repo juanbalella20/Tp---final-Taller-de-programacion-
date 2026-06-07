@@ -26,6 +26,7 @@ class GameMsg {
     uint32_t hp;
     uint32_t xp;
     uint32_t mana;
+    int level;
     std::vector<PlayerInfo> players;
     Zone zone;
     int damage;
@@ -91,6 +92,9 @@ class GameMsg {
     // MSG_UPDATE_EQUIP para que el cliente resalte exactamente esos slots.
     void set_equipped_ids(const std::vector<std::string>& ids);
     const std::vector<std::string>& get_equipped_ids() const;
+
+    void set_level(int level);
+    int get_level() const;
 };
 
 

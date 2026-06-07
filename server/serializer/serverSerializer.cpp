@@ -159,12 +159,14 @@ std::vector<uint8_t> ServerSerializer::serialize_cmd(const GameMsg& msg) {
 }
 
 std::vector<uint8_t> ServerSerializer::serialize_text(const GameMsg& msg) {
+    const std::string& sender = msg.get_player_name();
     const std::string& content = msg.get_chat_content();
-    uint16_t payload_len = LEN_NAME_SIZE_FIELD + static_cast<uint16_t>(content.size());
-
+    uint16_t payload_len = 1 + sender.size() + 1 + content.size();
     std::vector<uint8_t> buf;
     buf.reserve(LEN_HEADER + payload_len);
-    write_header(buf, static_cast<uint8_t>(msg.get_type()), payload_len);
+    write_header(buf, MSG_CHEAT_KILL, payload_len);
+    buf.push_back(static_cast<uint8_t>(sender.size()));
+    buf.insert(buf.end(), sender.begin(), sender.end());
     buf.push_back(static_cast<uint8_t>(content.size()));
     buf.insert(buf.end(), content.begin(), content.end());
     return buf;
@@ -371,7 +373,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
         payload_len += 1 + static_cast<uint16_t>(item.get_name().size());
         payload_len += 1;  // type
     }
-    payload_len += 4 * sizeof(uint32_t);    // gold + hp + xp + mana
+    payload_len += 5 * sizeof(uint32_t);    // gold + hp + xp + mana + level
     payload_len += 2 * LEN_COORD;           // spawn_x + spawn_y
     const auto& players = msg.get_players();
     payload_len += LEN_PLAYER_COUNT;
@@ -417,6 +419,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
     append_u32(msg.get_hp());
     append_u32(msg.get_xp());
     append_u32(msg.get_mana());
+    append_u32(static_cast<uint32_t>(msg.get_level()));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_x()));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_y()));
 
@@ -454,7 +457,9 @@ std::vector<uint8_t> ServerSerializer::serialize_players_snapshot(const GameMsg&
     uint16_t payload_len = LEN_PLAYER_COUNT;
     for (const auto& p : players) {
         payload_len += LEN_PLAYER_NAME_SIZE + static_cast<uint16_t>(p.name.size());
+         payload_len += 1; // race
         payload_len += 2 * LEN_COORD;  // x + y
+        payload_len += 1; // ghost
     }
 
     std::vector<uint8_t> buf;
@@ -467,8 +472,19 @@ std::vector<uint8_t> ServerSerializer::serialize_players_snapshot(const GameMsg&
     for (const auto& p : players) {
         buf.push_back(static_cast<uint8_t>(p.name.size()));
         buf.insert(buf.end(), p.name.begin(), p.name.end());
+        uint8_t race_code = RACE_HUMAN;
+        if (p.race == "elf") {
+            race_code = RACE_ELF;
+        } else if (p.race == "dwarf") {
+            race_code = RACE_DWARF;
+        } else if (p.race == "gnome") {
+            race_code = RACE_GNOME;
+        }
+        buf.push_back(race_code);
+
         append_uint16_be(buf, static_cast<uint16_t>(p.x));
         append_uint16_be(buf, static_cast<uint16_t>(p.y));
+        buf.push_back(p.ghost ? 1 : 0);
     }
 
     return buf;

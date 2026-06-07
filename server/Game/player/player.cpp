@@ -273,11 +273,11 @@ void Player::cast_on_self() {
                                   coord_x, coord_y, false);
 }
 
-void Player::ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target) {
+bool Player::ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target) {
     experience += level.xp_per_attack(dano, nivel_target);
     if (murio)
         experience += level.xp_per_kill(vida_max_target, nivel_target);
-    check_level_up();
+    return check_level_up();
 }
  
 void Player::add_experience(int exp) {
@@ -346,11 +346,13 @@ int Player::calculate_defense() {
     return defense_set.calculate_defense();
 }
  
-void Player::check_level_up() {
+bool Player::check_level_up() {
     if (level.try_level_up(experience)) {
         lives = max_life();
         mana  = max_mana();
+        return true;
     }
+    return false;
 }
 
 const std::string& Player::get_race_name() const {
