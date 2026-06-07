@@ -321,7 +321,6 @@ void ClientGUI::update() {
         }
         GameMsg msg(0);
         while (receiving.try_pop(msg)) {
-            // std::cout << "Mesaje recibido tipo: " << (int)msg.get_type() << std::endl;  // hot path: floodea la consola cada frame
             switch (msg.get_type()) {
                 case MSG_ZONE_CHANGE : {
                     Zone z = msg.get_zone();
@@ -428,11 +427,14 @@ void ClientGUI::update() {
                             [&mover](const PlayerInfo& p) { return p.name == mover; });
                         Direction dir = static_cast<Direction>(msg.get_direction());
                         if (it != other_players.end()) {
+                            bool ghost = it->ghost;
                             it->x = x;
                             it->y = y;
                             it->direction = dir;
+                            it->ghost = ghost;
                         } else {
                             PlayerInfo pi{mover, msg.get_race(), 0, x, y, dir};
+                            pi.ghost = false;
                             other_players.push_back(pi);
                         }
                     }
@@ -463,12 +465,23 @@ void ClientGUI::update() {
                 case MSG_CHEAT_INF_MANA:
                     chat_inbox.push(msg.get_chat_content());
                     break;
-                case MSG_CHEAT_KILL:
+                case MSG_CHEAT_KILL: {
                     std::cout << "DEBUG murió" << std::endl;
-                    player->set_ghost(true);
-                    player_pov = player->ghost_frame();
+
+                    if (msg.get_player_name() == own_name) {
+                        player->set_ghost(true);
+                        player_pov = player->ghost_frame();
+                    } else {
+                        for (auto& p : other_players) {
+                            if (p.name == msg.get_player_name()) {
+                                p.ghost = true;
+                                break;
+                            }
+                        }
+                    }
                     chat_inbox.push(msg.get_chat_content());
                     break;
+                }
                 case MSG_GOLD:
                     if (hud) hud->set_gold(msg.get_gold());
                     break;
@@ -549,6 +562,7 @@ void ClientGUI::drawOtherPlayers() {
             PlayerDisplay pd(renderer, "imagenes/1005.png", tileSize, p.race);
             pd.setTilePosition(p.x, p.y);
             pd.set_equipped_weapon(p.has_equipped_weapon);
+            pd.set_ghost(p.ghost);
             SDL_FRect pov;
             switch (p.direction) {
                 case DIR_NORTH: 
