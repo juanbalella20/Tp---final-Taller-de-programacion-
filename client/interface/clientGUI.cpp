@@ -26,14 +26,18 @@ ClientGUI::~ClientGUI() {
     }
 }
 
-void ClientGUI::initSDL() {
+void ClientGUI::initSDL(const WindowSettings& settings) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         throw std::runtime_error(std::string("SDL_Init: ") + SDL_GetError());
     }
-    window = SDL_CreateWindow(WIN_NAME, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+    window = SDL_CreateWindow(WIN_NAME, settings.width, settings.height, 0);
     if (!window) {
         throw std::runtime_error(std::string("SDL_CreateWindow: ") + SDL_GetError());
     }
+    if (settings.fullscreen && !SDL_SetWindowFullscreen(window, true)) {
+        throw std::runtime_error(std::string("SDL_SetWindowFullscreen: ") + SDL_GetError());
+    }
+
     renderer = SDL_CreateRenderer(window, nullptr);
     if (!renderer) {
         throw std::runtime_error(std::string("SDL_CreateRenderer: ") + SDL_GetError());
@@ -649,8 +653,8 @@ void ClientGUI::draw() {
     SDL_RenderPresent(renderer);
 }
 
-void ClientGUI::init_draw() {
-    initSDL();
+void ClientGUI::init_draw(const WindowSettings& settings) {
+    initSDL(settings);
     SDL_SetRenderLogicalPresentation(
         renderer, LOGICAL_WIDTH, LOGICAL_HEIGHT,
         SDL_LOGICAL_PRESENTATION_LETTERBOX);
@@ -747,7 +751,7 @@ void ClientGUI::run() {
         LauncherResult launcher_result = welcome_screen.run();
 
         if (launcher_result.start_game) {
-            init_draw();
+            init_draw(launcher_result.settings);
             while (is_running && should_keep_running()) {
                 handleEvents();
                 update();

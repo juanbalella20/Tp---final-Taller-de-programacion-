@@ -39,6 +39,8 @@ struct DamageNumber {
     uint64_t expire_ms;
 };
 
+struct WindowSettings;
+
 class ClientGUI: public Thread {
 private:
     SDL_Window* window;
@@ -93,7 +95,7 @@ private:
     static constexpr int GAME_VIEW_W = 732;
     static constexpr int GAME_VIEW_H = 456;
 
-    void initSDL();
+    void initSDL(const WindowSettings& settings);
     void loadMedia(Zone zone);
     void freeSDL();
 
@@ -127,7 +129,7 @@ private:
     void sendChatCmd(const std::string& msg);
 
     // recibe mensaje del server y hace el dibujo inicial
-    void init_draw();
+    void init_draw(const WindowSettings& settings);
     //PRE: SE RECIBEM LAS COORDENADAS DE DONDE ESTAN
     //POS ESAS COORDENADAS SE ENVIAN AL SERVIDOR PARA QUE SE MUEVA EL JUGADOR A ESA POS
     void sendCoord(int x, int y);
