@@ -178,6 +178,7 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
     registerMsg.set_mana(game_map.get_player_mana(cmd.get_player_name()));
     registerMsg.set_coord_x(p.get_coord_x());
     registerMsg.set_coord_y(p.get_coord_y());
+    registerMsg.set_level(p.get_level());
     registerMsg.set_players(game_map.build_players_snapshot(cmd.get_player_name()));
     std::cout << "[DEBUG: handle_register] player " << cmd.get_player_name()
               << " has race " << cmd.get_race() << std::endl;
