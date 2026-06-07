@@ -511,7 +511,6 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) {
     }
 
     draw_player(camera, body_pov);
-    // draw_player_head(camera);
 
     if (current_direction == ViewDirection::FRONT || current_direction == ViewDirection::RIGHT) {
         draw_equipped_item(camera);
