@@ -22,6 +22,12 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       panel_width(panel_width),
       canvas_height(canvas_height) {
     
+    image_w = 1021.0f;
+    image_h = 767.0f;
+
+    scale_x = static_cast<float>(game_width + panel_width) / image_w;
+    scale_y = static_cast<float>(canvas_height) / image_h;
+
     load_textures();
 }
 
@@ -178,12 +184,6 @@ void HUD::drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float S
 }
 
 void HUD::drawItems() {
-    float image_w = 1021.0f;
-    float image_h = 767.0f;
-
-    float scale_x = static_cast<float>(game_width + panel_width) / image_w;
-    float scale_y = static_cast<float>(canvas_height) / image_h;
-
     float slot_start_size = 48.0f;
     float slot_margin = 4.0f;
     float padding = 6.0f;
@@ -242,12 +242,6 @@ void HUD::drawBigStat(SDL_Texture* tex, float pos_y, int current, int max, TextC
     float tex_w, tex_h;
     SDL_GetTextureSize(tex, &tex_w, &tex_h);
 
-    float image_w = 1021.0f;
-    float image_h = 767.0f;
-
-    float scale_x = static_cast<float>(game_width + panel_width) / image_w;
-    float scale_y = static_cast<float>(canvas_height) / image_h;
-
     float start_x = 788.0f;
     const float bar_w = 217.0f;
     const float bar_h = 18.0f;
@@ -275,12 +269,6 @@ void HUD::drawBigStat(SDL_Texture* tex, float pos_y, int current, int max, TextC
 void HUD::drawSmallStat(SDL_Texture* tex, float pos_y, int current, int max, TextCache& cache) {
     float tex_w, tex_h;
     SDL_GetTextureSize(tex, &tex_w, &tex_h);
-
-    float image_w = 1021.0f;
-    float image_h = 767.0f;
-
-    float scale_x = static_cast<float>(game_width + panel_width) / image_w;
-    float scale_y = static_cast<float>(canvas_height) / image_h;
 
     float start_x = 788.0f;
     const float bar_w = 89.0f;
@@ -349,12 +337,6 @@ void HUD::drawGold() {
     std::string gold_text = std::to_string(player_gold);
     SDL_Color gold_color = {255, 215, 0, 255};
 
-    float image_w = 1021.0f;
-    float image_h = 767.0f;
-
-    float scale_x = static_cast<float>(game_width + panel_width) / image_w;
-    float scale_y = static_cast<float>(canvas_height) / image_h;
-
     float text_start_x = 788.0f * scale_x;
     float text_start_y = 558.0f * scale_y;
 
@@ -399,12 +381,6 @@ void HUD::display_player_info(const std::string& player_name, int level) {
     if (!font) return;
     
     SDL_Color color = {255, 255, 255, 255};
-
-    float image_w = 1021.0f;
-    float image_h = 767.0f;
-
-    float scale_x = static_cast<float>(game_width + panel_width) / image_w;
-    float scale_y = static_cast<float>(canvas_height) / image_h;
 
     float center_x = 878.0f * scale_x;
     float text_start_y = 46.0f * scale_y;

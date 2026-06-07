@@ -61,6 +61,10 @@ private:
     float game_width;
     float panel_width;
     float canvas_height;
+    float image_w;
+    float image_h;
+    float scale_x;
+    float scale_y;
 
     void load_textures();
     void load_stat_texture(const std::string& path, SDL_Texture** texture);
