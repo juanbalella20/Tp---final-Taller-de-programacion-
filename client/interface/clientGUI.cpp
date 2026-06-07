@@ -166,6 +166,12 @@ void ClientGUI::sendCoord(int tile_x, int tile_y) {
 void ClientGUI::selectCoord(int tile_x, int tile_y) {
   bool position_other_player = false;
   bool position_npc = false;
+    // Click sobre la propia celda: lanzar el hechizo del báculo equipado sobre
+    // sí mismo (auto-cast, p.ej. curación). El server decide si aplica.
+    if (player && player->getTileX() == tile_x && player->getTileY() == tile_y) {
+        sendSelfCastCmd();
+        return;
+    }
     for (const auto& p : other_players) {
         if (p.x == tile_x && p.y == tile_y) {
             position_other_player = true;
@@ -182,6 +188,17 @@ void ClientGUI::selectCoord(int tile_x, int tile_y) {
         sendAttackCmd(tile_x, tile_y);
     } else {
         sendCoord(tile_x, tile_y);
+    }
+}
+
+void ClientGUI::sendSelfCastCmd() {
+    ClientCmd cmd;
+    cmd.set_message_type(MSG_SELF_CAST);
+    outgoing.push(cmd);
+    // Efecto de curación sobre el propio sprite. Solo si hay un báculo de
+    // curación (flauta élfica) equipado; el server valida maná/clase aparte.
+    if (player && equipped_spell_id == "flauta_elfica") {
+        spawn_spell_animation(equipped_spell_id, player->getTileX(), player->getTileY());
     }
 }
 
@@ -340,7 +357,7 @@ void ClientGUI::update() {
         }
         GameMsg msg(0);
         while (receiving.try_pop(msg)) {
-            std::cout << "Mesaje recibido tipo: " << (int)msg.get_type() << std::endl;
+            // std::cout << "Mesaje recibido tipo: " << (int)msg.get_type() << std::endl;  // hot path: floodea la consola cada frame
             switch (msg.get_type()) {
                 case MSG_ZONE_CHANGE : {
                     Zone z = msg.get_zone();
@@ -382,7 +399,7 @@ void ClientGUI::update() {
                     items_on_floor = msg.get_items_on_floor();
                     break;
                 case MSG_PLAYERS_SNAPSHOT: {
-                    std::cout << "Received players snapshot with " << msg.get_players().size() << " players." << std::endl;
+                    // std::cout << "Received players snapshot with " << msg.get_players().size() << " players." << std::endl;  // hot path: floodea la consola cada frame
                     for (const auto& incoming : msg.get_players()) {
                         auto it = std::find_if(other_players.begin(), other_players.end(),
                             [&incoming](const PlayerInfo& p) { return p.name == incoming.name; });
@@ -476,6 +493,13 @@ void ClientGUI::update() {
                             msg.get_damage(), SDL_GetTicks() + DMG_MS
                         });
                     }
+                    // Si el atacante tiene un báculo de daño equipado, anima su
+                    // efecto sobre el target. La flauta (curación) no aplica acá:
+                    // su efecto se dispara localmente al hacer /self-cast.
+                    if (!equipped_spell_id.empty() && equipped_spell_id != "flauta_elfica") {
+                        spawn_spell_animation(equipped_spell_id,
+                                              msg.get_coord_x(), msg.get_coord_y());
+                    }
                     break;
                 case MSG_XP:
                     if (hud) hud->set_xp(msg.get_xp());
@@ -488,8 +512,20 @@ void ClientGUI::update() {
                     if (msg.get_player_name() == own_name) {
                         // Arma del personaje + halos del inventario (todos los items
                         // equipados, arma y defensas) según el estado real del server.
-                        if (player) player->set_equipped_weapon(msg.get_equipped());
+                        if (player) {
+                            player->set_equipped_weapon(msg.get_equipped());
+                            // Sprite del personaje con cada item equipado (arma/báculo + escudo).
+                            player->set_equipped_items(msg.get_equipped_ids());
+                        }
                         if (hud) hud->set_equipped_by_ids(msg.get_equipped_ids());
+                        // ¿Equipó un báculo? Lo recordamos para animar su efecto.
+                        equipped_spell_id.clear();
+                        for (const auto& id : msg.get_equipped_ids()) {
+                            if (spell_effects.find(id) != spell_effects.end()) {
+                                equipped_spell_id = id;
+                                break;
+                            }
+                        }
                     } else {
                         for (auto& p : other_players) {
                             if (p.name == msg.get_player_name()) {
@@ -558,6 +594,74 @@ void ClientGUI::drawOtherPlayers() {
     }
 }
 
+
+void ClientGUI::load_spell_effects() {
+    // Cada báculo tiene un spritesheet de efecto. La clave es el id del item
+    // (igual que en el server) para deducir el efecto desde el item equipado.
+    struct Def { const char* id; const char* path; int fw; int fh; int cols; int count; };
+    const Def defs[] = {
+        // Curación (flauta élfica): 1024x1024, grilla 5x2 -> 10 frames de 204x204.
+        {"flauta_elfica",    "imagenes/3444.png", 204, 204, 5, 10},
+        // Flecha mágica (vara de fresno): 512x512, grilla 4x4 -> 15 frames de 128x128.
+        {"vara_fresno",      "imagenes/2511.png", 128, 128, 4, 15},
+        // Misil (báculo nudoso): 512x512, grilla 4x4 -> 16 frames de 128x128.
+        {"baculo_nudoso",    "imagenes/3451.png", 128, 128, 4, 16},
+        // Explosión (báculo engarzado): 512x512, grilla 4x4 -> 16 frames de 128x128.
+        {"baculo_engarzado", "imagenes/864.png",  128, 128, 4, 16},
+    };
+    for (const auto& d : defs) {
+        SDL_Surface* surf = IMG_Load(d.path);
+        if (!surf) continue;
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+        SDL_DestroySurface(surf);
+        if (!tex) continue;
+        spell_effects[d.id] = {tex, d.fw, d.fh, d.cols, d.count};
+    }
+}
+
+void ClientGUI::spawn_spell_animation(const std::string& effect_id, int tile_x, int tile_y) {
+    if (spell_effects.find(effect_id) == spell_effects.end()) return;
+    spell_animations.push_back({tile_x, tile_y, effect_id, SDL_GetTicks()});
+}
+
+void ClientGUI::draw_spell_animations() {
+    if (!tilemap) return;
+    const int tileSize = tilemap->getTileSize();
+    const uint64_t now = SDL_GetTicks();
+    constexpr uint64_t FRAME_MS = 55;  // duración de cada frame de la animación
+
+    // Descarta las animaciones que ya terminaron todos sus frames.
+    spell_animations.erase(
+        std::remove_if(spell_animations.begin(), spell_animations.end(),
+            [&](const SpellAnimation& a) {
+                auto it = spell_effects.find(a.effect_id);
+                if (it == spell_effects.end()) return true;
+                uint64_t frame = (now - a.start_ms) / FRAME_MS;
+                return frame >= static_cast<uint64_t>(it->second.frame_count);
+            }),
+        spell_animations.end());
+
+    for (const auto& a : spell_animations) {
+        const SpellEffectDef& def = spell_effects[a.effect_id];
+        int frame = static_cast<int>((now - a.start_ms) / FRAME_MS);
+        if (frame >= def.frame_count) continue;
+        SDL_FRect src{
+            static_cast<float>((frame % def.cols) * def.frame_w),
+            static_cast<float>((frame / def.cols) * def.frame_h),
+            static_cast<float>(def.frame_w),
+            static_cast<float>(def.frame_h)
+        };
+        // Centrado y escalado para cubrir el tile del target (un poco más grande
+        // que el tile para que el efecto envuelva al sprite).
+        const float size = tileSize * 1.6f;
+        const float wx = static_cast<float>(a.tile_x * tileSize);
+        const float wy = static_cast<float>(a.tile_y * tileSize);
+        const float sx = camera.world_to_screen_x(wx) + (tileSize - size) / 2.0f;
+        const float sy = camera.world_to_screen_y(wy) + (tileSize - size) / 2.0f;
+        SDL_FRect dst{sx, sy, size, size};
+        SDL_RenderTexture(renderer, def.texture, &src, &dst);
+    }
+}
 
 void ClientGUI::draw_damage_numbers() {
     if (!tilemap || !chat_font) return;
@@ -640,6 +744,7 @@ void ClientGUI::draw() {
     drawEnemies();
     drawOtherPlayers();
     draw_npc_friends();
+    draw_spell_animations();
     draw_damage_numbers();
 
     // Se restaura el viewport completo para dibujar el frame (HUD) y el chat encima.
@@ -718,6 +823,27 @@ void ClientGUI::init_draw(const WindowSettings& settings) {
         floor_item_crops["escudo"] = {0.0f, 0.0f, 32.0f, 32.0f};
     }
 
+    // Báculos/varas en el piso: misma imagen que el ícono del HUD. La clave es
+    // el id del item (igual que en el server) para que cada uno se vea como su
+    // sprite y no caiga al fallback de la espada.
+    struct FloorIcon { const char* id; const char* path; float w; float h; };
+    const FloorIcon staff_floor_icons[] = {
+        {"vara_fresno",      "imagenes/icon_vara_fresno.png",       27.0f,   29.0f},
+        {"baculo_nudoso",    "imagenes/icon_baculo_nudoso.png",     30.0f,   29.0f},
+        {"baculo_engarzado", "imagenes/icon_baculo_engarzado.png",  34.0f,   40.0f},
+        {"flauta_elfica",    "imagenes/icon_flauta_elfica.png",     40.0f,   40.0f},
+    };
+    for (const auto& fi : staff_floor_icons) {
+        SDL_Surface* surf = IMG_Load(fi.path);
+        if (!surf) continue;
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+        SDL_DestroySurface(surf);
+        if (!tex) continue;
+        floor_item_textures[fi.id] = tex;
+        floor_item_crops[fi.id] = {0.0f, 0.0f, fi.w, fi.h};
+    }
+
     SDL_Surface* elem_surf = IMG_Load("imagenes/100.png");
     if (!elem_surf) { elem_surf = IMG_Load("100.png"); }
     if (elem_surf) {
@@ -726,6 +852,9 @@ void ClientGUI::init_draw(const WindowSettings& settings) {
     }
 
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
+
+    // Spritesheets de efectos de hechizo (animaciones sobre el target).
+    load_spell_effects();
 
     // tile_size viene del TOML
     // el player se escala con el mismo tamano de celda
@@ -756,7 +885,7 @@ void ClientGUI::run() {
                 handleEvents();
                 update();
                 draw();
-                //SDL_Delay(16);
+                SDL_Delay(16);
             }
         }
     } catch (const std::exception& e) {

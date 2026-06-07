@@ -6,6 +6,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <map>
 #include "minichat.h"
 #include "displayPlayer.h"
 #include "parser.h"
@@ -40,6 +41,22 @@ struct DamageNumber {
 };
 
 struct WindowSettings;
+// Catalogo de un efecto visual de hechizo: spritesheet animado por frames.
+struct SpellEffectDef {
+    SDL_Texture* texture = nullptr;
+    int frame_w = 0;       // ancho de cada frame en el spritesheet
+    int frame_h = 0;       // alto de cada frame
+    int cols = 0;          // columnas de la grilla
+    int frame_count = 0;   // cantidad total de frames a reproducir
+};
+
+// Animacion de hechizo en curso, dibujada sobre una celda y avanzando frames.
+struct SpellAnimation {
+    int tile_x;
+    int tile_y;
+    std::string effect_id;   // clave en spell_effects (id del baculo)
+    uint64_t start_ms;
+};
 
 class ClientGUI: public Thread {
 private:
@@ -70,6 +87,12 @@ private:
     // TODO: refactorizar para permitir movimientos de los npcs
     std::map<std::string, SDL_FRect> enemies_crops;
     std::vector<DamageNumber> damage_numbers;
+    // Efectos de hechizo: catalogo (id de baculo -> spritesheet) y animaciones activas.
+    std::map<std::string, SpellEffectDef> spell_effects;
+    std::vector<SpellAnimation> spell_animations;
+    // Id del baculo actualmente equipado por el jugador local ("" si ninguno o si
+    // tiene un arma fisica). Sirve para deducir que efecto animar al castear.
+    std::string equipped_spell_id;
     SDL_Texture* frame_texture;
     SDL_Texture* item_texture;
     SDL_Texture* gold_texture;
@@ -125,6 +148,7 @@ private:
 
     void sendMoveCmd(Direction dir);
     void sendAttackCmd(int tile_x, int tile_y);
+    void sendSelfCastCmd();
     void sendEquipCmd(const std::string& item_id);
     void sendChatCmd(const std::string& msg);
 
@@ -146,6 +170,13 @@ private:
     void draw_teleport_labels();
     // Dibuja los numeros de daño flotantes en rojo y descarta los expirados.
     void draw_damage_numbers();
+
+    // Carga los spritesheets de efectos de hechizo (uno por baculo).
+    void load_spell_effects();
+    // Dispara una animacion de efecto del baculo dado sobre la celda (tile_x,tile_y).
+    void spawn_spell_animation(const std::string& effect_id, int tile_x, int tile_y);
+    // Dibuja y avanza las animaciones de hechizo activas.
+    void draw_spell_animations();
 
 public:
     ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name, const std::string& player_race);

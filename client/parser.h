@@ -12,7 +12,7 @@ class Parser {
     ClientCmd parse_name_cmd(MessageType type, std::istringstream& ss, const std::string& correct_use);
 
     bool health_command(const std::string& command, ClientCmd& cmd);
-    bool cheat_command(const std::string& command, ClientCmd& cmd);
+    bool cheat_command(const std::string& command, ClientCmd& cmd, std::istringstream& ss);
     bool item_related_command(const std::string& command, ClientCmd& cmd, std::istringstream& ss);
     bool clan_related_command(const std::string& command, ClientCmd& cmd, std::istringstream& ss);
     bool gold_related_command(const std::string& command, ClientCmd& cmd, std::istringstream& ss);

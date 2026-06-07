@@ -5,6 +5,7 @@
 
 Serializer::Serializer() {
     handlers[MSG_REGISTER] = [this](const ClientCmd& cmd) { return serialize_register(cmd); };
+    handlers[MSG_LOGIN]    = [this](const ClientCmd& cmd) { return serialize_login(cmd); };
     handlers[MSG_MOVE]     = [this](const ClientCmd& cmd) { return serialize_move(cmd); };
     handlers[MSG_ATTACK]   = [this](const ClientCmd& cmd) { return serialize_coords(MSG_ATTACK, cmd); };
     handlers[MSG_SELECT]   = [this](const ClientCmd& cmd) { return serialize_coords(MSG_SELECT, cmd); };
@@ -34,6 +35,8 @@ Serializer::Serializer() {
     handlers[MSG_CHEAT_INF_HP] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CHEAT_INF_HP); };
     handlers[MSG_CHEAT_INF_MANA] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CHEAT_INF_MANA); };
     handlers[MSG_TELEPORT] = [this](const ClientCmd& cmd) { return serialize_zone(MSG_TELEPORT, cmd); };
+    handlers[MSG_CHEAT_MANA] = [this](const ClientCmd& cmd) { return serialize_gold(MSG_CHEAT_MANA, cmd); };
+    handlers[MSG_SELF_CAST] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_SELF_CAST); };
     handlers[MSG_PRIVATE] = [this](const ClientCmd& cmd) { return serialize_private(cmd); };
 }
 
@@ -50,18 +53,44 @@ void Serializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t 
 }
 
 
+// Formato MSG_REGISTER: [name_len:1][name][pass_len:1][pass][race:1][class:1]
 std::vector<uint8_t> Serializer::serialize_register(const ClientCmd& cmd) {
     const std::string& name = cmd.get_player_name();
+    const std::string& pass = cmd.get_password();
     uint8_t name_len = static_cast<uint8_t>(name.size());
-    uint16_t payload_len = LEN_NAME_SIZE_FIELD + name_len + LEN_RACE + LEN_CLASS;
+    uint8_t pass_len = static_cast<uint8_t>(pass.size());
+    uint16_t payload_len = LEN_NAME_SIZE_FIELD + name_len
+                         + LEN_PASSWORD_SIZE_FIELD + pass_len
+                         + LEN_RACE + LEN_CLASS;
 
     std::vector<uint8_t> buf;
     buf.reserve(LEN_HEADER + payload_len);
     write_header(buf, MSG_REGISTER, payload_len);
     buf.push_back(name_len);
     buf.insert(buf.end(), name.begin(), name.end());
+    buf.push_back(pass_len);
+    buf.insert(buf.end(), pass.begin(), pass.end());
     buf.push_back(static_cast<uint8_t>(RACE_MAP.at(cmd.get_race())));
     buf.push_back(static_cast<uint8_t>(CLASS_MAP.at(cmd.get_class())));
+    return buf;
+}
+
+// Formato MSG_LOGIN: [name_len:1][name][pass_len:1][pass]
+std::vector<uint8_t> Serializer::serialize_login(const ClientCmd& cmd) {
+    const std::string& name = cmd.get_player_name();
+    const std::string& pass = cmd.get_password();
+    uint8_t name_len = static_cast<uint8_t>(name.size());
+    uint8_t pass_len = static_cast<uint8_t>(pass.size());
+    uint16_t payload_len = LEN_NAME_SIZE_FIELD + name_len
+                         + LEN_PASSWORD_SIZE_FIELD + pass_len;
+
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, MSG_LOGIN, payload_len);
+    buf.push_back(name_len);
+    buf.insert(buf.end(), name.begin(), name.end());
+    buf.push_back(pass_len);
+    buf.insert(buf.end(), pass.begin(), pass.end());
     return buf;
 }
 

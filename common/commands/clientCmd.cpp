@@ -8,7 +8,8 @@ ClientCmd::ClientCmd():
         target_type(ENTITY_PLAYER),
         target_name(),
         race("human"),
-        klass("mage"),
+        klass("wizard"),
+        password(),
         direction(DIR_NORTH),
         gold(0),
         coord_x(0),
@@ -37,6 +38,9 @@ const std::string& ClientCmd::get_race() const { return this->race; }
 
 void ClientCmd::set_class(const std::string& class_value) { this->klass = class_value; }
 const std::string& ClientCmd::get_class() const { return this->klass; }
+
+void ClientCmd::set_password(const std::string& password_value) { this->password = password_value; }
+const std::string& ClientCmd::get_password() const { return this->password; }
 
 void ClientCmd::set_direction(Direction dir) { this->direction = dir; }
 Direction ClientCmd::get_direction() const { return this->direction; }

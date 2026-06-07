@@ -2,6 +2,7 @@
 #include "../../game_exceptions.h"
 #include "alive_state.h"
 #include "ghost_state.h"
+#include "meditate_state.h"
 
 #include <cmath>
 
@@ -28,6 +29,10 @@ void Player::to_alive() {
     state = std::make_unique<AliveState>();
 }
 
+void Player::to_meditate() {
+    state = std::make_unique<MeditateState>();
+}
+
 const Inventory& Player::get_inventory() const {
     return player_inventory;
 }
@@ -50,6 +55,9 @@ uint32_t Player::max_mana() {
 
 
 void Player::add_item(std::unique_ptr<Item> item) {
+    // Tomar/recibir un item es una acción: interrumpe la meditación.
+    // (Al spawnear el jugador está vivo, así que es un no-op.)
+    stop_meditation();
     player_inventory.add_item(std::move(item));
 }
 
@@ -118,12 +126,23 @@ void Player::heal_mana(const int healthy_mana) {
     }
 }
 
+void Player::lose_mana(const int amount) {
+    if (amount <= 0) return;
+    if (static_cast<uint32_t>(amount) >= mana) {
+        mana = 0;
+    } else {
+        mana -= static_cast<uint32_t>(amount);
+    }
+}
+
 void Player::heal(const int healthy_life, const int healthy_mana) {
     heal_life(healthy_life);
     heal_mana(healthy_mana);
 }
 
 void Player::add_gold(const int extra_gold) {
+    // Tomar/recibir oro es una acción: interrumpe la meditación.
+    stop_meditation();
     gold += extra_gold;
 }
 
@@ -153,6 +172,8 @@ int Player::get_coord_y() const {
 }
 
 void Player::update_position(const int x, const int y) {
+    // Moverse es una acción: interrumpe la meditación.
+    stop_meditation();
     coord_x = x;
     coord_y = y;
 }
@@ -173,22 +194,34 @@ void Player::set_ghost() {
     to_ghost();
 }
 
-bool Player::is_meditating() const {
-    return meditating;
-}
- 
-void Player::change_meditation() {
-    meditating = !meditating;
-}
- 
 void Player::stop_meditation() {
-    meditating = false;
+    state->stop_meditation(*this);
 }
-/* 
+
+bool Player::toggle_meditation() {
+    return state->toggle_meditation(*this);
+}
+
 bool Player::can_meditate() const {
-    return player_class.class_can_meditate(); //Tengoq ue actualizar player_class, solo el guerrero no puede meditar
+    return !state->is_ghost() && player_class.class_can_meditate();
 }
-*/
+
+bool Player::can_cast() const {
+    // El guerrero es la única clase que no puede usar magia. Reusa el mismo
+    // criterio que la meditación (factor de meditación 0 => guerrero).
+    return player_class.class_can_meditate();
+}
+
+bool Player::tick(double seconds) {
+    return state->tick(*this, seconds);
+}
+
+void Player::recover_meditation_mana(double seconds) {
+    // Mana = FClaseMeditacion * Inteligencia * segundos (tope en max_mana()).
+    int inteligence = player_race.race_inteligence() + player_class.class_inteligence();
+    double gained = player_class.class_meditation_factor() * inteligence * seconds;
+    heal_mana(static_cast<int>(gained));
+}
 
 uint32_t Player::get_lives() const {
     return lives;
@@ -224,12 +257,20 @@ int Player::damage_attack() {
     return player_race.race_strength() + player_class.class_strength();
 }
  
-int Player::receive_damage(int damage, Player& atacante, bool is_critical) {
+DamageOutcome Player::receive_damage(int damage, Player& atacante, bool is_critical) {
     return state->receive_damage(*this, damage, atacante, is_critical);
 }
 
-int Player::attack(Entity& target, int target_x, int target_y) {
+DamageOutcome Player::attack(Entity& target, int target_x, int target_y) {
     return state->attack(*this, target, target_x, target_y);
+}
+
+void Player::cast_on_self() {
+    // Auto-cast: el target es uno mismo. El item equipado decide el efecto
+    // (la flauta élfica cura; consume maná). Usa la propia celda como target.
+    stop_meditation();
+    player_inventory.use_equipped(*this, *this, coord_x, coord_y,
+                                  coord_x, coord_y, false);
 }
 
 void Player::ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target) {
@@ -244,6 +285,8 @@ void Player::add_experience(int exp) {
 }
 
 void Player::equip_item(std::string item_id) {
+    // Equipar es una acción: interrumpe la meditación.
+    stop_meditation();
     // Busca el item en el inventario y lo equipa en el slot que corresponde a
     // su tipo. El Inventory sigue siendo dueño; el DefenseSet solo referencia.
     Item* item = player_inventory.find_item(item_id);
@@ -251,7 +294,9 @@ void Player::equip_item(std::string item_id) {
 
     switch (item->get_type()) {
         case ItemType::WEAPON:
-            // Toggle: si el arma ya está equipada, la desequipa; si no, la equipa.
+        case ItemType::MAGIC:
+            // Toggle: si ya está equipada, la desequipa; si no, la equipa. Arma y
+            // báculo comparten slot, así que equipar uno desplaza al otro.
             if (player_inventory.is_equipped(item_id)) {
                 player_inventory.unequip_item();
             } else {
@@ -310,4 +355,22 @@ void Player::check_level_up() {
 
 const std::string& Player::get_race_name() const {
     return player_race.get_name();
+}
+
+RaceType Player::get_race_id() const {
+    return player_race.get_race_id();
+}
+
+ClassType Player::get_class_id() const {
+    return player_class.get_class_id();
+}
+
+void Player::restore(uint32_t gold, uint32_t lives, uint32_t mana,
+                     uint32_t experience, int level, int id_clan) {
+    this->gold = gold;
+    this->lives = lives;
+    this->mana = mana;
+    this->experience = experience;
+    this->level = Level(level);
+    this->id_clan = id_clan;
 }

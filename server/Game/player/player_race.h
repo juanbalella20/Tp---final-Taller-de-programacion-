@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "../../../common/constants/game_constants.h"
+
 class PlayerRace {
 
 private:
@@ -13,9 +15,13 @@ private:
     float life_factor;
     float mana_factor;
     std::string name;
+    RaceType race_id;  // identidad de la raza (dominio), para persistir
 
 public:
     PlayerRace() {}
+
+    // Identidad de la raza como enum del dominio (para persistir).
+    RaceType get_race_id() const;
 
     void set_human();
 

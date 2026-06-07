@@ -4,7 +4,8 @@
 #include <string>
 #include <cstdint>
 
-class Entity;
+#include "../entity.h"  // DamageOutcome (retorno de use_item)
+
 class Player;
 
 // Tipo de item, usado para que el cliente sepa en qué slot del HUD resaltarlo.
@@ -15,6 +16,7 @@ enum class ItemType : uint8_t {
     HELMET = 2,
     SHIELD = 3,
     OTHER  = 4,
+    MAGIC  = 5,  // varas/báculos: lanzan hechizos consumiendo maná.
 };
 
 class Item {
@@ -37,7 +39,7 @@ public:
     // Tipo del item (para que el cliente lo ubique en el slot correcto del HUD).
     virtual ItemType get_type() const = 0;
 
-    virtual int use_item(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical) = 0;
+    virtual DamageOutcome use_item(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical) = 0;
 };
 
 #endif

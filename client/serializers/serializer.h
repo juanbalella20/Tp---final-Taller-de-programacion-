@@ -15,6 +15,9 @@ class Serializer {
     void write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len);
     std::vector<uint8_t> serialize_register(const ClientCmd& cmd);
 
+    // [LOGIN]
+    std::vector<uint8_t> serialize_login(const ClientCmd& cmd);
+
     // [MOVE]
     std::vector<uint8_t> serialize_move(const ClientCmd& cmd);
 

@@ -21,6 +21,7 @@ class Player : public Entity {
     // transición de estado) al ejecutar las acciones que gobiernan.
     friend class AliveState;
     friend class GhostState;
+    friend class MeditateState;
 
 private:
     std::string name;
@@ -31,7 +32,6 @@ private:
     int id_clan;
     int coord_x;
     int coord_y;
-    bool meditating;
     std::unique_ptr<PlayerState> state;
     std::shared_ptr<Item> equipped_item;
 
@@ -47,8 +47,10 @@ private:
 
     // Transiciones de estado internas (las disparan los propios estados).
     // to_ghost: pasa a fantasma (muerto). to_alive: vuelve a vivo.
+    // to_meditate: pasa a meditar.
     void to_ghost();
     void to_alive();
+    void to_meditate();
 
 public:
     Player(const std::string name, PlayerRace& player_race, PlayerClass& player_class);
@@ -77,7 +79,11 @@ public:
 
     void use_object(Item item);
 
-    int attack(Entity& target, int target_x, int target_y);
+    DamageOutcome attack(Entity& target, int target_x, int target_y);
+
+    // Lanza el hechizo del item equipado sobre uno mismo (auto-cast, p.ej.
+    // curación con la flauta élfica). Usa la propia celda como target.
+    void cast_on_self();
 
     // Suma a este jugador (atacante) la XP por golpear/matar a un target.
     void ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target);
@@ -87,6 +93,9 @@ public:
     void heal_life(const int healthy_life);
 
     void heal_mana(const int healthy_mana);
+
+    // Resta maná (no baja de 0). Usado por el cheat /mana para testear /meditar.
+    void lose_mana(const int amount);
 
     void heal(const int healthy_life, const int healthy_mana);
 
@@ -114,13 +123,26 @@ public:
     
     void set_ghost();
 
-    bool is_meditating() const;
-
-    void change_meditation();
-
+    // Deja de meditar (no-op si no estaba meditando). Cualquier acción debe
+    // llamarlo: meditar se interrumpe ante cualquier interacción.
     void stop_meditation();
 
+    // Alterna meditación (comando /meditar). Devuelve true si tras el toggle el
+    // jugador quedó meditando, false si dejó de meditar o no pudo empezar.
+    bool toggle_meditation();
+
     bool can_meditate() const;
+
+    // ¿La clase puede usar magia (hechizos/báculos)? Solo el guerrero no puede.
+    bool can_cast() const;
+
+    // Avance de tiempo del game loop: delega en el estado. Devuelve true si el
+    // jugador está meditando (maná actualizado, hay que notificar al cliente).
+    bool tick(double seconds);
+
+    // Recupera maná por meditación: FClaseMeditacion * Inteligencia * segundos,
+    // tope en max_mana(). Lo invoca MeditateState desde tick().
+    void recover_meditation_mana(double seconds);
 
     uint32_t get_lives() const;
 
@@ -136,7 +158,7 @@ public:
 
     int damage_attack();
 
-    int receive_damage(int damage, Player& atacante, bool is_critical) override;
+    DamageOutcome receive_damage(int damage, Player& atacante, bool is_critical) override;
 
     void add_experience(int exp);
 
@@ -147,6 +169,20 @@ public:
     uint32_t get_mana() const;
 
     const std::string& get_race_name() const;
+
+    // --- Identidad e I/O de persistencia ---
+
+    // Identidad de raza/clase como enum del dominio (para serializar a disco).
+    RaceType get_race_id() const;
+    ClassType get_class_id() const;
+
+    // Restaura el estado mutable de un jugador cargado de disco. Setea los
+    // campos que el constructor calcula y para los que no hay setter (gold,
+    // lives, mana, experience, level, id_clan). La posicion se setea aparte con
+    // update_position; el estado ghost con set_ghost(). race/class/name son
+    // inmutables (van por el constructor).
+    void restore(uint32_t gold, uint32_t lives, uint32_t mana,
+                 uint32_t experience, int level, int id_clan);
 };
 
 #endif

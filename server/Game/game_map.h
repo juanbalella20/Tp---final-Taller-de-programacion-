@@ -81,6 +81,11 @@ public:
 
     void add_player(Player player);
 
+    // Alta de un jugador cargado de persistencia: ademas de agregarlo, lo etiqueta
+    // en su zona persistida (add_player solo no setea player_zone). Reusa el tag
+    // de zona que hace spawn_player.
+    void add_persisted_player(Player player, Zone zone);
+
     // Devuelve un snapshot de todos los jugadores en el mismo mapa que player_name
     // (excluyéndolo a él). Hoy todo está en "desert"; cuando haya múltiples mapas,
     // filtrar por sector aquí.
@@ -100,6 +105,7 @@ public:
         int damage;
         int target_x;
         int target_y;
+        bool dodged;  // el target esquivó el golpe (solo PvP)
     };
 
     // Calcula la nueva posicion del player a partir de su posicion actual y la
@@ -109,8 +115,16 @@ public:
     // Ataca la celda (x,y) en la zona del atacante
     AttackResult attack(const std::string& atacker_name, int x, int y);
 
+    // El jugador lanza el hechizo del item equipado sobre sí mismo (auto-cast,
+    // p.ej. curación). Propaga las excepciones de Baculo::use_item.
+    void self_cast(const std::string& player_name);
+
     // Respawn de NPCs en TODAS las zonas. Devuelve true si hubo alguno
     bool update_npcs();
+
+    // Avance de tiempo: hace tick() en todos los players. Devuelve los nombres
+    // de los que están meditando (su maná cambió: hay que notificarles MSG_MANA).
+    std::vector<std::string> tick(double seconds);
 
     // Snapshots de la zona del player indicado
     std::vector<NpcInfo> build_npcs_snapshot(const std::string& player_name);
@@ -135,6 +149,9 @@ public:
     bool player_equip_item(const std::string& player_name, const std::string& item_id);
     void spawn_player(const std::string& name, const std::string& race, const std::string& pclass);
     const Player& get_player(const std::string& name);
+    // Acceso mutable por nombre para handlers que cambian estado del player
+    // (p. ej. meditar). Devuelve nullptr si no existe.
+    Player* get_player_mut(const std::string& name);
     bool player_exists(const std::string& name);
 
     std::unique_ptr<Item> pick_up_item(const std::string& player_name);
@@ -144,6 +161,9 @@ public:
     uint32_t get_player_hp(const std::string& name);
     uint32_t get_player_xp(const std::string& name);
     uint32_t get_player_mana(const std::string& name);
+
+    // Cheat /mana: resta `amount` de maná al player (para testear /meditar).
+    void cheat_lose_mana(const std::string& name, uint32_t amount);
 
     /*
      * Carga TODAS las zonas al iniciar el server. Por cada (zone_id, path):

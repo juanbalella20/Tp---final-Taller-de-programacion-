@@ -140,7 +140,7 @@ bool Parser::health_command(const std::string& command, ClientCmd& cmd) {
     return false;
 }
 
-bool Parser::cheat_command(const std::string& command, ClientCmd& cmd) {
+bool Parser::cheat_command(const std::string& command, ClientCmd& cmd, std::istringstream& ss) {
     if (command == "/cheat-morir") {
         cmd = parse_no_payload(MSG_CHEAT_KILL);
         return true;
@@ -151,6 +151,11 @@ bool Parser::cheat_command(const std::string& command, ClientCmd& cmd) {
     }
     if (command == "/cheat-mana") {
         cmd = parse_no_payload(MSG_CHEAT_INF_MANA);
+        return true;
+    }
+    if (command == "/mana") {
+        // Cheat: resta N de maná (para probar la recuperación con /meditar).
+        cmd = parse_gold_cmd(MSG_CHEAT_MANA, ss, "Uso: /mana <cantidad>");
         return true;
     }
     return false;
@@ -274,7 +279,7 @@ ClientCmd Parser::parse_chat(const std::string& input) {
     if (gold_related_command(command, cmd, ss)) {
         return cmd;
     }
-    if (cheat_command(command, cmd)) {
+    if (cheat_command(command, cmd, ss)) {
         return cmd;
     }
     if (teleport_command(command, cmd, ss)) {

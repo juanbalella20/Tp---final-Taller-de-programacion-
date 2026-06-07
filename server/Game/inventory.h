@@ -47,7 +47,7 @@ public:
     std::string get_equipped_weapon_id() const;
 
     bool is_full() const;
-    int use_equipped(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical);
+    DamageOutcome use_equipped(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical);
 };
 
 

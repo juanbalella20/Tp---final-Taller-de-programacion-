@@ -11,13 +11,13 @@ int DefenseItem::calculate_defense() const {
     return defense_min + roll;
 }
 
-int DefenseItem::use_item(Entity& target, Player& atacante,
+DamageOutcome DefenseItem::use_item(Entity& target, Player& atacante,
                           int attacker_x, int attacker_y,
                           int target_x, int target_y, bool is_critical) {
-    // "Usar" un item de defensa = la defensa que aporta. Ignora los parámetros
-    // de ataque.
+    // Un item de defensa no se castea ni produce daño: outcome vacío. Su aporte
+    // a la defensa se calcula aparte (calculate_defense), no acá.
     (void)target; (void)atacante;
     (void)attacker_x; (void)attacker_y;
     (void)target_x; (void)target_y; (void)is_critical;
-    return calculate_defense();
+    return {};
 }
