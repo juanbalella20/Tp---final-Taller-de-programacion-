@@ -355,18 +355,17 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
             throw AttackNotAllowedException("No puede haber ataques entre miembros del mismo clan");
     }
 
-    int gold_drop = attacker->attack(*target, x, y);
-//attack debe devolver danio hecho
+    DamageOutcome outcome = attacker->attack(*target, x, y);
     if (target->is_dead()) {
-        if (gold_drop > 0)
-            world.spawn_gold(x, y, static_cast<uint32_t>(gold_drop));
+        if (outcome.gold_drop > 0)
+            world.spawn_gold(x, y, static_cast<uint32_t>(outcome.gold_drop));
         if (target_is_player) {
             auto dropped = target_player->drop_inventory();
             world.scatter_items(x, y, std::move(dropped), players_in(z));
         }
-        return {true, true, target_is_player, target->get_name(), 0, x, y};
+        return {true, true, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged};
     }
-    return {true, false, target_is_player, target->get_name(), 0, x, y};
+    return {true, false, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged};
 }
 
 void GameMap::self_cast(const std::string& player_name) {

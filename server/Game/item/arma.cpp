@@ -13,10 +13,10 @@ int Arma::get_disntance_min_attack() const {
     return disntance_min_attack;
 }
 
-int Arma::use_item(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical) {
+DamageOutcome Arma::use_item(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical) {
     int dx = std::abs(attacker_x - target_x);
     int dy = std::abs(attacker_y - target_y);
-    if (dx + dy > disntance_min_attack) return 0;
+    if (dx + dy > disntance_min_attack) return {};
 
     // Daño = Fuerza * rand(DañoArmaMin, DañoArmaMax)
     int rango = damage_max - damage_min;

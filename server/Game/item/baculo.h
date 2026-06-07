@@ -37,9 +37,9 @@ public:
 
     // Lanza el hechizo. Si el atacante no puede usar magia lanza
     // CannotCastException; si no le alcanza el maná, NotEnoughManaException.
-    // Para CURAR: cura al propio atacante y devuelve 0. Para DANIO: aplica daño
-    // a distancia sobre el target y devuelve el oro dropeado.
-    int use_item(Entity& target, Player& atacante, int attacker_x, int attacker_y,
+    // Para CURAR: cura al propio atacante y devuelve un outcome vacío. Para DANIO:
+    // aplica daño a distancia sobre el target y devuelve el resultado del golpe.
+    DamageOutcome use_item(Entity& target, Player& atacante, int attacker_x, int attacker_y,
                  int target_x, int target_y, bool is_critical) override;
 };
 

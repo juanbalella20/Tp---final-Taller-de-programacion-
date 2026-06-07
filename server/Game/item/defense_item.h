@@ -19,9 +19,9 @@ public:
     // Defensa que aporta este item: rand(defense_min, defense_max).
     int calculate_defense() const;
 
-    // "Usar" un item de defensa devuelve la defensa que aporta (ignora los
-    // parámetros de ataque).
-    int use_item(Entity& target, Player& atacante,
+    // "Usar" un item de defensa no produce daño: los items de defensa no se
+    // equipan en el slot de arma ni se castean. Devuelve un outcome vacío.
+    DamageOutcome use_item(Entity& target, Player& atacante,
                  int attacker_x, int attacker_y,
                  int target_x, int target_y, bool is_critical) override;
 };

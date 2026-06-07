@@ -14,7 +14,7 @@ int Baculo::get_mana_cost() const {
     return mana_cost;
 }
 
-int Baculo::use_item(Entity& target, Player& atacante, int attacker_x, int attacker_y,
+DamageOutcome Baculo::use_item(Entity& target, Player& atacante, int attacker_x, int attacker_y,
                      int target_x, int target_y, bool is_critical) {
     // El guerrero no puede usar magia.
     if (!atacante.can_cast()) throw CannotCastException();
@@ -30,7 +30,7 @@ int Baculo::use_item(Entity& target, Player& atacante, int attacker_x, int attac
         // El hechizo de curación restaura vida sobre el propio lanzador.
         atacante.lose_mana(mana_cost);
         atacante.heal_life(value);
-        return 0;
+        return {};
     }
 
     // Hechizo de daño a distancia: como un arco, click sobre el target.

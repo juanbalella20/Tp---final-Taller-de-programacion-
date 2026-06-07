@@ -257,20 +257,20 @@ int Player::damage_attack() {
     return player_race.race_strength() + player_class.class_strength();
 }
  
-int Player::receive_damage(int damage, Player& atacante, bool is_critical) {
+DamageOutcome Player::receive_damage(int damage, Player& atacante, bool is_critical) {
     return state->receive_damage(*this, damage, atacante, is_critical);
 }
 
-int Player::attack(Entity& target, int target_x, int target_y) {
+DamageOutcome Player::attack(Entity& target, int target_x, int target_y) {
     return state->attack(*this, target, target_x, target_y);
 }
 
-int Player::cast_on_self() {
+void Player::cast_on_self() {
     // Auto-cast: el target es uno mismo. El item equipado decide el efecto
     // (la flauta élfica cura; consume maná). Usa la propia celda como target.
     stop_meditation();
-    return player_inventory.use_equipped(*this, *this, coord_x, coord_y,
-                                         coord_x, coord_y, false);
+    player_inventory.use_equipped(*this, *this, coord_x, coord_y,
+                                  coord_x, coord_y, false);
 }
 
 void Player::ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target) {

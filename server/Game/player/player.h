@@ -79,11 +79,11 @@ public:
 
     void use_object(Item item);
 
-    int attack(Entity& target, int target_x, int target_y);
+    DamageOutcome attack(Entity& target, int target_x, int target_y);
 
     // Lanza el hechizo del item equipado sobre uno mismo (auto-cast, p.ej.
     // curación con la flauta élfica). Usa la propia celda como target.
-    int cast_on_self();
+    void cast_on_self();
 
     // Suma a este jugador (atacante) la XP por golpear/matar a un target.
     void ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target);
@@ -158,7 +158,7 @@ public:
 
     int damage_attack();
 
-    int receive_damage(int damage, Player& atacante, bool is_critical) override;
+    DamageOutcome receive_damage(int damage, Player& atacante, bool is_critical) override;
 
     void add_experience(int exp);
 

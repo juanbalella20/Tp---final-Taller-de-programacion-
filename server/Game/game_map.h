@@ -105,6 +105,7 @@ public:
         int damage;
         int target_x;
         int target_y;
+        bool dodged;  // el target esquivó el golpe (solo PvP)
     };
 
     // Calcula la nueva posicion del player a partir de su posicion actual y la

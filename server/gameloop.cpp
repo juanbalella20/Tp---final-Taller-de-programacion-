@@ -450,6 +450,18 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
         dmg_msg.set_coord_y(result.target_y);
         dmg_msg.set_damage(result.damage);
         client_registry_monitor.notify_client(cmd.get_client_id(), dmg_msg);
+
+        // Feed de combate (estilo AO) en el minichat del ATACANTE: cuánto daño
+        // provocó, o si el target esquivó. Viaja como MSG_CHAT.
+        GameMsg atk_chat(MSG_CHAT);
+        if (result.dodged) {
+            atk_chat.set_chat_content(result.entity_name + " ha esquivado tu ataque");
+        } else {
+            atk_chat.set_chat_content("Le has provocado " + std::to_string(result.damage) +
+                                      " de daño a " + result.entity_name);
+        }
+        client_registry_monitor.notify_client(cmd.get_client_id(), atk_chat);
+
         if (result.entity_died) {
             broadcast_npcs_snapshot();
             broadcast_items_snapshot();
@@ -468,6 +480,17 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
             GameMsg hp_msg(MSG_HP);
             hp_msg.set_hp(game_map.get_player_hp(result.entity_name));
             client_registry_monitor.notify_client_by_name(result.entity_name, hp_msg);
+
+            // Feed de combate en el minichat de la VÍCTIMA: cuánto daño recibió y
+            // de quién, o si logró esquivar. Notifica al otro cliente por nombre.
+            GameMsg victim_chat(MSG_CHAT);
+            if (result.dodged) {
+                victim_chat.set_chat_content("¡Has esquivado el ataque de " + attacker_name + "!");
+            } else {
+                victim_chat.set_chat_content(attacker_name + " te ha provocado " +
+                                             std::to_string(result.damage) + " de daño");
+            }
+            client_registry_monitor.notify_client_by_name(result.entity_name, victim_chat);
 
             if (result.entity_died) {
                 GameMsg gold_msg(MSG_GOLD);

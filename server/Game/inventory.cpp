@@ -71,7 +71,7 @@ bool Inventory::is_full() const {
     return (int)items.size() >= MAX_SLOTS;
 }
 
-int Inventory::use_equipped(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical) {
+DamageOutcome Inventory::use_equipped(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical) {
     if (!equipped_item)
         throw NoWeaponEquippedException();
     return equipped_item->use_item(target, atacante, attacker_x, attacker_y, target_x, target_y, is_critical);
