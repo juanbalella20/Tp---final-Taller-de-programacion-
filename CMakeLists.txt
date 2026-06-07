@@ -94,6 +94,7 @@ add_executable(client
     client/serializers/serializer.cpp
     client/parser.cpp
     client/interface/clientGUI.cpp
+    client/interface/welcome_screen.cpp
     client/interface/tileMap.cpp
     client/interface/displayPlayer.cpp
     client/interface/camera.cpp

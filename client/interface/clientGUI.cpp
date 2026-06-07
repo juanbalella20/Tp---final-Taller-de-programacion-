@@ -1,6 +1,7 @@
 #include "clientGUI.h"
 #include "npcSprite.h"
 #include "itemSprite.h"
+#include "welcome_screen.h"
 #include <SDL3_image/SDL_image.h>
 #include <algorithm>
 #include <iostream>
@@ -19,7 +20,10 @@ ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, cons
 
 ClientGUI::~ClientGUI() {
     freeSDL();
-    TTF_CloseFont(chat_font);
+    if (chat_font) {
+        TTF_CloseFont(chat_font);
+        chat_font = nullptr;
+    }
 }
 
 void ClientGUI::initSDL() {
@@ -647,6 +651,10 @@ void ClientGUI::draw() {
 
 void ClientGUI::init_draw() {
     initSDL();
+    SDL_SetRenderLogicalPresentation(
+        renderer, LOGICAL_WIDTH, LOGICAL_HEIGHT,
+        SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
     // Carga provisional solo para tener un tileSize valido al crear el player.
     // El mapa REAL lo carga el primer MSG_ZONE_CHANGE del server (current_zone
     // arranca en un centinela, asi que siempre recarga la zona real). No tocar
@@ -735,13 +743,17 @@ void ClientGUI::init_draw() {
 
 void ClientGUI::run() {
     try {
-        
-        init_draw();
-        while (is_running && should_keep_running()) {
-            handleEvents();
-            update();
-            draw();
-            //SDL_Delay(16);
+        WelcomeScreen welcome_screen;
+        LauncherResult launcher_result = welcome_screen.run();
+
+        if (launcher_result.start_game) {
+            init_draw();
+            while (is_running && should_keep_running()) {
+                handleEvents();
+                update();
+                draw();
+                //SDL_Delay(16);
+            }
         }
     } catch (const std::exception& e) {
         std::cerr << "ClientGUI error: " << e.what() << std::endl;
