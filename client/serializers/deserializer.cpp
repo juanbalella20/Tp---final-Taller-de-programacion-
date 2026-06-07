@@ -21,6 +21,9 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_SEND_MAP] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_map(payload, msg);
     };
+    handlers[MSG_CONFIRM_SESSION] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_confirm_session(payload, msg);
+    };
     for (uint8_t type : {
         (uint8_t)MSG_MEDITATE, (uint8_t)MSG_RESURRECT, (uint8_t)MSG_CURE, (uint8_t)MSG_LIST,
         (uint8_t)MSG_FOUND_CLAN, (uint8_t)MSG_JOIN_CLAN, (uint8_t)MSG_LEFT_CLAN, (uint8_t)MSG_CLAN_ACEP,
@@ -345,6 +348,17 @@ void ClientDeserializer::deserialize_npcs_snapshot(const std::vector<uint8_t>& p
 }
 
 // Ver formato en serverSerializer::serialize_register.
+// MSG_CONFIRM_SESSION: confirmacion de auth exitoso (login/registro).
+// Payload: [name_len:1][name][race_len:1][race][class_len:1][class]
+// El motivo: el cliente necesita name/race/class del personaje ANTES de entrar
+// al juego (en login la raza/clase reales viven en el server).
+void ClientDeserializer::deserialize_confirm_session(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    size_t offset = 0;
+    msg.set_player_name(read_string(payload, offset));
+    msg.set_race(read_string(payload, offset));
+    msg.set_class(read_string(payload, offset));
+}
+
 void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payload, GameMsg& msg) {
     size_t offset = 0;
 
