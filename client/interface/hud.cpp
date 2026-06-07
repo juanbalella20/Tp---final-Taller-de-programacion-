@@ -13,6 +13,7 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       max_mana(100),
       player_xp(0),
       player_mana(0),
+      player_level(1),
       hp_bar_texture(nullptr),
       xp_bar_texture(nullptr),
       mana_bar_texture(nullptr),
@@ -107,6 +108,10 @@ void HUD::set_mana(uint32_t mana) {
 
 void HUD::set_equipped_item(const std::string& id) {
     equipped_item_id = id;
+}
+
+void HUD::set_level(int level) {
+    player_level = level;
 }
 
 void HUD::set_equipped_slot(int slot_index) {
@@ -377,7 +382,7 @@ void HUD::drawMana() {
     }
 }
 
-void HUD::display_player_info(const std::string& player_name, int level) {
+void HUD::display_player_info(const std::string& player_name) {
     if (!font) return;
     
     SDL_Color color = {255, 255, 255, 255};
@@ -394,7 +399,7 @@ void HUD::display_player_info(const std::string& player_name, int level) {
         SDL_RenderTexture(gui_renderer, name_text_cache.texture, nullptr, &dest);
     }
 
-    std::string level_text = "Level: " + std::to_string(level);
+    std::string level_text = "Level: " + std::to_string(player_level);
     text_start_y = 75.0f * scale_y;
 
     update_text_cache(level_text_cache, level_text, color);
