@@ -8,6 +8,7 @@
 
 const uint16_t LEN_HEADER = 3;  // 1 byte para tipo de mensaje + 2 bytes para largo del payload
 const uint16_t LEN_NAME_SIZE_FIELD = 1;  // 1 byte para largo del nombre
+const uint16_t LEN_PASSWORD_SIZE_FIELD = 1;  // 1 byte para largo de la password (REGISTER/LOGIN)
 const uint16_t LEN_RACE = 1;  // 1 byte para la raza
 const uint16_t LEN_CLASS = 1;  // 1 byte para la clase
 const uint16_t LEN_ENTITY = 1;  // 1 byte para el tipo de entidad (player/npc)
@@ -73,6 +74,7 @@ enum MessageType : uint8_t {
     MSG_UPDATE_EQUIP = 0x31, // Server -> cliente: actualizar equip de item
     MSG_CHEAT_MANA = 0x32,  // Cheat: restar N de maná (para testear /meditar)
     MSG_SELF_CAST  = 0x33,  // Cliente->server: lanzar hechizo del báculo equipado sobre sí mismo (sin payload)
+    MSG_AUTH_ERROR = 0x34,  // Server->cliente: register/login fallido. Payload: [reason_len:1][reason]
 };
 
 enum Direction : uint8_t {

@@ -169,6 +169,20 @@ public:
     uint32_t get_mana() const;
 
     const std::string& get_race_name() const;
+
+    // --- Identidad e I/O de persistencia ---
+
+    // Identidad de raza/clase como enum del dominio (para serializar a disco).
+    RaceType get_race_id() const;
+    ClassType get_class_id() const;
+
+    // Restaura el estado mutable de un jugador cargado de disco. Setea los
+    // campos que el constructor calcula y para los que no hay setter (gold,
+    // lives, mana, experience, level, id_clan). La posicion se setea aparte con
+    // update_position; el estado ghost con set_ghost(). race/class/name son
+    // inmutables (van por el constructor).
+    void restore(uint32_t gold, uint32_t lives, uint32_t mana,
+                 uint32_t experience, int level, int id_clan);
 };
 
 #endif

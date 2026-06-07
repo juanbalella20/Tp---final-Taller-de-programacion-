@@ -81,6 +81,11 @@ public:
 
     void add_player(Player player);
 
+    // Alta de un jugador cargado de persistencia: ademas de agregarlo, lo etiqueta
+    // en su zona persistida (add_player solo no setea player_zone). Reusa el tag
+    // de zona que hace spawn_player.
+    void add_persisted_player(Player player, Zone zone);
+
     // Devuelve un snapshot de todos los jugadores en el mismo mapa que player_name
     // (excluyéndolo a él). Hoy todo está en "desert"; cuando haya múltiples mapas,
     // filtrar por sector aquí.

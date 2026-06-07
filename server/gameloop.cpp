@@ -5,6 +5,7 @@
 #include <cmath>
 #include <chrono>
 #include <thread>
+#include <cstring>
 
 #include "../common/commands/gameMsg.h"
 #include "../common/info/item_info.h"
@@ -12,12 +13,14 @@
 
 GameLoop::GameLoop(Queue<ClientCmd>& receiving_queue,
                    ClientRegistryMonitor& client_registry_monitor):
-        receiving_queue(receiving_queue), client_registry_monitor(client_registry_monitor) {
+        receiving_queue(receiving_queue), client_registry_monitor(client_registry_monitor),
+        persistence(PERSIST_DATA_DIR), auth(persistence) {
     register_handlers();
 }
 
 void GameLoop::register_handlers() {
     handlers[MSG_REGISTER]       = [this](const ClientCmd& cmd) { handle_register(cmd); };
+    handlers[MSG_LOGIN]          = [this](const ClientCmd& cmd) { handle_login(cmd); };
     handlers[MSG_LIST]           = [this](const ClientCmd& cmd) { handle_list(cmd); };
     handlers[MSG_SELL]           = [this](const ClientCmd& cmd) { handle_sell(cmd); };
     handlers[MSG_BUY]            = [this](const ClientCmd& cmd) { handle_buy(cmd); };
@@ -153,45 +156,92 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
     if (it != handlers.end()) it->second(cmd);
 }
 
-void GameLoop::handle_register(const ClientCmd& cmd) {
-    client_registry_monitor.assign_name(cmd.get_client_id(), cmd.get_player_name());
-    game_map.spawn_player(cmd.get_player_name(), cmd.get_race(), cmd.get_class());
+void GameLoop::send_auth_error(uint32_t client_id, const std::string& reason) {
+    GameMsg msg(MSG_AUTH_ERROR);
+    msg.set_chat_content(reason);
+    client_registry_monitor.notify_client(client_id, msg);
+}
+
+void GameLoop::send_world_snapshot_to(uint32_t client_id, const std::string& name,
+                                      const std::string& race) {
     GameMsg registerMsg(MSG_REGISTER);
-    registerMsg.set_map(game_map.get_map(cmd.get_player_name()));
+    registerMsg.set_map(game_map.get_map(name));
 
-    std::cout << "[DEBUG: MSG_REGISTER] received cmd type="
-              << static_cast<int>(cmd.get_message_type())
-              << " client_id=" << cmd.get_client_id() << std::endl;
-
-    const Player& p = game_map.get_player(cmd.get_player_name());
+    const Player& p = game_map.get_player(name);
     std::vector<ItemInfo> item_infos;
     for (Item* item : p.get_all_items()) {
-        item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+        item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(),
+                                static_cast<uint8_t>(item->get_type()));
     }
     registerMsg.set_items(item_infos);
-    registerMsg.set_gold(game_map.get_player_gold(cmd.get_player_name()));
-    registerMsg.set_hp(game_map.get_player_hp(cmd.get_player_name()));
-    std::cout << "[DEBUG: handle_register] player " << cmd.get_player_name()
-              << " hp=" << game_map.get_player_hp(cmd.get_player_name()) << std::endl;
-    registerMsg.set_xp(game_map.get_player_xp(cmd.get_player_name()));
-    registerMsg.set_mana(game_map.get_player_mana(cmd.get_player_name()));
+    registerMsg.set_gold(game_map.get_player_gold(name));
+    registerMsg.set_hp(game_map.get_player_hp(name));
+    registerMsg.set_xp(game_map.get_player_xp(name));
+    registerMsg.set_mana(game_map.get_player_mana(name));
     registerMsg.set_coord_x(p.get_coord_x());
     registerMsg.set_coord_y(p.get_coord_y());
-    registerMsg.set_players(game_map.build_players_snapshot(cmd.get_player_name()));
-    std::cout << "[DEBUG: handle_register] player " << cmd.get_player_name()
-              << " has race " << cmd.get_race() << std::endl;
-    client_registry_monitor.notify_client(cmd.get_client_id(), registerMsg);
+    registerMsg.set_players(game_map.build_players_snapshot(name));
+    client_registry_monitor.notify_client(client_id, registerMsg);
 
-    send_npcs_snapshot_to(cmd.get_client_id());
-    send_items_snapshot_to(cmd.get_client_id());
-    send_player_snapshot_to_other_players(cmd.get_client_id(), cmd.get_player_name(), cmd.get_race());//le quiero avisar a toods que se conecto el cliente 1
+    send_npcs_snapshot_to(client_id);
+    send_items_snapshot_to(client_id);
+    // Avisar a los demas que este jugador se conecto.
+    send_player_snapshot_to_other_players(client_id, name, race);
 
-    // Envia la zona real donde spawneo el player
+    // Envia la zona real donde esta el player.
     GameMsg zoneMsg(MSG_ZONE_CHANGE);
-    zoneMsg.set_zone(game_map.get_player_zone(cmd.get_player_name()));
+    zoneMsg.set_zone(game_map.get_player_zone(name));
     zoneMsg.set_coord_x(p.get_coord_x());
     zoneMsg.set_coord_y(p.get_coord_y());
-    client_registry_monitor.notify_client(cmd.get_client_id(), zoneMsg);
+    client_registry_monitor.notify_client(client_id, zoneMsg);
+}
+
+void GameLoop::handle_register(const ClientCmd& cmd) {
+    const std::string& name = cmd.get_player_name();
+    uint32_t client_id = cmd.get_client_id();
+
+    AuthResult res = auth.try_register(name, cmd.get_password());
+    if (res.status == AuthStatus::NAME_TAKEN) {
+        std::cout << "[REGISTER] nombre ya existe: " << name << std::endl;
+        send_auth_error(client_id, "El nombre ya existe");
+        return;
+    }
+
+    // Nombre libre: crear el personaje y persistirlo de inmediato (red de
+    // seguridad ante una desconexion antes del primer guardado periodico).
+    client_registry_monitor.assign_name(client_id, name);
+    game_map.spawn_player(name, cmd.get_race(), cmd.get_class());
+    persistence.save(name, player_serializer.to_record(
+            game_map.get_player(name), game_map.get_player_zone(name), cmd.get_password()));
+    std::cout << "[REGISTER] nuevo personaje creado y persistido: " << name << std::endl;
+
+    send_world_snapshot_to(client_id, name, cmd.get_race());
+}
+
+void GameLoop::handle_login(const ClientCmd& cmd) {
+    const std::string& name = cmd.get_player_name();
+    uint32_t client_id = cmd.get_client_id();
+
+    AuthResult res = auth.try_login(name, cmd.get_password());
+    if (res.status == AuthStatus::BAD_CREDENTIALS) {
+        std::cout << "[LOGIN] credenciales invalidas: " << name << std::endl;
+        send_auth_error(client_id, "Usuario o contraseña incorrectos");
+        return;
+    }
+
+    client_registry_monitor.assign_name(client_id, name);
+
+    // Re-login defensivo: si la copia vieja sigue viva en memoria, se reutiliza;
+    // si no, se carga del record que devolvio el auth.
+    if (!game_map.player_exists(name)) {
+        Player player = player_serializer.from_record(res.record);
+        game_map.add_persisted_player(std::move(player), static_cast<Zone>(res.record.zone));
+        std::cout << "[LOGIN] personaje cargado de disco: " << name << std::endl;
+    } else {
+        std::cout << "[LOGIN] personaje reutilizado de memoria: " << name << std::endl;
+    }
+
+    send_world_snapshot_to(client_id, name, game_map.get_player(name).get_race_name());
 }
 
 void GameLoop::handle_list(const ClientCmd& cmd) {
@@ -702,11 +752,33 @@ void GameLoop::run() {
                 ticks_accumulated = 0;
                 regen_players_mana(1.0);
             }
+
+            // Guardado periodico: red de seguridad ante desconexiones abruptas.
+            if (++tick_count % PERSIST_INTERVAL_TICKS == 0) {
+                persist_online_players();
+            }
         }
         catch (... ) {
             //
         }
         std::this_thread::sleep_until(next_tick);
+    }
+}
+
+void GameLoop::persist_online_players() {
+    for (const auto& [client_id, name] : client_registry_monitor.get_active_clients()) {
+        (void)client_id;
+        if (name.empty() || !game_map.player_exists(name)) continue;
+        // La password ya esta persistida en el record previo; la recuperamos para
+        // no perderla al reescribir (el Player no la conoce).
+        PlayerRecord prev;
+        std::string password;
+        if (persistence.load(name, prev)) {
+            password = std::string(prev.password,
+                                   ::strnlen(prev.password, PERSIST_PASSWORD_MAX));
+        }
+        persistence.save(name, player_serializer.to_record(
+                game_map.get_player(name), game_map.get_player_zone(name), password));
     }
 }
 

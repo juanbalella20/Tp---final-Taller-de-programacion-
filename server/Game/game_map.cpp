@@ -3,6 +3,7 @@
 #include "item/arma.h"
 #include "item/escudo.h"
 #include "item/baculo.h"
+#include "item/item_catalog.h"
 
 #include <algorithm>
 #include <iostream>
@@ -161,6 +162,11 @@ void GameMap::add_player(Player player) {
     players.push_back(std::move(player));
 }
 
+void GameMap::add_persisted_player(Player player, Zone zone) {
+    player_zone[player.get_name()] = zone;
+    players.push_back(std::move(player));
+}
+
 Player* GameMap::find_player_by_name(const std::string& name) {
     auto it = std::find_if(players.begin(), players.end(),
                            [&name](const Player& p) { return p.get_name() == name; });
@@ -207,18 +213,12 @@ void GameMap::spawn_player(const std::string& name, const std::string& race, con
 
     Player player(name, player_race, player_class);
     player.update_position(start_x, start_y);
-    player.add_item(std::make_unique<Arma>("espada", "Espada", 100, 2, 2, 5));
-    player.add_item(std::make_unique<Escudo>("escudo", "Escudo de tortuga", 80, 1, 2));
-    // Báculos/varas hardcodeados (valores del enunciado). Daño a distancia salvo
-    // la flauta élfica, que cura al lanzador.
-    player.add_item(std::make_unique<Baculo>("vara_fresno", "Vara de fresno", 200,
-                                             SpellKind::DANIO, 5, 8, 2, 4));
-    player.add_item(std::make_unique<Baculo>("baculo_nudoso", "Báculo nudoso", 400,
-                                             SpellKind::DANIO, 15, 8, 4, 8));
-    player.add_item(std::make_unique<Baculo>("baculo_engarzado", "Báculo engarzado", 800,
-                                             SpellKind::DANIO, 30, 8, 8, 20));
-    player.add_item(std::make_unique<Baculo>("flauta_elfica", "Flauta élfica", 600,
-                                             SpellKind::CURAR, 100, 0, 30, 60));
+    // Inventario inicial via catalogo (unica fuente de verdad de los stats).
+    ItemCatalog catalog;
+    for (const char* id : {"espada", "escudo", "vara_fresno", "baculo_nudoso",
+                           "baculo_engarzado", "flauta_elfica"}) {
+        player.add_item(catalog.make_item(id));
+    }
     players.push_back(std::move(player));
     std::cout << "[DEBUG: spawn_player] " << name << " at ("
               << start_x << "," << start_y << ") zona=" << static_cast<int>(start_zone)

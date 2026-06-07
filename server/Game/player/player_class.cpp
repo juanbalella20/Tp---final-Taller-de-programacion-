@@ -28,6 +28,10 @@ bool PlayerClass::class_can_meditate() const {
     return meditation_factor > 0.0f;
 }
 
+ClassType PlayerClass::get_class_id() const {
+    return class_id;
+}
+
 void PlayerClass::set_wizard() {
     inteligence = 8;
     strength = 3;
@@ -36,6 +40,7 @@ void PlayerClass::set_wizard() {
     life_factor = 2;
     mana_factor = 8;
     meditation_factor = 0.10f;  // FClaseMeditacion, TODO balancear
+    class_id = ClassType::MAGE;
 }
 
 void PlayerClass::set_cleric() {
@@ -46,6 +51,7 @@ void PlayerClass::set_cleric() {
     life_factor = 7;
     mana_factor = 6;
     meditation_factor = 0.07f;  // FClaseMeditacion, TODO balancear
+    class_id = ClassType::CLERIC;
 }
 
 void PlayerClass::set_paladin() {
@@ -56,6 +62,7 @@ void PlayerClass::set_paladin() {
     life_factor = 8;
     mana_factor = 8;
     meditation_factor = 0.04f;  // FClaseMeditacion, TODO balancear
+    class_id = ClassType::PALADIN;
 }
 
 void PlayerClass::set_warrior() {
@@ -66,4 +73,5 @@ void PlayerClass::set_warrior() {
     life_factor = 8;
     mana_factor = 0;  // El guerrero no usa magia: su maná es siempre 0
     meditation_factor = 0.0f;  // El guerrero no puede meditar
+    class_id = ClassType::WARRIOR;
 }

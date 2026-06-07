@@ -8,6 +8,9 @@ ServerDeserializer::ServerDeserializer() {
     handlers[MSG_REGISTER] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_register(payload, cmd);
     };
+    handlers[MSG_LOGIN] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_login(payload, cmd);
+    };
     handlers[MSG_MOVE] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_move(payload, cmd);
     };
@@ -88,13 +91,38 @@ ServerDeserializer::ServerDeserializer() {
 
 
 void ServerDeserializer::deserialize_register(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
-    uint8_t name_len = payload[0];
-    //payload+1, es el inicio del nombre; y termina en el inicio del payload + 1 (largo del nombre) + largo del nombre
-    std::string name(payload.begin() + LEN_NAME_SIZE_FIELD,
-                     payload.begin() + LEN_NAME_SIZE_FIELD + name_len);
+    // Formato: [name_len:1][name][pass_len:1][pass][race:1][class:1]
+    size_t pos = 0;
+    uint8_t name_len = payload[pos];
+    pos += LEN_NAME_SIZE_FIELD;
+    std::string name(payload.begin() + pos, payload.begin() + pos + name_len);
+    pos += name_len;
     cmd.set_player_name(name);
-    cmd.set_race(RACE_MAP_INV.at(payload[LEN_NAME_SIZE_FIELD + name_len]));
-    cmd.set_class(CLASS_MAP_INV.at(payload[LEN_NAME_SIZE_FIELD + name_len + LEN_RACE]));
+
+    uint8_t pass_len = payload[pos];
+    pos += LEN_PASSWORD_SIZE_FIELD;
+    std::string password(payload.begin() + pos, payload.begin() + pos + pass_len);
+    pos += pass_len;
+    cmd.set_password(password);
+
+    cmd.set_race(RACE_MAP_INV.at(payload[pos]));
+    pos += LEN_RACE;
+    cmd.set_class(CLASS_MAP_INV.at(payload[pos]));
+}
+
+void ServerDeserializer::deserialize_login(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+    // Formato: [name_len:1][name][pass_len:1][pass]
+    size_t pos = 0;
+    uint8_t name_len = payload[pos];
+    pos += LEN_NAME_SIZE_FIELD;
+    std::string name(payload.begin() + pos, payload.begin() + pos + name_len);
+    pos += name_len;
+    cmd.set_player_name(name);
+
+    uint8_t pass_len = payload[pos];
+    pos += LEN_PASSWORD_SIZE_FIELD;
+    std::string password(payload.begin() + pos, payload.begin() + pos + pass_len);
+    cmd.set_password(password);
 }
 
 void ServerDeserializer::deserialize_move(const std::vector<uint8_t>& payload, ClientCmd& cmd) {

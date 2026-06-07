@@ -16,6 +16,7 @@ class ClientCmd {
     std::string target_name;
     std::string race;
     std::string klass;
+    std::string password;  // REGISTER/LOGIN
     std::string item_id;
     Direction direction;
     uint32_t gold;
@@ -48,6 +49,9 @@ class ClientCmd {
 
     void set_class(const std::string& class_value);
     const std::string& get_class() const;
+
+    void set_password(const std::string& password_value);
+    const std::string& get_password() const;
 
     void set_direction(Direction dir);
     Direction get_direction() const;

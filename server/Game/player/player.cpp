@@ -356,3 +356,21 @@ void Player::check_level_up() {
 const std::string& Player::get_race_name() const {
     return player_race.get_name();
 }
+
+RaceType Player::get_race_id() const {
+    return player_race.get_race_id();
+}
+
+ClassType Player::get_class_id() const {
+    return player_class.get_class_id();
+}
+
+void Player::restore(uint32_t gold, uint32_t lives, uint32_t mana,
+                     uint32_t experience, int level, int id_clan) {
+    this->gold = gold;
+    this->lives = lives;
+    this->mana = mana;
+    this->experience = experience;
+    this->level = Level(level);
+    this->id_clan = id_clan;
+}

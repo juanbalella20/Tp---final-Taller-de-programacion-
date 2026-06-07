@@ -1,6 +1,8 @@
 #ifndef PLAYER_CLASS_H_
 #define PLAYER_CLASS_H_
 
+#include "../../../common/constants/game_constants.h"
+
 class PlayerClass {
 
 private:
@@ -11,10 +13,14 @@ private:
     float life_factor;
     float mana_factor;
     float meditation_factor;  // FClaseMeditacion. 0 => la clase no puede meditar (guerrero).
+    ClassType class_id;       // identidad de la clase (dominio), para persistir
 
 public:
     PlayerClass() {}
-    
+
+    // Identidad de la clase como enum del dominio (para persistir).
+    ClassType get_class_id() const;
+
     void set_wizard();
 
     void set_cleric();
