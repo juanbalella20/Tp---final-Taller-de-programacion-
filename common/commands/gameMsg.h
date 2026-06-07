@@ -18,6 +18,7 @@ class GameMsg {
     uint32_t gold;
     std::string player_name;
     std::string race;
+    std::string klass;
     int coord_x;
     int coord_y;
     std::vector<ItemInfo> items;
@@ -76,6 +77,10 @@ class GameMsg {
 
     void set_race(const std::string& race);
     const std::string& get_race() const;
+
+    // Clase del jugador. Poblada por MSG_CONFIRM_SESSION (login/registro OK).
+    void set_class(const std::string& klass);
+    const std::string& get_class() const;
 
     void set_zone(Zone z);
     Zone get_zone() const;

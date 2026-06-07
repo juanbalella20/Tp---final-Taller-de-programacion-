@@ -44,6 +44,9 @@ Zone GameMsg::get_zone() const { return this->zone; }
 void GameMsg::set_race(const std::string& race) { this->race = race; }
 const std::string& GameMsg::get_race() const { return this->race; }
 
+void GameMsg::set_class(const std::string& klass) { this->klass = klass; }
+const std::string& GameMsg::get_class() const { return this->klass; }
+
 void GameMsg::set_damage(int dmg) { this->damage = dmg; }
 int GameMsg::get_damage() const { return this->damage; }
 
