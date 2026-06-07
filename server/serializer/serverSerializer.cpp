@@ -370,7 +370,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
         payload_len += 1 + static_cast<uint16_t>(item.get_name().size());
         payload_len += 1;  // type
     }
-    payload_len += 4 * sizeof(uint32_t);    // gold + hp + xp + mana
+    payload_len += 5 * sizeof(uint32_t);    // gold + hp + xp + mana + level
     payload_len += 2 * LEN_COORD;           // spawn_x + spawn_y
     const auto& players = msg.get_players();
     payload_len += LEN_PLAYER_COUNT;
@@ -416,6 +416,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
     append_u32(msg.get_hp());
     append_u32(msg.get_xp());
     append_u32(msg.get_mana());
+    append_u32(static_cast<uint32_t>(msg.get_level()));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_x()));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_y()));
 

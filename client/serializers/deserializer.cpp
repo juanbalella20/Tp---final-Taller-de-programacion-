@@ -368,19 +368,21 @@ void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
     }
     msg.set_items(items);
 
-    uint32_t gold_be, hp_be, xp_be, mana_be;
-    if (offset + 4 * sizeof(uint32_t) > payload.size()) {
+    uint32_t gold_be, hp_be, xp_be, mana_be, level_be;
+    if (offset + 5 * sizeof(uint32_t) > payload.size()) {
         throw std::invalid_argument("Payload demasiado corto leyendo stats en MSG_REGISTER");
     }
     std::memcpy(&gold_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
     std::memcpy(&hp_be,   payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
     std::memcpy(&xp_be,   payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
     std::memcpy(&mana_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
+    std::memcpy(&level_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
 
     msg.set_gold(ntohl(gold_be));
     msg.set_hp(ntohl(hp_be));
     msg.set_xp(ntohl(xp_be));
     msg.set_mana(ntohl(mana_be));
+    msg.set_level(static_cast<int>(ntohl(level_be)));
 
     // Posicion de spawn calculada por el servidor.
     msg.set_coord_x(static_cast<int>(read_uint16_be(payload, offset)));
