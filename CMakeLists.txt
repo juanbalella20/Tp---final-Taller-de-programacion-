@@ -143,6 +143,7 @@ add_executable(server
     server/Game/defense_set.cpp
     server/Game/item/item.cpp
     server/Game/item/arma.cpp
+    server/Game/item/baculo.cpp
     server/Game/item/defense_item.cpp
     server/Game/item/armadura.cpp
     server/Game/item/casco.cpp

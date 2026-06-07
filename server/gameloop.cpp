@@ -27,6 +27,7 @@ void GameLoop::register_handlers() {
     handlers[MSG_MOVE]           = [this](const ClientCmd& cmd) { handle_move(cmd); };
     handlers[MSG_ATTACK]         = [this](const ClientCmd& cmd) { handle_attack(cmd); };
     handlers[MSG_MEDITATE]       = [this](const ClientCmd& cmd) { handle_meditate(cmd); };
+    handlers[MSG_SELF_CAST]      = [this](const ClientCmd& cmd) { handle_self_cast(cmd); };
     handlers[MSG_TELEPORT]       = [this](const ClientCmd& cmd) { handle_teleport(cmd); };
     handlers[MSG_PRIVATE]        = [this](const ClientCmd& cmd) { handle_private(cmd); };
     handlers[MSG_CHEAT_KILL]     = [this](const ClientCmd& cmd) { handle_cheat_kill(cmd); };
@@ -390,14 +391,15 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
     std::string attacker_name = client_registry_monitor.get_name(cmd.get_client_id());
     try {
         auto result = game_map.attack(attacker_name, x, y);
-        // notifica solo al cliente el daño que hizo (no se hace broadcast a todos los clientes)
-        if (result.damage > 0) {
-            GameMsg dmg_msg(MSG_ATTACK);
-            dmg_msg.set_coord_x(result.target_x);
-            dmg_msg.set_coord_y(result.target_y);
-            dmg_msg.set_damage(result.damage);
-            client_registry_monitor.notify_client(cmd.get_client_id(), dmg_msg);
-        }
+        // notifica solo al atacante que su ataque impactó esa celda (no se hace
+        // broadcast). Se envía siempre que el ataque ocurrió: el cliente lo usa
+        // para mostrar el número de daño y animar el efecto del hechizo sobre el
+        // target. (target_x/target_y = celda atacada).
+        GameMsg dmg_msg(MSG_ATTACK);
+        dmg_msg.set_coord_x(result.target_x);
+        dmg_msg.set_coord_y(result.target_y);
+        dmg_msg.set_damage(result.damage);
+        client_registry_monitor.notify_client(cmd.get_client_id(), dmg_msg);
         if (result.entity_died) {
             broadcast_npcs_snapshot();
             broadcast_items_snapshot();
@@ -406,6 +408,12 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
         GameMsg xp_msg(MSG_XP);
         xp_msg.set_xp(game_map.get_player_xp(attacker_name));
         client_registry_monitor.notify_client(cmd.get_client_id(), xp_msg);
+
+        // Si el ataque fue con un hechizo, consumió maná: notificar el actualizado.
+        GameMsg mana_msg(MSG_MANA);
+        mana_msg.set_player_name(attacker_name);
+        mana_msg.set_mana(game_map.get_player_mana(attacker_name));
+        client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
         if (result.target_is_player) {
             GameMsg hp_msg(MSG_HP);
             hp_msg.set_hp(game_map.get_player_hp(result.entity_name));
@@ -442,6 +450,14 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
         GameMsg msg(MSG_CHAT);
         msg.set_chat_content(e.what());
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    } catch (const CannotCastException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    } catch (const NotEnoughManaException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
     }
 }
 
@@ -465,6 +481,34 @@ void GameLoop::handle_meditate(const ClientCmd& cmd) {
 
     std::cout << "[INFO: MSG_MEDITATE] " << name
               << (meditating ? " empezo a meditar" : " no esta meditando") << std::endl;
+}
+
+void GameLoop::handle_self_cast(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    try {
+        game_map.self_cast(name);
+        // El hechizo (p.ej. curación) cambió vida y maná: notificar al jugador.
+        GameMsg hp_msg(MSG_HP);
+        hp_msg.set_hp(game_map.get_player_hp(name));
+        client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
+
+        GameMsg mana_msg(MSG_MANA);
+        mana_msg.set_player_name(name);
+        mana_msg.set_mana(game_map.get_player_mana(name));
+        client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
+    } catch (const NoWeaponEquippedException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    } catch (const CannotCastException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    } catch (const NotEnoughManaException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    }
 }
 
 void GameLoop::handle_private(const ClientCmd& cmd) {

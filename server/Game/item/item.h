@@ -15,6 +15,7 @@ enum class ItemType : uint8_t {
     HELMET = 2,
     SHIELD = 3,
     OTHER  = 4,
+    MAGIC  = 5,  // varas/báculos: lanzan hechizos consumiendo maná.
 };
 
 class Item {

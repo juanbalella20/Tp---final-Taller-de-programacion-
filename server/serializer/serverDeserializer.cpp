@@ -57,6 +57,9 @@ ServerDeserializer::ServerDeserializer() {
     handlers[MSG_CHEAT_MANA] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         read_gold(payload, cmd);
     };
+    handlers[MSG_SELF_CAST] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
     handlers[MSG_PRIVATE] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_private(payload, cmd);
     };

@@ -81,6 +81,10 @@ public:
 
     int attack(Entity& target, int target_x, int target_y);
 
+    // Lanza el hechizo del item equipado sobre uno mismo (auto-cast, p.ej.
+    // curación con la flauta élfica). Usa la propia celda como target.
+    int cast_on_self();
+
     // Suma a este jugador (atacante) la XP por golpear/matar a un target.
     void ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target);
 
@@ -128,6 +132,9 @@ public:
     bool toggle_meditation();
 
     bool can_meditate() const;
+
+    // ¿La clase puede usar magia (hechizos/báculos)? Solo el guerrero no puede.
+    bool can_cast() const;
 
     // Avance de tiempo del game loop: delega en el estado. Devuelve true si el
     // jugador está meditando (maná actualizado, hay que notificar al cliente).

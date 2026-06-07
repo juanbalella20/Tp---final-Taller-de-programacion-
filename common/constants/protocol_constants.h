@@ -72,6 +72,7 @@ enum MessageType : uint8_t {
     MSG_ZONE_CHANGE = 0x30, // Server -> cliente: zona a cargar
     MSG_UPDATE_EQUIP = 0x31, // Server -> cliente: actualizar equip de item
     MSG_CHEAT_MANA = 0x32,  // Cheat: restar N de maná (para testear /meditar)
+    MSG_SELF_CAST  = 0x33,  // Cliente->server: lanzar hechizo del báculo equipado sobre sí mismo (sin payload)
 };
 
 enum Direction : uint8_t {

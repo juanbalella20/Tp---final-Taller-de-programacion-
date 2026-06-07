@@ -206,6 +206,12 @@ bool Player::can_meditate() const {
     return !state->is_ghost() && player_class.class_can_meditate();
 }
 
+bool Player::can_cast() const {
+    // El guerrero es la única clase que no puede usar magia. Reusa el mismo
+    // criterio que la meditación (factor de meditación 0 => guerrero).
+    return player_class.class_can_meditate();
+}
+
 bool Player::tick(double seconds) {
     return state->tick(*this, seconds);
 }
@@ -259,6 +265,14 @@ int Player::attack(Entity& target, int target_x, int target_y) {
     return state->attack(*this, target, target_x, target_y);
 }
 
+int Player::cast_on_self() {
+    // Auto-cast: el target es uno mismo. El item equipado decide el efecto
+    // (la flauta élfica cura; consume maná). Usa la propia celda como target.
+    stop_meditation();
+    return player_inventory.use_equipped(*this, *this, coord_x, coord_y,
+                                         coord_x, coord_y, false);
+}
+
 void Player::ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target) {
     experience += level.xp_per_attack(dano, nivel_target);
     if (murio)
@@ -280,7 +294,9 @@ void Player::equip_item(std::string item_id) {
 
     switch (item->get_type()) {
         case ItemType::WEAPON:
-            // Toggle: si el arma ya está equipada, la desequipa; si no, la equipa.
+        case ItemType::MAGIC:
+            // Toggle: si ya está equipada, la desequipa; si no, la equipa. Arma y
+            // báculo comparten slot, así que equipar uno desplaza al otro.
             if (player_inventory.is_equipped(item_id)) {
                 player_inventory.unequip_item();
             } else {

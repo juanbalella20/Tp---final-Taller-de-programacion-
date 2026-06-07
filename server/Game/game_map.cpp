@@ -2,6 +2,7 @@
 #include "../game_exceptions.h"
 #include "item/arma.h"
 #include "item/escudo.h"
+#include "item/baculo.h"
 
 #include <algorithm>
 #include <iostream>
@@ -208,6 +209,16 @@ void GameMap::spawn_player(const std::string& name, const std::string& race, con
     player.update_position(start_x, start_y);
     player.add_item(std::make_unique<Arma>("espada", "Espada", 100, 2, 2, 5));
     player.add_item(std::make_unique<Escudo>("escudo", "Escudo de tortuga", 80, 1, 2));
+    // Báculos/varas hardcodeados (valores del enunciado). Daño a distancia salvo
+    // la flauta élfica, que cura al lanzador.
+    player.add_item(std::make_unique<Baculo>("vara_fresno", "Vara de fresno", 200,
+                                             SpellKind::DANIO, 5, 8, 2, 4));
+    player.add_item(std::make_unique<Baculo>("baculo_nudoso", "Báculo nudoso", 400,
+                                             SpellKind::DANIO, 15, 8, 4, 8));
+    player.add_item(std::make_unique<Baculo>("baculo_engarzado", "Báculo engarzado", 800,
+                                             SpellKind::DANIO, 30, 8, 8, 20));
+    player.add_item(std::make_unique<Baculo>("flauta_elfica", "Flauta élfica", 600,
+                                             SpellKind::CURAR, 100, 0, 30, 60));
     players.push_back(std::move(player));
     std::cout << "[DEBUG: spawn_player] " << name << " at ("
               << start_x << "," << start_y << ") zona=" << static_cast<int>(start_zone)
@@ -353,9 +364,15 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
             auto dropped = target_player->drop_inventory();
             world.scatter_items(x, y, std::move(dropped), players_in(z));
         }
-        return {true, true, target_is_player, target->get_name()};
+        return {true, true, target_is_player, target->get_name(), 0, x, y};
     }
-    return {true, false, target_is_player, target->get_name()};//agustin devolvia las posiciones, xq?-> no se 
+    return {true, false, target_is_player, target->get_name(), 0, x, y};
+}
+
+void GameMap::self_cast(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw AttackerNotFoundException();
+    player->cast_on_self();
 }
 
 bool GameMap::update_npcs() {

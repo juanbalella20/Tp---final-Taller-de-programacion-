@@ -109,6 +109,10 @@ public:
     // Ataca la celda (x,y) en la zona del atacante
     AttackResult attack(const std::string& atacker_name, int x, int y);
 
+    // El jugador lanza el hechizo del item equipado sobre sí mismo (auto-cast,
+    // p.ej. curación). Propaga las excepciones de Baculo::use_item.
+    void self_cast(const std::string& player_name);
+
     // Respawn de NPCs en TODAS las zonas. Devuelve true si hubo alguno
     bool update_npcs();
 

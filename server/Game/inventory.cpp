@@ -34,7 +34,10 @@ void Inventory::equip_item(std::string item_id) {
     // (armadura/casco/escudo) no se equipan acá — los maneja el DefenseSet.
     for (const auto& item : items) {
         if (item->get_id() == item_id) {
-            if (item->get_type() != ItemType::WEAPON) return;  // no es un arma
+            // Solo armas o báculos ocupan este slot. Como es uno solo, equipar
+            // un báculo desplaza al arma y viceversa (no se pueden tener ambos).
+            if (item->get_type() != ItemType::WEAPON && item->get_type() != ItemType::MAGIC)
+                return;
             equipped_item = item.get();
             return;
         }
