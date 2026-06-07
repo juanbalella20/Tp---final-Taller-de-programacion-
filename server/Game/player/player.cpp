@@ -206,6 +206,12 @@ bool Player::can_meditate() const {
     return !state->is_ghost() && player_class.class_can_meditate();
 }
 
+bool Player::can_cast() const {
+    // El guerrero es la única clase que no puede usar magia. Reusa el mismo
+    // criterio que la meditación (factor de meditación 0 => guerrero).
+    return player_class.class_can_meditate();
+}
+
 bool Player::tick(double seconds) {
     return state->tick(*this, seconds);
 }
@@ -251,19 +257,27 @@ int Player::damage_attack() {
     return player_race.race_strength() + player_class.class_strength();
 }
  
-int Player::receive_damage(int damage, Player& atacante, bool is_critical) {
+DamageOutcome Player::receive_damage(int damage, Player& atacante, bool is_critical) {
     return state->receive_damage(*this, damage, atacante, is_critical);
 }
 
-int Player::attack(Entity& target, int target_x, int target_y) {
+DamageOutcome Player::attack(Entity& target, int target_x, int target_y) {
     return state->attack(*this, target, target_x, target_y);
 }
 
-void Player::ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target) {
+void Player::cast_on_self() {
+    // Auto-cast: el target es uno mismo. El item equipado decide el efecto
+    // (la flauta élfica cura; consume maná). Usa la propia celda como target.
+    stop_meditation();
+    player_inventory.use_equipped(*this, *this, coord_x, coord_y,
+                                  coord_x, coord_y, false);
+}
+
+bool Player::ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target) {
     experience += level.xp_per_attack(dano, nivel_target);
     if (murio)
         experience += level.xp_per_kill(vida_max_target, nivel_target);
-    check_level_up();
+    return check_level_up();
 }
  
 void Player::add_experience(int exp) {
@@ -280,7 +294,9 @@ void Player::equip_item(std::string item_id) {
 
     switch (item->get_type()) {
         case ItemType::WEAPON:
-            // Toggle: si el arma ya está equipada, la desequipa; si no, la equipa.
+        case ItemType::MAGIC:
+            // Toggle: si ya está equipada, la desequipa; si no, la equipa. Arma y
+            // báculo comparten slot, así que equipar uno desplaza al otro.
             if (player_inventory.is_equipped(item_id)) {
                 player_inventory.unequip_item();
             } else {
@@ -330,13 +346,33 @@ int Player::calculate_defense() {
     return defense_set.calculate_defense();
 }
  
-void Player::check_level_up() {
+bool Player::check_level_up() {
     if (level.try_level_up(experience)) {
         lives = max_life();
         mana  = max_mana();
+        return true;
     }
+    return false;
 }
 
 const std::string& Player::get_race_name() const {
     return player_race.get_name();
+}
+
+RaceType Player::get_race_id() const {
+    return player_race.get_race_id();
+}
+
+ClassType Player::get_class_id() const {
+    return player_class.get_class_id();
+}
+
+void Player::restore(uint32_t gold, uint32_t lives, uint32_t mana,
+                     uint32_t experience, int level, int id_clan) {
+    this->gold = gold;
+    this->lives = lives;
+    this->mana = mana;
+    this->experience = experience;
+    this->level = Level(level);
+    this->id_clan = id_clan;
 }

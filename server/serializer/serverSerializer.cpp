@@ -36,6 +36,9 @@ ServerSerializer::ServerSerializer() {
     handlers[MSG_ZONE_CHANGE] = [this](const GameMsg& msg) {return serialize_zone(msg); };
     handlers[MSG_ATTACK] = [this](const GameMsg& msg) { return serialize_attack(msg); };
     handlers[MSG_UPDATE_EQUIP] = [this](const GameMsg& msg) {return serialize_update_equip(msg); };
+    // MSG_AUTH_ERROR: mismo formato que un texto ([len][texto]); el motivo viaja
+    // en chat_content del GameMsg y el header lleva el tipo MSG_AUTH_ERROR.
+    handlers[MSG_AUTH_ERROR] = [this](const GameMsg& msg) { return serialize_text(msg); };
 }
 
 // Appendea un uint16_t en big-endian al buffer (definido mas abajo).

@@ -462,6 +462,26 @@ void HUD::load_textures() {
         SDL_DestroySurface(shield_surf);
     }
 
+    // Íconos de los báculos/varas. Cada PNG es un único sprite, así que el crop
+    // cubre toda la imagen. La clave es el id del item (igual que el server).
+    struct StaffIcon { const char* id; const char* path; float w; float h; };
+    const StaffIcon staff_icons[] = {
+        {"vara_fresno",      "imagenes/icon_vara_fresno.png",       27.0f,   29.0f},
+        {"baculo_nudoso",    "imagenes/icon_baculo_nudoso.png",     30.0f,   29.0f},
+        {"baculo_engarzado", "imagenes/icon_baculo_engarzado.png",   34.0f,  40.0f},
+        {"flauta_elfica",    "imagenes/icon_flauta_elfica.png",      40.0f,   40.0f},
+    };
+    for (const auto& si : staff_icons) {
+        SDL_Surface* surf = IMG_Load(si.path);
+        if (!surf) continue;
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
+        SDL_SetTextureBlendMode(tex, SDL_SCALEMODE_LINEAR);
+        SDL_DestroySurface(surf);
+        if (!tex) continue;
+        inventory.items_textures[si.id] = tex;
+        inventory.items_crops[si.id] = {0.0f, 0.0f, si.w, si.h};
+    }
+
     load_stat_texture("imagenes/en_barradevida.bmp", &hp_bar_texture);
     load_stat_texture("imagenes/en_barraexperiencia.bmp", &xp_bar_texture);
     load_stat_texture("imagenes/en_barrademana.bmp", &mana_bar_texture);

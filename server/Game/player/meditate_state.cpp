@@ -1,13 +1,13 @@
 #include "meditate_state.h"
 #include "player.h"
 
-int MeditateState::attack(Player& self, Entity& target, int target_x, int target_y) {
+DamageOutcome MeditateState::attack(Player& self, Entity& target, int target_x, int target_y) {
     // Atacar saca de meditación: vuelve a vivo y delega en ese estado.
     self.to_alive();
     return self.attack(target, target_x, target_y);
 }
 
-int MeditateState::receive_damage(Player& self, int damage, Player& attacker, bool is_critical) {
+DamageOutcome MeditateState::receive_damage(Player& self, int damage, Player& attacker, bool is_critical) {
     // Recibir daño saca de meditación: vuelve a vivo y delega en ese estado.
     self.to_alive();
     return self.receive_damage(damage, attacker, is_critical);

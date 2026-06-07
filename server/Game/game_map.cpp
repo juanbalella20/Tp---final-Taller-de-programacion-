@@ -2,6 +2,8 @@
 #include "../game_exceptions.h"
 #include "item/arma.h"
 #include "item/escudo.h"
+#include "item/baculo.h"
+#include "item/item_catalog.h"
 
 #include <algorithm>
 #include <iostream>
@@ -160,6 +162,11 @@ void GameMap::add_player(Player player) {
     players.push_back(std::move(player));
 }
 
+void GameMap::add_persisted_player(Player player, Zone zone) {
+    player_zone[player.get_name()] = zone;
+    players.push_back(std::move(player));
+}
+
 Player* GameMap::find_player_by_name(const std::string& name) {
     auto it = std::find_if(players.begin(), players.end(),
                            [&name](const Player& p) { return p.get_name() == name; });
@@ -206,8 +213,12 @@ void GameMap::spawn_player(const std::string& name, const std::string& race, con
 
     Player player(name, player_race, player_class);
     player.update_position(start_x, start_y);
-    player.add_item(std::make_unique<Arma>("espada", "Espada", 100, 2, 2, 5));
-    player.add_item(std::make_unique<Escudo>("escudo", "Escudo de tortuga", 80, 1, 2));
+    // Inventario inicial via catalogo (unica fuente de verdad de los stats).
+    ItemCatalog catalog;
+    for (const char* id : {"espada", "escudo", "vara_fresno", "baculo_nudoso",
+                           "baculo_engarzado", "flauta_elfica"}) {
+        player.add_item(catalog.make_item(id));
+    }
     players.push_back(std::move(player));
     std::cout << "[DEBUG: spawn_player] " << name << " at ("
               << start_x << "," << start_y << ") zona=" << static_cast<int>(start_zone)
@@ -344,18 +355,23 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
             throw AttackNotAllowedException("No puede haber ataques entre miembros del mismo clan");
     }
 
-    int gold_drop = attacker->attack(*target, x, y);
-//attack debe devolver danio hecho
+    DamageOutcome outcome = attacker->attack(*target, x, y);
     if (target->is_dead()) {
-        if (gold_drop > 0)
-            world.spawn_gold(x, y, static_cast<uint32_t>(gold_drop));
+        if (outcome.gold_drop > 0)
+            world.spawn_gold(x, y, static_cast<uint32_t>(outcome.gold_drop));
         if (target_is_player) {
             auto dropped = target_player->drop_inventory();
             world.scatter_items(x, y, std::move(dropped), players_in(z));
         }
-        return {true, true, target_is_player, target->get_name()};
+        return {true, true, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged};
     }
-    return {true, false, target_is_player, target->get_name()};//agustin devolvia las posiciones, xq?-> no se 
+    return {true, false, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged};
+}
+
+void GameMap::self_cast(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw AttackerNotFoundException();
+    player->cast_on_self();
 }
 
 bool GameMap::update_npcs() {

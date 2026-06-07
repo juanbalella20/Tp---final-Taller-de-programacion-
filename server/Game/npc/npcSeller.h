@@ -6,19 +6,21 @@
 
 #include "../../../common/info/item_info.h"
 #include "item.h"
+#include "item_catalog.h"
 
 #include <vector>
 #include <memory>
 #include <string>
 
 class Player;
- 
+
 class NPCseller : public NPCfriendly {
 private:
     int pos_x;
     int pos_y;
     std::vector<std::unique_ptr<Item>> store_items;
- 
+    ItemCatalog catalog;  // fabrica de items (stock + reconstruccion en la compra)
+
     void init_store();
  
 public:

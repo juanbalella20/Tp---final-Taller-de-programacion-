@@ -3,6 +3,8 @@
 
 #include <SDL3/SDL.h>
 #include <string>
+#include <vector>
+#include <map>
 #include "worldEntity.h"
 
 // #define PLAYER_VEL 3.0f
@@ -20,7 +22,6 @@ class PlayerDisplay : public WorldEntity {
 private:
     SDL_Renderer* renderer;
     SDL_Texture* image;
-    SDL_Texture* weapon_image;
     SDL_Texture* head_image;
     SDL_Texture* hat_image;
     SDL_Texture* ghost_image;
@@ -41,8 +42,18 @@ private:
     bool has_equipped_weapon = false;
 
     ViewDirection current_direction = ViewDirection::BACK;
+    // Sprite de cada item equipable, por id (textura + recorte en su spritesheet).
+    struct EquipSprite {
+        SDL_Texture* texture;
+        SDL_FRect crop;
+        bool use_crop;
+    };
+    std::map<std::string, EquipSprite> equip_sprites;
+    // Ids de los items actualmente equipados, para dibujarlos sobre el jugador.
+    std::vector<std::string> equipped_item_ids;
 
     void load_heads();
+    void load_equip_sprites();
 
     void head_back_pov();
     void head_front_pov();
@@ -81,6 +92,7 @@ public:
     void set_ghost(bool ghost);
     bool is_ghost() const;
     void set_equipped_weapon(bool has_weapon);
+    void set_equipped_items(const std::vector<std::string>& ids);
     void draw(const Camera& camera, SDL_FRect crop) override;
     SDL_FRect right_pov(ViewDirection direction);
     SDL_FRect left_pov(ViewDirection direction);

@@ -8,6 +8,7 @@
 
 const uint16_t LEN_HEADER = 3;  // 1 byte para tipo de mensaje + 2 bytes para largo del payload
 const uint16_t LEN_NAME_SIZE_FIELD = 1;  // 1 byte para largo del nombre
+const uint16_t LEN_PASSWORD_SIZE_FIELD = 1;  // 1 byte para largo de la password (REGISTER/LOGIN)
 const uint16_t LEN_RACE = 1;  // 1 byte para la raza
 const uint16_t LEN_CLASS = 1;  // 1 byte para la clase
 const uint16_t LEN_ENTITY = 1;  // 1 byte para el tipo de entidad (player/npc)
@@ -68,11 +69,13 @@ enum MessageType : uint8_t {
     MSG_NPCS_SNAPSHOT  = 0x26, // Snapshot de NPCs vivos: vector<NpcInfo>
     MSG_ITEMS_SNAPSHOT = 0x27, // Snapshot de items en el piso: vector<ItemFloorInfo>
     MSG_PLAYERS_SNAPSHOT = 0x28, // Snapshot de players vivos: vector<PlayerInfo>
-    MSG_TELEPORT       = 0x29,   // Cliente->server: pedido de /tp (sin payload)
-    MSG_ZONE_CHANGE = 0x30,      // Server -> cliente: zona a cargar
-    MSG_UPDATE_EQUIP = 0x31,     // Server -> cliente: actualizar equip de item
-    MSG_CHEAT_MANA = 0x32,       // Cheat: restar N de maná (para testear /meditar)
-    MSG_UPDATE_LEVEL = 0x33,     
+    MSG_TELEPORT       = 0x29, // Cliente->server: pedido de /tp (sin payload)
+    MSG_ZONE_CHANGE = 0x30, // Server -> cliente: zona a cargar
+    MSG_UPDATE_EQUIP = 0x31, // Server -> cliente: actualizar equip de item
+    MSG_CHEAT_MANA = 0x32,  // Cheat: restar N de maná (para testear /meditar)
+    MSG_SELF_CAST  = 0x33,  // Cliente->server: lanzar hechizo del báculo equipado sobre sí mismo (sin payload)
+    MSG_AUTH_ERROR = 0x34,  // Server->cliente: register/login fallido. Payload: [reason_len:1][reason]
+    MSG_UPDATE_LEVEL = 0x35,
 };
 
 enum Direction : uint8_t {

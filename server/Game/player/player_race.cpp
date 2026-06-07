@@ -34,6 +34,7 @@ void PlayerRace::set_human() {
     life_factor = 5;
     mana_factor = 5;
     name = "human";
+    race_id = RaceType::HUMAN;
 }
 
 void PlayerRace::set_elf() {
@@ -44,6 +45,7 @@ void PlayerRace::set_elf() {
     life_factor = 4;
     mana_factor = 6;
     name = "elf";
+    race_id = RaceType::ELF;
 }
 
 void PlayerRace::set_dwarf() {
@@ -54,6 +56,7 @@ void PlayerRace::set_dwarf() {
     life_factor = 6;
     mana_factor = 4;
     name = "dwarf";
+    race_id = RaceType::DWARF;
 }
 
 void PlayerRace::set_gnome() {
@@ -64,8 +67,13 @@ void PlayerRace::set_gnome() {
     life_factor = 2;
     mana_factor = 4;
     name = "gnome";
+    race_id = RaceType::GNOME;
 }
 
 const std::string& PlayerRace::get_name() const {
     return name;
+}
+
+RaceType PlayerRace::get_race_id() const {
+    return race_id;
 }

@@ -81,6 +81,11 @@ public:
 
     void add_player(Player player);
 
+    // Alta de un jugador cargado de persistencia: ademas de agregarlo, lo etiqueta
+    // en su zona persistida (add_player solo no setea player_zone). Reusa el tag
+    // de zona que hace spawn_player.
+    void add_persisted_player(Player player, Zone zone);
+
     // Devuelve un snapshot de todos los jugadores en el mismo mapa que player_name
     // (excluyéndolo a él). Hoy todo está en "desert"; cuando haya múltiples mapas,
     // filtrar por sector aquí.
@@ -100,6 +105,7 @@ public:
         int damage;
         int target_x;
         int target_y;
+        bool dodged;  // el target esquivó el golpe (solo PvP)
     };
 
     // Calcula la nueva posicion del player a partir de su posicion actual y la
@@ -108,6 +114,10 @@ public:
 
     // Ataca la celda (x,y) en la zona del atacante
     AttackResult attack(const std::string& atacker_name, int x, int y);
+
+    // El jugador lanza el hechizo del item equipado sobre sí mismo (auto-cast,
+    // p.ej. curación). Propaga las excepciones de Baculo::use_item.
+    void self_cast(const std::string& player_name);
 
     // Respawn de NPCs en TODAS las zonas. Devuelve true si hubo alguno
     bool update_npcs();

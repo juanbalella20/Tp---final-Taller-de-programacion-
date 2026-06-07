@@ -18,6 +18,7 @@ class ServerDeserializer {
     void read_gold(const std::vector<uint8_t>& payload, ClientCmd& cmd);
 
     void deserialize_register(const std::vector<uint8_t>& payload, ClientCmd& cmd);
+    void deserialize_login(const std::vector<uint8_t>& payload, ClientCmd& cmd);
     void deserialize_move(const std::vector<uint8_t>& payload, ClientCmd& cmd);
     void read_coords(const std::vector<uint8_t>& payload, ClientCmd& cmd);
     void deserialize_attack(const std::vector<uint8_t>& payload, ClientCmd& cmd);

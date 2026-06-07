@@ -2,17 +2,18 @@
 #include "../player/player.h"
 #include "../item/item.h"
 #include "../item/arma.h"
+#include "../item/item_catalog.h"
 
 NPCseller::NPCseller(int x, int y) : pos_x(x), pos_y(y) {
     name = "Comerciante";
     init_store();
 }
- 
-// TODO: cargar desde ItemDataBase cuando este implementada (pociones, armaduras, etc)
+
+// Stock del comerciante via catalogo (unica fuente de verdad de los stats).
 void NPCseller::init_store() {
-    store_items.push_back(std::make_unique<Arma>("espada",   "Espada",   100, 1, 2, 5));
-    store_items.push_back(std::make_unique<Arma>("hacha",    "Hacha",    150, 1, 4, 5));
-    store_items.push_back(std::make_unique<Arma>("martillo", "Martillo", 120, 1, 1, 9));
+    for (const char* id : {"espada", "hacha", "martillo"}) {
+        store_items.push_back(catalog.make_item(id));
+    }
 }
 
 int NPCseller::get_coord_x() const { return pos_x; }
@@ -57,15 +58,11 @@ void NPCseller::interact(Player& player, Command cmd) {
         if (player.get_gold() < price) return;
  
         player.give_gold(price);
- 
-        // TODO: usar factory de items cuando este implementada
-        auto new_item = std::make_unique<Arma>(
-            store_item->get_id(),
-            store_item->getName(),
-            store_item->getPrice(),
-            1, 2, 5
-        );
-        player.add_item(std::move(new_item));
+
+        // Reconstruye el item con su subtipo y stats reales via catalogo
+        // (antes se creaba siempre como Arma con stats inventados -> bug).
+        auto new_item = catalog.make_item(store_item->get_id());
+        if (new_item) player.add_item(std::move(new_item));
     }
 }
 

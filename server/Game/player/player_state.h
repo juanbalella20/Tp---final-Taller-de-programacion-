@@ -3,6 +3,7 @@
 
 class Player;
 class Entity;
+struct DamageOutcome;
 
 // Patrón State: gobierna qué puede hacer un jugador según esté vivo, fantasma o
 // meditando. Cada estado EJECUTA el comportamiento de la acción (no solo responde flags).
@@ -10,12 +11,12 @@ class PlayerState {
 public:
     virtual ~PlayerState() = default;
 
-    // Ataca a un target. Devuelve el daño infligido.
-    virtual int attack(Player& self, Entity& target, int target_x, int target_y) = 0;
+    // Ataca a un target. Devuelve el resultado del golpe (daño, oro, esquive).
+    virtual DamageOutcome attack(Player& self, Entity& target, int target_x, int target_y) = 0;
 
-    // Recibe daño de un atacante. Devuelve el oro que droppea al suelo (0 si no
-    // murió o si el estado no recibe daño).
-    virtual int receive_damage(Player& self, int damage, Player& attacker, bool is_critical) = 0;
+    // Recibe daño de un atacante. Devuelve el resultado del golpe (daño aplicado,
+    // oro dropeado al morir, si esquivó). Struct vacío si el estado no recibe daño.
+    virtual DamageOutcome receive_damage(Player& self, int damage, Player& attacker, bool is_critical) = 0;
 
     // Resucita al jugador (solo tiene efecto si está muerto).
     virtual void revive(Player& self) = 0;

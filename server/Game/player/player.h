@@ -79,10 +79,14 @@ public:
 
     void use_object(Item item);
 
-    int attack(Entity& target, int target_x, int target_y);
+    DamageOutcome attack(Entity& target, int target_x, int target_y);
+
+    // Lanza el hechizo del item equipado sobre uno mismo (auto-cast, p.ej.
+    // curación con la flauta élfica). Usa la propia celda como target.
+    void cast_on_self();
 
     // Suma a este jugador (atacante) la XP por golpear/matar a un target.
-    void ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target);
+    bool ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target);
 
     void revive();
 
@@ -129,6 +133,9 @@ public:
 
     bool can_meditate() const;
 
+    // ¿La clase puede usar magia (hechizos/báculos)? Solo el guerrero no puede.
+    bool can_cast() const;
+
     // Avance de tiempo del game loop: delega en el estado. Devuelve true si el
     // jugador está meditando (maná actualizado, hay que notificar al cliente).
     bool tick(double seconds);
@@ -151,17 +158,31 @@ public:
 
     int damage_attack();
 
-    int receive_damage(int damage, Player& atacante, bool is_critical) override;
+    DamageOutcome receive_damage(int damage, Player& atacante, bool is_critical) override;
 
     void add_experience(int exp);
 
-    void check_level_up();
+    bool check_level_up();
 
     uint32_t get_xp() const;
 
     uint32_t get_mana() const;
 
     const std::string& get_race_name() const;
+
+    // --- Identidad e I/O de persistencia ---
+
+    // Identidad de raza/clase como enum del dominio (para serializar a disco).
+    RaceType get_race_id() const;
+    ClassType get_class_id() const;
+
+    // Restaura el estado mutable de un jugador cargado de disco. Setea los
+    // campos que el constructor calcula y para los que no hay setter (gold,
+    // lives, mana, experience, level, id_clan). La posicion se setea aparte con
+    // update_position; el estado ghost con set_ghost(). race/class/name son
+    // inmutables (van por el constructor).
+    void restore(uint32_t gold, uint32_t lives, uint32_t mana,
+                 uint32_t experience, int level, int id_clan);
 };
 
 #endif

@@ -30,4 +30,14 @@ public:
     OutOfRangeException() : std::runtime_error("El enemigo está fuera de rango") {}
 };
 
+class NotEnoughManaException : public std::runtime_error {
+public:
+    NotEnoughManaException() : std::runtime_error("No tenés suficiente maná") {}
+};
+
+class CannotCastException : public std::runtime_error {
+public:
+    CannotCastException() : std::runtime_error("Tu clase no puede usar magia") {}
+};
+
 #endif

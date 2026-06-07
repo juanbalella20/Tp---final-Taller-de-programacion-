@@ -5,6 +5,7 @@
 #include <cmath>
 #include <chrono>
 #include <thread>
+#include <cstring>
 
 #include "../common/commands/gameMsg.h"
 #include "../common/info/item_info.h"
@@ -12,12 +13,14 @@
 
 GameLoop::GameLoop(Queue<ClientCmd>& receiving_queue,
                    ClientRegistryMonitor& client_registry_monitor):
-        receiving_queue(receiving_queue), client_registry_monitor(client_registry_monitor) {
+        receiving_queue(receiving_queue), client_registry_monitor(client_registry_monitor),
+        persistence(PERSIST_DATA_DIR), auth(persistence) {
     register_handlers();
 }
 
 void GameLoop::register_handlers() {
     handlers[MSG_REGISTER]       = [this](const ClientCmd& cmd) { handle_register(cmd); };
+    handlers[MSG_LOGIN]          = [this](const ClientCmd& cmd) { handle_login(cmd); };
     handlers[MSG_LIST]           = [this](const ClientCmd& cmd) { handle_list(cmd); };
     handlers[MSG_SELL]           = [this](const ClientCmd& cmd) { handle_sell(cmd); };
     handlers[MSG_BUY]            = [this](const ClientCmd& cmd) { handle_buy(cmd); };
@@ -27,6 +30,7 @@ void GameLoop::register_handlers() {
     handlers[MSG_MOVE]           = [this](const ClientCmd& cmd) { handle_move(cmd); };
     handlers[MSG_ATTACK]         = [this](const ClientCmd& cmd) { handle_attack(cmd); };
     handlers[MSG_MEDITATE]       = [this](const ClientCmd& cmd) { handle_meditate(cmd); };
+    handlers[MSG_SELF_CAST]      = [this](const ClientCmd& cmd) { handle_self_cast(cmd); };
     handlers[MSG_TELEPORT]       = [this](const ClientCmd& cmd) { handle_teleport(cmd); };
     handlers[MSG_PRIVATE]        = [this](const ClientCmd& cmd) { handle_private(cmd); };
     handlers[MSG_CHEAT_KILL]     = [this](const ClientCmd& cmd) { handle_cheat_kill(cmd); };
@@ -154,46 +158,92 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
     if (it != handlers.end()) it->second(cmd);
 }
 
-void GameLoop::handle_register(const ClientCmd& cmd) {
-    client_registry_monitor.assign_name(cmd.get_client_id(), cmd.get_player_name());
-    game_map.spawn_player(cmd.get_player_name(), cmd.get_race(), cmd.get_class());
+void GameLoop::send_auth_error(uint32_t client_id, const std::string& reason) {
+    GameMsg msg(MSG_AUTH_ERROR);
+    msg.set_chat_content(reason);
+    client_registry_monitor.notify_client(client_id, msg);
+}
+
+void GameLoop::send_world_snapshot_to(uint32_t client_id, const std::string& name,
+                                      const std::string& race) {
     GameMsg registerMsg(MSG_REGISTER);
-    registerMsg.set_map(game_map.get_map(cmd.get_player_name()));
+    registerMsg.set_map(game_map.get_map(name));
 
-    std::cout << "[DEBUG: MSG_REGISTER] received cmd type="
-              << static_cast<int>(cmd.get_message_type())
-              << " client_id=" << cmd.get_client_id() << std::endl;
-
-    const Player& p = game_map.get_player(cmd.get_player_name());
+    const Player& p = game_map.get_player(name);
     std::vector<ItemInfo> item_infos;
     for (Item* item : p.get_all_items()) {
-        item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+        item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(),
+                                static_cast<uint8_t>(item->get_type()));
     }
     registerMsg.set_items(item_infos);
-    registerMsg.set_gold(game_map.get_player_gold(cmd.get_player_name()));
-    registerMsg.set_hp(game_map.get_player_hp(cmd.get_player_name()));
-    std::cout << "[DEBUG: handle_register] player " << cmd.get_player_name()
-              << " hp=" << game_map.get_player_hp(cmd.get_player_name()) << std::endl;
-    registerMsg.set_xp(game_map.get_player_xp(cmd.get_player_name()));
-    registerMsg.set_mana(game_map.get_player_mana(cmd.get_player_name()));
+    registerMsg.set_gold(game_map.get_player_gold(name));
+    registerMsg.set_hp(game_map.get_player_hp(name));
+    registerMsg.set_xp(game_map.get_player_xp(name));
+    registerMsg.set_mana(game_map.get_player_mana(name));
     registerMsg.set_coord_x(p.get_coord_x());
     registerMsg.set_coord_y(p.get_coord_y());
     registerMsg.set_level(p.get_level());
-    registerMsg.set_players(game_map.build_players_snapshot(cmd.get_player_name()));
-    std::cout << "[DEBUG: handle_register] player " << cmd.get_player_name()
-              << " has race " << cmd.get_race() << std::endl;
-    client_registry_monitor.notify_client(cmd.get_client_id(), registerMsg);
+    registerMsg.set_players(game_map.build_players_snapshot(name));
+    client_registry_monitor.notify_client(client_id, registerMsg);
+    send_npcs_snapshot_to(client_id);
+    send_items_snapshot_to(client_id);
+    // Avisar a los demas que este jugador se conecto.
+    send_player_snapshot_to_other_players(client_id, name, race);
 
-    send_npcs_snapshot_to(cmd.get_client_id());
-    send_items_snapshot_to(cmd.get_client_id());
-    send_player_snapshot_to_other_players(cmd.get_client_id(), cmd.get_player_name(), cmd.get_race());//le quiero avisar a toods que se conecto el cliente 1
-
-    // Envia la zona real donde spawneo el player
+    // Envia la zona real donde esta el player.
     GameMsg zoneMsg(MSG_ZONE_CHANGE);
-    zoneMsg.set_zone(game_map.get_player_zone(cmd.get_player_name()));
+    zoneMsg.set_zone(game_map.get_player_zone(name));
     zoneMsg.set_coord_x(p.get_coord_x());
     zoneMsg.set_coord_y(p.get_coord_y());
-    client_registry_monitor.notify_client(cmd.get_client_id(), zoneMsg);
+    client_registry_monitor.notify_client(client_id, zoneMsg);
+}
+
+void GameLoop::handle_register(const ClientCmd& cmd) {
+    const std::string& name = cmd.get_player_name();
+    uint32_t client_id = cmd.get_client_id();
+
+    AuthResult res = auth.try_register(name, cmd.get_password());
+    if (res.status == AuthStatus::NAME_TAKEN) {
+        std::cout << "[REGISTER] nombre ya existe: " << name << std::endl;
+        send_auth_error(client_id, "El nombre ya existe");
+        return;
+    }
+
+    // Nombre libre: crear el personaje y persistirlo de inmediato (red de
+    // seguridad ante una desconexion antes del primer guardado periodico).
+    client_registry_monitor.assign_name(client_id, name);
+    game_map.spawn_player(name, cmd.get_race(), cmd.get_class());
+    persistence.save(name, player_serializer.to_record(
+            game_map.get_player(name), game_map.get_player_zone(name), cmd.get_password()));
+    std::cout << "[REGISTER] nuevo personaje creado y persistido: " << name << std::endl;
+
+    send_world_snapshot_to(client_id, name, cmd.get_race());
+}
+
+void GameLoop::handle_login(const ClientCmd& cmd) {
+    const std::string& name = cmd.get_player_name();
+    uint32_t client_id = cmd.get_client_id();
+
+    AuthResult res = auth.try_login(name, cmd.get_password());
+    if (res.status == AuthStatus::BAD_CREDENTIALS) {
+        std::cout << "[LOGIN] credenciales invalidas: " << name << std::endl;
+        send_auth_error(client_id, "Usuario o contraseña incorrectos");
+        return;
+    }
+
+    client_registry_monitor.assign_name(client_id, name);
+
+    // Re-login defensivo: si la copia vieja sigue viva en memoria, se reutiliza;
+    // si no, se carga del record que devolvio el auth.
+    if (!game_map.player_exists(name)) {
+        Player player = player_serializer.from_record(res.record);
+        game_map.add_persisted_player(std::move(player), static_cast<Zone>(res.record.zone));
+        std::cout << "[LOGIN] personaje cargado de disco: " << name << std::endl;
+    } else {
+        std::cout << "[LOGIN] personaje reutilizado de memoria: " << name << std::endl;
+    }
+
+    send_world_snapshot_to(client_id, name, game_map.get_player(name).get_race_name());
 }
 
 void GameLoop::handle_list(const ClientCmd& cmd) {
@@ -393,14 +443,27 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
     std::string attacker_name = client_registry_monitor.get_name(cmd.get_client_id());
     try {
         auto result = game_map.attack(attacker_name, x, y);
-        // notifica solo al cliente el daño que hizo (no se hace broadcast a todos los clientes)
-        if (result.damage > 0) {
-            GameMsg dmg_msg(MSG_ATTACK);
-            dmg_msg.set_coord_x(result.target_x);
-            dmg_msg.set_coord_y(result.target_y);
-            dmg_msg.set_damage(result.damage);
-            client_registry_monitor.notify_client(cmd.get_client_id(), dmg_msg);
+        // notifica solo al atacante que su ataque impactó esa celda (no se hace
+        // broadcast). Se envía siempre que el ataque ocurrió: el cliente lo usa
+        // para mostrar el número de daño y animar el efecto del hechizo sobre el
+        // target. (target_x/target_y = celda atacada).
+        GameMsg dmg_msg(MSG_ATTACK);
+        dmg_msg.set_coord_x(result.target_x);
+        dmg_msg.set_coord_y(result.target_y);
+        dmg_msg.set_damage(result.damage);
+        client_registry_monitor.notify_client(cmd.get_client_id(), dmg_msg);
+
+        // Feed de combate (estilo AO) en el minichat del ATACANTE: cuánto daño
+        // provocó, o si el target esquivó. Viaja como MSG_CHAT.
+        GameMsg atk_chat(MSG_CHAT);
+        if (result.dodged) {
+            atk_chat.set_chat_content(result.entity_name + " ha esquivado tu ataque");
+        } else {
+            atk_chat.set_chat_content("Le has provocado " + std::to_string(result.damage) +
+                                      " de daño a " + result.entity_name);
         }
+        client_registry_monitor.notify_client(cmd.get_client_id(), atk_chat);
+
         if (result.entity_died) {
             broadcast_npcs_snapshot();
             broadcast_items_snapshot();
@@ -409,10 +472,27 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
         GameMsg xp_msg(MSG_XP);
         xp_msg.set_xp(game_map.get_player_xp(attacker_name));
         client_registry_monitor.notify_client(cmd.get_client_id(), xp_msg);
+
+        // Si el ataque fue con un hechizo, consumió maná: notificar el actualizado.
+        GameMsg mana_msg(MSG_MANA);
+        mana_msg.set_player_name(attacker_name);
+        mana_msg.set_mana(game_map.get_player_mana(attacker_name));
+        client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
         if (result.target_is_player) {
             GameMsg hp_msg(MSG_HP);
             hp_msg.set_hp(game_map.get_player_hp(result.entity_name));
             client_registry_monitor.notify_client_by_name(result.entity_name, hp_msg);
+
+            // Feed de combate en el minichat de la VÍCTIMA: cuánto daño recibió y
+            // de quién, o si logró esquivar. Notifica al otro cliente por nombre.
+            GameMsg victim_chat(MSG_CHAT);
+            if (result.dodged) {
+                victim_chat.set_chat_content("¡Has esquivado el ataque de " + attacker_name + "!");
+            } else {
+                victim_chat.set_chat_content(attacker_name + " te ha provocado " +
+                                             std::to_string(result.damage) + " de daño");
+            }
+            client_registry_monitor.notify_client_by_name(result.entity_name, victim_chat);
 
             if (result.entity_died) {
                 GameMsg gold_msg(MSG_GOLD);
@@ -445,6 +525,14 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
         GameMsg msg(MSG_CHAT);
         msg.set_chat_content(e.what());
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    } catch (const CannotCastException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    } catch (const NotEnoughManaException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
     }
 }
 
@@ -468,6 +556,34 @@ void GameLoop::handle_meditate(const ClientCmd& cmd) {
 
     std::cout << "[INFO: MSG_MEDITATE] " << name
               << (meditating ? " empezo a meditar" : " no esta meditando") << std::endl;
+}
+
+void GameLoop::handle_self_cast(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    try {
+        game_map.self_cast(name);
+        // El hechizo (p.ej. curación) cambió vida y maná: notificar al jugador.
+        GameMsg hp_msg(MSG_HP);
+        hp_msg.set_hp(game_map.get_player_hp(name));
+        client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
+
+        GameMsg mana_msg(MSG_MANA);
+        mana_msg.set_player_name(name);
+        mana_msg.set_mana(game_map.get_player_mana(name));
+        client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
+    } catch (const NoWeaponEquippedException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    } catch (const CannotCastException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    } catch (const NotEnoughManaException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    }
 }
 
 void GameLoop::handle_private(const ClientCmd& cmd) {
@@ -662,11 +778,33 @@ void GameLoop::run() {
                 ticks_accumulated = 0;
                 regen_players_mana(1.0);
             }
+
+            // Guardado periodico: red de seguridad ante desconexiones abruptas.
+            if (++tick_count % PERSIST_INTERVAL_TICKS == 0) {
+                persist_online_players();
+            }
         }
         catch (... ) {
             //
         }
         std::this_thread::sleep_until(next_tick);
+    }
+}
+
+void GameLoop::persist_online_players() {
+    for (const auto& [client_id, name] : client_registry_monitor.get_active_clients()) {
+        (void)client_id;
+        if (name.empty() || !game_map.player_exists(name)) continue;
+        // La password ya esta persistida en el record previo; la recuperamos para
+        // no perderla al reescribir (el Player no la conoce).
+        PlayerRecord prev;
+        std::string password;
+        if (persistence.load(name, prev)) {
+            password = std::string(prev.password,
+                                   ::strnlen(prev.password, PERSIST_PASSWORD_MAX));
+        }
+        persistence.save(name, player_serializer.to_record(
+                game_map.get_player(name), game_map.get_player_zone(name), password));
     }
 }
 

@@ -25,7 +25,7 @@ ClientDeserializer::ClientDeserializer() {
         (uint8_t)MSG_MEDITATE, (uint8_t)MSG_RESURRECT, (uint8_t)MSG_CURE, (uint8_t)MSG_LIST,
         (uint8_t)MSG_FOUND_CLAN, (uint8_t)MSG_JOIN_CLAN, (uint8_t)MSG_LEFT_CLAN, (uint8_t)MSG_CLAN_ACEP,
         (uint8_t)MSG_CLAN_BAN, (uint8_t)MSG_CLAN_KICK, (uint8_t)MSG_CLAN_RECH, (uint8_t)MSG_REV_CLAN,
-        (uint8_t)MSG_CHAT, (uint8_t)MSG_TAKE
+        (uint8_t)MSG_CHAT, (uint8_t)MSG_TAKE, (uint8_t)MSG_AUTH_ERROR
     }) {
         handlers[type] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
             deserialize_text(payload, msg);

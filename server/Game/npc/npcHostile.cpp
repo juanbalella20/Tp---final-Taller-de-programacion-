@@ -50,7 +50,7 @@ void NPChostile::revive(int x, int y) {
     set_state(State::ALIVE);
 }
 
-int NPChostile::receive_damage(int dmg, Player& atacante, bool is_critical) {
+DamageOutcome NPChostile::receive_damage(int dmg, Player& atacante, bool is_critical) {
     (void)is_critical;  // los NPC no esquivan ni tienen defensa modelada aún
     lifepoints -= dmg;
     bool murio = false;
@@ -62,8 +62,8 @@ int NPChostile::receive_damage(int dmg, Player& atacante, bool is_critical) {
     }
     const int nivel_npc = 1;
     // La XP se otorga SIEMPRE, haya muerto o no, antes de retornar el oro.
-    atacante.ganar_xp(dmg, nivel_npc, murio, max_lifepoints);
-    return gold_drop;
+    bool level_up =atacante.ganar_xp(dmg, nivel_npc, murio, max_lifepoints);
+    return {dmg, gold_drop, false, level_up};
 }
 
 /*
