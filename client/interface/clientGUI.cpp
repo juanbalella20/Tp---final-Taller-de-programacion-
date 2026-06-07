@@ -708,6 +708,7 @@ void ClientGUI::draw() {
 
     if (hud) {
         hud->render();
+        hud->display_player_info(own_name, 1);
     }
 
     // Levanta el clip para dibujar el panel y el chat encima

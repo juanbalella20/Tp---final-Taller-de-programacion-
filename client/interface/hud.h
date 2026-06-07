@@ -55,6 +55,8 @@ private:
     TextCache hp_text_cache;
     TextCache mana_text_cache;
     TextCache xp_text_cache;
+    TextCache name_text_cache;
+    TextCache level_text_cache;
 
     float game_width;
     float panel_width;
@@ -102,6 +104,7 @@ public:
     void drawMana();
     void drawGold();
     void drawXp();
+    void display_player_info(const std::string& player_name, int level);
     void render();
 };
 
