@@ -553,30 +553,30 @@ void ClientGUI::drawOtherPlayers() {
             switch (p.direction) {
                 case DIR_NORTH: 
                     if (pd.is_ghost()) {
-                        player_pov = pd.ghost_frame();
+                        pov = pd.ghost_frame();
                     } else {
-                        player_pov = pd.back_pov(ViewDirection::BACK);
+                        pov = pd.back_pov(ViewDirection::BACK);
                     }
                     break;
                 case DIR_SOUTH:
                     if (pd.is_ghost()) {
-                        player_pov = pd.ghost_frame();
+                        pov = pd.ghost_frame();
                     } else {
-                        player_pov = pd.front_pov(ViewDirection::FRONT);
+                        pov = pd.front_pov(ViewDirection::FRONT);
                     } 
                     break;
                 case DIR_EAST:
                     if (pd.is_ghost()) {
-                        player_pov = pd.ghost_frame();
+                        pov = pd.ghost_frame();
                     } else {
-                        player_pov = pd.right_pov(ViewDirection::RIGHT);
+                        pov = pd.right_pov(ViewDirection::RIGHT);
                     }  
                     break;
                 case DIR_WEST:
                     if (pd.is_ghost()) {
-                        player_pov = pd.ghost_frame();
+                        pov = pd.ghost_frame();
                     } else {
-                        player_pov = pd.left_pov(ViewDirection::LEFT);
+                        pov = pd.left_pov(ViewDirection::LEFT);
                     }   
                     break;
                 default: break;
