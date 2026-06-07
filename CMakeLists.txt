@@ -148,6 +148,10 @@ add_executable(server
     server/Game/item/armadura.cpp
     server/Game/item/casco.cpp
     server/Game/item/escudo.cpp
+    server/Game/item/item_catalog.cpp
+    server/persistence/player_persistence.cpp
+    server/persistence/player_serializer.cpp
+    server/persistence/auth_service.cpp
     server/Game/npc/npc.cpp
     server/Game/npc/npcHostile.cpp
     # server/Game/npc/npcBanker.cpp
@@ -162,5 +166,6 @@ target_include_directories(server PRIVATE
     server/Game/item
     server/Game/npc
     server/Game/player
+    server/persistence
 )
 target_link_libraries(server PRIVATE common)
