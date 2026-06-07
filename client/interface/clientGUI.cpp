@@ -341,6 +341,7 @@ void ClientGUI::update() {
                         hud->set_max_mana(msg.get_mana());
                         hud->set_xp(msg.get_xp());
                         hud->set_mana(msg.get_mana());
+                        hud->set_level(msg.get_level());
                     }
                     if (player) {//spawn
                         player->setTilePosition(msg.get_coord_x(), msg.get_coord_y());
@@ -380,11 +381,9 @@ void ClientGUI::update() {
                     int y = msg.get_coord_y();
                     int old_x = player->getTileX();
                     int old_y = player->getTileY();
-
                     
                     bool moved = (old_x != x || old_y != y);
                     if (!moved) player->reset_frame();
-                    
 
                     // Nombre vacio = compatibilidad: tratar como jugador local.
                     if (mover.empty() || mover == own_name) {
@@ -518,6 +517,9 @@ void ClientGUI::update() {
                         }
                     }
                     break;
+                case MSG_UPDATE_LEVEL: {
+                    if (hud) hud->set_level(msg.get_level());
+                }
                 default:
                     break;
             }
@@ -708,7 +710,7 @@ void ClientGUI::draw() {
 
     if (hud) {
         hud->render();
-        hud->display_player_info(own_name, 1);
+        hud->display_player_info(own_name);
     }
 
     // Levanta el clip para dibujar el panel y el chat encima
