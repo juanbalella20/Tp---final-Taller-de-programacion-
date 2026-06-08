@@ -70,9 +70,9 @@ ZoneWorld& GameMap::zone_of(const std::string& player_name) {
     return zones.at(zone_id_of(player_name));
 }
 
-std::vector<const Player*> GameMap::players_in(Zone z) const {
-    std::vector<const Player*> result;
-    for (const auto& p : players) {
+std::vector<Player*> GameMap::players_in(Zone z) {
+    std::vector<Player*> result;
+    for (auto& p : players) {
         auto it = player_zone.find(p.get_name());
         if (it != player_zone.end() && it->second == z) {
             result.push_back(&p);
@@ -86,7 +86,7 @@ Zone GameMap::get_player_zone(const std::string& player_name) const {
 }
 
 std::pair<int, int> GameMap::find_arrival_cell(ZoneWorld& dst, Zone dest_zone) {
-    const std::vector<const Player*> dest_players = players_in(dest_zone);
+    const std::vector<Player*> dest_players = players_in(dest_zone);
     // Si la zona destino tiene teleport, aparecer adyacente a el.
     if (!dst.get_teleports().empty()) {
         const TeleportDef& dest_tp = dst.get_teleports().front();
@@ -272,7 +272,7 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     }
 
     ZoneWorld& world = zone_of(player_name);
-    const std::vector<const Player*> here = players_in(zone_id_of(player_name));
+    const std::vector<Player*> here = players_in(zone_id_of(player_name));
 
     int current_x = player->get_coord_x();
     int current_y = player->get_coord_y();

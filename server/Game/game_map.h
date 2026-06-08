@@ -63,7 +63,7 @@ private:
     ZoneWorld& zone_of(const std::string& player_name);
     Zone zone_id_of(const std::string& player_name) const;
     // Punteros (const) a los players que estan en la zona z
-    std::vector<const Player*> players_in(Zone z) const;
+    std::vector<Player*> players_in(Zone z);
 
     // Celda donde aparece un player que llega a la zona dst: adyacente al
     // teleport de esa zona si tiene, o una celda libre random. {-1,-1} si nada.
