@@ -715,8 +715,24 @@ void ClientGUI::drawEnemies() {
     if (!enemy_texture || !tilemap) return;
     const int tileSize = tilemap->getTileSize();
     for (const auto& npc : npcs) {
-        NpcSprite(renderer, enemies_textures[npc.name], npc.x, npc.y, tileSize)
-            .draw(camera, enemies_crops[npc.name]);
+        NpcSprite ns(renderer, enemies_textures[npc.name], npc.x, npc.y, tileSize);
+        SDL_FRect pov;
+        switch (p.direction) {
+            case DIR_NORTH: 
+                pov = ns.back_pov();
+                break;
+            case DIR_SOUTH:
+                pov = ns.front_pov();
+                break;
+            case DIR_EAST:
+                pov = ns.right_pov();
+                break;
+            case DIR_WEST:
+                pov = ns.left_pov();
+                break;
+            default: break;
+        }
+        ns.draw(camera, pov);
     }
 }
 
@@ -998,10 +1014,7 @@ void ClientGUI::init_draw() {
 
     // Recorte del 1er tile (esquina sup-izq) de cada spritesheet. La grilla es
     // 8 columnas: Goblin 256/8=32px, Spider 512/8=64px.
-    enemies_crops["Goblin"] = {0.0f, 0.0f, 32.0f, 32.0f};
-    enemies_crops["Spider1"] = {0.0f, 0.0f, 64.0f, 64.0f};
-    enemies_crops["Spider2"] = {0.0f, 14.0f, 95.0f, 65.0f};
-    enemies_crops["Spider3"] = {20.0f, 69.0f, 84.0f, 57.0f};
+    crop_enemies();
     //
     SDL_Surface* frame_surf = IMG_Load("imagenes/frame..png");
     if (frame_surf) {

@@ -84,7 +84,7 @@ private:
     std::map<std::string, SDL_Texture*> enemies_textures;
     // Recorte del 1er tile del spritesheet por tipo de NPC (nombre -> src crop)
     // TODO: refactorizar para permitir movimientos de los npcs
-    std::map<std::string, SDL_FRect> enemies_crops;
+    // std::map<std::string, std::vector<SDL_FRect>> enemies_crops;
     std::vector<DamageNumber> damage_numbers;
     // Efectos de hechizo: catalogo (id de baculo -> spritesheet) y animaciones activas.
     std::map<std::string, SpellEffectDef> spell_effects;
@@ -203,6 +203,7 @@ private:
 
     void load_npc_texture(const std::string& npc_name, const std::string& image_path);
     void load_enemies_textures();
+    void crop_enemies();
 
 public:
     // window/renderer/font son COMPARTIDOS (propiedad del ScreenManager): se
