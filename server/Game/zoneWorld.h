@@ -37,6 +37,10 @@ private:
     std::vector<groundGold> ground_gold;
     std::vector<TeleportDef> teleports;
 
+    // persecución de npcs hacia players
+    static constexpr int AGGRO_RANGE = 8;
+    static constexpr int ABANDON_RANGE = 15;
+
 public:
     ZoneWorld() = default;
 
@@ -80,6 +84,8 @@ public:
 
     // Respawn de NPCs muertos cuyo timer venció. Devuelve true si hubo alguno.
     bool update_npcs();
+
+    void update_npc_aggro(const std::vector<const Player*>& players_in_zone);
 
     // --- Snapshots de contenido para mandar al cliente ---
     std::vector<NpcInfo> build_npcs_snapshot() const;

@@ -149,6 +149,45 @@ bool ZoneWorld::update_npcs() {
     return respawned;
 }
 
+void ZoneWorld::update_npc_aggro(const std::vector<const Player*>& players_in_zone) {
+    for (auto& npc : npcs) {
+        if (npc.is_dead()) continue;
+        
+        // Busca jugador más cercano
+        int best_distance = INT_MAX;
+        std::string closest_player;
+        
+        for (const Player* player : players_in_zone) {
+            int dist = std::abs(npc.get_coord_x() - player->get_coord_x()) +
+                      std::abs(npc.get_coord_y() - player->get_coord_y());  // Manhattan
+            
+            if (dist < best_distance) {
+                best_distance = dist;
+                closest_player = player->get_name();
+            }
+        }
+
+        // Activar/desactivar persecución
+        if (best_distance <= AGGRO_RANGE && !npc.has_target()) {
+            npc.set_target(closest_player);
+        } else if (best_distance > ABANDON_RANGE && npc.has_target()) {
+            npc.clear_target();
+        }
+        
+        // Mover hacia objetivo
+        if (npc.has_target()) {
+            auto it = std::find_if(players_in_zone.begin(), players_in_zone.end(),
+                [&](const Player* p) { return p->get_name() == npc.get_target(); });
+
+            if (it != players_in_zone.end()) {
+                npc.move_towards((*it)->get_coord_x(), (*it)->get_coord_y());
+            } else {
+                npc.clear_target();
+            }
+        }
+    }
+}
+
 std::vector<NpcInfo> ZoneWorld::build_npcs_snapshot() const {
     std::vector<NpcInfo> snapshot;
     snapshot.reserve(npcs.size());

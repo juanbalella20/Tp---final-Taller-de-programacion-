@@ -298,6 +298,7 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     }
 
     player->update_position(new_x, new_y);
+    player_zone[player_name] = zone_id_of(player_name);
     return {true, player_name, new_x, new_y};
 }
 
@@ -387,6 +388,13 @@ bool GameMap::update_npcs() {
         if (world.update_npcs()) respawned = true;
     }
     return respawned;
+}
+
+void GameMap::update_npc_aggro() {
+    for (auto& [zone_id, world] : zones) {
+        auto players_in_zone = players_in(zone_id);
+        world.update_npc_aggro(players_in_zone);
+    }
 }
 
 std::vector<std::string> GameMap::tick(double seconds) {

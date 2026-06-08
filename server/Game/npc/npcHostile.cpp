@@ -2,6 +2,8 @@
 #include "../player/player.h"
 #include <cstdlib>
 
+#include <iostream>
+
 NPChostile::NPChostile(const std::string& type_id, const std::string& name,
                        int lifepoints, int attack_dmg, int ticks_to_spawn)
     : type_id(type_id),
@@ -64,6 +66,21 @@ DamageOutcome NPChostile::receive_damage(int dmg, Player& atacante, bool is_crit
     // La XP se otorga SIEMPRE, haya muerto o no, antes de retornar el oro.
     bool level_up =atacante.ganar_xp(dmg, nivel_npc, murio, max_lifepoints);
     return {dmg, gold_drop, false, level_up};
+}
+
+void NPChostile::move_towards(int target_x, int target_y) {
+    int old_x = coord_x, old_y = coord_y;
+    int dx = target_x - coord_x;
+    int dy = target_y - coord_y;
+
+    if (std::abs(dx) > std::abs(dy)) {
+        coord_x += (dx > 0) ? 1 : -1;
+    } else if (std::abs(dy) > 0) {
+        coord_y += (dy > 0) ? 1 : -1;
+    }
+
+    std::cout << "[DEBUG] NPC " << get_name() << " moved from (" << old_x << "," << old_y 
+              << ") to (" << coord_x << "," << coord_y << ")" << std::endl;
 }
 
 /*

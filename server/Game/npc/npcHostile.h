@@ -25,6 +25,9 @@ class NPChostile : public NPC, public Entity {
         int ticks_to_spawn;
         int max_lifepoints;
 
+        // persecución a jugador
+        std::string target_player;
+
         void death();
         void set_state(State state);
         // Calcula el oro que deja caer el NPC al morir:
@@ -44,8 +47,13 @@ class NPChostile : public NPC, public Entity {
         void set_position(int x, int y);
         int get_coord_x() const;
         int get_coord_y() const;
-        
-        
+
+        // Lógica de persecución a jugador
+        void set_target(const std::string& player_name) { target_player = player_name; }
+        void clear_target() { target_player.clear(); }
+        bool has_target() const { return !target_player.empty(); }
+        const std::string& get_target() const { return target_player; }
+        void move_towards(int target_x, int target_y); // Mueve 1 tile hacia el objetivo
         
         // attacks player
         //void interact(Player player, Command cmd) override;

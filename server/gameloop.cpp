@@ -786,6 +786,8 @@ void GameLoop::run() {
     // por segundo: evita spamear MSG_MANA cada 50ms.
     int ticks_accumulated = 0;
     const int ticks_per_second = 20; // 1000ms / 50ms
+    int npc_move_ticks = 0;
+    const int TICKS_PER_NPC_MOVE = 10;
 
     while (should_keep_running()) {
         next_tick += tick_rate;
@@ -796,6 +798,11 @@ void GameLoop::run() {
                 process_cmd(cmd);
             }
             update_npcs_in_map();
+            if (++npc_move_ticks >= TICKS_PER_NPC_MOVE) {
+                npc_move_ticks = 0;
+                game_map.update_npc_aggro();
+                broadcast_npcs_snapshot();
+            }
 
             if (++ticks_accumulated >= ticks_per_second) {
                 ticks_accumulated = 0;

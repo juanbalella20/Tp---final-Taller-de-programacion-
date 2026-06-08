@@ -123,6 +123,8 @@ public:
     // Respawn de NPCs en TODAS las zonas. Devuelve true si hubo alguno
     bool update_npcs();
 
+    void update_npc_aggro();
+
     // Avance de tiempo: hace tick() en todos los players. Devuelve los nombres
     // de los que están meditando (su maná cambió: hay que notificarles MSG_MANA).
     std::vector<std::string> tick(double seconds);
