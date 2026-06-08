@@ -261,6 +261,10 @@ DamageOutcome Player::receive_damage(int damage, Player& atacante, bool is_criti
     return state->receive_damage(*this, damage, atacante, is_critical);
 }
 
+DamageOutcome Player::receive_npc_damage(int damage, bool is_critical) {
+    return state->receive_npc_damage(*this, damage, is_critical);
+}
+
 DamageOutcome Player::attack(Entity& target, int target_x, int target_y) {
     return state->attack(*this, target, target_x, target_y);
 }

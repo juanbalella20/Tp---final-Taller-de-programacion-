@@ -161,6 +161,7 @@ public:
     int damage_attack();
 
     DamageOutcome receive_damage(int damage, Player& atacante, bool is_critical) override;
+    DamageOutcome receive_npc_damage(int damage, bool is_critical);
 
     void add_experience(int exp);
 
