@@ -800,7 +800,22 @@ void GameLoop::run() {
             update_npcs_in_map();
             if (++npc_move_ticks >= TICKS_PER_NPC_MOVE) {
                 npc_move_ticks = 0;
-                game_map.update_npc_aggro();
+                auto npc_attacks = game_map.update_npc_aggro();
+                for (const auto& attack : npc_attacks) {
+                    GameMsg hp_msg(MSG_HP);
+                    hp_msg.set_hp(game_map.get_player_hp(attack.victim_name));
+                    client_registry_monitor.notify_client_by_name(attack.victim_name, hp_msg);
+
+                    GameMsg victim_chat(MSG_CHAT);
+                    if (attack.dodged) {
+                        victim_chat.set_chat_content("¡Has esquivado el ataque de un " + attack.npc_name + "!");
+                    } else {
+                        victim_chat.set_chat_content("Un " + attack.npc_name + " te ha provocado " +
+                                                    std::to_string(attack.damage) + " de daño");
+                    }
+                    client_registry_monitor.notify_client_by_name(attack.victim_name, victim_chat);
+
+                }
                 broadcast_npcs_snapshot();
             }
 
