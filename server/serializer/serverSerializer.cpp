@@ -39,6 +39,7 @@ ServerSerializer::ServerSerializer() {
     // MSG_AUTH_ERROR: mismo formato que un texto ([len][texto]); el motivo viaja
     // en chat_content del GameMsg y el header lleva el tipo MSG_AUTH_ERROR.
     handlers[MSG_AUTH_ERROR] = [this](const GameMsg& msg) { return serialize_text(msg); };
+    handlers[MSG_UPDATE_LEVEL] = [this](const GameMsg& msg) { return serialize_level(msg); };
 }
 
 // Appendea un uint16_t en big-endian al buffer (definido mas abajo).
@@ -337,6 +338,25 @@ std::vector<uint8_t> ServerSerializer::serialize_mana(const GameMsg& msg) {
     return serialize_value(msg, mana);
 }
 
+std::vector<uint8_t> ServerSerializer::serialize_level(const GameMsg& msg) {
+    std::vector<uint8_t> buf;
+    uint16_t payload_len = 2 * sizeof(uint32_t);  // level + max_xp
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, msg.get_type(), payload_len);
+    
+    auto append_u32 = [&](uint32_t value) {
+        uint32_t be = htonl(value);
+        uint8_t bytes[sizeof(uint32_t)];
+        std::memcpy(bytes, &be, sizeof(uint32_t));
+        buf.insert(buf.end(), bytes, bytes + sizeof(uint32_t));
+    };
+    
+    append_u32(static_cast<uint32_t>(msg.get_level()));
+    append_u32(msg.get_max_xp());
+    
+    return buf;
+}
+
 // Formato MSG_REGISTER payload:
 //   [map_rows        : 2 bytes BE]
 //   [map_cols        : 2 bytes BE]
@@ -373,7 +393,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
         payload_len += 1 + static_cast<uint16_t>(item.get_name().size());
         payload_len += 1;  // type
     }
-    payload_len += 5 * sizeof(uint32_t);    // gold + hp + xp + mana + level
+    payload_len += 6 * sizeof(uint32_t);    // gold + hp + xp + mana + max xp + level
     payload_len += 2 * LEN_COORD;           // spawn_x + spawn_y
     const auto& players = msg.get_players();
     payload_len += LEN_PLAYER_COUNT;
@@ -419,6 +439,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
     append_u32(msg.get_hp());
     append_u32(msg.get_xp());
     append_u32(msg.get_mana());
+    append_u32(msg.get_max_xp());
     append_u32(static_cast<uint32_t>(msg.get_level()));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_x()));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_y()));
