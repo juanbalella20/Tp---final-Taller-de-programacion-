@@ -40,6 +40,35 @@ DamageOutcome AliveState::receive_damage(Player& self, int damage, Player& attac
     return {damage, 0, false, level_up};
 }
 
+DamageOutcome AliveState::receive_npc_damage(Player& self, int damage, bool is_critical) {
+    if (!is_critical) {
+        int agility = self.player_race.race_agility() + self.player_class.class_agility();
+        double rnd = std::rand() / static_cast<double>(RAND_MAX);
+        if (std::pow(rnd, agility) < 0.001) return {0, 0, true};  // esquivó
+
+        // Defensa: armadura + escudo + casco
+        int defense = self.calculate_defense();
+        damage = std::max(0, damage - defense);
+    }
+
+    bool murio = false;
+    if (static_cast<int>(self.lives) <= damage) {
+        self.lives = 0;
+        murio = true;
+    } else {
+        self.lives -= static_cast<uint32_t>(damage);
+    }
+
+    if (murio) {
+        uint32_t drop = self.level.calculate_gold_drop(self.gold);
+        self.gold -= drop;
+        self.to_ghost();
+        return {damage, static_cast<int>(drop), false, false};
+    }
+
+    return {damage, 0, false, false};
+}
+
 void AliveState::revive(Player& self) {
     // Ya está vivo: no hace nada.
     (void)self;

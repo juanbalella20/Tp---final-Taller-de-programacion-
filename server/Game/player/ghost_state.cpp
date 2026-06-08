@@ -13,6 +13,12 @@ DamageOutcome GhostState::receive_damage(Player& self, int damage, Player& attac
     return {};
 }
 
+DamageOutcome GhostState::receive_npc_damage(Player& self, int damage, bool is_critical) {
+    // Un fantasma no recibe daño ni reparte XP.
+    (void)self; (void)damage; (void)is_critical;
+    return {};
+}
+
 void GhostState::revive(Player& self) {
     self.lives = self.max_life();
     self.mana = self.max_mana();

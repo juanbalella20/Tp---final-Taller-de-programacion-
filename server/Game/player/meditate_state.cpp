@@ -13,6 +13,12 @@ DamageOutcome MeditateState::receive_damage(Player& self, int damage, Player& at
     return self.receive_damage(damage, attacker, is_critical);
 }
 
+DamageOutcome MeditateState::receive_npc_damage(Player& self, int damage, bool is_critical) {
+    // Recibir daño saca de meditación: vuelve a vivo y delega en ese estado.
+    self.to_alive();
+    return self.receive_npc_damage(damage, is_critical);
+}
+
 void MeditateState::revive(Player& self) {
     // Ya está vivo: no hace nada.
     (void)self;
