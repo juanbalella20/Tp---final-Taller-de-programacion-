@@ -46,6 +46,21 @@ void ClientHandler::run() {
     } catch (...) {}
 
     if (registrated) {
+        // Avisar al game loop que este cliente se fue, ANTES de sacarlo del
+        // registro (así el nombre todavía está disponible). El loop saca al
+        // player del mundo y avisa a su zona en su propio hilo (game_map solo lo
+        // toca él). Mandamos el nombre en el comando para no depender del registry.
+        try {
+            std::string name = client_registry_monitor.get_name(client_id);
+            if (!name.empty()) {
+                ClientCmd logout;
+                logout.set_message_type(MSG_LOGOUT);
+                logout.set_client_id(client_id);
+                logout.set_player_name(name);
+                receiving_queue.push(logout);
+            }
+        } catch (...) {}
+
         try {
             client_registry_monitor.remove_client(client_id);
         } catch (...) {}

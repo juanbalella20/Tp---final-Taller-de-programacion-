@@ -42,6 +42,8 @@ ServerSerializer::ServerSerializer() {
     handlers[MSG_AUTH_ERROR] = [this](const GameMsg& msg) { return serialize_text(msg); };
     handlers[MSG_UPDATE_LEVEL] = [this](const GameMsg& msg) { return serialize_level(msg); };
     handlers[MSG_DEATH] = [this](const GameMsg& msg) { return serialize_name(msg); };
+    // MSG_PLAYER_LEFT: mismo formato que MSG_DEATH ([name_size:1B][name]).
+    handlers[MSG_PLAYER_LEFT] = [this](const GameMsg& msg) { return serialize_name(msg); };
     handlers[MSG_CONFIRM_SESSION] = [this](const GameMsg& msg) { return serialize_confirm_session(msg); };
 }
 

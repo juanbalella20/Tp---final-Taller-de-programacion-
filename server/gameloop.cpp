@@ -23,6 +23,7 @@ GameLoop::GameLoop(Queue<ClientCmd>& receiving_queue,
 void GameLoop::register_handlers() {
     handlers[MSG_REGISTER]       = [this](const ClientCmd& cmd) { handle_register(cmd); };
     handlers[MSG_LOGIN]          = [this](const ClientCmd& cmd) { handle_login(cmd); };
+    handlers[MSG_LOGOUT]         = [this](const ClientCmd& cmd) { handle_logout(cmd); };
     handlers[MSG_LIST]           = [this](const ClientCmd& cmd) { handle_list(cmd); };
     handlers[MSG_SELL]           = [this](const ClientCmd& cmd) { handle_sell(cmd); };
     handlers[MSG_BUY]            = [this](const ClientCmd& cmd) { handle_buy(cmd); };
@@ -154,16 +155,33 @@ void GameLoop::load_maps() {
 // mandar snaphot de players
 
 
+void GameLoop::notify_zone(Zone zone, const GameMsg& msg, const std::string& except_name) {
+    // Visibilidad por zona: solo ve el evento quien comparte la zona 'zone'.
+    for (const auto& [client_id, name] : client_registry_monitor.get_active_clients()) {
+        if (name.empty() || name == except_name) continue;
+        if (!game_map.player_exists(name)) continue;
+        if (game_map.get_player_zone(name) != zone) continue;
+        client_registry_monitor.notify_client(client_id, msg);
+    }
+}
+
+void GameLoop::send_players_snapshot_to(uint32_t client_id, const std::string& player_name) {
+    GameMsg msg(MSG_PLAYERS_SNAPSHOT);
+    msg.set_players(game_map.build_players_snapshot(player_name));
+    client_registry_monitor.notify_client(client_id, msg);
+}
+
 void GameLoop::send_player_snapshot_to_other_players(uint32_t client_id, const std::string& player_name, const std::string& player_race) {
-    // Avisa a todos los demás clientes que un nuevo jugador apareció.
+    // Avisa a los demás clientes DE LA MISMA ZONA que un nuevo jugador apareció.
     // Solo incluye al jugador recién registrado, no a todos.
+    (void)client_id;  // ahora se filtra por nombre/zona, no por id
     const Player& p = game_map.get_player(player_name);
     GameMsg msg(MSG_PLAYERS_SNAPSHOT);
     PlayerInfo pi{player_name, player_race, 0, p.get_coord_x(), p.get_coord_y()};
     pi.ghost = p.is_ghost();
     msg.set_player(pi);
-    std::cout << "[DEBUG: MSG_PLAYERS_SNAPSHOT] Notificando a otros jugadores sobre nuevo jugador " << msg.get_players().front().name << std::endl;
-    client_registry_monitor.notify_clients_less_client(client_id, msg);
+    std::cout << "[DEBUG: MSG_PLAYERS_SNAPSHOT] Notificando a la zona sobre nuevo jugador " << msg.get_players().front().name << std::endl;
+    notify_zone(game_map.get_player_zone(player_name), msg, player_name);
 }
 
 void GameLoop::process_cmd(const ClientCmd& cmd) {
@@ -220,6 +238,9 @@ void GameLoop::send_world_snapshot_to(uint32_t client_id, const std::string& nam
     zoneMsg.set_coord_x(p.get_coord_x());
     zoneMsg.set_coord_y(p.get_coord_y());
     client_registry_monitor.notify_client(client_id, zoneMsg);
+    // El cliente limpia other_players al recibir MSG_ZONE_CHANGE, así que el
+    // snapshot que viajó en MSG_REGISTER queda descartado: reenviarlo después.
+    send_players_snapshot_to(client_id, name);
 }
 
 void GameLoop::handle_register(const ClientCmd& cmd) {
@@ -279,6 +300,38 @@ void GameLoop::handle_login(const ClientCmd& cmd) {
     // Confirmacion de auth EXITOSO antes del world snapshot (ver handle_register).
     send_confirm_session(client_id, name, race, klass);
     send_world_snapshot_to(client_id, name, race);
+}
+
+void GameLoop::handle_logout(const ClientCmd& cmd) {
+    // El nombre viaja en el comando sintético (lo puso el ClientHandler antes de
+    // sacar al cliente del registro): no dependemos del registry, que ya pudo
+    // haberse limpiado para este client_id.
+    const std::string& name = cmd.get_player_name();
+    if (name.empty() || !game_map.player_exists(name)) {
+        selected_npc.erase(cmd.get_client_id());
+        return;
+    }
+
+    // Persistir antes de borrarlo de memoria: red de seguridad ante una
+    // desconexión entre guardados periódicos. La password ya está en disco;
+    // la recuperamos para no pisarla (el Player no la conoce).
+    PlayerRecord prev;
+    std::string password;
+    if (persistence.load(name, prev)) {
+        password = std::string(prev.password, ::strnlen(prev.password, PERSIST_PASSWORD_MAX));
+    }
+    persistence.save(name, player_serializer.to_record(
+            game_map.get_player(name), game_map.get_player_zone(name), password));
+
+    // Capturar la zona ANTES de sacarlo: los que quedan en esa zona lo borran.
+    Zone zone = game_map.get_player_zone(name);
+    game_map.remove_player(name);
+    selected_npc.erase(cmd.get_client_id());
+
+    GameMsg leftMsg(MSG_PLAYER_LEFT);
+    leftMsg.set_player_name(name);
+    notify_zone(zone, leftMsg, name);
+    std::cout << "[LOGOUT] " << name << " se desconectó y salió del mundo." << std::endl;
 }
 
 void GameLoop::handle_list(const ClientCmd& cmd) {
@@ -457,6 +510,11 @@ void GameLoop::send_zone_transition(uint32_t client_id, const std::string& name,
     // Cambio de zona fallido (zona no cargada o sin celda): no se envia nada.
     if (!r.on_tile) return;
 
+    // Los que quedan en la zona de origen dejan de ver a este player.
+    GameMsg leftMsg(MSG_PLAYER_LEFT);
+    leftMsg.set_player_name(name);
+    notify_zone(r.src_zone, leftMsg, name);
+
     // Transición a la nueva zona
     GameMsg zoneMsg(MSG_ZONE_CHANGE);
     zoneMsg.set_zone(r.dest_zone);
@@ -471,6 +529,12 @@ void GameLoop::send_zone_transition(uint32_t client_id, const std::string& name,
 
     send_npcs_snapshot_to(client_id);
     send_items_snapshot_to(client_id);
+    // El que llega recibe el snapshot de players de la zona destino (antes no se
+    // mandaba: por eso no veía a los que ya estaban ahí).
+    send_players_snapshot_to(client_id, name);
+    // Y los que ya estaban en la zona destino se enteran del recién llegado (sin
+    // esto solo lo verían cuando se mueva).
+    send_player_snapshot_to_other_players(client_id, name, game_map.get_player(name).get_race_name());
 }
 
 void GameLoop::handle_move(const ClientCmd& cmd) {
@@ -493,7 +557,9 @@ void GameLoop::handle_move(const ClientCmd& cmd) {
         msg.set_race(cmd.get_race());
         std::cout << "[DEBUG: handle_move] player " << cmd.get_player_name()
               << " has race " << cmd.get_race() << std::endl;
-        client_registry_monitor.notify_clients(msg);
+        // Solo los de la MISMA zona ven el movimiento (incluido el propio mover,
+        // que usa su MSG_MOVE para fijar su posición/POV).
+        notify_zone(game_map.get_player_zone(name), msg);
         std::cout << "[DEBUG]: sended" << std::endl;
     // }
 

@@ -84,6 +84,14 @@ enum MessageType : uint8_t {
     // Cliente->server: usar/consumir un item del inventario (p.ej. tomar una
     // poción). Payload: el uid de INSTANCIA del item en texto (como MSG_EQUIP).
     MSG_USE_ITEM = 0x39,
+    // Comando SINTETICO interno (nunca viaja por la red): el ClientHandler lo
+    // encola en receiving_queue al desconectarse un cliente, para que el game
+    // loop saque al player del mundo y avise a los demas en su propio hilo.
+    MSG_LOGOUT = 0x3A,
+    // Server->cliente: un jugador dejo de ser visible (se desconecto o cambio de
+    // zona). El cliente lo borra de other_players. Payload: [name_len:1B][name]
+    // (mismo formato que MSG_DEATH).
+    MSG_PLAYER_LEFT = 0x3B,
 };
 
 enum Direction : uint8_t {

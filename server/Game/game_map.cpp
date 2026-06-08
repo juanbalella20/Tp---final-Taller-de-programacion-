@@ -122,9 +122,12 @@ TeleportResult GameMap::force_zone_change(const std::string& player_name,
     auto [nx, ny] = find_arrival_cell(dst, dest_zone);
     if (nx == -1) return {false, ZONE_DESERT, 0, 0};  // sin lugar libre
 
+    // Zona de origen ANTES de re-etiquetar: el gameloop la usa para avisar a los
+    // que quedan en esa zona que el player se fue.
+    Zone src_zone = zone_id_of(player_name);
     player_zone[player_name] = dest_zone;
     player->update_position(nx, ny);
-    return {true, dest_zone, nx, ny};
+    return {true, dest_zone, nx, ny, src_zone};
 }
 void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
                          const std::map<Zone, InitialState>& initial_states) {
@@ -162,6 +165,13 @@ std::vector<std::vector<elements>> GameMap::get_map(const std::string& player_na
 
 void GameMap::add_player(Player player) {
     players.push_back(std::move(player));
+}
+
+void GameMap::remove_player(const std::string& name) {
+    players.erase(std::remove_if(players.begin(), players.end(),
+                                 [&name](const Player& p) { return p.get_name() == name; }),
+                  players.end());
+    player_zone.erase(name);
 }
 
 void GameMap::add_persisted_player(Player player, Zone zone) {

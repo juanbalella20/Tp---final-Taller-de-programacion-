@@ -96,6 +96,10 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_DEATH] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_name(payload, msg);
     };
+    // MSG_PLAYER_LEFT: mismo formato que MSG_DEATH ([name_size:1B][name]).
+    handlers[MSG_PLAYER_LEFT] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_name(payload, msg);
+    };
 }
 
 

@@ -469,6 +469,10 @@ void ClientGUI::update() {
                         loadMedia(z);
                         current_zone = z;
                     }
+                    // Los players de la zona anterior dejan de ser visibles. El
+                    // MSG_PLAYERS_SNAPSHOT que el server manda a continuación
+                    // repuebla other_players con los de la zona nueva.
+                    other_players.clear();
                     player->setTilePosition(msg.get_coord_x(), msg.get_coord_y());
                     break;
                 }
@@ -710,6 +714,16 @@ void ClientGUI::update() {
                             }
                         }
                     }
+                    break;
+                }
+                case MSG_PLAYER_LEFT: {
+                    // Un jugador dejó de ser visible (se desconectó o cambió de
+                    // zona): borrarlo para que deje de dibujarse.
+                    const std::string& gone = msg.get_player_name();
+                    other_players.erase(
+                        std::remove_if(other_players.begin(), other_players.end(),
+                                       [&gone](const PlayerInfo& p) { return p.name == gone; }),
+                        other_players.end());
                     break;
                 }
 

@@ -43,6 +43,9 @@ struct TeleportResult {
         Zone dest_zone;
         int x;
         int y;
+        // Zona desde la que se fue el player (para avisar a esa zona que se retiró).
+        // Solo es válida si on_tile == true.
+        Zone src_zone = ZONE_DEFAULT;
 };
 
 // Factory: construye un NPChostile a partir de un NpcSpawn
@@ -84,6 +87,10 @@ public:
     std::vector<std::vector<elements>> get_map(const std::string& player_name);
 
     void add_player(Player player);
+
+    // Saca al jugador del mundo (lo borra de players y de su tag de zona). Se usa
+    // al desconectarse. No-op si el jugador no existe.
+    void remove_player(const std::string& name);
 
     // Alta de un jugador cargado de persistencia: ademas de agregarlo, lo etiqueta
     // en su zona persistida (add_player solo no setea player_zone). Reusa el tag

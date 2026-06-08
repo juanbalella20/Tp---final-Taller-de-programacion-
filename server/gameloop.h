@@ -58,8 +58,12 @@ class GameLoop : public Thread {
     void broadcast_items_snapshot();
     void send_items_snapshot_to(uint32_t client_id);
     void send_players_snapshot_to(uint32_t client_id, const std::string& player_name);
-    void send_player_snapshot_to_other_players(uint32_t client_id, const std::string& player_name, 
+    void send_player_snapshot_to_other_players(uint32_t client_id, const std::string& player_name,
          const std::string& player_race);
+
+    // Notifica 'msg' SOLO a los clientes cuyo player está en la zona 'zone'
+    // (visibilidad por zona). Si 'except_name' no está vacío, salta a ese player.
+    void notify_zone(Zone zone, const GameMsg& msg, const std::string& except_name = "");
 
     void process_cmd(const ClientCmd& cmd);
 
@@ -85,6 +89,9 @@ class GameLoop : public Thread {
 
     void handle_register(const ClientCmd& cmd);
     void handle_login(const ClientCmd& cmd);
+    // Desconexión de un cliente (comando sintético MSG_LOGOUT que encola el
+    // ClientHandler): persiste al player, lo saca del mundo y avisa a su zona.
+    void handle_logout(const ClientCmd& cmd);
     void handle_list(const ClientCmd& cmd);
     void handle_sell(const ClientCmd& cmd);
     void handle_buy(const ClientCmd& cmd);
