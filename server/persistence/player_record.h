@@ -40,7 +40,7 @@ struct PlayerRecord {
     uint32_t experience;
     int32_t  coord_x;
     int32_t  coord_y;
-    int32_t  id_clan;     // -1 si ninguno
+    char  clan[PERSIST_CLAN_NAME_MAX];     
     uint8_t  inv_count;   // cantidad de slots ocupados en items[]
     ItemRecord items[PERSIST_INV_SLOTS];
 };
@@ -49,6 +49,21 @@ struct PlayerRecord {
 struct IndexEntry {
     char     name[PERSIST_NAME_MAX];  // null-padded
     uint64_t offset;                  // byte offset del record en players.dat
+};
+
+// Un clan completo persistido (clans.dat). Tamaño FIJO: las listas de
+// miembros/baneados son arrays fijos con un contador, igual que items[] en el
+// PlayerRecord. founder + clan_name + review + members[] + banned[] reconstruyen
+// el clan tal cual estaba. clans.dat es un arreglo de estos records (se reescribe
+// entero al persistir; los clanes son pocos).
+struct ClanRecord {
+    char     founder[PERSIST_NAME_MAX];        // null-padded; fundador del clan
+    char     clan_name[PERSIST_CLAN_NAME_MAX]; // PK, null-padded
+    char     review[PERSIST_CLAN_REVIEW_MAX];  // historial de solicitudes (texto libre, truncado)
+    uint8_t  member_count;                     // slots ocupados en members[]
+    uint8_t  banned_count;                     // slots ocupados en banned[]
+    char     members[PERSIST_CLAN_MEMBERS_MAX][PERSIST_NAME_MAX];  // nombres null-padded
+    char     banned[PERSIST_CLAN_BANNED_MAX][PERSIST_NAME_MAX];    // nombres null-padded
 };
 
 #pragma pack(pop)

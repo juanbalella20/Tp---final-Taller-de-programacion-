@@ -1,6 +1,7 @@
 #include "clan.h"
 
 #include <algorithm>
+#include <utility>
 
 Clan::Clan(const std::string& founder_name, const std::string& clan_name) :
     founder_name(founder_name),
@@ -9,6 +10,15 @@ Clan::Clan(const std::string& founder_name, const std::string& clan_name) :
 
     members.push_back(founder_name);
 }
+
+Clan::Clan(const std::string& founder_name, const std::string& clan_name,
+           const std::string& clan_review, std::vector<std::string> members,
+           std::vector<std::string> banned_players) :
+    founder_name(founder_name),
+    clan_name(clan_name),
+    clan_review(clan_review),
+    members(std::move(members)),
+    banned_players(std::move(banned_players)) {}
 
 bool Clan::join_request(const std::string& player_name) {
     if (player_name == founder_name) {

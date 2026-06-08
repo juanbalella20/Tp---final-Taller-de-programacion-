@@ -552,6 +552,14 @@ void GameMap::kill_player(const std::string& player_name) {
     world.scatter_items(x, y, std::move(dropped), players_in(z));
 }
 
+void GameMap::load_clans(std::vector<Clan> persisted_clans) {
+    clans.clear();
+    for (Clan& clan : persisted_clans) {
+        std::string name = clan.get_name();
+        clans.emplace(std::move(name), std::move(clan));
+    }
+}
+
 bool GameMap::found_clan(const std::string& player_name, const std::string& clan_name) {
     // TO-DO chequeo: solo 1 clan por player
     auto [it, created] = clans.try_emplace(clan_name, player_name, clan_name);

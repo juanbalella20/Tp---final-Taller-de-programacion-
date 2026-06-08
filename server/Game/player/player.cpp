@@ -247,10 +247,6 @@ bool Player::can_attack_level(int other_level) const {
     return level.can_attack_level(other_level);
 }
  
-int Player::get_clan_id() const {
-    return id_clan;
-}
-
 int Player::damage_attack() {
     // Daño = Fuerza * rand(DañoArmaMin, DañoArmaMax)
     // TODO: cuando Item este definido, usar el arma equipada
@@ -406,13 +402,12 @@ ClassType Player::get_class_id() const {
 }
 
 void Player::restore(uint32_t gold, uint32_t lives, uint32_t mana,
-                     uint32_t experience, int level, int id_clan) {
+                     uint32_t experience, int level) {
     this->gold = gold;
     this->lives = lives;
     this->mana = mana;
     this->experience = experience;
     this->level = Level(level);
-    this->id_clan = id_clan;
 }
 
 uint32_t Player::gold_drop() {

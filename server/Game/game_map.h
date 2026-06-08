@@ -197,6 +197,12 @@ public:
 
     bool same_clan(Player* player1, Player* player2);
 
+    // --- Persistencia de clanes ---
+    // Acceso de solo lectura al set de clanes vivos (para volcarlos a disco).
+    const std::map<std::string, Clan>& get_clans() const { return clans; }
+    // Reemplaza el set de clanes por los cargados de disco al iniciar el server.
+    void load_clans(std::vector<Clan> persisted_clans);
+
     // Busca al player y su zona, comprueba que esté parado en una celda de teleport
     TeleportResult try_teleport_on_current_cell(const std::string& player_name);
 };

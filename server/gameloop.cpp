@@ -15,8 +15,9 @@
 GameLoop::GameLoop(Queue<ClientCmd>& receiving_queue,
                    ClientRegistryMonitor& client_registry_monitor):
         receiving_queue(receiving_queue), client_registry_monitor(client_registry_monitor),
-        persistence(PERSIST_DATA_DIR), auth(persistence) {
+        persistence(PERSIST_DATA_DIR), clan_persistence(PERSIST_DATA_DIR), auth(persistence) {
     register_handlers();
+    load_persisted_clans();
 }
 
 void GameLoop::register_handlers() {
@@ -768,6 +769,7 @@ void GameLoop::handle_clan_foundation(const ClientCmd& cmd) {
     } else {
         clan_msg.set_chat_content("Jugador " + player_name + " fundó el clan " + clan_name);
         client_registry_monitor.notify_clients(clan_msg);
+        persist_clans();
     }
 }
 
@@ -779,6 +781,8 @@ void GameLoop::handle_clan_joining(const ClientCmd& cmd) {
         clan_msg.set_chat_content("No podes solicitar unirte al clan: " + clan_name);
     } else {
         clan_msg.set_chat_content("Solicitud de unión al clan " + clan_name + " enviada");
+        // join_request anexa la solicitud al review del clan: persistir el cambio.
+        persist_clans();
     }
     client_registry_monitor.notify_client(cmd.get_client_id(), clan_msg);
 }
@@ -799,6 +803,7 @@ void GameLoop::handle_clan_accepting(const ClientCmd& cmd) {
     game_map.accept_new_member(player_name, new_member);
     clan_msg.set_chat_content("Jugador " + new_member + " fue aceptado a unirse al clan fundado por " + player_name);
     client_registry_monitor.notify_clients(clan_msg);
+    persist_clans();
 }
 
 void GameLoop::handle_clan_rejecting(const ClientCmd& cmd) {
@@ -823,6 +828,7 @@ void GameLoop::handle_clan_leaving(const ClientCmd& cmd) {
     }
     clan_msg.set_chat_content("Jugador " + player_name + " abandonó el clan " + clan_name);
     client_registry_monitor.notify_clients(clan_msg);
+    persist_clans();
 }
 
 void GameLoop::handle_clan_kick(const ClientCmd& cmd) {
@@ -839,6 +845,7 @@ void GameLoop::handle_clan_kick(const ClientCmd& cmd) {
     }
     clan_msg.set_chat_content("Jugador " + member + " fue echado del clan");
     client_registry_monitor.notify_clients(clan_msg);
+    persist_clans();
 }
 
 void GameLoop::handle_clan_ban(const ClientCmd& cmd) {
@@ -855,6 +862,7 @@ void GameLoop::handle_clan_ban(const ClientCmd& cmd) {
     }
     clan_msg.set_chat_content("Jugador " + member + " fue banneado del clan");
     client_registry_monitor.notify_clients(clan_msg);
+    persist_clans();
 }
 
 void GameLoop::update_npcs_in_map(){
@@ -946,6 +954,7 @@ void GameLoop::run() {
             // Guardado periodico: red de seguridad ante desconexiones abruptas.
             if (++tick_count % PERSIST_INTERVAL_TICKS == 0) {
                 persist_online_players();
+                persist_clans();
             }
         }
         catch (... ) {
@@ -970,6 +979,23 @@ void GameLoop::persist_online_players() {
         persistence.save(name, player_serializer.to_record(
                 game_map.get_player(name), game_map.get_player_zone(name), password));
     }
+}
+
+void GameLoop::load_persisted_clans() {
+    std::vector<Clan> clans;
+    for (const ClanRecord& rec : clan_persistence.load_all()) {
+        clans.push_back(clan_serializer.from_record(rec));
+    }
+    game_map.load_clans(std::move(clans));
+}
+
+void GameLoop::persist_clans() {
+    std::vector<ClanRecord> records;
+    for (const auto& [name, clan] : game_map.get_clans()) {
+        (void)name;
+        records.push_back(clan_serializer.to_record(clan));
+    }
+    clan_persistence.save_all(records);
 }
 
 void GameLoop::regen_players_mana(double seconds) {

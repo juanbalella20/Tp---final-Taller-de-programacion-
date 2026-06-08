@@ -29,7 +29,6 @@ private:
     uint32_t lives;
     uint32_t experience;
     uint32_t mana;
-    int id_clan;
     int coord_x;
     int coord_y;
     std::unique_ptr<PlayerState> state;
@@ -172,8 +171,6 @@ public:
     // Fair play: ¿puede atacar a un jugador de otro_nivel?
     bool can_attack_level(int other_level) const;
 
-    int get_clan_id() const;
-
     int damage_attack();
 
     DamageOutcome receive_damage(int damage, Player& atacante, bool is_critical) override;
@@ -197,11 +194,12 @@ public:
 
     // Restaura el estado mutable de un jugador cargado de disco. Setea los
     // campos que el constructor calcula y para los que no hay setter (gold,
-    // lives, mana, experience, level, id_clan). La posicion se setea aparte con
+    // lives, mana, experience, level). La posicion se setea aparte con
     // update_position; el estado ghost con set_ghost(). race/class/name son
-    // inmutables (van por el constructor).
+    // inmutables (van por el constructor). La pertenencia a un clan NO vive en
+    // el Player: la determina Clan::members (por nombre), persistida en clans.dat.
     void restore(uint32_t gold, uint32_t lives, uint32_t mana,
-                 uint32_t experience, int level, int id_clan);
+                 uint32_t experience, int level);
 
     uint32_t gold_drop();
 };

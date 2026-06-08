@@ -17,6 +17,12 @@ private:
 public:
     Clan(const std::string& founder_name, const std::string& clan_name);
 
+    // Reconstruye un clan completo desde disco (persistencia). Restaura founder,
+    // nombre, review y las listas de miembros/baneados tal cual estaban.
+    Clan(const std::string& founder_name, const std::string& clan_name,
+         const std::string& clan_review, std::vector<std::string> members,
+         std::vector<std::string> banned_players);
+
     bool join_request(const std::string& player_name);
 
     std::string review();
@@ -30,6 +36,13 @@ public:
     bool joined(const std::string& player_name);
 
     std::string& get_name() { return clan_name; }
+    const std::string& get_name() const { return clan_name; }
+
+    // --- Accesores para persistencia (clans.dat) ---
+    const std::string& get_founder() const { return founder_name; }
+    const std::string& get_review() const { return clan_review; }
+    const std::vector<std::string>& get_members() const { return members; }
+    const std::vector<std::string>& get_banned() const { return banned_players; }
 
     bool kick(const std::string& member);
 
