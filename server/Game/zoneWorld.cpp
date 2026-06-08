@@ -173,6 +173,8 @@ std::vector<NPCAttackEvent> ZoneWorld::update_npc_aggro(const std::vector<Player
         std::string closest_player;
         
         for (Player* player : players_in_zone) {
+            if (player->is_dead()) continue;
+
             int dist = std::abs(npc.get_coord_x() - player->get_coord_x()) +
                       std::abs(npc.get_coord_y() - player->get_coord_y());  // Manhattan
             
@@ -183,8 +185,11 @@ std::vector<NPCAttackEvent> ZoneWorld::update_npc_aggro(const std::vector<Player
         }
 
         // Activar/desactivar persecución
-        if (best_distance <= AGGRO_RANGE && !npc.has_target()) {
-            npc.set_target(closest_player);
+        if (best_distance <= AGGRO_RANGE) {
+            if (npc.get_target() != closest_player) {
+                npc.set_target(closest_player);
+                std::cout << "[DEBUG] " << npc.get_name() << " cambió de objetivo hacia " << closest_player << std::endl;
+            }
         } else if (best_distance > ABANDON_RANGE && npc.has_target()) {
             npc.clear_target();
         }
