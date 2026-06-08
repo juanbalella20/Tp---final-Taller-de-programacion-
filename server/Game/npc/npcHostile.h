@@ -30,6 +30,8 @@ class NPChostile : public NPC, public Entity {
 
         // persecución a jugador
         std::string target_player;
+        int attack_speed_ticks;
+        int current_attack_cooldown;
 
         void death();
         void set_state(State state);
@@ -56,10 +58,13 @@ class NPChostile : public NPC, public Entity {
         void clear_target() { target_player.clear(); }
         bool has_target() const { return !target_player.empty(); }
         const std::string& get_target() const { return target_player; }
-        void move_towards(int target_x, int target_y, ZoneWorld& world, const std::vector<const Player*>& players); // Mueve 1 tile hacia el objetivo
+        void move_towards(int target_x, int target_y, ZoneWorld& world, const std::vector<Player*>& players); // Mueve 1 tile hacia el objetivo
         
         // attacks player
-        //void interact(Player player, Command cmd) override;
+        bool can_attack() const;
+        void reset_attack_cooldown();
+        void tick_cooldowns();
+        int get_damage() const;
 };
 
 #endif 

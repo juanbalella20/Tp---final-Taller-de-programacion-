@@ -10,7 +10,9 @@ NPChostile::NPChostile(const std::string& type_id, const std::string& name,
     : type_id(type_id),
       lifepoints(lifepoints), max_lifepoints(lifepoints), attack_dmg(attack_dmg),
       state(State::ALIVE), coord_x(0), coord_y(0),
-      remaining_ticks_to_spawn(0), ticks_to_spawn(ticks_to_spawn) {
+      remaining_ticks_to_spawn(0), ticks_to_spawn(ticks_to_spawn),
+      attack_speed_ticks(20),
+      current_attack_cooldown(0) {
     this->name = name;
 }
 
@@ -69,7 +71,7 @@ DamageOutcome NPChostile::receive_damage(int dmg, Player& atacante, bool is_crit
     return {dmg, gold_drop, false, level_up};
 }
 
-void NPChostile::move_towards(int target_x, int target_y, ZoneWorld& world, const std::vector<const Player*>& players) {
+void NPChostile::move_towards(int target_x, int target_y, ZoneWorld& world, const std::vector<Player*>& players) {
     int dx = target_x - coord_x;
     int dy = target_y - coord_y;
 
@@ -91,6 +93,27 @@ void NPChostile::move_towards(int target_x, int target_y, ZoneWorld& world, cons
         std::cout << "[DEBUG] NPC " << get_name() << " stepped to (" 
                   << coord_x << "," << coord_y << ")" << std::endl;
     }
+}
+
+bool NPChostile::can_attack() const {
+    // Puede atacar si su tiempo de espera llegó a cero
+    return current_attack_cooldown <= 0;
+}
+
+void NPChostile::reset_attack_cooldown() {
+    // Reinicia el contador a su velocidad base
+    current_attack_cooldown = attack_speed_ticks;
+}
+
+void NPChostile::tick_cooldowns() {
+    // Si el contador es mayor a cero, lo reducimos
+    if (current_attack_cooldown > 0) {
+        current_attack_cooldown--;
+    }
+}
+
+int NPChostile::get_damage() const {
+    return attack_dmg;
 }
 
 /*
