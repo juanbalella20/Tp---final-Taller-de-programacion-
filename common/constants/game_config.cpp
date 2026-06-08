@@ -204,30 +204,60 @@ void GameConfig::load(const std::string& toml_path) {
     goblin.attack_dmg     = root.at_path("npcs.goblin.attack_dmg").value_or(5);
     goblin.ticks_to_spawn = root.at_path("npcs.goblin.ticks_to_spawn").value_or(100);
 
-    spider.name = root.at_path("npcs.spider.name").value_or(std::string("Spider"));
-    spider.lifepoints = root.at_path("npcs.spider.lifepoints").value_or(20);
-    spider.attack_dmg = root.at_path("npcs.spider.attack_dmg").value_or(4);
-    spider.ticks_to_spawn = root.at_path("npcs.spider.ticks_to_spawn").value_or(40);
+    spider1.name = root.at_path("npcs.spider.name").value_or(std::string("Spider1"));
+    spider1.lifepoints = root.at_path("npcs.spider.lifepoints").value_or(20);
+    spider1.attack_dmg = root.at_path("npcs.spider.attack_dmg").value_or(4);
+    spider1.ticks_to_spawn = root.at_path("npcs.spider.ticks_to_spawn").value_or(40);
 
-    skeleton.name = root.at_path("npcs.skeleton.name").value_or(std::string("Skeleton"));
-    skeleton.lifepoints = root.at_path("npcs.skeleton.lifepoints").value_or(25);
-    skeleton.attack_dmg = root.at_path("npcs.skeleton.attack_dmg").value_or(7);
-    skeleton.ticks_to_spawn = root.at_path("npcs.skeleton.ticks_to_spawn").value_or(60);
+    spider2.name = root.at_path("npcs.spider.name").value_or(std::string("Spider2"));
+    spider2.lifepoints = root.at_path("npcs.spider.lifepoints").value_or(30);
+    spider2.attack_dmg = root.at_path("npcs.spider.attack_dmg").value_or(6);
+    spider2.ticks_to_spawn = root.at_path("npcs.spider.ticks_to_spawn").value_or(40);
+
+    spider3.name = root.at_path("npcs.spider.name").value_or(std::string("Spider3"));
+    spider3.lifepoints = root.at_path("npcs.spider.lifepoints").value_or(40);
+    spider3.attack_dmg = root.at_path("npcs.spider.attack_dmg").value_or(8);
+    spider3.ticks_to_spawn = root.at_path("npcs.spider.ticks_to_spawn").value_or(40);
+
+    skeleton1.name = root.at_path("npcs.skeleton.name").value_or(std::string("Skeleton1"));
+    skeleton1.lifepoints = root.at_path("npcs.skeleton.lifepoints").value_or(25);
+    skeleton1.attack_dmg = root.at_path("npcs.skeleton.attack_dmg").value_or(7);
+    skeleton1.ticks_to_spawn = root.at_path("npcs.skeleton.ticks_to_spawn").value_or(60);
+
+    skeleton2.name = root.at_path("npcs.skeleton.name").value_or(std::string("Skeleton2"));
+    skeleton2.lifepoints = root.at_path("npcs.skeleton.lifepoints").value_or(35);
+    skeleton2.attack_dmg = root.at_path("npcs.skeleton.attack_dmg").value_or(9);
+    skeleton2.ticks_to_spawn = root.at_path("npcs.skeleton.ticks_to_spawn").value_or(60);
+
+    skeleton3.name = root.at_path("npcs.skeleton.name").value_or(std::string("Skeleton3"));
+    skeleton3.lifepoints = root.at_path("npcs.skeleton.lifepoints").value_or(45);
+    skeleton3.attack_dmg = root.at_path("npcs.skeleton.attack_dmg").value_or(11);
+    skeleton3.ticks_to_spawn = root.at_path("npcs.skeleton.ticks_to_spawn").value_or(60);
 
     zombie.name = root.at_path("npcs.zombie.name").value_or(std::string("Zombie"));
     zombie.lifepoints = root.at_path("npcs.zombie.lifepoints").value_or(35);
     zombie.attack_dmg = root.at_path("npcs.zombie.attack_dmg").value_or(6);
     zombie.ticks_to_spawn = root.at_path("npcs.zombie.ticks_to_spawn").value_or(80);
 
-    orc.name = root.at_path("npcs.orc.name").value_or(std::string("Orco"));
+    orc.name = root.at_path("npcs.orc.name").value_or(std::string("Orc"));
     orc.lifepoints = root.at_path("npcs.orc.lifepoints").value_or(60);
     orc.attack_dmg = root.at_path("npcs.orc.attack_dmg").value_or(12);
     orc.ticks_to_spawn = root.at_path("npcs.orc.ticks_to_spawn").value_or(150);
 
-    golem.name = root.at_path("npcs.golem.name").value_or(std::string("Golem"));
-    golem.lifepoints = root.at_path("npcs.golem.lifepoints").value_or(80);
-    golem.attack_dmg = root.at_path("npcs.golem.attack_dmg").value_or(15);
-    golem.ticks_to_spawn = root.at_path("npcs.golem.ticks_to_spawn").value_or(200);
+    golem1.name = root.at_path("npcs.golem.name").value_or(std::string("Golem1"));
+    golem1.lifepoints = root.at_path("npcs.golem.lifepoints").value_or(80);
+    golem1.attack_dmg = root.at_path("npcs.golem.attack_dmg").value_or(15);
+    golem1.ticks_to_spawn = root.at_path("npcs.golem.ticks_to_spawn").value_or(200);
+
+    golem2.name = root.at_path("npcs.golem.name").value_or(std::string("Golem2"));
+    golem2.lifepoints = root.at_path("npcs.golem.lifepoints").value_or(90);
+    golem2.attack_dmg = root.at_path("npcs.golem.attack_dmg").value_or(25);
+    golem2.ticks_to_spawn = root.at_path("npcs.golem.ticks_to_spawn").value_or(200);
+
+    golem3.name = root.at_path("npcs.golem.name").value_or(std::string("Golem3"));
+    golem3.lifepoints = root.at_path("npcs.golem.lifepoints").value_or(100);
+    golem3.attack_dmg = root.at_path("npcs.golem.attack_dmg").value_or(35);
+    golem3.ticks_to_spawn = root.at_path("npcs.golem.ticks_to_spawn").value_or(200);
 
     if (auto arr = root.at_path("zones.desert.allowed_npcs").as_array()) {
         for (auto& elem : *arr) {

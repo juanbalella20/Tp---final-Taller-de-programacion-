@@ -127,11 +127,17 @@ public:
 
     // Npc hostile
     NpcHostileConfig goblin;
-    NpcHostileConfig spider;
-    NpcHostileConfig skeleton;
+    NpcHostileConfig spider1;
+    NpcHostileConfig spider2;
+    NpcHostileConfig spider3;
+    NpcHostileConfig skeleton1;
+    NpcHostileConfig skeleton2;
+    NpcHostileConfig skeleton3;
     NpcHostileConfig zombie;
     NpcHostileConfig orc;
-    NpcHostileConfig golem;
+    NpcHostileConfig golem1;
+    NpcHostileConfig golem2;
+    NpcHostileConfig golem3;
 
     std::vector<std::string> desert_npcs;
     std::vector<std::string> forest_npcs;
