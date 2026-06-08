@@ -951,6 +951,30 @@ void ClientGUI::draw() {
     SDL_RenderPresent(renderer);
 }
 
+void ClientGUI::load_npc_texture(const std::string& npc_name, const std::string& image_path) {
+    SDL_Surface* surf = IMG_Load(image_path.c_str());
+    if (surf) {
+        SDL_Texture* text = SDL_CreateTextureFromSurface(renderer, surf);
+        enemies_textures[npc_name] = text;
+        SDL_DestroySurface(surf);
+    }
+}
+
+void ClientGUI::load_enemies_textures() {
+    load_npc_texture("Goblin", "imagenes/goblin1.png");
+    load_npc_texture("Spider1", "imagenes/araña1.png");
+    load_npc_texture("Spider2", "imagenes/araña2.png");
+    load_npc_texture("Spider3", "imagenes/araña3.png");
+    load_npc_texture("Skeleton1", "imagenes/esqueleto1.png");
+    load_npc_texture("Skeleton2", "imagenes/esqueleto2.png");
+    load_npc_texture("Skeleton3", "imagenes/esqueleto3.png");
+    load_npc_texture("Golem1", "imagenes/golem1.png");
+    load_npc_texture("Golem2", "imagenes/golem2.png");
+    load_npc_texture("Golem3", "imagenes/golem3.png");
+    load_npc_texture("Zombie", "imagenes/zombie.png");
+    load_npc_texture("Orc", "imagenes/orco.png");
+}
+
 void ClientGUI::init_draw() {
     initSDL();
     SDL_SetRenderLogicalPresentation(
@@ -969,23 +993,15 @@ void ClientGUI::init_draw() {
         enemy_texture = SDL_CreateTextureFromSurface(renderer, enemy_surf);
         SDL_DestroySurface(enemy_surf);
     }
-    // load enemies textures
-    SDL_Surface* goblin_surf = IMG_Load("imagenes/4047.png");
-    SDL_Surface* spider_surf = IMG_Load("imagenes/4060.png");
-    if (goblin_surf) {
-        SDL_Texture* goblin_text = SDL_CreateTextureFromSurface(renderer, goblin_surf);
-        enemies_textures["Goblin"] = goblin_text;
-        SDL_DestroySurface(goblin_surf);
-    }
-    if (spider_surf) {
-        SDL_Texture* spider_text = SDL_CreateTextureFromSurface(renderer, spider_surf);
-        enemies_textures["Spider"] = spider_text;
-        SDL_DestroySurface(spider_surf);
-    }
+
+    load_enemies_textures();
+
     // Recorte del 1er tile (esquina sup-izq) de cada spritesheet. La grilla es
     // 8 columnas: Goblin 256/8=32px, Spider 512/8=64px.
     enemies_crops["Goblin"] = {0.0f, 0.0f, 32.0f, 32.0f};
-    enemies_crops["Spider"] = {0.0f, 0.0f, 64.0f, 64.0f};
+    enemies_crops["Spider1"] = {0.0f, 0.0f, 64.0f, 64.0f};
+    enemies_crops["Spider2"] = {0.0f, 14.0f, 95.0f, 65.0f};
+    enemies_crops["Spider3"] = {20.0f, 69.0f, 84.0f, 57.0f};
     //
     SDL_Surface* frame_surf = IMG_Load("imagenes/frame..png");
     if (frame_surf) {

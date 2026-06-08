@@ -201,6 +201,9 @@ private:
     // Dibuja y avanza las animaciones de hechizo activas.
     void draw_spell_animations();
 
+    void load_npc_texture(const std::string& npc_name, const std::string& image_path);
+    void load_enemies_textures();
+
 public:
     // window/renderer/font son COMPARTIDOS (propiedad del ScreenManager): se
     // reciben, no se crean ni se destruyen aca.
