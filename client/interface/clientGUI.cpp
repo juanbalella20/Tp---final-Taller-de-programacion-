@@ -483,8 +483,6 @@ void ClientGUI::update() {
                     chat_inbox.push(msg.get_chat_content());
                     break;
                 case MSG_CHEAT_KILL: {
-                    std::cout << "DEBUG murió" << std::endl;
-
                     if (msg.get_player_name() == own_name) {
                         player->set_ghost(true);
                         player_pov = player->ghost_frame();
@@ -559,7 +557,23 @@ void ClientGUI::update() {
                         hud->set_level(msg.get_level());
                         hud->set_max_xp(msg.get_max_xp());
                     }
+                    break;
                 }
+                case MSG_DEATH: {
+                    if (msg.get_player_name() == own_name) {
+                        player->set_ghost(true);
+                        player_pov = player->ghost_frame();
+                    } else {
+                        for (auto& p : other_players) {
+                            if (p.name == msg.get_player_name()) {
+                                p.ghost = true;
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
+
                 default:
                     break;
             }
