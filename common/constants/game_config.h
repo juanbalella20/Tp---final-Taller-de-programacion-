@@ -77,6 +77,15 @@ public:
     // Combat
     double crit_chance;
     double dodge_threshold;
+
+    // Drop al morir un NPC (ver [npcs.drop] en config.toml).
+    // Probabilidades de la tabla de drop EXTRA (sobre el oro base que cae siempre).
+    double npc_drop_prob_nothing;
+    double npc_drop_prob_gold;
+    double npc_drop_prob_potion;
+    double npc_drop_prob_item;
+    // Factor de oro: rand(min, max) * VidaMaxNPC.
+    double npc_gold_drop_min;
     double npc_gold_drop_max;
 
     // Races

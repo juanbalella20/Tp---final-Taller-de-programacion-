@@ -363,6 +363,12 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
         if (target_is_player) {
             auto dropped = target_player->drop_inventory();
             world.scatter_items(x, y, std::move(dropped), players_in(z));
+        } else if (outcome.dropped_item) {
+            // Drop de la tabla de un NPC: poción o item al azar. Cae en la celda
+            // del NPC; si está ocupada por otro item, se esparce a una libre.
+            std::vector<std::unique_ptr<Item>> one;
+            one.push_back(std::move(outcome.dropped_item));
+            world.scatter_items(x, y, std::move(one), players_in(z));
         }
         return {true, true, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged};
     }
@@ -373,6 +379,12 @@ void GameMap::self_cast(const std::string& player_name) {
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) throw AttackerNotFoundException();
     player->cast_on_self();
+}
+
+bool GameMap::use_item(const std::string& player_name, uint64_t item_uid) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw AttackerNotFoundException();
+    return player->use_consumable(item_uid);
 }
 
 bool GameMap::update_npcs() {

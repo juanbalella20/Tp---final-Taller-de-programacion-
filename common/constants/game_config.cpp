@@ -31,7 +31,14 @@ void GameConfig::load(const std::string& toml_path) {
     // Combat
     crit_chance = root.at_path("combat.crit_chance").value_or(0.1);
     dodge_threshold = root.at_path("combat.dodge_threshold").value_or(0.001);
-    npc_gold_drop_max = root.at_path("combat.npc_gold_drop_max").value_or(0.2);
+
+    // Drop al morir un NPC (oro base siempre + tabla de drop extra).
+    npc_drop_prob_nothing = root.at_path("npcs.drop.prob_nothing").value_or(0.80);
+    npc_drop_prob_gold = root.at_path("npcs.drop.prob_gold").value_or(0.08);
+    npc_drop_prob_potion = root.at_path("npcs.drop.prob_potion").value_or(0.01);
+    npc_drop_prob_item = root.at_path("npcs.drop.prob_item").value_or(0.01);
+    npc_gold_drop_min = root.at_path("npcs.drop.npc_gold_drop_min").value_or(0.01);
+    npc_gold_drop_max = root.at_path("npcs.drop.npc_gold_drop_max").value_or(0.2);
 
     // Races
     human.inteligence = root.at_path("races.human.inteligence").value_or(5);

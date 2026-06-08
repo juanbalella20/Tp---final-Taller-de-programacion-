@@ -1,5 +1,6 @@
 #include "inventory.h"
 #include "../game_exceptions.h"
+#include "player/player.h"  // Player completo: upcast a Entity& en use_consumable
 
 bool Inventory::add_item(std::unique_ptr<Item> item) {
     if (is_full()) return false;
@@ -79,6 +80,20 @@ DamageOutcome Inventory::use_equipped(Entity& target, Player& atacante, int atta
     if (!equipped_item)
         throw NoWeaponEquippedException();
     return equipped_item->use_item(target, atacante, attacker_x, attacker_y, target_x, target_y, is_critical);
+}
+
+bool Inventory::use_consumable(uint64_t item_uid, Player& self) {
+    for (auto it = items.begin(); it != items.end(); ++it) {
+        if ((*it)->get_uid() != item_uid) continue;
+        // Solo se consumen items no equipables (pociones). Un arma/báculo/defensa
+        // no se "toma": se equipa, así que acá se ignora.
+        if ((*it)->get_type() != ItemType::OTHER) return false;
+        // El efecto (curación) recae sobre el propio jugador: es target y usuario.
+        (*it)->use_item(self, self, 0, 0, 0, 0, false);
+        items.erase(it);  // consumida: desaparece del inventario
+        return true;
+    }
+    return false;
 }
 
 std::vector<Item*> Inventory::get_items() const {

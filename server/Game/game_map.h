@@ -119,6 +119,11 @@ public:
     // p.ej. curación). Propaga las excepciones de Baculo::use_item.
     void self_cast(const std::string& player_name);
 
+    // El jugador toma/consume un item de su inventario por uid (p.ej. una poción):
+    // aplica su efecto (cura) y lo saca del inventario. Devuelve true si se
+    // consumió (false si el uid no existe o el item no es consumible).
+    bool use_item(const std::string& player_name, uint64_t item_uid);
+
     // Respawn de NPCs en TODAS las zonas. Devuelve true si hubo alguno
     bool update_npcs();
 

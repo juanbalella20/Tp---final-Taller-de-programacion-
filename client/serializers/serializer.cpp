@@ -12,6 +12,7 @@ Serializer::Serializer() {
     handlers[MSG_BUY]      = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_BUY, cmd); };
     handlers[MSG_SELL]     = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_SELL, cmd); };
     handlers[MSG_EQUIP]    = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_EQUIP, cmd); };
+    handlers[MSG_USE_ITEM] = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_USE_ITEM, cmd); };
     handlers[MSG_TAKE]    = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_TAKE, cmd); };
     handlers[MSG_THROW]    = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_THROW, cmd); };
     handlers[MSG_DEPOSIT]  = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_DEPOSIT, cmd); };

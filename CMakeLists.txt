@@ -162,6 +162,7 @@ add_executable(server
     server/Game/item/armadura.cpp
     server/Game/item/casco.cpp
     server/Game/item/escudo.cpp
+    server/Game/item/potion.cpp
     server/Game/item/item_catalog.cpp
     server/persistence/player_persistence.cpp
     server/persistence/player_serializer.cpp

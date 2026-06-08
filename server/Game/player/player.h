@@ -96,6 +96,11 @@ public:
     // curación con la flauta élfica). Usa la propia celda como target.
     void cast_on_self();
 
+    // Toma/consume un item del inventario por uid de instancia (p.ej. una poción):
+    // aplica su efecto sobre sí mismo y lo elimina del inventario. Devuelve true
+    // si se consumió. Interrumpe la meditación (es una acción).
+    bool use_consumable(uint64_t item_uid);
+
     // Suma a este jugador (atacante) la XP por golpear/matar a un target.
     bool ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target);
 

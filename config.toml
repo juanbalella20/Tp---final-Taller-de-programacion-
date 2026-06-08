@@ -38,9 +38,6 @@ crit_chance = 0.1
  
 # Esquive: rand(0,1)^Agilidad < dodge_threshold
 dodge_threshold = 0.001
- 
-# Oro que droppea un NPC al morir: rand(0, npc_gold_drop_max) * VidaMaxNPC
-npc_gold_drop_max = 0.2
 
 # ------------------------------------------------------------
 # Razas
@@ -305,15 +302,24 @@ lifepoints = 80
 attack_dmg = 15
 ticks_to_spawn = 200
  
-# Drop de items al morir un NPC (probabilidades acumuladas)
+# Al morir un NPC SIEMPRE deja caer oro base (seccion "Oro" del enunciado):
+#   OroBase = rand(0, npc_gold_drop_max) * VidaMaxNPC
+# y ADEMAS se sortea un drop extra segun esta tabla (seccion "Criaturas").
+# Se sortea r en [0,1) y, segun en que franja acumulada caiga, deja caer:
+#   [0, prob_nothing)                 -> nada extra
+#   [prob_nothing, +prob_gold)        -> oro extra: rand(npc_gold_drop_min, npc_gold_drop_max) * VidaMaxNPC
+#   [..., +prob_potion)               -> una pocion (vida/mana) al azar
+#   [..., +prob_item)                 -> cualquier otro objeto al azar
+#   el resto (1 - la suma de las 4)   -> nada extra
+# La suma de las 4 puede ser < 1; el sobrante cuenta como "nada extra".
 [npcs.drop]
 prob_nothing = 0.80
-prob_gold = 0.08   # 0.80 < r <= 0.88
-prob_potion = 0.01   # 0.88 < r <= 0.89
-prob_item = 0.01   # 0.89 < r <= 0.90
-# el resto (0.10) no droppea nada adicional
- 
-# Oro drop de NPC: rand(gold_drop_min, gold_drop_max) * VidaMaxNPC
+prob_gold = 0.08
+prob_potion = 0.01
+prob_item = 0.01
+
+# Rango del factor de oro (base y extra): rand(min, max) * VidaMaxNPC.
+# El oro base usa rand(0, npc_gold_drop_max); el extra usa rand(min, max).
 npc_gold_drop_min = 0.01
 npc_gold_drop_max = 0.2
 

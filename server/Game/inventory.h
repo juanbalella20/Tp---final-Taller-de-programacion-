@@ -54,6 +54,12 @@ public:
 
     bool is_full() const;
     DamageOutcome use_equipped(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical);
+
+    // Consume el item del inventario con ese uid de instancia (p.ej. una poción):
+    // aplica su efecto sobre 'self' (use_item) y lo elimina del inventario.
+    // Solo se consumen items no equipables (ItemType::OTHER). Devuelve true si se
+    // consumió; false si el uid no existe o el item no es consumible.
+    bool use_consumable(uint64_t item_uid, Player& self);
 };
 
 

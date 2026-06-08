@@ -84,6 +84,7 @@ class GameLoop : public Thread {
     void handle_attack(const ClientCmd& cmd);
     void handle_meditate(const ClientCmd& cmd);
     void handle_self_cast(const ClientCmd& cmd);
+    void handle_use_item(const ClientCmd& cmd);
     void handle_teleport(const ClientCmd& cmd);
     void send_zone_transition(uint32_t client_id, const std::string& name,
                               const TeleportResult& r);

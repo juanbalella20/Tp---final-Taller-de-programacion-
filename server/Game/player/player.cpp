@@ -273,6 +273,12 @@ void Player::cast_on_self() {
                                   coord_x, coord_y, false);
 }
 
+bool Player::use_consumable(uint64_t item_uid) {
+    // Tomar una poción es una acción: interrumpe la meditación.
+    stop_meditation();
+    return player_inventory.use_consumable(item_uid, *this);
+}
+
 bool Player::ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target) {
     experience += level.xp_per_attack(dano, nivel_target);
     if (murio)

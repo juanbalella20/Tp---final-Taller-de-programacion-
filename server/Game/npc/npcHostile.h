@@ -1,6 +1,8 @@
 #ifndef NPC_HOSTILE_H_
 #define NPC_HOSTILE_H_
 
+#include <memory>
+
 #include "npc.h"
 #include "../entity.h"
 // #include "itemDataBase.h"
@@ -27,9 +29,11 @@ class NPChostile : public NPC, public Entity {
 
         void death();
         void set_state(State state);
-        // Calcula el oro que deja caer el NPC al morir:
-        // Oro = rand(0, 0.2) * VidaMaxNPC
+        // Oro BASE que deja caer el NPC al morir (cae siempre, sección "Oro"):
+        // Oro = rand(0, npc_gold_drop_max) * VidaMaxNPC
         int drop();
+        // Oro EXTRA del drop según factor: rand(min, max) * VidaMaxNPC.
+        int roll_extra_gold() const;
 
     public:
         NPChostile(const std::string& type_id, const std::string& name,

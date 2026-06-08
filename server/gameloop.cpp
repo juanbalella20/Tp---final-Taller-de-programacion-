@@ -32,6 +32,7 @@ void GameLoop::register_handlers() {
     handlers[MSG_ATTACK]         = [this](const ClientCmd& cmd) { handle_attack(cmd); };
     handlers[MSG_MEDITATE]       = [this](const ClientCmd& cmd) { handle_meditate(cmd); };
     handlers[MSG_SELF_CAST]      = [this](const ClientCmd& cmd) { handle_self_cast(cmd); };
+    handlers[MSG_USE_ITEM]       = [this](const ClientCmd& cmd) { handle_use_item(cmd); };
     handlers[MSG_TELEPORT]       = [this](const ClientCmd& cmd) { handle_teleport(cmd); };
     handlers[MSG_PRIVATE]        = [this](const ClientCmd& cmd) { handle_private(cmd); };
     handlers[MSG_CHEAT_KILL]     = [this](const ClientCmd& cmd) { handle_cheat_kill(cmd); };
@@ -647,6 +648,42 @@ void GameLoop::handle_self_cast(const ClientCmd& cmd) {
         msg.set_chat_content(e.what());
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
     }
+}
+
+void GameLoop::handle_use_item(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    // El cliente manda el uid de INSTANCIA del item a usar (en texto decimal),
+    // igual que MSG_EQUIP.
+    uint64_t item_uid = 0;
+    try {
+        item_uid = std::stoull(cmd.get_item_id());
+    } catch (const std::exception&) {
+        return;  // uid mal formado: ignorar el comando
+    }
+
+    bool consumed = game_map.use_item(name, item_uid);
+    if (!consumed) return;  // uid inexistente o item no consumible: nada que notificar
+
+    // La poción curó vida y/o maná: notificar los valores nuevos.
+    GameMsg hp_msg(MSG_HP);
+    hp_msg.set_hp(game_map.get_player_hp(name));
+    client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
+
+    GameMsg mana_msg(MSG_MANA);
+    mana_msg.set_player_name(name);
+    mana_msg.set_mana(game_map.get_player_mana(name));
+    client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
+
+    // La poción se consumió: reenviar el inventario para que desaparezca del HUD.
+    const Player& p = game_map.get_player(name);
+    std::vector<ItemInfo> item_infos;
+    for (Item* item : p.get_all_items()) {
+        item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(),
+                                static_cast<uint8_t>(item->get_type()), item->get_uid());
+    }
+    GameMsg inv_msg(MSG_INVENTORY);
+    inv_msg.set_items(item_infos);
+    client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
 }
 
 void GameLoop::handle_private(const ClientCmd& cmd) {
