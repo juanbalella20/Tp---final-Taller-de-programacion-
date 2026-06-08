@@ -76,6 +76,7 @@ enum MessageType : uint8_t {
     MSG_SELF_CAST  = 0x33,  // Cliente->server: lanzar hechizo del báculo equipado sobre sí mismo (sin payload)
     MSG_AUTH_ERROR = 0x34,  // Server->cliente: register/login fallido. Payload: [reason_len:1][reason]
     MSG_UPDATE_LEVEL = 0x35,
+    MSG_DEATH = 0x36,
 };
 
 enum Direction : uint8_t {
