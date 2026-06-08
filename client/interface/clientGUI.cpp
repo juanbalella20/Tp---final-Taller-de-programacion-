@@ -487,6 +487,7 @@ void ClientGUI::update() {
                     }
                     if (player) {//spawn
                         player->setTilePosition(msg.get_coord_x(), msg.get_coord_y());
+                        player->set_ghost(msg.get_ghost());
                         std::cout << "Player registered at (" << msg.get_coord_x() << "," << msg.get_coord_y() << ")" << std::endl;
                     }
                     other_players = msg.get_players();
