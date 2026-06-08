@@ -203,6 +203,7 @@ void GameLoop::send_world_snapshot_to(uint32_t client_id, const std::string& nam
     registerMsg.set_coord_x(p.get_coord_x());
     registerMsg.set_coord_y(p.get_coord_y());
     registerMsg.set_level(p.get_level());
+    registerMsg.set_ghost(p.is_ghost());
     registerMsg.set_players(game_map.build_players_snapshot(name));
     client_registry_monitor.notify_client(client_id, registerMsg);
     send_npcs_snapshot_to(client_id);
