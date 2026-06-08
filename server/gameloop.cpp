@@ -68,8 +68,14 @@ InitialState GameLoop::load_initial_state_hardcoded(Zone zone) {
     case ZONE_DESERT:
         is.num_items = 6;
         is.num_npc = 7;
+        break;
+    case ZONE_FOREST:
+        //is.num_items = 3;
+        is.num_npc = 10;
+        break;
     case ZONE_DUNGEON: 
         is.num_npc = 12;
+        break;
     default:
         break;
     }
@@ -123,6 +129,7 @@ void GameLoop::load_maps() {
     // harcoded:
     InitialState state_desert = load_initial_state_hardcoded(ZONE_DESERT);
     InitialState state_city = load_initial_state_hardcoded(ZONE_CITY);
+    InitialState state_forest = load_initial_state_hardcoded(ZONE_FOREST);
     InitialState state_dungeon = load_initial_state_hardcoded(ZONE_DUNGEON);
     std::map<Zone, std::string> zone_paths = {
         {ZONE_DESERT, "data/maps/desert/map-2.bin"},
@@ -133,7 +140,7 @@ void GameLoop::load_maps() {
     std::map<Zone, InitialState> initial_states = {
         {ZONE_DESERT, state_desert},
         {ZONE_CITY,   state_city},
-        {ZONE_FOREST, state_city},
+        {ZONE_FOREST, state_forest},
         {ZONE_DUNGEON, state_dungeon},
     };
     game_map.init_world(zone_paths, initial_states);
