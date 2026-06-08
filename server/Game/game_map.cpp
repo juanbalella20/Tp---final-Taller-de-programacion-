@@ -390,11 +390,15 @@ bool GameMap::update_npcs() {
     return respawned;
 }
 
-void GameMap::update_npc_aggro() {
+std::vector<NPCAttackEvent> GameMap::update_npc_aggro() {
+    std::vector<NPCAttackEvent> all_events;
+
     for (auto& [zone_id, world] : zones) {
         auto players_in_zone = players_in(zone_id);
-        world.update_npc_aggro(players_in_zone);
+        auto zone_events = world.update_npc_aggro(players_in_zone);
+        all_events.insert(all_events.end(), zone_events.begin(), zone_events.end());
     }
+    return all_events;
 }
 
 std::vector<std::string> GameMap::tick(double seconds) {

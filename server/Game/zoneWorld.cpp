@@ -149,10 +149,13 @@ bool ZoneWorld::update_npcs() {
     return respawned;
 }
 
-void ZoneWorld::update_npc_aggro(const std::vector<Player*>& players_in_zone) {
+std::vector<NPCAttackEvent> ZoneWorld::update_npc_aggro(const std::vector<Player*>& players_in_zone) {
+    std::vector<NPCAttackEvent> attack_events;
+
     for (auto& npc : npcs) {
         if (npc.is_dead()) continue;
-        
+        npc.tick_cooldowns();
+
         // Busca jugador más cercano
         int best_distance = INT_MAX;
         std::string closest_player;
@@ -190,23 +193,13 @@ void ZoneWorld::update_npc_aggro(const std::vector<Player*>& players_in_zone) {
                     if (npc.can_attack()) {
                         int damage = npc.get_damage();
                         bool is_critical = false;
-
                         DamageOutcome outcome = target_player->receive_npc_damage(damage, is_critical);
-
-                        if (outcome.dodged) {
-                            std::cout << "[DEBUG] " << target_player->get_name() << " ESQUIVÓ el ataque de " << npc.get_name() << "!" << std::endl;
-                        } else {
-                            std::cout << "[DEBUG] " << npc.get_name() << " golpeó a " 
-                                    << target_player->get_name() << " por " << outcome.damage << " daño!" << std::endl;
-                            
-                            if (target_player->is_dead()) {
-                                std::cout << "[DEBUG] " << target_player->get_name() << " HA MUERTO a manos de un " << npc.get_name() << std::endl;
-                                auto dropped = target_player->drop_inventory();
-                                scatter_items(target_player->get_coord_x(), target_player->get_coord_y(), std::move(dropped), players_in_zone);
-                                
-                                npc.clear_target();
-                            }
-                        }
+                        attack_events.push_back({
+                            target_player->get_name(), 
+                            npc.get_name(), 
+                            outcome.damage, 
+                            outcome.dodged
+                        });
                         npc.reset_attack_cooldown();
                     }
                 } else {
@@ -217,6 +210,7 @@ void ZoneWorld::update_npc_aggro(const std::vector<Player*>& players_in_zone) {
             }
         }
     }
+    return attack_events;
 }
 
 std::vector<NpcInfo> ZoneWorld::build_npcs_snapshot() const {

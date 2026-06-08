@@ -24,6 +24,13 @@ struct groundItem {
     std::unique_ptr<Item> item;
 };
 
+struct NPCAttackEvent {
+    std::string victim_name;
+    std::string npc_name;
+    int damage;
+    bool dodged;
+};
+
 
 class ZoneWorld {
 private:
@@ -85,7 +92,7 @@ public:
     // Respawn de NPCs muertos cuyo timer venció. Devuelve true si hubo alguno.
     bool update_npcs();
 
-    void update_npc_aggro(const std::vector<Player*>& players_in_zone);
+    std::vector<NPCAttackEvent> update_npc_aggro(const std::vector<Player*>& players_in_zone);
 
     // --- Snapshots de contenido para mandar al cliente ---
     std::vector<NpcInfo> build_npcs_snapshot() const;
