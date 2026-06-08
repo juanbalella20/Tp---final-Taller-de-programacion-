@@ -27,6 +27,8 @@ void TextField::set_focus(bool focus) {
 
 bool TextField::is_focused() const { return focused_; }
 
+void TextField::set_box(const SDL_FRect& box) { box_ = box; }
+
 void TextField::render(SDL_Renderer* renderer, TTF_Font* font) const {
     // Fondo del campo (oscuro semitransparente).
     SDL_SetRenderDrawColor(renderer, 20, 20, 30, 220);

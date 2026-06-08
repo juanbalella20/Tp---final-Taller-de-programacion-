@@ -14,16 +14,17 @@
 
 namespace {
 constexpr SDL_Color COLOR_ERROR{ 220, 80, 70, 255 };
-constexpr SDL_Color COLOR_LABEL{ 230, 220, 180, 255 };
 
-// === AJUSTAR A TU PNG DE SIGNUP =============================================
-// Cajas de los inputs (coordenadas logicas 493x479: ancho 493, alto 479).
-// Mové estas 4 cifras (x, y, ancho, alto) hasta que calcen con los recuadros
-// de tu imagen de crear cuenta. La etiqueta se dibuja LABEL_DY pixeles arriba.
-constexpr SDL_FRect NAME_BOX{ 96.0f, 170.0f, 300.0f, 38.0f };
-constexpr SDL_FRect PASS_BOX{ 96.0f, 250.0f, 300.0f, 38.0f };
-constexpr float LABEL_DY = 22.0f;  // separacion vertical etiqueta -> caja
-// ===========================================================================
+// Field and button boxes are in the 493x479 logical presentation used by this screen.
+constexpr SDL_FRect LOGIN_NAME_BOX{ 60.0f, 184.0f, 180.0f, 45.0f };
+constexpr SDL_FRect LOGIN_PASS_BOX{ 255.0f, 184.0f, 180.0f, 45.0f };
+constexpr SDL_FRect SIGNUP_NAME_BOX{ 150.0f, 143.0f, 195.0f, 33.0f };
+constexpr SDL_FRect SIGNUP_PASS_BOX{ 151.0f, 215.0f, 195.0f, 36.0f };
+
+constexpr SDL_FRect LOGIN_SUBMIT_BUTTON{ 253.0f, 250.0f, 185.0f, 48.0f };
+constexpr SDL_FRect LOGIN_BACK_BUTTON{ 253.0f, 365.0f, 185.0f, 51.0f };
+constexpr SDL_FRect SIGNUP_BACK_BUTTON{ 58.0f, 338.0f, 184.0f, 40.0f };
+constexpr SDL_FRect SIGNUP_SUBMIT_BUTTON{ 255.0f, 338.0f, 184.0f, 40.0f };
 }  // namespace
 
 LoginSignupScreen::LoginSignupScreen(SDL_Renderer* renderer, SDL_Window* window,
@@ -31,8 +32,8 @@ LoginSignupScreen::LoginSignupScreen(SDL_Renderer* renderer, SDL_Window* window,
                                      std::string host, std::string port)
     : renderer_(renderer), window_(window), font_(font), session_(session),
       host_(std::move(host)), port_(std::move(port)),
-      name_field_(NAME_BOX, /*password=*/false),
-      password_field_(PASS_BOX, /*password=*/true) {
+      name_field_(LOGIN_NAME_BOX, /*password=*/false),
+      password_field_(LOGIN_PASS_BOX, /*password=*/true) {
     // Cada pantalla fija su propia presentacion logica (contrato del ScreenManager).
     SDL_SetRenderLogicalPresentation(renderer_, LOGIN_W, LOGIN_H,
                                      SDL_LOGICAL_PRESENTATION_LETTERBOX);
@@ -75,8 +76,19 @@ void LoginSignupScreen::focus(TextField& field) {
 
 void LoginSignupScreen::enter_form() {
     // El text-input es estado global de la ventana: lo prende la pantalla, una vez.
+    apply_form_layout();
     SDL_StartTextInput(window_);
     focus(name_field_);
+}
+
+void LoginSignupScreen::apply_form_layout() {
+    if (view_ == View::LOGIN_FORM) {
+        name_field_.set_box(LOGIN_NAME_BOX);
+        password_field_.set_box(LOGIN_PASS_BOX);
+    } else if (view_ == View::SIGNUP_FORM) {
+        name_field_.set_box(SIGNUP_NAME_BOX);
+        password_field_.set_box(SIGNUP_PASS_BOX);
+    }
 }
 
 void LoginSignupScreen::leave_form() {
@@ -112,12 +124,12 @@ void LoginSignupScreen::handle_choice_event(const SDL_Event& event) {
         float y = 0.0f;
         SDL_RenderCoordinatesFromWindow(renderer_, event.button.x, event.button.y, &x, &y);
 
-        if (contains(CHOICE_LOGIN_BUTTON, x, y)) {
-            view_ = View::LOGIN_FORM;
+        if (contains(CHOICE_SIGNUP_BUTTON, x, y)) {
+            view_ = View::SIGNUP_FORM;
             error_message_.clear();
             enter_form();
-        } else if (contains(CHOICE_SIGNUP_BUTTON, x, y)) {
-            view_ = View::SIGNUP_FORM;
+        } else if (contains(CHOICE_LOGIN_BUTTON, x, y)) {
+            view_ = View::LOGIN_FORM;
             error_message_.clear();
             enter_form();
         }
@@ -140,18 +152,7 @@ void LoginSignupScreen::handle_form_event(const SDL_Event& event) {
         // ENTER confirma segun la vista.
         if (event.key.scancode == SDL_SCANCODE_RETURN ||
             event.key.scancode == SDL_SCANCODE_KP_ENTER) {
-            if (view_ == View::LOGIN_FORM) {
-                try_login();
-            } else {  // SIGNUP_FORM: pasar a creacion de personaje.
-                if (name_field_.value().empty() || password_field_.value().empty()) {
-                    error_message_ = "Ingresa nombre y contrasena";
-                } else {
-                    session_.name = name_field_.value();
-                    session_.password = password_field_.value();
-                    error_message_.clear();
-                    next_ = ScreenState::CHARACTER_CREATION;
-                }
-            }
+            submit_current_form();
             return;
         }
     }
@@ -161,12 +162,21 @@ void LoginSignupScreen::handle_form_event(const SDL_Event& event) {
         float x = 0.0f;
         float y = 0.0f;
         SDL_RenderCoordinatesFromWindow(renderer_, event.button.x, event.button.y, &x, &y);
-        if (name_field_.hit(x, y)) {
+        if (view_ == View::LOGIN_FORM && contains(LOGIN_SUBMIT_BUTTON, x, y)) {
+            submit_current_form();
+        } else if (view_ == View::LOGIN_FORM && contains(LOGIN_BACK_BUTTON, x, y)) {
+            leave_form();
+            error_message_.clear();
+        } else if (view_ == View::SIGNUP_FORM && contains(SIGNUP_SUBMIT_BUTTON, x, y)) {
+            submit_current_form();
+        } else if (view_ == View::SIGNUP_FORM && contains(SIGNUP_BACK_BUTTON, x, y)) {
+            leave_form();
+            error_message_.clear();
+        } else if (name_field_.hit(x, y)) {
             focus(name_field_);
         } else if (password_field_.hit(x, y)) {
             focus(password_field_);
         }
-        // TODO(iteracion botones): hit-test de los botones de la PNG (confirmar/volver).
         return;
     }
 
@@ -233,6 +243,26 @@ void LoginSignupScreen::try_login() {
     }
 }
 
+void LoginSignupScreen::submit_current_form() {
+    if (view_ == View::LOGIN_FORM) {
+        try_login();
+    } else if (view_ == View::SIGNUP_FORM) {
+        submit_signup();
+    }
+}
+
+void LoginSignupScreen::submit_signup() {
+    if (name_field_.value().empty() || password_field_.value().empty()) {
+        error_message_ = "Ingresa nombre y contrasena";
+        return;
+    }
+
+    session_.name = name_field_.value();
+    session_.password = password_field_.value();
+    error_message_.clear();
+    next_ = ScreenState::CHARACTER_CREATION;
+}
+
 void LoginSignupScreen::update() {}
 
 void LoginSignupScreen::render() {
@@ -249,17 +279,10 @@ void LoginSignupScreen::render() {
         SDL_RenderTexture(renderer_, bg, nullptr, nullptr);
     }
 
-    // En el formulario de signup se dibujan los inputs sobre la PNG.
-    if (view_ == View::SIGNUP_FORM) {
-        draw_text(renderer_, font_, "Nombre",
-                  NAME_BOX.x, NAME_BOX.y - LABEL_DY, COLOR_LABEL);
+    if (view_ == View::LOGIN_FORM || view_ == View::SIGNUP_FORM) {
         name_field_.render(renderer_, font_);
-
-        draw_text(renderer_, font_, "Contrasena",
-                  PASS_BOX.x, PASS_BOX.y - LABEL_DY, COLOR_LABEL);
         password_field_.render(renderer_, font_);
     }
-    // TODO(login): dibujar tambien los inputs en View::LOGIN_FORM.
 
     if (!error_message_.empty()) {
         draw_text(renderer_, font_, error_message_.c_str(), 96.0f, 420.0f, COLOR_ERROR);

@@ -31,6 +31,9 @@ class TextField {
     void set_focus(bool focus);
     bool is_focused() const;
 
+    // Reubica el campo manteniendo el texto ya ingresado.
+    void set_box(const SDL_FRect& box);
+
     // Dibuja el marco, el contenido (o asteriscos) y el cursor parpadeante.
     void render(SDL_Renderer* renderer, TTF_Font* font) const;
 

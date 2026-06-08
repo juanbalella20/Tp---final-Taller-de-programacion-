@@ -69,21 +69,27 @@ class LoginSignupScreen : public Screen {
     ScreenState next_ = ScreenState::LOGIN_SIGNUP;
 
     // Zonas clickeables sobre la PNG de eleccion (coordenadas logicas LOGIN_W x
-    // LOGIN_H). TODO: ajustar a la imagen real.
-    static constexpr SDL_FRect CHOICE_LOGIN_BUTTON{ 96.0f, 200.0f, 300.0f, 50.0f };
-    static constexpr SDL_FRect CHOICE_SIGNUP_BUTTON{ 96.0f, 280.0f, 300.0f, 50.0f };
+    // LOGIN_H).
+    static constexpr SDL_FRect CHOICE_SIGNUP_BUTTON{ 134.0f, 180.0f, 228.0f, 55.0f };
+    static constexpr SDL_FRect CHOICE_LOGIN_BUTTON{ 134.0f, 263.0f, 228.0f, 52.0f };
 
     // Carga una textura PNG. Lanza si no se pudo cargar.
     SDL_Texture* load_png(const char* path);
     // Entra a un formulario (login o signup): prende el text-input de la ventana
     // y enfoca el campo de nombre.
     void enter_form();
+    // Ubica los campos sobre la PNG correspondiente al formulario activo.
+    void apply_form_layout();
     // Vuelve a la pantalla de eleccion: apaga el text-input y desenfoca.
     void leave_form();
     // Pone el foco en un campo y lo saca del otro (un solo campo activo a la vez).
     void focus(TextField& field);
     // Intenta el login sincrono. Llena error_message_ o avanza a GAME.
     void try_login();
+    // Confirma el formulario activo, usando la misma accion que Enter.
+    void submit_current_form();
+    // Valida el registro y avanza a creacion de personaje.
+    void submit_signup();
     // Asegura que la sesion tenga un ClientProtocol conectado. Devuelve false y
     // setea error_message_ si no se pudo conectar.
     bool ensure_connected();
