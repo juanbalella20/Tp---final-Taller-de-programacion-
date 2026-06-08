@@ -29,6 +29,7 @@ class GameMsg {
     uint32_t max_xp;
     uint32_t mana;
     int level;
+    bool ghost;
     std::vector<PlayerInfo> players;
     Zone zone;
     int damage;
@@ -111,6 +112,9 @@ class GameMsg {
 
     void set_level(int level);
     int get_level() const;
+
+    void set_ghost(bool value);
+    bool get_ghost() const;
 };
 
 

@@ -64,3 +64,6 @@ const std::vector<std::string>& GameMsg::get_equipped_uids() const { return this
 
 void GameMsg::set_level(int level) { this->level = level; }
 int GameMsg::get_level() const { return this->level; }
+
+void GameMsg::set_ghost(bool value) { this->ghost = value; }
+bool GameMsg::get_ghost() const { return this->ghost; }
