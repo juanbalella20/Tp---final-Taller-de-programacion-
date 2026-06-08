@@ -377,7 +377,13 @@ void ClientDeserializer::deserialize_npcs_snapshot(const std::vector<uint8_t>& p
         std::string name = read_string(payload, offset);
         int x = static_cast<int>(read_uint16_be(payload, offset));
         int y = static_cast<int>(read_uint16_be(payload, offset));
-        npcs.emplace_back(std::move(type), std::move(name), x, y);
+
+        if (offset >= payload.size()) {
+            throw std::invalid_argument("Payload demasiado corto leyendo la direccion del NPC");
+        }
+        Direction dir = static_cast<Direction>(payload[offset++]);
+
+        npcs.emplace_back(std::move(type), std::move(name), x, y, dir);
     }
 
     msg.set_npcs(npcs);
