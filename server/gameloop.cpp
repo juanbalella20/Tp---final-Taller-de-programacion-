@@ -57,7 +57,7 @@ void GameLoop::load_world() {
 }
 
 InitialState GameLoop::load_initial_state_hardcoded(Zone zone) {
-    InitialState is;
+    InitialState is{0, 0};
 
     switch (zone)
     {
@@ -68,8 +68,11 @@ InitialState GameLoop::load_initial_state_hardcoded(Zone zone) {
     case ZONE_DESERT:
         is.num_items = 6;
         is.num_npc = 7;
+        break;
     case ZONE_DUNGEON: 
         is.num_npc = 12;
+        is.num_items = 8;
+        break;
     default:
         break;
     }

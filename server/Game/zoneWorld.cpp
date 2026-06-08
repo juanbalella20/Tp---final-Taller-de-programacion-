@@ -74,7 +74,9 @@ std::pair<int, int> ZoneWorld::find_random_empty_cell(
     std::vector<std::pair<int, int>> empty_cells;
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            if (map[y][x] == elements::empty && !has_actor_at(x, y, players_here)) {
+            if (map[y][x] == elements::empty &&
+                !has_actor_at(x, y, players_here) &&
+                !has_ground_item_at(x, y)) {
                 empty_cells.emplace_back(x, y);
             }
         }

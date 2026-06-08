@@ -66,6 +66,11 @@ NPChostile GameMap::rand_npc(Zone zone, ZoneWorld& world) {
     return make_npc_from_spawn({type, x, y});
 }
 
+std::unique_ptr<Item> GameMap::rand_item() {
+    ItemCatalog catalog;
+    return catalog.make_random_item();
+}
+
 GameMap::GameMap() = default;
 Zone GameMap::zone_id_of(const std::string& player_name) const {
     auto it = player_zone.find(player_name);
@@ -135,8 +140,9 @@ void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
             }
             // spawn de items
             for (int i = 0; i < state_it->second.num_items; i++) {
-                //world.spawn_item(rand_item());
-                //world.spawn_item(7, 7, std::make_unique<Arma>("espada", "espada", 50, 2, 2));
+                auto [x, y] = world.find_random_empty_cell(players_in(zone_id));
+                if (x == -1 || y == -1) break;
+                world.spawn_item(x, y, rand_item());
             }
         }
         // Seller de prueba
@@ -144,7 +150,7 @@ void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
 
         // Item de prueba hardcodeado. TODO: moverlo a state.items cuando este listo.
         
-        world.spawn_item(7, 7, std::make_unique<Arma>("espada", cfg.espada.name, cfg.espada.price, cfg.espada.distance, cfg.espada.damage_min, cfg.espada.damage_max));
+        //world.spawn_item(7, 7, std::make_unique<Arma>("espada", cfg.espada.name, cfg.espada.price, cfg.espada.distance, cfg.espada.damage_min, cfg.espada.damage_max));
 
         zones.emplace(zone_id, std::move(world));
     }
@@ -692,4 +698,3 @@ void GameMap::set_infinite_mana(std::string player_name) {
     player->heal_max_mana();
     player->set_inf_mana();
 }
-

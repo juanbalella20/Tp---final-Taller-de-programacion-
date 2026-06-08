@@ -73,6 +73,10 @@ private:
     // genera un NPChostile random ubicado en una celda libre. Si la zona no
     // tiene tipos permitidos, devuelve un NPC en {-1,-1} (no se spawnea).
     NPChostile rand_npc(Zone zone, ZoneWorld& world);
+
+    // Construye un item concreto elegido al azar. Se devuelve por unique_ptr
+    // porque Item es una interfaz abstracta.
+    std::unique_ptr<Item> rand_item();
 public:
     GameMap();
 
