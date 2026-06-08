@@ -40,6 +40,7 @@ void GameLoop::register_handlers() {
     handlers[MSG_CHEAT_INF_HP]   = [this](const ClientCmd& cmd) { handle_cheat_inf_hp(cmd); };
     handlers[MSG_CHEAT_INF_MANA] = [this](const ClientCmd& cmd) { handle_cheat_inf_mana(cmd); };
     handlers[MSG_CHEAT_MANA]     = [this](const ClientCmd& cmd) { handle_cheat_mana(cmd); };
+    handlers[MSG_CHEAT_RESPAWN]  = [this](const ClientCmd& cmd) { handle_cheat_revive(cmd); };
     handlers[MSG_FOUND_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_foundation(cmd); };
     handlers[MSG_JOIN_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_joining(cmd); };
     handlers[MSG_REV_CLAN]     = [this](const ClientCmd& cmd) { handle_clan_reviewing(cmd); };
@@ -760,6 +761,34 @@ void GameLoop::handle_cheat_mana(const ClientCmd& cmd) {
     std::cout << "[INFO: MSG_CHEAT_MANA] " << name << " perdio "
               << cmd.get_gold() << " de mana (queda "
               << game_map.get_player_mana(name) << ")" << std::endl;
+}
+
+void GameLoop::handle_cheat_revive(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    game_map.revive_player(name);
+
+    // Avisa a todos para que dejen de dibujar al jugador como fantasma.
+    GameMsg msg(MSG_CHEAT_RESPAWN);
+    msg.set_player_name(name);
+    msg.set_chat_content(name + " resucitó.");
+    client_registry_monitor.notify_clients(msg);
+
+    // Sincroniza el HUD del propio jugador: revivir restaura vida/maná al máximo
+    // y resetea la experiencia.
+    GameMsg hp_msg(MSG_HP);
+    hp_msg.set_player_name(name);
+    hp_msg.set_hp(game_map.get_player_hp(name));
+    client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
+
+    GameMsg mana_msg(MSG_MANA);
+    mana_msg.set_player_name(name);
+    mana_msg.set_mana(game_map.get_player_mana(name));
+    client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
+
+    GameMsg xp_msg(MSG_XP);
+    xp_msg.set_player_name(name);
+    xp_msg.set_xp(game_map.get_player_xp(name));
+    client_registry_monitor.notify_client(cmd.get_client_id(), xp_msg);
 }
 
 void GameLoop::handle_clan_foundation(const ClientCmd& cmd) {

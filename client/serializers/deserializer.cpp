@@ -52,7 +52,8 @@ ClientDeserializer::ClientDeserializer() {
     };
     
     for (uint8_t type : {
-        (uint8_t)MSG_CHEAT_KILL, (uint8_t)MSG_CHEAT_INF_HP, (uint8_t)MSG_CHEAT_INF_MANA
+        (uint8_t)MSG_CHEAT_KILL, (uint8_t)MSG_CHEAT_INF_HP, (uint8_t)MSG_CHEAT_INF_MANA,
+        (uint8_t)MSG_CHEAT_RESPAWN
     }) {
         handlers[type] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) { deserialize_text(payload, msg); };
     };

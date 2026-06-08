@@ -58,6 +58,9 @@ ServerDeserializer::ServerDeserializer() {
     handlers[MSG_CHEAT_INF_MANA] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         deserialize_no_payload(payload, cmd);
     };
+    handlers[MSG_CHEAT_RESPAWN] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
+        deserialize_no_payload(payload, cmd);
+    };
     handlers[MSG_CHEAT_MANA] = [this](const std::vector<uint8_t>& payload, ClientCmd& cmd) {
         read_gold(payload, cmd);
     };

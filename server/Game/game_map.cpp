@@ -698,3 +698,9 @@ void GameMap::set_infinite_mana(std::string player_name) {
     player->heal_max_mana();
     player->set_inf_mana();
 }
+
+void GameMap::revive_player(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) return;
+    player->revive();
+}

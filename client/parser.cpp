@@ -158,8 +158,7 @@ bool Parser::cheat_command(const std::string& command, ClientCmd& cmd, std::istr
         cmd = parse_gold_cmd(MSG_CHEAT_MANA, ss, "Uso: /mana <cantidad>");
         return true;
     }
-    if (command == "/resucitar") {
-        // TODO:
+    if (command == "/cheat-resucitar") {
         cmd = parse_no_payload(MSG_CHEAT_RESPAWN);
         return true;
     }

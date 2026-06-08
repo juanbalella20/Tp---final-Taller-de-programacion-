@@ -621,6 +621,21 @@ void ClientGUI::update() {
                     chat_inbox.push(msg.get_chat_content());
                     break;
                 }
+                case MSG_CHEAT_RESPAWN: {
+                    if (msg.get_player_name() == own_name) {
+                        player->set_ghost(false);
+                        player_pov = player->front_pov(ViewDirection::FRONT);
+                    } else {
+                        for (auto& p : other_players) {
+                            if (p.name == msg.get_player_name()) {
+                                p.ghost = false;
+                                break;
+                            }
+                        }
+                    }
+                    chat_inbox.push(msg.get_chat_content());
+                    break;
+                }
                 case MSG_GOLD:
                     if (hud) hud->set_gold(msg.get_gold());
                     break;

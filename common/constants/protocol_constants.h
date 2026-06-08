@@ -80,7 +80,7 @@ enum MessageType : uint8_t {
     // Server->cliente: register/login EXITOSO. Se manda antes del world snapshot.
     // Payload: [name_len:1][name][race_len:1][race][class_len:1][class]
     MSG_CONFIRM_SESSION = 0x37,
-    MSG_CHEAT_RESPAWN = 0x38,
+    MSG_CHEAT_RESPAWN = 0x38,  // Cheat /cheat-resucitar: revivir al player (fantasma -> vivo)
     // Cliente->server: usar/consumir un item del inventario (p.ej. tomar una
     // poción). Payload: el uid de INSTANCIA del item en texto (como MSG_EQUIP).
     MSG_USE_ITEM = 0x39,
