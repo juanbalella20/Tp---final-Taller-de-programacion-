@@ -13,7 +13,7 @@ Player::Player(const std::string name, PlayerRace& player_race, PlayerClass& pla
     player_race(player_race),
     player_class(player_class),
     player_inventory(),
-    level(1) {
+    level(16) {
 
     lives = max_life();
     gold = 10000;
@@ -379,4 +379,8 @@ void Player::restore(uint32_t gold, uint32_t lives, uint32_t mana,
     this->experience = experience;
     this->level = Level(level);
     this->id_clan = id_clan;
+}
+
+uint32_t Player::gold_drop() {
+    return level.calculate_gold_drop(gold);
 }

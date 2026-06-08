@@ -185,6 +185,8 @@ public:
     // inmutables (van por el constructor).
     void restore(uint32_t gold, uint32_t lives, uint32_t mana,
                  uint32_t experience, int level, int id_clan);
+
+    uint32_t gold_drop();
 };
 
 #endif
