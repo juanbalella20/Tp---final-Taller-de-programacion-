@@ -143,6 +143,7 @@ void Player::heal_mana(const int healthy_mana) {
 }
 
 void Player::lose_mana(const int amount) {
+    if (inf_mana) return;
     if (amount <= 0) return;
     if (static_cast<uint32_t>(amount) >= mana) {
         mana = 0;
@@ -270,10 +271,12 @@ int Player::damage_attack() {
 }
  
 DamageOutcome Player::receive_damage(int damage, Player& atacante, bool is_critical) {
+    if (inmortal) return {0,0,false,false,nullptr};
     return state->receive_damage(*this, damage, atacante, is_critical);
 }
 
 DamageOutcome Player::receive_npc_damage(int damage, bool is_critical) {
+    if (inmortal) return {0,0,false,false,nullptr};
     return state->receive_npc_damage(*this, damage, is_critical);
 }
 
