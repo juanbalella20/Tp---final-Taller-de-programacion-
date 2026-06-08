@@ -58,6 +58,11 @@ enum class elements {
 #define PERSIST_DATA_DIR "data/persistence/"
 #define PERSIST_PLAYERS_FILE "players.dat"
 #define PERSIST_INDEX_FILE "index.dat"
+// Clanes: archivo binario propio. A diferencia de players.dat, los clanes tienen
+// listas de tamaño variable (miembros/baneados), asi que cada ClanRecord se
+// serializa con un header de tamaño fijo + N nombres a continuacion. El archivo
+// se reescribe entero al persistir (los clanes son pocos).
+#define PERSIST_CLANS_FILE "clans.dat"
 
 // Guardado periodico: cada cuantos ticks del game loop se persiste el estado de
 // los jugadores online. Loop a 20 ticks/s => 600 ticks = 30 s.
@@ -68,7 +73,14 @@ enum class elements {
 #define PERSIST_NAME_MAX 32
 #define PERSIST_PASSWORD_MAX 32
 #define PERSIST_ITEM_ID_MAX 24
-#define PERSIST_INV_SLOTS 25  // debe coincidir con Inventory::MAX_SLOTS
+#define PERSIST_INV_SLOTS 25  
+#define PERSIST_CLAN_NAME_MAX 32
+// Clan completo (clans.dat). Cada nombre (founder/miembro/baneado) ocupa
+// PERSIST_NAME_MAX. El review es texto libre que se trunca a este buffer.
+#define PERSIST_CLAN_REVIEW_MAX 1024
+#define PERSIST_CLAN_MEMBERS_MAX 64
+#define PERSIST_CLAN_BANNED_MAX 64
+// debe coincidir con Inventory::MAX_SLOTS
 
 
 #endif

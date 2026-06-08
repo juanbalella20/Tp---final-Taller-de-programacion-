@@ -11,6 +11,8 @@
 #include "game_map.h"
 #include "persistence/player_persistence.h"
 #include "persistence/player_serializer.h"
+#include "persistence/clan_persistence.h"
+#include "persistence/clan_serializer.h"
 #include "persistence/auth_service.h"
 
 class GameLoop : public Thread {
@@ -27,6 +29,10 @@ class GameLoop : public Thread {
     // unico hilo que muta el mundo, asi que persiste sin locks.
     PlayerPersistence persistence;
     PlayerSerializer player_serializer;
+    // Persistencia de clanes: archivo propio (clans.dat). Los clanes se cargan al
+    // iniciar y se reescriben en bloque al mutar/guardar (son pocos).
+    ClanPersistence clan_persistence;
+    ClanSerializer clan_serializer;
     AuthService auth;
     uint64_t tick_count = 0;  // para el guardado periodico (PERSIST_INTERVAL_TICKS)
 
@@ -71,6 +77,11 @@ class GameLoop : public Thread {
                                 const std::string& race);
     // Persiste a disco el estado de todos los jugadores online (guardado periodico).
     void persist_online_players();
+    // Carga los clanes de clans.dat al GameMap (una vez, al iniciar el server).
+    void load_persisted_clans();
+    // Reescribe clans.dat con el set actual de clanes (en cada mutacion y en el
+    // guardado periodico). Los clanes son pocos: se vuelca el set entero.
+    void persist_clans();
 
     void handle_register(const ClientCmd& cmd);
     void handle_login(const ClientCmd& cmd);

@@ -51,7 +51,9 @@ PlayerRecord PlayerSerializer::to_record(const Player& player, Zone zone,
     rec.experience = player.get_xp();
     rec.coord_x    = player.get_coord_x();
     rec.coord_y    = player.get_coord_y();
-    rec.id_clan    = player.get_clan_id();
+    // El clan NO se persiste por jugador: su fuente de verdad es clans.dat (la
+    // membresia vive en Clan::members, por nombre). rec.clan queda en cero (el
+    // memset inicial) como campo reservado/denormalizado.
 
     // Inventario: un slot por item, guardando SOLO el type_id. Marca los
     // equipados comparando por uid de INSTANCIA (así, con dos copias del mismo
@@ -88,7 +90,7 @@ Player PlayerSerializer::from_record(const PlayerRecord& rec) const {
     Player player(name, race, klass);
 
     // Estado mutable que el constructor calcula / no tiene setter.
-    player.restore(rec.gold, rec.lives, rec.mana, rec.experience, rec.level, rec.id_clan);
+    player.restore(rec.gold, rec.lives, rec.mana, rec.experience, rec.level);
     player.update_position(rec.coord_x, rec.coord_y);
     if (rec.is_ghost) player.set_ghost();
 

@@ -166,6 +166,8 @@ add_executable(server
     server/Game/item/item_catalog.cpp
     server/persistence/player_persistence.cpp
     server/persistence/player_serializer.cpp
+    server/persistence/clan_persistence.cpp
+    server/persistence/clan_serializer.cpp
     server/persistence/auth_service.cpp
     server/Game/npc/npc.cpp
     server/Game/npc/npcHostile.cpp
