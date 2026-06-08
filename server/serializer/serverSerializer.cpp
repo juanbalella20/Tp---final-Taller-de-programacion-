@@ -40,6 +40,7 @@ ServerSerializer::ServerSerializer() {
     // en chat_content del GameMsg y el header lleva el tipo MSG_AUTH_ERROR.
     handlers[MSG_AUTH_ERROR] = [this](const GameMsg& msg) { return serialize_text(msg); };
     handlers[MSG_UPDATE_LEVEL] = [this](const GameMsg& msg) { return serialize_level(msg); };
+    handlers[MSG_DEATH] = [this](const GameMsg& msg) { return serialize_name(msg); };
 }
 
 // Appendea un uint16_t en big-endian al buffer (definido mas abajo).
@@ -401,6 +402,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
         payload_len += LEN_PLAYER_NAME_SIZE + static_cast<uint16_t>(pl.name.size());
         payload_len += 1;                   // race
         payload_len += 2 * LEN_COORD;       // x + y
+        payload_len += 1;
     }
 
     std::vector<uint8_t> buf;
@@ -459,6 +461,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
         buf.push_back(race_code);
         append_uint16_be(buf, static_cast<uint16_t>(pl.x));
         append_uint16_be(buf, static_cast<uint16_t>(pl.y));
+        buf.push_back(pl.ghost ? 1 : 0);
     }
 
     return buf;

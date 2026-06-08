@@ -89,6 +89,9 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_UPDATE_LEVEL] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_level(payload, msg);
     };
+    handlers[MSG_DEATH] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_name(payload, msg);
+    };
 }
 
 
@@ -423,6 +426,10 @@ void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
         uint8_t race_code = payload[offset++];
         int x = static_cast<int>(read_uint16_be(payload, offset));
         int y = static_cast<int>(read_uint16_be(payload, offset));
+        bool is_ghost = (payload[offset++] != 0);
+
+        std::cout << "[DEBUG] Player " << name << " is_ghost: " << is_ghost << std::endl;
+    
         std::string race;
         switch (race_code) {
             case RACE_HUMAN: race = "human"; break;
@@ -431,7 +438,9 @@ void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
             case RACE_GNOME: race = "gnome"; break;
             default: throw std::invalid_argument("Raza invalida en MSG_REGISTER");
         }
-        players.push_back({std::move(name), race, 0, x, y});
+        PlayerInfo pi{std::move(name), race, 0, x, y};
+        pi.ghost = is_ghost;
+        players.push_back(pi);
     }
     msg.set_players(players);
 }
