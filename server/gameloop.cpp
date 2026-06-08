@@ -612,6 +612,18 @@ void GameLoop::handle_cheat_kill(const ClientCmd& cmd) {
     msg.set_player_name(name);
     msg.set_chat_content(name + " murió instantáneamente.");
     client_registry_monitor.notify_clients(msg);
+    broadcast_items_snapshot();
+    GameMsg gold_msg(MSG_GOLD);
+    gold_msg.set_gold(game_map.get_player_gold(name));
+    client_registry_monitor.notify_client_by_name(name, gold_msg);
+    const Player& p = game_map.get_player(name);
+    std::vector<ItemInfo> item_infos;
+    for (Item* item : p.get_all_items()) {
+        item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+    }
+    GameMsg inv_msg(MSG_INVENTORY);
+    inv_msg.set_items(item_infos);
+    client_registry_monitor.notify_client_by_name(name, inv_msg);
 }
 
 void GameLoop::handle_cheat_inf_hp(const ClientCmd& cmd) {

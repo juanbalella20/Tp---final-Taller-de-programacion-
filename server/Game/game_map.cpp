@@ -514,8 +514,17 @@ std::vector<PlayerInfo> GameMap::build_players_snapshot(const std::string& playe
 }
 
 void GameMap::kill_player(const std::string& player_name) {
+    ZoneWorld& world = zone_of(player_name);
+    const Zone z = zone_id_of(player_name);
     Player* player = find_player_by_name(player_name);
     player->set_ghost();
+    int x = player->get_coord_x();
+    int y = player->get_coord_y();
+    uint32_t gold_drop = player->gold_drop();
+    if (gold_drop > 0)
+        world.spawn_gold(x, y, gold_drop);
+    auto dropped = player->drop_inventory();
+    world.scatter_items(x, y, std::move(dropped), players_in(z));
 }
 
 bool GameMap::found_clan(const std::string& player_name, const std::string& clan_name) {
