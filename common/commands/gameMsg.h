@@ -25,6 +25,7 @@ class GameMsg {
     std::vector<ItemFloorInfo> items_on_floor;
     uint32_t hp;
     uint32_t xp;
+    uint32_t max_xp;
     uint32_t mana;
     int level;
     std::vector<PlayerInfo> players;
@@ -70,6 +71,9 @@ class GameMsg {
 
     void set_xp(uint32_t xp);
     uint32_t get_xp() const;
+
+    void set_max_xp(uint32_t max_xp);
+    uint32_t get_max_xp() const;
 
     void set_mana(uint32_t mana);
     uint32_t get_mana() const;
