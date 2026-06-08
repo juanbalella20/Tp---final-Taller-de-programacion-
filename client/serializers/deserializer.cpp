@@ -455,6 +455,12 @@ void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
     msg.set_coord_x(static_cast<int>(read_uint16_be(payload, offset)));
     msg.set_coord_y(static_cast<int>(read_uint16_be(payload, offset)));
 
+    if (offset >= payload.size()) {
+        throw std::invalid_argument("Payload demasiado corto leyendo ghost flag en MSG_REGISTER");
+    }
+    bool is_ghost = (payload[offset++] != 0);
+    msg.set_ghost(is_ghost);
+
     // Jugadores ya presentes en el mapa al momento del registro.
     uint16_t player_count = read_uint16_be(payload, offset);
     std::vector<PlayerInfo> players;
