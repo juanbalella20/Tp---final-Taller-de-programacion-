@@ -123,7 +123,6 @@ void GameLoop::load_maps() {
     InitialState state_city = load_initial_state_hardcoded(ZONE_CITY);
     InitialState state_dungeon = load_initial_state_hardcoded(ZONE_DUNGEON);
     std::map<Zone, std::string> zone_paths = {
-        //{ZONE_DESERT, "data/maps/desert/map.toml"},
         {ZONE_DESERT, "data/maps/desert/map-2.bin"},
         {ZONE_CITY,   "data/maps/city/city-2.bin"},
         {ZONE_FOREST, "data/maps/forest/forest2.bin"},

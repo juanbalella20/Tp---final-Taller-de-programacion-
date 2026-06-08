@@ -43,16 +43,12 @@ void ClientGUI::loadMedia(Zone zone) {
     {
     case ZONE_DESERT : {
         tilemap = std::make_unique<TileMap>(renderer);
-        //tilemap->load_map_bin("data/maps/desert/map-test-1.bin");
         tilemap->load_map_bin("data/maps/desert/map-2.bin");
-        //tilemap->load_map_toml("data/maps/desert/map.toml");
         break;
     }
     case ZONE_CITY : {
         tilemap = std::make_unique<TileMap>(renderer);
-        //tilemap->load_map_bin("data/maps/city/city-map-test.bin");
         tilemap->load_map_bin("data/maps/city/city-2.bin");
-        //tilemap->load_map_toml("data/maps/city/map.toml");
         break;
     }
     case ZONE_FOREST : {
