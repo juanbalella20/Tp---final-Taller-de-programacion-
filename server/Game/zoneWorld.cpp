@@ -40,7 +40,7 @@ bool ZoneWorld::is_blocked_terrain(int x, int y) const {
 }
 
 bool ZoneWorld::has_actor_at(int x, int y,
-                             const std::vector<const Player*>& players_here) const {
+                             const std::vector<Player*>& players_here) const {
     for (const Player* p : players_here) {
         if (p->get_coord_x() == x && p->get_coord_y() == y) return true;
     }
@@ -58,7 +58,7 @@ bool ZoneWorld::has_ground_item_at(int x, int y) const {
 }
 
 std::pair<int, int> ZoneWorld::find_random_empty_cell(
-    const std::vector<const Player*>& players_here) const {
+    const std::vector<Player*>& players_here) const {
     std::vector<std::pair<int, int>> empty_cells;
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
@@ -108,7 +108,7 @@ void ZoneWorld::spawn_gold(int x, int y, int amount) {
 
 void ZoneWorld::scatter_items(int center_x, int center_y,
                               std::vector<std::unique_ptr<Item>> items,
-                              const std::vector<const Player*>& players_here) {
+                              const std::vector<Player*>& players_here) {
     size_t placed = 0;
     // Anillos crecientes alrededor del centro (radio Chebyshev r = 1, 2, 3, ...).
     // El máximo radio posible cubre toda la zona.
@@ -149,7 +149,7 @@ bool ZoneWorld::update_npcs() {
     return respawned;
 }
 
-void ZoneWorld::update_npc_aggro(const std::vector<const Player*>& players_in_zone) {
+void ZoneWorld::update_npc_aggro(const std::vector<Player*>& players_in_zone) {
     for (auto& npc : npcs) {
         if (npc.is_dead()) continue;
         
@@ -157,7 +157,7 @@ void ZoneWorld::update_npc_aggro(const std::vector<const Player*>& players_in_zo
         int best_distance = INT_MAX;
         std::string closest_player;
         
-        for (const Player* player : players_in_zone) {
+        for (Player* player : players_in_zone) {
             int dist = std::abs(npc.get_coord_x() - player->get_coord_x()) +
                       std::abs(npc.get_coord_y() - player->get_coord_y());  // Manhattan
             
@@ -174,13 +174,44 @@ void ZoneWorld::update_npc_aggro(const std::vector<const Player*>& players_in_zo
             npc.clear_target();
         }
         
-        // Mover hacia objetivo
+        // Mover hacia objetivo o atacar
         if (npc.has_target()) {
             auto it = std::find_if(players_in_zone.begin(), players_in_zone.end(),
-                [&](const Player* p) { return p->get_name() == npc.get_target(); });
+                [&](Player* p) { return p->get_name() == npc.get_target(); });
 
             if (it != players_in_zone.end()) {
-                npc.move_towards((*it)->get_coord_x(), (*it)->get_coord_y(), *this, players_in_zone);
+                Player* target_player = *it;
+                int dist = std::abs(npc.get_coord_x() - target_player->get_coord_x()) +
+                        std::abs(npc.get_coord_y() - target_player->get_coord_y());
+                    
+                int attack_range = 1; // adyacente
+
+                if (dist <= attack_range) {
+                    if (npc.can_attack()) {
+                        int damage = npc.get_damage();
+                        bool is_critical = false;
+
+                        DamageOutcome outcome = target_player->receive_npc_damage(damage, is_critical);
+
+                        if (outcome.dodged) {
+                            std::cout << "[DEBUG] " << target_player->get_name() << " ESQUIVÓ el ataque de " << npc.get_name() << "!" << std::endl;
+                        } else {
+                            std::cout << "[DEBUG] " << npc.get_name() << " golpeó a " 
+                                    << target_player->get_name() << " por " << outcome.damage << " daño!" << std::endl;
+                            
+                            if (target_player->is_dead()) {
+                                std::cout << "[DEBUG] " << target_player->get_name() << " HA MUERTO a manos de un " << npc.get_name() << std::endl;
+                                auto dropped = target_player->drop_inventory();
+                                scatter_items(target_player->get_coord_x(), target_player->get_coord_y(), std::move(dropped), players_in_zone);
+                                
+                                npc.clear_target();
+                            }
+                        }
+                        npc.reset_attack_cooldown();
+                    }
+                } else {
+                    npc.move_towards((*it)->get_coord_x(), (*it)->get_coord_y(), *this, players_in_zone);
+                }
             } else {
                 npc.clear_target();
             }
@@ -282,7 +313,7 @@ const TeleportDef* ZoneWorld::teleport_adjacent_to(int x, int y) const {
 }
 
 std::pair<int, int> ZoneWorld::free_cell_adjacent_to(
-    int tx, int ty, const std::vector<const Player*>& players_here) const {
+    int tx, int ty, const std::vector<Player*>& players_here) const {
     // Las 4 celdas adyacentes (N, S, E, O) al teleport destino.
     const int dx[] = {0, 0, 1, -1};
     const int dy[] = {-1, 1, 0, 0};
