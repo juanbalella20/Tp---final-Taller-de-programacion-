@@ -6,6 +6,7 @@
 #include "npc.h"
 #include "../entity.h"
 // #include "itemDataBase.h"
+#include "../../../common/constants/protocol_constants.h"
 
 #include <vector>
 
@@ -29,7 +30,7 @@ class NPChostile : public NPC, public Entity {
         int remaining_ticks_to_spawn;
         int ticks_to_spawn;
         int max_lifepoints;
-
+        Direction current_direction;
         // persecución a jugador
         std::string target_player;
         int attack_speed_ticks;
@@ -57,6 +58,7 @@ class NPChostile : public NPC, public Entity {
         int get_coord_x() const;
         int get_coord_y() const;
 
+        Direction get_direction() const { return current_direction; }
         // Lógica de persecución a jugador
         void set_target(const std::string& player_name) { target_player = player_name; }
         void clear_target() { target_player.clear(); }
