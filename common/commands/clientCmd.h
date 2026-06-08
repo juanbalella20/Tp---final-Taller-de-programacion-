@@ -23,6 +23,7 @@ class ClientCmd {
     int coord_x;
     int coord_y;
     std::string chat_content;
+    uint8_t zone_uint;
 
  public:
     ClientCmd();
@@ -70,6 +71,8 @@ class ClientCmd {
 
     void set_chat_content(const std::string& content);
     const std::string& get_chat_content() const;
+    void set_zone(const uint8_t zone_uint8);
+    uint8_t get_zone() const;
 };
 
 #endif  // COMMON_CLIENT_CMD_H_

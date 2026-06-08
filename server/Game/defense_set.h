@@ -1,6 +1,7 @@
 #ifndef DEFENSE_SET_H_
 #define DEFENSE_SET_H_
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -28,11 +29,15 @@ public:
     void unequip_casco();
     void unequip_escudo();
 
-    // ¿El item con ese id está equipado en alguno de los slots de defensa?
-    bool is_equipped(const std::string& item_id) const;
+    // ¿El item con ese uid de instancia está equipado en algún slot de defensa?
+    bool is_equipped(uint64_t item_uid) const;
 
-    // Ids de los items equipados (armadura, casco, escudo); omite slots vacíos.
-    std::vector<std::string> get_equipped_ids() const;
+    // uids de instancia de los items equipados (armadura, casco, escudo); omite
+    // slots vacíos.
+    std::vector<uint64_t> get_equipped_uids() const;
+
+    // type_ids de los items equipados (para el sprite/animaciones del cliente).
+    std::vector<std::string> get_equipped_type_ids() const;
 
     // Defensa = defensa(armadura) + defensa(casco) + defensa(escudo).
     // Los slots vacíos aportan 0.

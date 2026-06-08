@@ -39,6 +39,9 @@ class Serializer {
     // [DEP_GOLD, RET_GOLD]
     std::vector<uint8_t> serialize_gold(uint8_t type, const ClientCmd& cmd);
 
+    // [TELEPORT] -> payload [zona:1B]
+    std::vector<uint8_t> serialize_zone(uint8_t type, const ClientCmd& cmd);
+
     std::vector<uint8_t> serialize_private(const ClientCmd& cmd);
 
  public:

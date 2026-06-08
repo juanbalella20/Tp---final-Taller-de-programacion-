@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <stdexcept>
 #include "../vendored/tomlplusplus/toml.hpp"
-//#include "binaryMap/binaryMapLoader.h"
+#include "binaryMap/binaryMapLoader.h"
 #include <iostream>
 
 int MapLoader::get_tile_size() const {
@@ -37,16 +37,28 @@ const TileDef* MapLoader::find_tile(int id) const {
 }
 
 bool MapLoader::is_collidable(int x, int y) const {
+    // La grilla de colision es la unica fuente de verdad. Fuera del mapa siempre
+    // bloquea; in-bounds, depende de la grilla (vacia/sin entrada = transitable).
     if (x < 0 || y < 0 || x >= width || y >= height) return true;
+    if (y >= static_cast<int>(collision.size())) return false;
+    const auto& row = collision[y];
+    if (x >= static_cast<int>(row.size())) return false;
+    return row[x] != 0;
+}
+
+void MapLoader::derive_collision_from_layers() {
+    // Path TOML legacy: el TOML no trae grilla explicita, asi que la derivamos
+    // del flag 'collidable' por-tileset de los tiles presentes en cada celda.
+    collision.assign(height, std::vector<uint8_t>(width, 0));
     for (const auto& layer : layers) {
-        if (y >= static_cast<int>(layer.data.size())) continue;
-        const auto& row = layer.data[y];
-        if (x >= static_cast<int>(row.size())) continue;
-        int id = row[x];
-        const TileDef* td = find_tile(id);
-        if (td && td->collidable) return true;
+        for (int y = 0; y < height && y < static_cast<int>(layer.data.size()); ++y) {
+            const auto& src = layer.data[y];
+            for (int x = 0; x < width && x < static_cast<int>(src.size()); ++x) {
+                const TileDef* td = find_tile(src[x]);
+                if (td && td->collidable) collision[y][x] = 1;
+            }
+        }
     }
-    return false;
 }
 
 
@@ -226,8 +238,9 @@ void MapLoader::load(const std::string& tomlPath) {
     parse_layers(tbl);
     parse_spawns(tbl);
     parse_teleports(tbl);
+    // La grilla se deriva DESPUES de tener tiles + capas.
+    derive_collision_from_layers();
 }
-/*
 void MapLoader::load_bin(const std::string& binPath) {
     // BinaryMapLoader expone la misma superficie que MapLoader: parsea el .bin
     BinaryMapLoader bin;
@@ -240,8 +253,8 @@ void MapLoader::load_bin(const std::string& binPath) {
     layers    = bin.get_layers();
     spawns    = bin.get_spawns();
     teleports = bin.get_teleports();
+    collision = bin.get_collision();
 
     tiles.clear();
     build_tile_index();
 }
-*/

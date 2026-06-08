@@ -24,14 +24,22 @@ void DefenseSet::unequip_escudo() {
     escudo = nullptr;
 }
 
-bool DefenseSet::is_equipped(const std::string& item_id) const {
-    if (armadura && armadura->get_id() == item_id) return true;
-    if (casco    && casco->get_id() == item_id)    return true;
-    if (escudo   && escudo->get_id() == item_id)   return true;
+bool DefenseSet::is_equipped(uint64_t item_uid) const {
+    if (armadura && armadura->get_uid() == item_uid) return true;
+    if (casco    && casco->get_uid() == item_uid)    return true;
+    if (escudo   && escudo->get_uid() == item_uid)   return true;
     return false;
 }
 
-std::vector<std::string> DefenseSet::get_equipped_ids() const {
+std::vector<uint64_t> DefenseSet::get_equipped_uids() const {
+    std::vector<uint64_t> uids;
+    if (armadura) uids.push_back(armadura->get_uid());
+    if (casco)    uids.push_back(casco->get_uid());
+    if (escudo)   uids.push_back(escudo->get_uid());
+    return uids;
+}
+
+std::vector<std::string> DefenseSet::get_equipped_type_ids() const {
     std::vector<std::string> ids;
     if (armadura) ids.push_back(armadura->get_id());
     if (casco)    ids.push_back(casco->get_id());

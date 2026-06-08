@@ -39,7 +39,7 @@ struct InitialState {
 };
 
 struct TeleportResult {
-        bool adyacente;
+        bool on_tile;
         Zone dest_zone;
         int x;
         int y;
@@ -120,6 +120,11 @@ public:
     // p.ej. curación). Propaga las excepciones de Baculo::use_item.
     void self_cast(const std::string& player_name);
 
+    // El jugador toma/consume un item de su inventario por uid (p.ej. una poción):
+    // aplica su efecto (cura) y lo saca del inventario. Devuelve true si se
+    // consumió (false si el uid no existe o el item no es consumible).
+    bool use_item(const std::string& player_name, uint64_t item_uid);
+
     // Respawn de NPCs en TODAS las zonas. Devuelve true si hubo alguno
     bool update_npcs();
 
@@ -142,12 +147,15 @@ public:
     Zone get_player_zone(const std::string& player_name) const;
 
 
-    // Si el player esta adyacente a un teleport, lo mueve a la zona destino y actualiza su tag.
-    TeleportResult teleport_player(const std::string& player_name);
+    // Fuerza el cambio del jugador a 'dest_zone',
+    // ubicandolo en una celda libre de llegada. Devuelve {false,...} si la zona no esta
+    // cargada o no hay celda libre.
+    TeleportResult force_zone_change(const std::string& player_name, Zone dest_zone);
 
-    // Equipa/desequipa (toggle) el item del jugador.
+    // Equipa/desequipa (toggle) el item del jugador, identificado por su uid de
+    // instancia (distingue dos copias del mismo tipo).
     // Devuelve true si, tras la operación, el jugador tiene un arma equipada.
-    bool player_equip_item(const std::string& player_name, const std::string& item_id);
+    bool player_equip_item(const std::string& player_name, uint64_t item_uid);
     void spawn_player(const std::string& name, const std::string& race, const std::string& pclass);
     const Player& get_player(const std::string& name);
     // Acceso mutable por nombre para handlers que cambian estado del player
@@ -188,6 +196,9 @@ public:
     bool ban_member(const std::string& player_name, const std::string& member);
 
     bool same_clan(Player* player1, Player* player2);
+
+    // Busca al player y su zona, comprueba que esté parado en una celda de teleport
+    TeleportResult try_teleport_on_current_cell(const std::string& player_name);
 };
 
 #endif

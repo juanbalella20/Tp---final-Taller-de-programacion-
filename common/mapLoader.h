@@ -1,6 +1,7 @@
 #ifndef MAP_LOADER_H
 #define MAP_LOADER_H
 
+#include <cstdint>
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -54,6 +55,10 @@ class MapLoader {
         std::vector<MapLayerData> layers;
         std::map<std::string, positionCoord> spawns;
         std::vector<TeleportDef> teleports;
+        // Grilla de colision por celda [height][width] (0/1). FUENTE UNICA de
+        // verdad de is_collidable. Para .bin proviene de la seccion COLLISION;
+        // para TOML se deriva de los tiles colidables al cargar (compat legacy).
+        std::vector<std::vector<uint8_t>> collision;
 
         /*
          * Recorre la tabla (array) de tilesets del TOML.
@@ -76,7 +81,10 @@ class MapLoader {
         void parse_spawns(const toml::table& tbl);
         // Traduce los [[teleport]] del TOML al vector de teleports
         void parse_teleports(const toml::table& tbl);
-     
+        // Deriva la grilla de colision a partir de los tiles colidables de las
+        // capas (path TOML legacy: el TOML no trae grilla explicita).
+        void derive_collision_from_layers();
+
 
     public:
         int get_tile_size() const;
@@ -86,10 +94,11 @@ class MapLoader {
         const std::vector<TeleportDef>& get_teleports() const { return teleports; }
         const std::vector<Tileset>& get_tilesets() const;
         const std::vector<MapLayerData>& get_layers() const;
+        const std::vector<std::vector<uint8_t>>& get_collision() const { return collision; }
 
 
-        // True si la celda esta fuera del mapa
-        // True si alguna capa tiene en (x,y) un tile colidable
+        // True si la celda esta fuera del mapa, o si la grilla de colision la
+        // marca como bloqueada. La grilla es la unica fuente de verdad.
         bool is_collidable(int x, int y) const;
 
         // Devuelve nullptr si el id es 0 o no esta registrado en ningun tileset.

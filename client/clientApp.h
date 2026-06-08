@@ -9,25 +9,21 @@
 #include "networkReceiverThread.h"
 #include "clientGUI.h"
 
+// Orquesta el cliente: lee host/puerto de config.toml, corre el ScreenManager
+// (config -> login/registro, con conexion DIFERIDA) y, si el usuario se
+// autentica, arranca los threads de red sobre la conexion ya abierta y entra al
+// juego (ClientGUI) reutilizando el mismo window/renderer/font.
 class ClientApp {
  private:
     std::string host_;
     std::string port_;
-    std::string player_name_;
-    std::string race_;
-    std::string class_;
 
     Queue<ClientCmd> sendingQueue;
     Queue<GameMsg> receivingQueue;
 
-    void initialize_connection(ClientProtocol& protocol);
-
  public:
-    ClientApp(const std::string& host,
-              const std::string& port,
-              const std::string& player_name,
-              const std::string& race,
-              const std::string& klass);
+    // host/port se leen de config.toml en clientmain; ./client va sin argumentos.
+    ClientApp(const std::string& host, const std::string& port);
     void run();
 };
 #endif  // CLIENT_APP_H

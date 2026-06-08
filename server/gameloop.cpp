@@ -10,6 +10,7 @@
 #include "../common/commands/gameMsg.h"
 #include "../common/info/item_info.h"
 #include "Game/item/item.h"
+#include "../common/constants/game_config.h"
 
 GameLoop::GameLoop(Queue<ClientCmd>& receiving_queue,
                    ClientRegistryMonitor& client_registry_monitor):
@@ -31,6 +32,7 @@ void GameLoop::register_handlers() {
     handlers[MSG_ATTACK]         = [this](const ClientCmd& cmd) { handle_attack(cmd); };
     handlers[MSG_MEDITATE]       = [this](const ClientCmd& cmd) { handle_meditate(cmd); };
     handlers[MSG_SELF_CAST]      = [this](const ClientCmd& cmd) { handle_self_cast(cmd); };
+    handlers[MSG_USE_ITEM]       = [this](const ClientCmd& cmd) { handle_use_item(cmd); };
     handlers[MSG_TELEPORT]       = [this](const ClientCmd& cmd) { handle_teleport(cmd); };
     handlers[MSG_PRIVATE]        = [this](const ClientCmd& cmd) { handle_private(cmd); };
     handlers[MSG_CHEAT_KILL]     = [this](const ClientCmd& cmd) { handle_cheat_kill(cmd); };
@@ -65,6 +67,8 @@ InitialState GameLoop::load_initial_state_hardcoded(Zone zone) {
     case ZONE_DESERT:
         is.num_items = 6;
         is.num_npc = 7;
+    case ZONE_DUNGEON: 
+        is.num_npc = 12;
     default:
         break;
     }
@@ -118,14 +122,18 @@ void GameLoop::load_maps() {
     // harcoded:
     InitialState state_desert = load_initial_state_hardcoded(ZONE_DESERT);
     InitialState state_city = load_initial_state_hardcoded(ZONE_CITY);
+    InitialState state_dungeon = load_initial_state_hardcoded(ZONE_DUNGEON);
     std::map<Zone, std::string> zone_paths = {
-        {ZONE_DESERT, "data/maps/desert/map.toml"},
-        //{ZONE_DESERT, "data/maps/desert/map-test-1.bin"},
-        {ZONE_CITY,   "data/maps/city/map.toml"},
+        {ZONE_DESERT, "data/maps/desert/map-2.bin"},
+        {ZONE_CITY,   "data/maps/city/city-2.bin"},
+        {ZONE_FOREST, "data/maps/forest/forest2.bin"},
+        {ZONE_DUNGEON, "data/maps/dungeon/dungeon-v1.bin"},
     };
     std::map<Zone, InitialState> initial_states = {
         {ZONE_DESERT, state_desert},
         {ZONE_CITY,   state_city},
+        {ZONE_FOREST, state_city},
+        {ZONE_DUNGEON, state_dungeon},
     };
     game_map.init_world(zone_paths, initial_states);
 }
@@ -164,6 +172,15 @@ void GameLoop::send_auth_error(uint32_t client_id, const std::string& reason) {
     client_registry_monitor.notify_client(client_id, msg);
 }
 
+void GameLoop::send_confirm_session(uint32_t client_id, const std::string& name,
+                                    const std::string& race, const std::string& klass) {
+    GameMsg msg(MSG_CONFIRM_SESSION);
+    msg.set_player_name(name);
+    msg.set_race(race);
+    msg.set_class(klass);
+    client_registry_monitor.notify_client(client_id, msg);
+}
+
 void GameLoop::send_world_snapshot_to(uint32_t client_id, const std::string& name,
                                       const std::string& race) {
     GameMsg registerMsg(MSG_REGISTER);
@@ -173,7 +190,7 @@ void GameLoop::send_world_snapshot_to(uint32_t client_id, const std::string& nam
     std::vector<ItemInfo> item_infos;
     for (Item* item : p.get_all_items()) {
         item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(),
-                                static_cast<uint8_t>(item->get_type()));
+                                static_cast<uint8_t>(item->get_type()), item->get_uid());
     }
     registerMsg.set_items(item_infos);
     registerMsg.set_gold(game_map.get_player_gold(name));
@@ -219,6 +236,9 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
             game_map.get_player(name), game_map.get_player_zone(name), cmd.get_password()));
     std::cout << "[REGISTER] nuevo personaje creado y persistido: " << name << std::endl;
 
+    // Confirmacion de auth EXITOSO antes del world snapshot: el cliente lee
+    // exactamente un mensaje de auth (MSG_AUTH_ERROR o MSG_CONFIRM_SESSION).
+    send_confirm_session(client_id, name, cmd.get_race(), cmd.get_class());
     send_world_snapshot_to(client_id, name, cmd.get_race());
 }
 
@@ -245,7 +265,15 @@ void GameLoop::handle_login(const ClientCmd& cmd) {
         std::cout << "[LOGIN] personaje reutilizado de memoria: " << name << std::endl;
     }
 
-    send_world_snapshot_to(client_id, name, game_map.get_player(name).get_race_name());
+    const Player& player = game_map.get_player(name);
+    const std::string& race = player.get_race_name();
+    // La clase vive en el server (enum del dominio); la traducimos al string del
+    // protocolo para que el cliente la reciba en el confirm.
+    std::string klass = CLASS_MAP_INV.at(static_cast<uint8_t>(player.get_class_id()));
+
+    // Confirmacion de auth EXITOSO antes del world snapshot (ver handle_register).
+    send_confirm_session(client_id, name, race, klass);
+    send_world_snapshot_to(client_id, name, race);
 }
 
 void GameLoop::handle_list(const ClientCmd& cmd) {
@@ -298,7 +326,7 @@ void GameLoop::handle_sell(const ClientCmd& cmd) {
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
         for (Item* item : p.get_all_items()) {
-            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()), item->get_uid());
         }
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
@@ -331,7 +359,7 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
         for (Item* item : p.get_all_items()) {
-            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()), item->get_uid());
         }
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
@@ -350,12 +378,29 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
 
 void GameLoop::handle_equip(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-    bool has_weapon = game_map.player_equip_item(name, cmd.get_item_id());
+    // El cliente manda el uid de INSTANCIA del item a equipar (en texto decimal).
+    uint64_t item_uid = 0;
+    try {
+        item_uid = std::stoull(cmd.get_item_id());
+    } catch (const std::exception&) {
+        return;  // uid mal formado: ignorar el comando
+    }
+    bool has_weapon = game_map.player_equip_item(name, item_uid);
+    const Player& player = game_map.get_player(name);
+
+    // equipped_ids: type_ids (para el sprite del personaje y detectar báculos).
+    // equipped_uids: uids de instancia (para que el HUD resalte el slot exacto).
+    // Ambas listas viajan como strings; van en paralelo (mismo orden de items).
+    std::vector<uint64_t> uids = player.get_equipped_uids();
+    std::vector<std::string> uid_strs;
+    uid_strs.reserve(uids.size());
+    for (uint64_t u : uids) uid_strs.push_back(std::to_string(u));
 
     GameMsg msg_equip(MSG_UPDATE_EQUIP);
     msg_equip.set_player_name(name);
     msg_equip.set_equipped(has_weapon);
-    msg_equip.set_equipped_ids(game_map.get_player(name).get_equipped_ids());
+    msg_equip.set_equipped_ids(player.get_equipped_type_ids());
+    msg_equip.set_equipped_uids(uid_strs);
 
     client_registry_monitor.notify_clients(msg_equip);
 }
@@ -377,7 +422,7 @@ void GameLoop::handle_take(const ClientCmd& cmd) {
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
         for (Item* item : p.get_all_items()) {
-            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()), item->get_uid());
         }
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
@@ -388,30 +433,39 @@ void GameLoop::handle_take(const ClientCmd& cmd) {
 }
 
 void GameLoop::handle_teleport(const ClientCmd& cmd) {
+    // CHEAT /tp <zona>: fuerza el cambio a la zona pedida (sin adyacencia).
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-    auto tp_result = game_map.teleport_player(name);
+    Zone dest = static_cast<Zone>(cmd.get_zone());
+    auto tp_result = game_map.force_zone_change(name, dest);
 
-    if (!tp_result.adyacente) {
+    if (!tp_result.on_tile) {
         GameMsg msg(MSG_CHAT);
-        msg.set_chat_content("No hay zona de teleportación cerca");
+        msg.set_chat_content("Zona no disponible");
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
         return;
     }
+    send_zone_transition(cmd.get_client_id(), name, tp_result);
+}
+
+void GameLoop::send_zone_transition(uint32_t client_id, const std::string& name,
+                                    const TeleportResult& r) {
+    // Cambio de zona fallido (zona no cargada o sin celda): no se envia nada.
+    if (!r.on_tile) return;
 
     // Transición a la nueva zona
     GameMsg zoneMsg(MSG_ZONE_CHANGE);
-    zoneMsg.set_zone(tp_result.dest_zone);
-    zoneMsg.set_coord_x(tp_result.x);
-    zoneMsg.set_coord_y(tp_result.y);
-    client_registry_monitor.notify_client(cmd.get_client_id(), zoneMsg);
+    zoneMsg.set_zone(r.dest_zone);
+    zoneMsg.set_coord_x(r.x);
+    zoneMsg.set_coord_y(r.y);
+    client_registry_monitor.notify_client(client_id, zoneMsg);
 
     // Nuevo terreno + actores/items de la nueva zona
     GameMsg mapMsg(MSG_SEND_MAP);
     mapMsg.set_map(game_map.get_map(name));
-    client_registry_monitor.notify_client(cmd.get_client_id(), mapMsg);
+    client_registry_monitor.notify_client(client_id, mapMsg);
 
-    send_npcs_snapshot_to(cmd.get_client_id());
-    send_items_snapshot_to(cmd.get_client_id());
+    send_npcs_snapshot_to(client_id);
+    send_items_snapshot_to(client_id);
 }
 
 void GameLoop::handle_move(const ClientCmd& cmd) {
@@ -437,6 +491,16 @@ void GameLoop::handle_move(const ClientCmd& cmd) {
         client_registry_monitor.notify_clients(msg);
         std::cout << "[DEBUG]: sended" << std::endl;
     // }
+
+    // Teleport automatico: si el player se movio y quedo parado sobre una celda
+    // teleport, se cambia de zona (mismo flujo que el cheat /tp)
+    // MSG_ZONE_CHANGE lo reubica en la zona destino
+    if (result.moved) {
+        auto tp = game_map.try_teleport_on_current_cell(name);
+        if (tp.on_tile) {
+            send_zone_transition(cmd.get_client_id(), name, tp);
+        }
+    }
 }
 
 void GameLoop::handle_attack(const ClientCmd& cmd) {
@@ -512,7 +576,7 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
                 const Player& p = game_map.get_player(result.entity_name);
                 std::vector<ItemInfo> item_infos;
                 for (Item* item : p.get_all_items()) {
-                    item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+                    item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()), item->get_uid());
                 }
                 GameMsg inv_msg(MSG_INVENTORY);
                 inv_msg.set_items(item_infos);
@@ -595,6 +659,42 @@ void GameLoop::handle_self_cast(const ClientCmd& cmd) {
         msg.set_chat_content(e.what());
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
     }
+}
+
+void GameLoop::handle_use_item(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    // El cliente manda el uid de INSTANCIA del item a usar (en texto decimal),
+    // igual que MSG_EQUIP.
+    uint64_t item_uid = 0;
+    try {
+        item_uid = std::stoull(cmd.get_item_id());
+    } catch (const std::exception&) {
+        return;  // uid mal formado: ignorar el comando
+    }
+
+    bool consumed = game_map.use_item(name, item_uid);
+    if (!consumed) return;  // uid inexistente o item no consumible: nada que notificar
+
+    // La poción curó vida y/o maná: notificar los valores nuevos.
+    GameMsg hp_msg(MSG_HP);
+    hp_msg.set_hp(game_map.get_player_hp(name));
+    client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
+
+    GameMsg mana_msg(MSG_MANA);
+    mana_msg.set_player_name(name);
+    mana_msg.set_mana(game_map.get_player_mana(name));
+    client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
+
+    // La poción se consumió: reenviar el inventario para que desaparezca del HUD.
+    const Player& p = game_map.get_player(name);
+    std::vector<ItemInfo> item_infos;
+    for (Item* item : p.get_all_items()) {
+        item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(),
+                                static_cast<uint8_t>(item->get_type()), item->get_uid());
+    }
+    GameMsg inv_msg(MSG_INVENTORY);
+    inv_msg.set_items(item_infos);
+    client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
 }
 
 void GameLoop::handle_private(const ClientCmd& cmd) {
@@ -778,14 +878,14 @@ void GameLoop::update_npcs_in_map(){
 //   A diferencia de sleep_for(50ms), no acumula drift entre ticks.
 void GameLoop::run() {
     load_world();
-
-    const auto tick_rate = std::chrono::milliseconds(50); // 20 ticks/s
+    const auto& cfg = GameConfig::instance();
+    const auto tick_rate = std::chrono::milliseconds(cfg.tick_rate_ms);// 20 ticks/s
     auto next_tick = std::chrono::steady_clock::now();
 
     // Acumulamos ticks para resolver la regeneracion (maná al meditar) una vez
     // por segundo: evita spamear MSG_MANA cada 50ms.
     int ticks_accumulated = 0;
-    const int ticks_per_second = 20; // 1000ms / 50ms
+    const int ticks_per_second = cfg.ticks_per_second; // 1000ms / 50ms
     int npc_move_ticks = 0;
     const int TICKS_PER_NPC_MOVE = 10;
 
@@ -880,16 +980,3 @@ void GameLoop::regen_players_mana(double seconds) {
         client_registry_monitor.notify_client_by_name(name, msg);
     }
 }
-
-/*
-Avisar sobre reaparición de NPCs:
-
-std::vector<std::string> npcs_respawned = game_map.update_respawns()
-for (const auto& npc : npcs_respawned) {
-    GameMsg msg(MSG_CHAT)
-    msg.set_chat_content(npc + " ha reaparecido.")
-    client_registry_monitor.notify_clients(msg)
-}
-
-(y algo así para la reaparición de los players...)
-*/

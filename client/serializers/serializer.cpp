@@ -12,6 +12,7 @@ Serializer::Serializer() {
     handlers[MSG_BUY]      = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_BUY, cmd); };
     handlers[MSG_SELL]     = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_SELL, cmd); };
     handlers[MSG_EQUIP]    = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_EQUIP, cmd); };
+    handlers[MSG_USE_ITEM] = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_USE_ITEM, cmd); };
     handlers[MSG_TAKE]    = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_TAKE, cmd); };
     handlers[MSG_THROW]    = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_THROW, cmd); };
     handlers[MSG_DEPOSIT]  = [this](const ClientCmd& cmd) { return serialize_item_id(MSG_DEPOSIT, cmd); };
@@ -34,8 +35,8 @@ Serializer::Serializer() {
     handlers[MSG_CHEAT_KILL] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CHEAT_KILL); };
     handlers[MSG_CHEAT_INF_HP] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CHEAT_INF_HP); };
     handlers[MSG_CHEAT_INF_MANA] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_CHEAT_INF_MANA); };
+    handlers[MSG_TELEPORT] = [this](const ClientCmd& cmd) { return serialize_zone(MSG_TELEPORT, cmd); };
     handlers[MSG_CHEAT_MANA] = [this](const ClientCmd& cmd) { return serialize_gold(MSG_CHEAT_MANA, cmd); };
-    handlers[MSG_TELEPORT] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_TELEPORT); };
     handlers[MSG_SELF_CAST] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_SELF_CAST); };
     handlers[MSG_PRIVATE] = [this](const ClientCmd& cmd) { return serialize_private(cmd); };
 }
@@ -160,6 +161,15 @@ std::vector<uint8_t> Serializer::serialize_no_payload(uint8_t type) {
     std::vector<uint8_t> buf;
     buf.reserve(LEN_HEADER);
     write_header(buf, type, 0);
+    return buf;
+}
+
+std::vector<uint8_t> Serializer::serialize_zone(uint8_t type, const ClientCmd& cmd) {
+    // payload = [zona:1B]
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + 1);
+    write_header(buf, type, 1);
+    buf.push_back(cmd.get_zone());
     return buf;
 }
 

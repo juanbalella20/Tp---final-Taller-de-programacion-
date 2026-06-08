@@ -21,6 +21,9 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_SEND_MAP] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_map(payload, msg);
     };
+    handlers[MSG_CONFIRM_SESSION] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_confirm_session(payload, msg);
+    };
     for (uint8_t type : {
         (uint8_t)MSG_MEDITATE, (uint8_t)MSG_RESURRECT, (uint8_t)MSG_CURE, (uint8_t)MSG_LIST,
         (uint8_t)MSG_FOUND_CLAN, (uint8_t)MSG_JOIN_CLAN, (uint8_t)MSG_LEFT_CLAN, (uint8_t)MSG_CLAN_ACEP,
@@ -246,6 +249,18 @@ void ClientDeserializer::deserialize_update_equip(const std::vector<uint8_t>& pa
         }
     }
     msg.set_equipped_ids(ids);
+
+    // Segunda lista: uids de instancia (paralela a ids), para resaltar el slot
+    // exacto del inventario. Clientes/servidores viejos sin esta lista -> vacía.
+    std::vector<std::string> uids;
+    if (offset < payload.size()) {
+        uint8_t n_uids = payload[offset];
+        ++offset;
+        for (uint8_t i = 0; i < n_uids && offset < payload.size(); ++i) {
+            uids.push_back(read_string(payload, offset));
+        }
+    }
+    msg.set_equipped_uids(uids);
 }
 
 uint32_t ClientDeserializer::deserialize_value(const std::vector<uint8_t>& payload, GameMsg& msg) {
@@ -303,6 +318,19 @@ void ClientDeserializer::deserialize_item(const std::vector<uint8_t>& payload, G
     msg.set_item_id(read_string(payload, offset));
 }
 
+// Lee un uint64_t en big-endian del payload (8 bytes).
+static uint64_t read_uint64_be(const std::vector<uint8_t>& payload, size_t& offset) {
+    if (offset + 8 > payload.size()) {
+        throw std::invalid_argument("Payload demasiado corto para leer uint64");
+    }
+    uint64_t value = 0;
+    for (int i = 0; i < 8; ++i) {
+        value = (value << 8) | payload[offset + i];
+    }
+    offset += 8;
+    return value;
+}
+
 void ClientDeserializer::deserialize_inventory(const std::vector<uint8_t>& payload, GameMsg& msg) {
     size_t offset = 0;
     std::vector<ItemInfo> items;
@@ -311,7 +339,8 @@ void ClientDeserializer::deserialize_inventory(const std::vector<uint8_t>& paylo
         std::string id   = read_string(payload, offset);
         std::string name = read_string(payload, offset);
         uint8_t type = payload[offset++];
-        items.emplace_back(id, name, 0, type);
+        uint64_t uid = read_uint64_be(payload, offset);
+        items.emplace_back(id, name, 0, type, uid);
     }
 
     msg.set_items(items);
@@ -355,6 +384,17 @@ void ClientDeserializer::deserialize_npcs_snapshot(const std::vector<uint8_t>& p
 }
 
 // Ver formato en serverSerializer::serialize_register.
+// MSG_CONFIRM_SESSION: confirmacion de auth exitoso (login/registro).
+// Payload: [name_len:1][name][race_len:1][race][class_len:1][class]
+// El motivo: el cliente necesita name/race/class del personaje ANTES de entrar
+// al juego (en login la raza/clase reales viven en el server).
+void ClientDeserializer::deserialize_confirm_session(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    size_t offset = 0;
+    msg.set_player_name(read_string(payload, offset));
+    msg.set_race(read_string(payload, offset));
+    msg.set_class(read_string(payload, offset));
+}
+
 void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payload, GameMsg& msg) {
     size_t offset = 0;
 
@@ -388,7 +428,8 @@ void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
         std::string id   = read_string(payload, offset);
         std::string name = read_string(payload, offset);
         uint8_t type = payload[offset++];
-        items.emplace_back(id, name, 0, type);
+        uint64_t uid = read_uint64_be(payload, offset);
+        items.emplace_back(id, name, 0, type, uid);
     }
     msg.set_items(items);
 

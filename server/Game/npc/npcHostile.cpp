@@ -2,8 +2,10 @@
 #include "../player/player.h"
 #include "../zoneWorld.h"
 #include <cstdlib>
+#include "game_config.h"
+#include "../item/item.h"
+#include "../item/item_catalog.h"
 #include <vector>
-#include <iostream>
 
 NPChostile::NPChostile(const std::string& type_id, const std::string& name,
                        int lifepoints, int attack_dmg, int ticks_to_spawn)
@@ -32,8 +34,17 @@ bool NPChostile::can_spawn() const {
 void NPChostile::set_state(State s) { this->state = s; }
 
 int NPChostile::drop() {
-    // Oro = rand(0, 0.2) * VidaMaxNPC
-    double factor = (std::rand() / static_cast<double>(RAND_MAX)) * 0.2;
+    // Oro base = rand(0, npc_gold_drop_max) * VidaMaxNPC
+    const auto& cfg = GameConfig::instance();
+    double factor = (std::rand() / static_cast<double>(RAND_MAX)) * cfg.npc_gold_drop_max;
+    return static_cast<int>(factor * max_lifepoints);
+}
+
+int NPChostile::roll_extra_gold() const {
+    // Oro extra de la tabla = rand(npc_gold_drop_min, npc_gold_drop_max) * VidaMaxNPC
+    const auto& cfg = GameConfig::instance();
+    double r = std::rand() / static_cast<double>(RAND_MAX);
+    double factor = cfg.npc_gold_drop_min + r * (cfg.npc_gold_drop_max - cfg.npc_gold_drop_min);
     return static_cast<int>(factor * max_lifepoints);
 }
 
@@ -60,15 +71,35 @@ DamageOutcome NPChostile::receive_damage(int dmg, Player& atacante, bool is_crit
     lifepoints -= dmg;
     bool murio = false;
     int gold_drop = 0;
+    std::unique_ptr<Item> dropped_item;
     if (lifepoints <= 0) {
-        gold_drop = drop();  // oro a tirar; se retorna recién al final
+        // 1) Oro base: cae SIEMPRE al morir (sección "Oro" del enunciado).
+        gold_drop = drop();
+        // 2) Drop EXTRA: se sortea según la tabla [npcs.drop] (sección "Criaturas").
+        //    Las franjas son acumuladas; el sobrante de probabilidad = "nada extra".
+        const auto& cfg = GameConfig::instance();
+        double r = std::rand() / static_cast<double>(RAND_MAX);
+        double thr_gold   = cfg.npc_drop_prob_nothing + cfg.npc_drop_prob_gold;
+        double thr_potion = thr_gold + cfg.npc_drop_prob_potion;
+        double thr_item   = thr_potion + cfg.npc_drop_prob_item;
+        if (r < cfg.npc_drop_prob_nothing) {
+            // nada extra
+        } else if (r < thr_gold) {
+            gold_drop += roll_extra_gold();
+        } else if (r < thr_potion) {
+            ItemCatalog catalog;
+            dropped_item = catalog.make_random_potion();
+        } else if (r < thr_item) {
+            ItemCatalog catalog;
+            dropped_item = catalog.make_random_item();
+        }
         death();
         murio = true;
     }
     const int nivel_npc = 1;
     // La XP se otorga SIEMPRE, haya muerto o no, antes de retornar el oro.
-    bool level_up =atacante.ganar_xp(dmg, nivel_npc, murio, max_lifepoints);
-    return {dmg, gold_drop, false, level_up};
+    bool level_up = atacante.ganar_xp(dmg, nivel_npc, murio, max_lifepoints);
+    return {dmg, gold_drop, false, level_up, std::move(dropped_item)};
 }
 
 void NPChostile::move_towards(int target_x, int target_y, ZoneWorld& world, const std::vector<Player*>& players) {
@@ -89,9 +120,6 @@ void NPChostile::move_towards(int target_x, int target_y, ZoneWorld& world, cons
         
         coord_x = next_x;
         coord_y = next_y;
-    
-        std::cout << "[DEBUG] NPC " << get_name() << " stepped to (" 
-                  << coord_x << "," << coord_y << ")" << std::endl;
     }
 }
 

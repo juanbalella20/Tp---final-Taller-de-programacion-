@@ -3,51 +3,41 @@
 #include "itemSprite.h"
 #include <SDL3_image/SDL_image.h>
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 
-ClientGUI::ClientGUI(Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name,
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+ClientGUI::ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
+    Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name,
     const std::string& player_race)
-    : window(nullptr), renderer(nullptr), event{}, chat_font(nullptr),
+    : window(window), renderer(renderer), event{}, chat_font(font),
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
       hud(nullptr), own_name(player_name), race(player_race), player(nullptr), tilemap(nullptr),
       enemy_texture(nullptr), frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
-      camera((float)GAME_WIDTH, (float)CANVAS_HEIGHT),
-      current_zone(static_cast<Zone>(0xFF)),  
+      camera((float)GAME_VIEW_W, (float)GAME_VIEW_H),
+      current_zone(static_cast<Zone>(0xFF)),
       selected_npc_tile_x(-1), selected_npc_tile_y(-1) {}
-    
+
 
 ClientGUI::~ClientGUI() {
     freeSDL();
-    TTF_CloseFont(chat_font);
+    // chat_font, window y renderer son del ScreenManager: no se liberan aca.
 }
 
 void ClientGUI::initSDL() {
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
-        throw std::runtime_error(std::string("SDL_Init: ") + SDL_GetError());
-    }
-    window = SDL_CreateWindow(WIN_NAME, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
-    if (!window) {
-        throw std::runtime_error(std::string("SDL_CreateWindow: ") + SDL_GetError());
-    }
-    renderer = SDL_CreateRenderer(window, nullptr);
-    if (!renderer) {
-        throw std::runtime_error(std::string("SDL_CreateRenderer: ") + SDL_GetError());
-    }
-
-    SDL_SetRenderLogicalPresentation(renderer, LOGICAL_WIDTH, LOGICAL_HEIGHT,SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    // window/renderer/font ya existen (del ScreenManager). Solo configuramos la
+    // presentacion logica del juego, el icono y el mini chat.
+    SDL_SetRenderLogicalPresentation(renderer, LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
     SDL_Surface* icon = IMG_Load("imagenes/logo.jpeg");
     if (icon) {
         SDL_SetWindowIcon(window, icon);
         SDL_DestroySurface(icon);
     }
-
-    if (!TTF_Init() == -1) {
-        throw std::runtime_error(std::string("TTF_Init: ") + SDL_GetError());
-    }
-
-    chat_font = TTF_OpenFont("fonts/StackSansText-Medium.ttf", 12);
 
     mini_chat = std::make_unique<MiniChat>(renderer, chat_font, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
 }
@@ -58,14 +48,23 @@ void ClientGUI::loadMedia(Zone zone) {
     {
     case ZONE_DESERT : {
         tilemap = std::make_unique<TileMap>(renderer);
-        ///tilemap->load_map_bin("data/maps/desert/map-test-1.bin");
-        tilemap->load_map_toml("data/maps/desert/map.toml");
+        tilemap->load_map_bin("data/maps/desert/map-2.bin");
         break;
     }
     case ZONE_CITY : {
         tilemap = std::make_unique<TileMap>(renderer);
-        //tilemap->load_map_bin("data/maps/city/city-map-test.bin");
-        tilemap->load_map_toml("data/maps/city/map.toml");
+        tilemap->load_map_bin("data/maps/city/city-2.bin");
+        break;
+    }
+    case ZONE_FOREST : {
+        tilemap = std::make_unique<TileMap>(renderer);
+        tilemap->load_map_bin("data/maps/forest/forest2.bin");
+        break;
+    }
+    case ZONE_DUNGEON : {
+        tilemap = std::make_unique<TileMap>(renderer);
+        tilemap->load_map_bin("data/maps/dungeon/dungeon-v1.bin");
+        break;
     }
     default:
         break;
@@ -87,8 +86,9 @@ void ClientGUI::freeSDL() {
     }
 
     // Texturas extra de items del piso (las que no son item_texture, p. ej. escudo).
+    // Se saltea gold_texture: lo comparten las pociones del piso y se libera aparte.
     for (auto& kv : floor_item_textures) {
-        if (kv.second && kv.second != item_texture) {
+        if (kv.second && kv.second != item_texture && kv.second != gold_texture) {
             SDL_DestroyTexture(kv.second);
         }
     }
@@ -104,21 +104,15 @@ void ClientGUI::freeSDL() {
         gold_texture = nullptr;
     }
 
-    if (renderer) {
-        SDL_DestroyRenderer(renderer);
-        renderer = nullptr;
-    }
-    if (window) {
-        SDL_DestroyWindow(window);
-        window = nullptr;
-    }
-    SDL_Quit();
+    // window/renderer NO se destruyen: son del ScreenManager. Tampoco SDL_Quit.
 }
 
 std::vector<int> ClientGUI::translate_tile_to_coord(int pixel_x, int pixel_y) const {
     int tileSize = tilemap ? tilemap->getTileSize() : 64;
-    int world_x = static_cast<int>(camera.screen_to_world_x(pixel_x));
-    int world_y = static_cast<int>(camera.screen_to_world_y(pixel_y));
+    // El mundo se dibuja dentro del viewport del hueco, asi que hay que restar
+    // su origen para pasar de coordenadas logicas a coordenadas del viewport.
+    int world_x = static_cast<int>(camera.screen_to_world_x(pixel_x - GAME_VIEW_X));
+    int world_y = static_cast<int>(camera.screen_to_world_y(pixel_y - GAME_VIEW_Y));
     return {world_x / tileSize, world_y / tileSize};
 }
 
@@ -135,6 +129,104 @@ void ClientGUI::sendEquipCmd(const std::string& item_id) {
     cmd.set_message_type(MSG_EQUIP);
     cmd.set_item_id(item_id);
     outgoing.push(cmd);
+}
+
+void ClientGUI::sendUseItemCmd(const std::string& item_uid) {
+    ClientCmd cmd;
+    cmd.set_message_type(MSG_USE_ITEM);
+    cmd.set_item_id(item_uid);  // uid de INSTANCIA en texto (como MSG_EQUIP)
+    outgoing.push(cmd);
+}
+
+bool ClientGUI::potion_slot_at(int mx, int my, uint64_t& out_uid,
+                               SDL_FRect& out_rect) const {
+    if (!hud) return false;
+    const auto& inv = hud->get_inventory();
+
+    // Misma geometría que el handler de equipar (click izquierdo) más abajo.
+    float image_w = 1021.0f;
+    float image_h = 767.0f;
+    float scale_x = static_cast<float>(GAME_WIDTH + PANEL_WIDTH) / image_w;
+    float scale_y = static_cast<float>(CANVAS_HEIGHT) / image_h;
+
+    float slot_start_size = 48.0f;
+    float slot_margin = 4.0f;
+    float padding = 6.0f;
+    float inv_x = 781.0f;
+    float inv_y = 200.0f;
+    float inv_w = 218.0f;
+
+    float start_x = (inv_x + padding) * scale_x;
+    float start_y = (inv_y + padding) * scale_y;
+    float slot_size = slot_start_size * scale_x;
+    float margin_x = slot_margin * scale_x;
+    float margin_y = slot_margin * scale_y;
+    float limit_x = (inv_x + inv_w - padding) * scale_x;
+
+    float slot_x = start_x;
+    float slot_y = start_y;
+    for (const auto& item : inv) {
+        if (mx >= slot_x && mx <= slot_x + slot_size &&
+            my >= slot_y && my <= slot_y + slot_size) {
+            // Solo las pociones (item consumible, ItemType::OTHER == 4) se toman
+            // manteniendo presionado. Las armas/defensas se equipan con un click.
+            if (item.get_type() != 4) return false;
+            out_uid = item.get_uid();
+            out_rect = {slot_x, slot_y, slot_size, slot_size};
+            return true;
+        }
+        slot_x += slot_size + margin_x;
+        if (slot_x + slot_size > limit_x) {
+            slot_x = start_x;
+            slot_y += slot_size + margin_y;
+        }
+    }
+    return false;
+}
+
+void ClientGUI::update_potion_hold() {
+    if (!potion_hold_active || potion_hold_sent) return;
+    uint64_t elapsed = SDL_GetTicks() - potion_hold_start_ms;
+    if (elapsed >= static_cast<uint64_t>(POTION_HOLD_MS)) {
+        // Se completaron los 3s: pedir al server consumir la poción. El server
+        // valida, aplica el efecto y reenvía el inventario (la poción desaparece).
+        sendUseItemCmd(std::to_string(potion_hold_uid));
+        potion_hold_sent = true;  // no repetir hasta soltar y volver a presionar
+    }
+}
+
+void ClientGUI::draw_potion_hold_arc() {
+    if (!potion_hold_active || potion_hold_sent) return;
+    uint64_t elapsed = SDL_GetTicks() - potion_hold_start_ms;
+    float progress = static_cast<float>(elapsed) / POTION_HOLD_MS;
+    if (progress > 1.0f) progress = 1.0f;
+
+    // Anillo de progreso centrado en el slot. Se dibuja como una serie de
+    // segmentos a lo largo de un arco que va de 0 a (progress * 360°), arrancando
+    // arriba (-90°) y avanzando en sentido horario.
+    float cx = potion_hold_slot_rect.x + potion_hold_slot_rect.w / 2.0f;
+    float cy = potion_hold_slot_rect.y + potion_hold_slot_rect.h / 2.0f;
+    float radius = (potion_hold_slot_rect.w / 2.0f) + 4.0f;
+
+    const int total_segments = 48;
+    int lit = static_cast<int>(progress * total_segments);
+
+    // Fondo del anillo (tenue) + progreso (brillante), dibujados como puntos
+    // gruesos a lo largo de la circunferencia.
+    for (int i = 0; i < total_segments; ++i) {
+        float frac = static_cast<float>(i) / total_segments;
+        float angle = -static_cast<float>(M_PI) / 2.0f + frac * 2.0f * static_cast<float>(M_PI);
+        float px = cx + radius * std::cos(angle);
+        float py = cy + radius * std::sin(angle);
+        if (i < lit) {
+            SDL_SetRenderDrawColor(renderer, 80, 220, 120, 255);  // verde brillante
+        } else {
+            SDL_SetRenderDrawColor(renderer, 40, 60, 40, 120);    // fondo tenue
+        }
+        // "Punto" de 3x3 para que el anillo se vea grueso.
+        SDL_FRect dot = {px - 1.5f, py - 1.5f, 3.0f, 3.0f};
+        SDL_RenderFillRect(renderer, &dot);
+    }
 }
 
 void ClientGUI::sendCoord(int tile_x, int tile_y) {
@@ -238,6 +330,25 @@ void ClientGUI::handleEvents() {
                 int mx = static_cast<int>(lx);
                 int my = static_cast<int>(ly);
 
+                if (event.button.button != SDL_BUTTON_LEFT) break;
+
+                // Click IZQUIERDO sostenido sobre una poción: arranca el hold de 3s
+                // para tomarla. El conteo y el envío del use los maneja
+                // update_potion_hold(). Una poción no se equipa, así que el hold
+                // reemplaza al equip sólo en sus slots; el resto sigue equipando.
+                {
+                    uint64_t uid = 0;
+                    SDL_FRect slot_rect;
+                    if (potion_slot_at(mx, my, uid, slot_rect)) {
+                        potion_hold_active = true;
+                        potion_hold_sent = false;
+                        potion_hold_uid = uid;
+                        potion_hold_start_ms = SDL_GetTicks();
+                        potion_hold_slot_rect = slot_rect;
+                        break;  // sobre una poción: hold, no equipar
+                    }
+                }
+
                 if (mx >= GAME_WIDTH) {
                     if (hud) {
                         const auto& inv = hud->get_inventory();
@@ -273,7 +384,10 @@ void ClientGUI::handleEvents() {
                                 // Sólo pedimos el toggle al server. Él responde con
                                 // MSG_UPDATE_EQUIP y de ahí derivamos el halo amarillo
                                 // y el arma del personaje (estado real, no optimista).
-                                sendEquipCmd(item.get_id());
+                                // Enviamos el uid de INSTANCIA (no el id de tipo): así
+                                // con dos copias del mismo item se equipa exactamente
+                                // la que se clickeó.
+                                sendEquipCmd(std::to_string(item.get_uid()));
                                 break;
                             }
                             slot_x += slot_size + margin_x;
@@ -284,10 +398,20 @@ void ClientGUI::handleEvents() {
                             ++slot_index;
                         }
                     }
-                } else {
-                    // Click en el area del juego
+                } else if (mx >= GAME_VIEW_X && mx < GAME_VIEW_X + GAME_VIEW_W &&
+                           my >= GAME_VIEW_Y && my < GAME_VIEW_Y + GAME_VIEW_H) {
+                    // Click dentro del hueco visible del mundo (no en el chat ni los bordes).
                     auto coords = translate_tile_to_coord(mx, my);
                     selectCoord(coords[0], coords[1]);
+                }
+                break;
+            }
+            case SDL_EVENT_MOUSE_BUTTON_UP: {
+                // Soltar el botón izquierdo antes de los 3s cancela el hold: la
+                // poción no se toma (hay que volver a mantener presionado).
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    potion_hold_active = false;
+                    potion_hold_sent = false;
                 }
                 break;
             }
@@ -534,7 +658,7 @@ void ClientGUI::update() {
                             // Sprite del personaje con cada item equipado (arma/báculo + escudo).
                             player->set_equipped_items(msg.get_equipped_ids());
                         }
-                        if (hud) hud->set_equipped_by_ids(msg.get_equipped_ids());
+                        if (hud) hud->set_equipped_by_uids(msg.get_equipped_uids());
                         // ¿Equipó un báculo? Lo recordamos para animar su efecto.
                         equipped_spell_id.clear();
                         for (const auto& id : msg.get_equipped_ids()) {
@@ -657,28 +781,7 @@ void ClientGUI::drawOtherPlayers() {
         }
     }
 }
-void ClientGUI::draw_teleport_labels() {
-    if (!tilemap || !chat_font) return;
-    const int tileSize = tilemap->getTileSize();
-    const SDL_Color color = {255, 255, 0, 255};
 
-    for (const auto& tp : tilemap->getTeleports()) {
-        const std::string text = "Transportarse a " + tp.dest_zone;
-        SDL_Surface* surf = TTF_RenderText_Blended(chat_font, text.c_str(), 0, color);
-        if (!surf) continue;
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
-        if (tex) {
-            const float wx = static_cast<float>(tp.x * tileSize);
-            const float wy = static_cast<float>(tp.y * tileSize);
-            const float sx = camera.world_to_screen_x(wx) + (tileSize - surf->w) / 2.0f;
-            const float sy = camera.world_to_screen_y(wy) - surf->h;
-            SDL_FRect dst{sx, sy, static_cast<float>(surf->w), static_cast<float>(surf->h)};
-            SDL_RenderTexture(renderer, tex, nullptr, &dst);
-            SDL_DestroyTexture(tex);
-        }
-        SDL_DestroySurface(surf);
-    }
-}
 
 void ClientGUI::load_spell_effects() {
     // Cada báculo tiene un spritesheet de efecto. La clave es el id del item
@@ -812,15 +915,16 @@ void ClientGUI::draw() {
 
     SDL_RenderClear(renderer);
 
-    // Limita el rendering del mapa y entidades al area del juego (excluye panel derecho)
-    // SDL_Rect game_clip = {0, 0, GAME_WIDTH, CANVAS_HEIGHT};
-    // SDL_SetRenderClipRect(renderer, &game_clip);
+    // El mundo se dibuja dentro del hueco transparente del frame. El viewport
+    // desplaza el origen al hueco y recorta todo lo que se salga, asi el player
+    // nunca queda dibujado debajo del chat o de los bordes del frame.
+    SDL_Rect game_view = {GAME_VIEW_X, GAME_VIEW_Y, GAME_VIEW_W, GAME_VIEW_H};
+    SDL_SetRenderViewport(renderer, &game_view);
 
     if (tilemap) {
         tilemap->render(camera.get_x(), camera.get_y());
     }
 
-    draw_teleport_labels();
     drawItems();
     if (player) {
         player->draw(camera, player_pov);
@@ -831,13 +935,16 @@ void ClientGUI::draw() {
     draw_spell_animations();
     draw_damage_numbers();
 
+    // Se restaura el viewport completo para dibujar el frame (HUD) y el chat encima.
+    SDL_SetRenderViewport(renderer, nullptr);
+
     if (hud) {
         hud->render();
         hud->display_player_info(own_name);
     }
 
-    // Levanta el clip para dibujar el panel y el chat encima
-    // SDL_SetRenderClipRect(renderer, nullptr);
+    // Anillo de progreso del hold de poción, encima del inventario del HUD.
+    draw_potion_hold_arc();
 
     mini_chat->render(GAME_WIDTH, CANVAS_HEIGHT);
     SDL_RenderPresent(renderer);
@@ -845,6 +952,10 @@ void ClientGUI::draw() {
 
 void ClientGUI::init_draw() {
     initSDL();
+    SDL_SetRenderLogicalPresentation(
+        renderer, LOGICAL_WIDTH, LOGICAL_HEIGHT,
+        SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
     // Carga provisional solo para tener un tileSize valido al crear el player.
     // El mapa REAL lo carga el primer MSG_ZONE_CHANGE del server (current_zone
     // arranca en un centinela, asi que siempre recarga la zona real). No tocar
@@ -932,6 +1043,17 @@ void ClientGUI::init_draw() {
         SDL_DestroySurface(elem_surf);
     }
 
+    // Pociones en el piso: se recortan del mismo spritesheet 100.png que el oro.
+    // pocion_vida = botella gris; pocion_mana = botella azul (coords medidas en
+    // 100.png). Comparten textura (gold_texture); el cleanup de floor_item_textures
+    // ya saltea las que apuntan a otra textura ya liberada.
+    if (gold_texture) {
+        floor_item_textures["pocion_vida"] = gold_texture;
+        floor_item_crops["pocion_vida"] = {392.0f, 159.0f, 16.0f, 26.0f};
+        floor_item_textures["pocion_mana"] = gold_texture;
+        floor_item_crops["pocion_mana"] = {424.0f, 159.0f, 17.0f, 26.0f};
+    }
+
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
 
     // Spritesheets de efectos de hechizo (animaciones sobre el target).
@@ -956,14 +1078,17 @@ void ClientGUI::init_draw() {
 }
 
 void ClientGUI::run() {
+    // El launcher/login ya corrieron en el ScreenManager: aca solo entramos al
+    // juego sobre el window/renderer compartidos. La conexion ya esta abierta y
+    // los threads de red ya estan andando.
     try {
-        
         init_draw();
         while (is_running && should_keep_running()) {
             handleEvents();
             update();
+            update_potion_hold();  // ¿se cumplieron los 3s del hold de poción?
             draw();
-            SDL_Delay(16);  // ~60 FPS: cede CPU para no saturar un core al 100%
+            SDL_Delay(16);
         }
     } catch (const std::exception& e) {
         std::cerr << "ClientGUI error: " << e.what() << std::endl;

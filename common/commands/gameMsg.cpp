@@ -47,6 +47,9 @@ Zone GameMsg::get_zone() const { return this->zone; }
 void GameMsg::set_race(const std::string& race) { this->race = race; }
 const std::string& GameMsg::get_race() const { return this->race; }
 
+void GameMsg::set_class(const std::string& klass) { this->klass = klass; }
+const std::string& GameMsg::get_class() const { return this->klass; }
+
 void GameMsg::set_damage(int dmg) { this->damage = dmg; }
 int GameMsg::get_damage() const { return this->damage; }
 
@@ -55,6 +58,9 @@ bool GameMsg::get_equipped() const { return this->equipped; }
 
 void GameMsg::set_equipped_ids(const std::vector<std::string>& ids) { this->equipped_ids = ids; }
 const std::vector<std::string>& GameMsg::get_equipped_ids() const { return this->equipped_ids; }
+
+void GameMsg::set_equipped_uids(const std::vector<std::string>& uids) { this->equipped_uids = uids; }
+const std::vector<std::string>& GameMsg::get_equipped_uids() const { return this->equipped_uids; }
 
 void GameMsg::set_level(int level) { this->level = level; }
 int GameMsg::get_level() const { return this->level; }

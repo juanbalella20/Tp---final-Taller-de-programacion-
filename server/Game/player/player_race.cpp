@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "game_config.h"
+
 float PlayerRace::race_constitution() {
     return endurance;
 }
@@ -27,45 +29,49 @@ int PlayerRace::race_mana_factor() {
 }
 
 void PlayerRace::set_human() {
-    inteligence = 5;
-    strength = 5;
-    agility = 5;
-    endurance = 0.5;
-    life_factor = 5;
-    mana_factor = 5;
+    const auto& cfg = GameConfig::instance();
+    inteligence = cfg.human.inteligence;
+    strength = cfg.human.strength;
+    agility = cfg.human.agility;
+    endurance = cfg.human.endurance;
+    life_factor = cfg.human.life_factor;
+    mana_factor = cfg.human.mana_factor;
     name = "human";
     race_id = RaceType::HUMAN;
 }
 
 void PlayerRace::set_elf() {
-    inteligence = 7;
-    strength = 5;
-    agility = 7;
-    endurance = 0.2;
-    life_factor = 4;
-    mana_factor = 6;
+    const auto& cfg = GameConfig::instance();
+    inteligence = cfg.elf.inteligence;
+    strength = cfg.elf.strength;
+    agility = cfg.elf.agility;
+    endurance = cfg.elf.endurance;
+    life_factor = cfg.elf.life_factor;
+    mana_factor = cfg.elf.mana_factor;
     name = "elf";
     race_id = RaceType::ELF;
 }
 
 void PlayerRace::set_dwarf() {
-    inteligence = 6;
-    strength = 7;
-    agility = 4;
-    endurance = 0.7;
-    life_factor = 6;
-    mana_factor = 4;
+    const auto& cfg = GameConfig::instance();
+    inteligence = cfg.dwarf.inteligence;
+    strength = cfg.dwarf.strength;
+    agility = cfg.dwarf.agility;
+    endurance = cfg.dwarf.endurance;
+    life_factor = cfg.dwarf.life_factor;
+    mana_factor = cfg.dwarf.mana_factor;
     name = "dwarf";
     race_id = RaceType::DWARF;
 }
 
 void PlayerRace::set_gnome() {
-    inteligence = 7;
-    strength = 8;
-    agility = 8;
-    endurance = 0.6;
-    life_factor = 2;
-    mana_factor = 4;
+    const auto& cfg = GameConfig::instance();
+    inteligence = cfg.gnome.inteligence;
+    strength = cfg.gnome.strength;
+    agility = cfg.gnome.agility;
+    endurance = cfg.gnome.endurance;
+    life_factor = cfg.gnome.life_factor;
+    mana_factor = cfg.gnome.mana_factor;
     name = "gnome";
     race_id = RaceType::GNOME;
 }

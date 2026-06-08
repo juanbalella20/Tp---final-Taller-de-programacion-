@@ -4,6 +4,7 @@
 #include "item/escudo.h"
 #include "item/baculo.h"
 #include "item/item_catalog.h"
+#include "game_config.h"
 
 #include <algorithm>
 #include <iostream>
@@ -14,25 +15,32 @@
 
 namespace {
 // Que tipos de NPC hostil pueden generarse en cada zona. Los strings deben
-// coincidir con los que reconoce make_npc_from_spawn
-// TODO: mover a archivo de config.toml mas adelante.
-const std::map<Zone, std::vector<std::string>> ZONE_NPC_TYPES = {
-    {ZONE_DESERT, {"goblin", "spider"}},
-    // ZONE_CITY/FOREST/TOWN: sin NPCs hostiles por ahora.
-};
+// coincidir con los que reconoce make_npc_from_spawn.
+//
+// Se construye en cada llamada (no como objeto estatico) para leer la config
+// DESPUES de GameConfig::load().
+// ZONE_CITY: sin NPCs hostiles.
+std::map<Zone, std::vector<std::string>> zone_npc_types() {
+    return {
+        {ZONE_DESERT, GameConfig::instance().desert_npcs},
+        {ZONE_FOREST, GameConfig::instance().forest_npcs},
+        {ZONE_DUNGEON, GameConfig::instance().dungeon_npcs}
+    };
+}
 }  // namespace
 
 // Esto tienen que ser posiciones aleatorias
 NPChostile make_npc_from_spawn(const NpcSpawn& spawn) {
     // Catalogo de tipos de NPC hostiles. Mas adelante esto puede vivir
     // en un archivo de configuracion o base de datos.
+    const auto& cfg = GameConfig::instance();
     if (spawn.type == "goblin") {
-        NPChostile npc("goblin", "Goblin", 30, 5, 100);
-        npc.set_position(spawn.x, spawn.y);
+    NPChostile npc("goblin", cfg.goblin.name, cfg.goblin.lifepoints, cfg.goblin.attack_dmg, cfg.goblin.ticks_to_spawn);        
+    npc.set_position(spawn.x, spawn.y);
         return npc;
     }
     if (spawn.type == "spider") {
-        NPChostile npc("spider", "Spider", 20, 4, 40);
+        NPChostile npc("spider", cfg.spider.name, cfg.spider.lifepoints, cfg.spider.attack_dmg, cfg.spider.ticks_to_spawn);
         npc.set_position(spawn.x, spawn.y);
         return npc;
     }
@@ -43,8 +51,9 @@ NPChostile make_npc_from_spawn(const NpcSpawn& spawn) {
 }
 
 NPChostile GameMap::rand_npc(Zone zone, ZoneWorld& world) {
-    auto it = ZONE_NPC_TYPES.find(zone);
-    if (it == ZONE_NPC_TYPES.end() || it->second.empty()) {
+    const auto types = zone_npc_types();
+    auto it = types.find(zone);
+    if (it == types.end() || it->second.empty()) {
         // Zona sin NPCs permitidos: NPC en {-1,-1}, spawn_npc lo descarta.
         return make_npc_from_spawn({"", -1, -1});
     }
@@ -96,34 +105,20 @@ std::pair<int, int> GameMap::find_arrival_cell(ZoneWorld& dst, Zone dest_zone) {
     return dst.find_random_empty_cell(dest_players);
 }
 
-TeleportResult GameMap::teleport_player(const std::string& player_name) {
+TeleportResult GameMap::force_zone_change(const std::string& player_name,
+                                          Zone dest_zone) {
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) return {false, ZONE_DESERT, 0, 0};
-
-    // Chequea si el player esta adyacente a un teleport
-    ZoneWorld& src = zone_of(player_name);
-    const TeleportDef* tp = src.teleport_adjacent_to(player->get_coord_x(),
-                                                     player->get_coord_y());
-    if (tp == nullptr) return {false, ZONE_DESERT, 0, 0};
-
-    // Encuentra la zona por nombre
-    auto zit = ZONE_NAME_MAP.find(tp->dest_zone);
-    if (zit == ZONE_NAME_MAP.end()) return {false, ZONE_DESERT, 0, 0};
-    Zone dest_zone = zit->second;
 
     auto dit = zones.find(dest_zone);
     if (dit == zones.end()) return {false, ZONE_DESERT, 0, 0};  // zona no cargada
     ZoneWorld& dst = dit->second;
 
-    // Ubica al player en una celda libre de la zona destino.
     auto [nx, ny] = find_arrival_cell(dst, dest_zone);
     if (nx == -1) return {false, ZONE_DESERT, 0, 0};  // sin lugar libre
 
-    // Aplica el cambio de zona y posicion.
     player_zone[player_name] = dest_zone;
     player->update_position(nx, ny);
-    std::cout << "[DEBUG: teleport] " << player_name << " -> zona "
-              << static_cast<int>(dest_zone) << " (" << nx << "," << ny << ")" << std::endl;
     return {true, dest_zone, nx, ny};
 }
 void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
@@ -131,7 +126,7 @@ void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
     for (const auto& [zone_id, path] : zone_paths) {
         ZoneWorld world;
         world.load_terrain(path);
-
+        const auto& cfg = GameConfig::instance();
         auto state_it = initial_states.find(zone_id);
         if (state_it != initial_states.end()) {
             // spawn de npcs random segun los tipos permitidos en la zona
@@ -148,7 +143,8 @@ void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
         world.spawn_seller(1, 1);
 
         // Item de prueba hardcodeado. TODO: moverlo a state.items cuando este listo.
-        world.spawn_item(7, 7, std::make_unique<Arma>("espada", "espada", 50, 2, 2, 5));
+        
+        world.spawn_item(7, 7, std::make_unique<Arma>("espada", cfg.espada.name, cfg.espada.price, cfg.espada.distance, cfg.espada.damage_min, cfg.espada.damage_max));
 
         zones.emplace(zone_id, std::move(world));
     }
@@ -179,6 +175,7 @@ void GameMap::spawn_player(const std::string& name, const std::string& race, con
     // TODO: derivar de config / persistencia
     const Zone start_zone = ZONE_CITY;
     player_zone[name] = start_zone;
+    const auto& cfg = GameConfig::instance();
 
     // Posicion de spawn hardcodeada
     // int start_x = 29;
@@ -219,6 +216,10 @@ void GameMap::spawn_player(const std::string& name, const std::string& race, con
                            "baculo_engarzado", "flauta_elfica"}) {
         player.add_item(catalog.make_item(id));
     }
+    // TODO: ver con cual version qeudarse!
+    player.add_item(std::make_unique<Arma>("espada", cfg.espada.name, cfg.espada.price, cfg.espada.distance, cfg.espada.damage_min, cfg.espada.damage_max));
+    player.add_item(std::make_unique<Escudo>("escudo", cfg.escudo_tortuga.name, cfg.escudo_tortuga.price, cfg.escudo_tortuga.defense_min, cfg.escudo_tortuga.defense_max));
+    //
     players.push_back(std::move(player));
     std::cout << "[DEBUG: spawn_player] " << name << " at ("
               << start_x << "," << start_y << ") zona=" << static_cast<int>(start_zone)
@@ -239,12 +240,12 @@ bool GameMap::player_exists(const std::string& name) {
     return find_player_by_name(name) != nullptr;
 }
 
-bool GameMap::player_equip_item(const std::string& player_name, const std::string& item_id) {
+bool GameMap::player_equip_item(const std::string& player_name, uint64_t item_uid) {
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) {
         throw std::runtime_error("Player not found: " + player_name);
     }
-    player->equip_item(item_id);
+    player->equip_item(item_uid);
     return player->has_weapon_equipped();
 }
 // TODO: refactorizar funcion
@@ -364,6 +365,12 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
         if (target_is_player) {
             auto dropped = target_player->drop_inventory();
             world.scatter_items(x, y, std::move(dropped), players_in(z));
+        } else if (outcome.dropped_item) {
+            // Drop de la tabla de un NPC: poción o item al azar. Cae en la celda
+            // del NPC; si está ocupada por otro item, se esparce a una libre.
+            std::vector<std::unique_ptr<Item>> one;
+            one.push_back(std::move(outcome.dropped_item));
+            world.scatter_items(x, y, std::move(one), players_in(z));
         }
         std::cout << "[DEBUG] nivel: " << attacker->get_level() << std::endl;
         if (outcome.level_up) {
@@ -380,6 +387,12 @@ void GameMap::self_cast(const std::string& player_name) {
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) throw AttackerNotFoundException();
     player->cast_on_self();
+}
+
+bool GameMap::use_item(const std::string& player_name, uint64_t item_uid) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw AttackerNotFoundException();
+    return player->use_consumable(item_uid);
 }
 
 bool GameMap::update_npcs() {
@@ -645,3 +658,19 @@ bool GameMap::ban_member(const std::string& player_name, const std::string& memb
     }
     return true;
 }
+
+TeleportResult GameMap::try_teleport_on_current_cell(const std::string& player_name) {
+    ZoneWorld& zw = zone_of(player_name);
+    Player* player = find_player_by_name(player_name);
+    const TeleportDef* tp = zw.teleport_at(player->get_coord_x(), player->get_coord_y());
+    if (tp == nullptr) {
+        return {false, Zone::ZONE_DEFAULT,0,0};
+    }
+    auto it = ZONE_NAME_MAP.find(tp->dest_zone);
+    if (it == ZONE_NAME_MAP.end()) {
+        return {false, Zone::ZONE_DEFAULT,0,0};   // el string no es una zona conocida
+    }
+    Zone dest = it->second;
+    return force_zone_change(player_name, dest);
+}
+

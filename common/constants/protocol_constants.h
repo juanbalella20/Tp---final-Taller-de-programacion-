@@ -77,6 +77,12 @@ enum MessageType : uint8_t {
     MSG_AUTH_ERROR = 0x34,  // Server->cliente: register/login fallido. Payload: [reason_len:1][reason]
     MSG_UPDATE_LEVEL = 0x35,
     MSG_DEATH = 0x36,
+    // Server->cliente: register/login EXITOSO. Se manda antes del world snapshot.
+    // Payload: [name_len:1][name][race_len:1][race][class_len:1][class]
+    MSG_CONFIRM_SESSION = 0x37,
+    // Cliente->server: usar/consumir un item del inventario (p.ej. tomar una
+    // poción). Payload: el uid de INSTANCIA del item en texto (como MSG_EQUIP).
+    MSG_USE_ITEM = 0x38,
 };
 
 enum Direction : uint8_t {
@@ -122,10 +128,12 @@ enum ELEMENT_TYPE : uint8_t {
 };
 
 enum Zone : uint8_t {
+    ZONE_DEFAULT = 0x01, // misma que city
     ZONE_DESERT = 0x00,
     ZONE_CITY = 0x01,
     ZONE_FOREST = 0x02,
     ZONE_TOWN = 0x03,
+    ZONE_DUNGEON = 0x04
 };
 
 // Nombre de zona (usado en el TOML para dest_zone y en el label del cliente).
@@ -134,6 +142,7 @@ const std::unordered_map<std::string, Zone> ZONE_NAME_MAP = {
     {"city",   ZONE_CITY},
     {"forest", ZONE_FOREST},
     {"town",   ZONE_TOWN},
+    {"dungeon", ZONE_DUNGEON},
 };
 
 const std::unordered_map<uint8_t, std::string> ZONE_NAME_MAP_INV = {
@@ -141,6 +150,7 @@ const std::unordered_map<uint8_t, std::string> ZONE_NAME_MAP_INV = {
     {ZONE_CITY,   "city"},
     {ZONE_FOREST, "forest"},
     {ZONE_TOWN,   "town"},
+    {ZONE_DUNGEON, "dungeon"},
 };
 
 // Solo buildings/empty viven en la matriz (terreno estatico).
