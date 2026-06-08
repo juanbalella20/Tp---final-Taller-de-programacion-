@@ -7,17 +7,9 @@
 #include "clientProtocol.h"
 
 // Sesion de autenticacion compartida entre las pantallas (LoginSignupScreen,
-// CharacterCreationScreen) y el andamiaje que arranca el juego (ScreenManager /
-// ClientApp).
+// CharacterCreationScreen) y (ScreenManager, ClientApp).
 //
-// CONTRATO (fase 0):
-//  - Las pantallas de login/creacion LLENAN este struct: crean el `protocol`
-//    en el primer intento de conexion, dejan name/race/klass y, ante un
-//    MSG_CONFIRM_SESSION, marcan `authenticated = true`.
-//  - ClientApp/ScreenManager lo CONSUME: si `authenticated`, mueve el
-//    `protocol` hacia los threads de red y construye ClientGUI con name/race.
-//
-// La conexion al socket esta DIFERIDA: `protocol` arranca en nullptr y recien
+// La conexion al socket esta DIFERIDA: protocol arranca en nullptr y recien
 // se crea cuando el usuario confirma login o registro.
 struct AuthSession {
     std::string name;

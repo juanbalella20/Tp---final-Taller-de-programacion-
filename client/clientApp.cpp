@@ -9,8 +9,8 @@ ClientApp::ClientApp(const std::string& host, const std::string& port):
         host_(host), port_(port) {}
 
 void ClientApp::run() {
-    // 1) Pantallas pre-juego (config + login/registro). La conexion al server
-    //    esta DIFERIDA: el ScreenManager/las screens crean el ClientProtocol
+    // 1) Pantallas pre-game (config + login/registro). E
+    //    El ScreenManager/las screens crean el ClientProtocol
     //    recien al primer intento de auth y lo dejan en la AuthSession.
     ScreenManager screen_manager(host_, port_);
     AuthSession session;
@@ -25,7 +25,7 @@ void ClientApp::run() {
     //    del MSG_CONFIRM_SESSION y lo lee directamente el NetworkReceiverThread
     //    (no hay nada que re-encolar).
     std::unique_ptr<ClientProtocol> protocol = std::move(session.protocol);
-    session.password.clear();  // descartar la contrasena en claro tras autenticar.
+    session.password.clear();
 
     NetworkSenderThread sender(*protocol, sendingQueue);
     NetworkReceiverThread receiver(*protocol, receivingQueue);

@@ -10,16 +10,10 @@
 #include "Screen.h"
 #include "auth_session.h"
 
+struct WindowSettings;  // definido en welcome_screen.h
+
 // Dueño del SDL_Window / SDL_Renderer / TTF_Font COMPARTIDOS por todas las
-// pantallas. Crea esos recursos una sola vez (no parpadea entre pantallas) y
-// drivea el ciclo de pantallas pre-juego:
-//
-//   WELCOME -> LOGIN_SIGNUP -> (CHARACTER_CREATION si "Crear cuenta") -> GAME
-//
-// run() corre hasta que se alcanza GAME (auth OK; session.authenticated == true)
-// o EXIT (el usuario cerro). NO maneja el GAME en si: devuelve el estado final
-// y ClientApp arranca los threads de red y construye ClientGUI sobre el mismo
-// window/renderer/font (accesibles via los getters).
+// pantallas.
 class ScreenManager {
  private:
     static constexpr char WINDOW_NAME[] = "Argentum Online";
@@ -37,6 +31,10 @@ class ScreenManager {
 
     // Construye la pantalla correspondiente al estado dado (nullptr para GAME/EXIT).
     std::unique_ptr<Screen> make_screen(ScreenState state, AuthSession& session);
+
+    // Aplica a la ventana compartida la resolucion / pantalla completa elegidas
+    // en el launcher. Persiste hasta el juego porque el window es el mismo.
+    void apply_window_settings(const WindowSettings& settings);
 
  public:
     ScreenManager(std::string host, std::string port);
