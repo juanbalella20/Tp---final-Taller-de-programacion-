@@ -165,6 +165,8 @@ public:
     // Cheat /mana: resta `amount` de maná al player (para testear /meditar).
     void cheat_lose_mana(const std::string& name, uint32_t amount);
 
+    void set_infinite_hp(std::string player_name);
+    void set_infinite_mana(std::string player_name);
     /*
      * Carga TODAS las zonas al iniciar el server. Por cada (zone_id, path):
      * crea la ZoneWorld, carga su terreno y spawnea sus actores segun el

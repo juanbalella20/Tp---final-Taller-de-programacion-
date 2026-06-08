@@ -622,3 +622,14 @@ TeleportResult GameMap::try_teleport_on_current_cell(const std::string& player_n
     return force_zone_change(player_name, dest);
 }
 
+void GameMap::set_infinite_hp(std::string player_name) {
+    Player* player = find_player_by_name(player_name);
+    player->heal_max_life();
+    player->set_inmortal();
+}
+void GameMap::set_infinite_mana(std::string player_name) {
+    Player* player = find_player_by_name(player_name);
+    player->heal_max_mana();
+    player->set_inf_mana();
+}
+

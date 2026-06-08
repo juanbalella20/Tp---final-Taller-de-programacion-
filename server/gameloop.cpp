@@ -651,7 +651,7 @@ void GameLoop::handle_cheat_kill(const ClientCmd& cmd) {
 
 void GameLoop::handle_cheat_inf_hp(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-    // game_map.set_infinite_hp(name);
+    game_map.set_infinite_hp(name);
     GameMsg msg(MSG_CHAT);
     msg.set_chat_content("Vida infinita activada.");
     client_registry_monitor.notify_client(cmd.get_client_id(), msg);
@@ -659,7 +659,7 @@ void GameLoop::handle_cheat_inf_hp(const ClientCmd& cmd) {
 
 void GameLoop::handle_cheat_inf_mana(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-    // game_map.set_infinite_mana(name);
+    game_map.set_infinite_mana(name);
     GameMsg msg(MSG_CHAT);
     msg.set_chat_content("Mana infinito activado.");
     client_registry_monitor.notify_client(cmd.get_client_id(), msg);

@@ -52,6 +52,10 @@ private:
     void to_alive();
     void to_meditate();
 
+    // para cheats:
+    bool inmortal = false;
+    bool inf_mana = false;
+
 public:
     Player(const std::string name, PlayerRace& player_race, PlayerClass& player_class);
 
@@ -91,8 +95,14 @@ public:
     void revive();
 
     void heal_life(const int healthy_life);
+    void heal_max_life();
 
     void heal_mana(const int healthy_mana);
+    void heal_max_mana();
+
+    //para cheats:
+    void set_inmortal();
+    void set_inf_mana();
 
     // Resta maná (no baja de 0). Usado por el cheat /mana para testear /meditar.
     void lose_mana(const int amount);

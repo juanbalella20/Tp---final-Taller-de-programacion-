@@ -118,6 +118,22 @@ void Player::heal_life(const int healthy_life) {
     }
 }
 
+void Player::heal_max_life() {
+    heal_life(max_life());
+}
+
+void Player::heal_max_mana() {
+    heal_mana(max_mana());
+}
+
+void Player::set_inmortal() {
+    inmortal = true;
+}
+void Player::set_inf_mana() {
+    inf_mana = true;
+}
+
+
 void Player::heal_mana(const int healthy_mana) {
     if (mana + healthy_mana < max_mana()) {
         mana += healthy_mana;
