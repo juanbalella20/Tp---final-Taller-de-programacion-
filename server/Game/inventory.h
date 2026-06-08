@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <cstdint>
 
 #include "item/item.h"
 #include "entity.h"
@@ -30,21 +31,26 @@ public:
     // Devuelve todos los items del inventario y lo deja vacío.
     std::vector<std::unique_ptr<Item>> drop_all();
 
-    void equip_item(std::string item_id);
+    // Equipa por uid de INSTANCIA (distingue dos copias del mismo tipo). No-op
+    // si el uid no está en el inventario o el item no ocupa el slot de arma.
+    void equip_item(uint64_t item_uid);
 
-    // Devuelve el item con ese id (sin ceder ownership), o nullptr si no está.
-    Item* find_item(const std::string& item_id) const;
+    // Devuelve el item con ese uid de instancia (sin ceder ownership), o nullptr.
+    Item* find_item(uint64_t item_uid) const;
 
     void unequip_item();
 
-    // ¿El item con ese id es el arma actualmente equipada?
-    bool is_equipped(const std::string& item_id) const;
+    // ¿El item con ese uid de instancia es el arma actualmente equipada?
+    bool is_equipped(uint64_t item_uid) const;
 
     // ¿Hay un arma equipada?
     bool has_weapon_equipped() const;
 
-    // Id del arma equipada, o "" si no hay ninguna.
-    std::string get_equipped_weapon_id() const;
+    // uid de instancia del arma equipada, o 0 si no hay ninguna.
+    uint64_t get_equipped_weapon_uid() const;
+
+    // type_id del arma equipada, o "" si no hay ninguna (para el sprite/cliente).
+    std::string get_equipped_weapon_type_id() const;
 
     bool is_full() const;
     DamageOutcome use_equipped(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical);

@@ -261,7 +261,10 @@ void ClientGUI::handleEvents() {
                                 // Sólo pedimos el toggle al server. Él responde con
                                 // MSG_UPDATE_EQUIP y de ahí derivamos el halo amarillo
                                 // y el arma del personaje (estado real, no optimista).
-                                sendEquipCmd(item.get_id());
+                                // Enviamos el uid de INSTANCIA (no el id de tipo): así
+                                // con dos copias del mismo item se equipa exactamente
+                                // la que se clickeó.
+                                sendEquipCmd(std::to_string(item.get_uid()));
                                 break;
                             }
                             slot_x += slot_size + margin_x;
@@ -524,7 +527,7 @@ void ClientGUI::update() {
                             // Sprite del personaje con cada item equipado (arma/báculo + escudo).
                             player->set_equipped_items(msg.get_equipped_ids());
                         }
-                        if (hud) hud->set_equipped_by_ids(msg.get_equipped_ids());
+                        if (hud) hud->set_equipped_by_uids(msg.get_equipped_uids());
                         // ¿Equipó un báculo? Lo recordamos para animar su efecto.
                         equipped_spell_id.clear();
                         for (const auto& id : msg.get_equipped_ids()) {

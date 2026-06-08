@@ -189,7 +189,7 @@ void GameLoop::send_world_snapshot_to(uint32_t client_id, const std::string& nam
     std::vector<ItemInfo> item_infos;
     for (Item* item : p.get_all_items()) {
         item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(),
-                                static_cast<uint8_t>(item->get_type()));
+                                static_cast<uint8_t>(item->get_type()), item->get_uid());
     }
     registerMsg.set_items(item_infos);
     registerMsg.set_gold(game_map.get_player_gold(name));
@@ -323,7 +323,7 @@ void GameLoop::handle_sell(const ClientCmd& cmd) {
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
         for (Item* item : p.get_all_items()) {
-            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()), item->get_uid());
         }
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
@@ -356,7 +356,7 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
         for (Item* item : p.get_all_items()) {
-            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()), item->get_uid());
         }
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
@@ -375,12 +375,29 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
 
 void GameLoop::handle_equip(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-    bool has_weapon = game_map.player_equip_item(name, cmd.get_item_id());
+    // El cliente manda el uid de INSTANCIA del item a equipar (en texto decimal).
+    uint64_t item_uid = 0;
+    try {
+        item_uid = std::stoull(cmd.get_item_id());
+    } catch (const std::exception&) {
+        return;  // uid mal formado: ignorar el comando
+    }
+    bool has_weapon = game_map.player_equip_item(name, item_uid);
+    const Player& player = game_map.get_player(name);
+
+    // equipped_ids: type_ids (para el sprite del personaje y detectar báculos).
+    // equipped_uids: uids de instancia (para que el HUD resalte el slot exacto).
+    // Ambas listas viajan como strings; van en paralelo (mismo orden de items).
+    std::vector<uint64_t> uids = player.get_equipped_uids();
+    std::vector<std::string> uid_strs;
+    uid_strs.reserve(uids.size());
+    for (uint64_t u : uids) uid_strs.push_back(std::to_string(u));
 
     GameMsg msg_equip(MSG_UPDATE_EQUIP);
     msg_equip.set_player_name(name);
     msg_equip.set_equipped(has_weapon);
-    msg_equip.set_equipped_ids(game_map.get_player(name).get_equipped_ids());
+    msg_equip.set_equipped_ids(player.get_equipped_type_ids());
+    msg_equip.set_equipped_uids(uid_strs);
 
     client_registry_monitor.notify_clients(msg_equip);
 }
@@ -402,7 +419,7 @@ void GameLoop::handle_take(const ClientCmd& cmd) {
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
         for (Item* item : p.get_all_items()) {
-            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()), item->get_uid());
         }
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
@@ -547,7 +564,7 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
                 const Player& p = game_map.get_player(result.entity_name);
                 std::vector<ItemInfo> item_infos;
                 for (Item* item : p.get_all_items()) {
-                    item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+                    item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()), item->get_uid());
                 }
                 GameMsg inv_msg(MSG_INVENTORY);
                 inv_msg.set_items(item_infos);

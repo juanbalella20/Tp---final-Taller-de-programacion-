@@ -144,9 +144,10 @@ public:
     // cargada o no hay celda libre.
     TeleportResult force_zone_change(const std::string& player_name, Zone dest_zone);
 
-    // Equipa/desequipa (toggle) el item del jugador.
+    // Equipa/desequipa (toggle) el item del jugador, identificado por su uid de
+    // instancia (distingue dos copias del mismo tipo).
     // Devuelve true si, tras la operación, el jugador tiene un arma equipada.
-    bool player_equip_item(const std::string& player_name, const std::string& item_id);
+    bool player_equip_item(const std::string& player_name, uint64_t item_uid);
     void spawn_player(const std::string& name, const std::string& race, const std::string& pclass);
     const Player& get_player(const std::string& name);
     // Acceso mutable por nombre para handlers que cambian estado del player

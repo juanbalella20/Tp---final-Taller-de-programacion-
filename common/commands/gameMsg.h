@@ -33,6 +33,9 @@ class GameMsg {
     int damage;
     bool equipped;
     std::vector<std::string> equipped_ids;
+    // uids de instancia de los items equipados (paralelo a equipped_ids, pero por
+    // instancia). Para que el cliente resalte el slot exacto en MSG_UPDATE_EQUIP.
+    std::vector<std::string> equipped_uids;
 
     public:
     GameMsg(uint8_t type, Direction direction = DIR_NORTH)
@@ -97,6 +100,10 @@ class GameMsg {
     // MSG_UPDATE_EQUIP para que el cliente resalte exactamente esos slots.
     void set_equipped_ids(const std::vector<std::string>& ids);
     const std::vector<std::string>& get_equipped_ids() const;
+
+    // uids de instancia de los items equipados (ver miembro equipped_uids).
+    void set_equipped_uids(const std::vector<std::string>& uids);
+    const std::vector<std::string>& get_equipped_uids() const;
 
     void set_level(int level);
     int get_level() const;

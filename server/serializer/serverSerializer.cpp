@@ -59,7 +59,8 @@ std::vector<uint8_t> ServerSerializer::serialize_inventory(const GameMsg& msg) {
     for (const auto& item : items) {
         payload_len += static_cast<uint16_t>(item.get_id().size()) + 1
                      + static_cast<uint16_t>(item.get_name().size()) + 1
-                     + 1;  // type
+                     + 1   // type
+                     + 8;  // uid (uint64 big-endian)
     }
 
     std::vector<uint8_t> buf;
@@ -74,6 +75,11 @@ std::vector<uint8_t> ServerSerializer::serialize_inventory(const GameMsg& msg) {
         buf.push_back(static_cast<uint8_t>(name.size()));
         buf.insert(buf.end(), name.begin(), name.end());
         buf.push_back(item.get_type());
+        // uid de instancia: 8 bytes big-endian (el cliente lo reenvía al equipar).
+        uint64_t uid = item.get_uid();
+        for (int shift = 56; shift >= 0; shift -= 8) {
+            buf.push_back(static_cast<uint8_t>((uid >> shift) & 0xFF));
+        }
     }
 
     return buf;
@@ -213,16 +219,22 @@ std::vector<uint8_t> ServerSerializer::serialize_name(const GameMsg& msg) {
 }
 
 // Formato MSG_UPDATE_EQUIP:
-//   [name_size:1B][name][equipped:1B][n_ids:1B] luego n veces: [id_size:1B][id]
-// 'equipped' indica si el jugador tiene un arma equipada (para el sprite);
-// 'n_ids'/ids son TODOS los items equipados (arma + defensas) para resaltar el inventario.
+//   [name_size:1B][name][equipped:1B]
+//   [n_ids:1B]  luego n veces: [id_size:1B][id]    -> type_ids (sprite/animacion)
+//   [n_uids:1B] luego n veces: [uid_size:1B][uid]  -> uids de instancia (halo HUD)
+// Las dos listas van en paralelo (mismo orden): ids[i] y uids[i] son el mismo item.
+// 'equipped' indica si el jugador tiene un arma equipada (para el sprite).
 std::vector<uint8_t> ServerSerializer::serialize_update_equip(const GameMsg& msg) {
     const std::string& name = msg.get_player_name();
     const std::vector<std::string>& ids = msg.get_equipped_ids();
+    const std::vector<std::string>& uids = msg.get_equipped_uids();
 
-    uint16_t payload_len = LEN_NAME_SIZE_FIELD + static_cast<uint16_t>(name.size()) + 1 + 1;
+    uint16_t payload_len = LEN_NAME_SIZE_FIELD + static_cast<uint16_t>(name.size()) + 1 + 1 + 1;
     for (const std::string& id : ids) {
         payload_len += LEN_NAME_SIZE_FIELD + static_cast<uint16_t>(id.size());
+    }
+    for (const std::string& uid : uids) {
+        payload_len += LEN_NAME_SIZE_FIELD + static_cast<uint16_t>(uid.size());
     }
 
     std::vector<uint8_t> buf;
@@ -235,6 +247,11 @@ std::vector<uint8_t> ServerSerializer::serialize_update_equip(const GameMsg& msg
     for (const std::string& id : ids) {
         buf.push_back(static_cast<uint8_t>(id.size()));
         buf.insert(buf.end(), id.begin(), id.end());
+    }
+    buf.push_back(static_cast<uint8_t>(uids.size()));
+    for (const std::string& uid : uids) {
+        buf.push_back(static_cast<uint8_t>(uid.size()));
+        buf.insert(buf.end(), uid.begin(), uid.end());
     }
     return buf;
 }
@@ -400,6 +417,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
         payload_len += 1 + static_cast<uint16_t>(item.get_id().size());
         payload_len += 1 + static_cast<uint16_t>(item.get_name().size());
         payload_len += 1;  // type
+        payload_len += 8;  // uid (uint64 big-endian)
     }
     payload_len += 5 * sizeof(uint32_t);    // gold + hp + xp + mana + level
     payload_len += 2 * LEN_COORD;           // spawn_x + spawn_y
@@ -435,6 +453,11 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
         buf.push_back(static_cast<uint8_t>(name.size()));
         buf.insert(buf.end(), name.begin(), name.end());
         buf.push_back(item.get_type());
+        // uid de instancia: 8 bytes big-endian (igual que en MSG_INVENTORY).
+        uint64_t uid = item.get_uid();
+        for (int shift = 56; shift >= 0; shift -= 8) {
+            buf.push_back(static_cast<uint8_t>((uid >> shift) & 0xFF));
+        }
     }
 
     auto append_u32 = [&](uint32_t value) {

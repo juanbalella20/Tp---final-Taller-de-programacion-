@@ -62,15 +62,26 @@ public:
     // Saca todos los items del inventario al morir y los devuelve.
     std::vector<std::unique_ptr<Item>> drop_inventory();
 
-    // Equipa el item (por id) en el slot que corresponde a su tipo.
+    // Equipa el item (por uid de INSTANCIA) en el slot que corresponde a su tipo.
     // Para armas funciona como toggle: si ya está equipada, la desequipa.
-    void equip_item(std::string item_id);
+    // Distingue dos copias del mismo tipo: equipa exactamente la instancia pedida.
+    void equip_item(uint64_t item_uid);
+
+    // Equipa la primera instancia de un TIPO dado. Solo para reconstruir el
+    // estado al cargar de persistencia (los uids se regeneran al recrear items,
+    // así que ahí se reequipa por tipo, no por uid).
+    void equip_item_by_type(const std::string& type_id);
 
     // ¿El jugador tiene un arma equipada?
     bool has_weapon_equipped() const;
 
-    // Ids de todos los items equipados (arma + defensas). Para resaltar el inventario.
-    std::vector<std::string> get_equipped_ids() const;
+    // uids de instancia de todos los items equipados (arma + defensas). Para
+    // resaltar el slot correcto del inventario en el cliente.
+    std::vector<uint64_t> get_equipped_uids() const;
+
+    // type_ids de todos los items equipados, en el MISMO orden que
+    // get_equipped_uids() (defensas y luego arma). Para el sprite/animaciones.
+    std::vector<std::string> get_equipped_type_ids() const;
 
     // Defensa total que aportan los items de defensa equipados.
     int calculate_defense();

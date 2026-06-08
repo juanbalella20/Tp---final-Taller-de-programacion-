@@ -132,12 +132,14 @@ void HUD::set_equipped_slot(int slot_index) {
     equipped_slots.insert(slot_index);
 }
 
-void HUD::set_equipped_by_ids(const std::vector<std::string>& ids) {
+void HUD::set_equipped_by_uids(const std::vector<std::string>& uids) {
+    // Resalta por uid de INSTANCIA: dos copias del mismo tipo tienen distinto
+    // uid, así que solo se resalta la que realmente está equipada.
     equipped_slots.clear();
     for (int i = 0; i < static_cast<int>(inventory.items.size()); ++i) {
-        const std::string& item_id = inventory.items[i].get_id();
-        for (const std::string& id : ids) {
-            if (item_id == id) {
+        const std::string item_uid = std::to_string(inventory.items[i].get_uid());
+        for (const std::string& uid : uids) {
+            if (item_uid == uid) {
                 equipped_slots.insert(i);
                 break;
             }

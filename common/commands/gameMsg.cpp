@@ -56,5 +56,8 @@ bool GameMsg::get_equipped() const { return this->equipped; }
 void GameMsg::set_equipped_ids(const std::vector<std::string>& ids) { this->equipped_ids = ids; }
 const std::vector<std::string>& GameMsg::get_equipped_ids() const { return this->equipped_ids; }
 
+void GameMsg::set_equipped_uids(const std::vector<std::string>& uids) { this->equipped_uids = uids; }
+const std::vector<std::string>& GameMsg::get_equipped_uids() const { return this->equipped_uids; }
+
 void GameMsg::set_level(int level) { this->level = level; }
 int GameMsg::get_level() const { return this->level; }

@@ -240,12 +240,12 @@ bool GameMap::player_exists(const std::string& name) {
     return find_player_by_name(name) != nullptr;
 }
 
-bool GameMap::player_equip_item(const std::string& player_name, const std::string& item_id) {
+bool GameMap::player_equip_item(const std::string& player_name, uint64_t item_uid) {
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) {
         throw std::runtime_error("Player not found: " + player_name);
     }
-    player->equip_item(item_id);
+    player->equip_item(item_uid);
     return player->has_weapon_equipped();
 }
 // TODO: refactorizar funcion
