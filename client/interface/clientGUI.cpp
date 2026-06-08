@@ -357,6 +357,7 @@ void ClientGUI::update() {
                         hud->set_max_hp(msg.get_hp());
                         hud->set_max_mana(msg.get_mana());
                         hud->set_xp(msg.get_xp());
+                        hud->set_max_xp(msg.get_max_xp());
                         hud->set_mana(msg.get_mana());
                         hud->set_level(msg.get_level());
                     }
@@ -554,7 +555,10 @@ void ClientGUI::update() {
                     }
                     break;
                 case MSG_UPDATE_LEVEL: {
-                    if (hud) hud->set_level(msg.get_level());
+                    if (hud) {
+                        hud->set_level(msg.get_level());
+                        hud->set_max_xp(msg.get_max_xp());
+                    }
                 }
                 default:
                     break;
