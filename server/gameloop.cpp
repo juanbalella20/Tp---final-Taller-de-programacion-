@@ -815,6 +815,25 @@ void GameLoop::run() {
                     }
                     client_registry_monitor.notify_client_by_name(attack.victim_name, victim_chat);
 
+                    if (attack.victim_died) {
+                        broadcast_npcs_snapshot();
+                        broadcast_items_snapshot();
+                        GameMsg death_msg(MSG_DEATH);
+                        death_msg.set_player_name(attack.victim_name);
+                        client_registry_monitor.notify_clients(death_msg);
+                        GameMsg gold_msg(MSG_GOLD);
+                        gold_msg.set_gold(game_map.get_player_gold(attack.victim_name));
+                        client_registry_monitor.notify_client_by_name(attack.victim_name, gold_msg);
+                        const Player& p = game_map.get_player(attack.victim_name);
+                        std::vector<ItemInfo> item_infos;
+                        for (Item* item : p.get_all_items()) {
+                            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+                        }
+                        GameMsg inv_msg(MSG_INVENTORY);
+                        inv_msg.set_items(item_infos);
+                        client_registry_monitor.notify_client_by_name(attack.victim_name, inv_msg);
+                    }
+
                 }
                 broadcast_npcs_snapshot();
             }

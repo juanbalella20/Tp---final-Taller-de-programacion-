@@ -198,7 +198,8 @@ std::vector<NPCAttackEvent> ZoneWorld::update_npc_aggro(const std::vector<Player
                             target_player->get_name(), 
                             npc.get_name(), 
                             outcome.damage, 
-                            outcome.dodged
+                            outcome.dodged,
+                            target_player->is_dead()
                         });
                         npc.reset_attack_cooldown();
                     }

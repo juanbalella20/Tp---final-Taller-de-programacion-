@@ -29,6 +29,7 @@ struct NPCAttackEvent {
     std::string npc_name;
     int damage;
     bool dodged;
+    bool victim_died;
 };
 
 
