@@ -24,9 +24,11 @@ class TextField {
     //  - BACKSPACE             -> borra el ultimo caracter
     void handle_event(const SDL_Event& event);
 
-    // Enfoca/desenfoca el campo. Arranca o detiene el text-input de SDL sobre la
-    // ventana dada (igual que MiniChat::toggle_active).
-    void set_focus(bool focus, SDL_Window* window);
+    // Enfoca/desenfoca el campo (solo cambia el flag interno). NO toca el
+    // text-input de SDL: ese estado es global por ventana, asi que lo maneja la
+    // pantalla (un SDL_StartTextInput mientras haya algun campo activo), no cada
+    // campo por su cuenta.
+    void set_focus(bool focus);
     bool is_focused() const;
 
     // Dibuja el marco, el contenido (o asteriscos) y el cursor parpadeante.

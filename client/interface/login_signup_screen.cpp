@@ -14,11 +14,16 @@
 
 namespace {
 constexpr SDL_Color COLOR_ERROR{ 220, 80, 70, 255 };
+constexpr SDL_Color COLOR_LABEL{ 230, 220, 180, 255 };
 
-// Cajas de los campos de texto (coordenadas logicas 493x479).
-// TODO(iteracion botones): ajustar a las imagenes reales de login/signup.
+// === AJUSTAR A TU PNG DE SIGNUP =============================================
+// Cajas de los inputs (coordenadas logicas 493x479: ancho 493, alto 479).
+// Mové estas 4 cifras (x, y, ancho, alto) hasta que calcen con los recuadros
+// de tu imagen de crear cuenta. La etiqueta se dibuja LABEL_DY pixeles arriba.
 constexpr SDL_FRect NAME_BOX{ 96.0f, 170.0f, 300.0f, 38.0f };
 constexpr SDL_FRect PASS_BOX{ 96.0f, 250.0f, 300.0f, 38.0f };
+constexpr float LABEL_DY = 22.0f;  // separacion vertical etiqueta -> caja
+// ===========================================================================
 }  // namespace
 
 LoginSignupScreen::LoginSignupScreen(SDL_Renderer* renderer, SDL_Window* window,
@@ -63,13 +68,22 @@ SDL_Texture* LoginSignupScreen::load_png(const char* path) {
 }
 
 void LoginSignupScreen::focus(TextField& field) {
-    if (&field == &name_field_) {
-        name_field_.set_focus(true, window_);
-        password_field_.set_focus(false, window_);
-    } else {
-        name_field_.set_focus(false, window_);
-        password_field_.set_focus(true, window_);
-    }
+    const bool name_gets_focus = (&field == &name_field_);
+    name_field_.set_focus(name_gets_focus);
+    password_field_.set_focus(!name_gets_focus);
+}
+
+void LoginSignupScreen::enter_form() {
+    // El text-input es estado global de la ventana: lo prende la pantalla, una vez.
+    SDL_StartTextInput(window_);
+    focus(name_field_);
+}
+
+void LoginSignupScreen::leave_form() {
+    name_field_.set_focus(false);
+    password_field_.set_focus(false);
+    SDL_StopTextInput(window_);
+    view_ = View::CHOICE;
 }
 
 void LoginSignupScreen::handleEvent(const SDL_Event& event) {
@@ -101,11 +115,11 @@ void LoginSignupScreen::handle_choice_event(const SDL_Event& event) {
         if (contains(CHOICE_LOGIN_BUTTON, x, y)) {
             view_ = View::LOGIN_FORM;
             error_message_.clear();
-            focus(name_field_);
+            enter_form();
         } else if (contains(CHOICE_SIGNUP_BUTTON, x, y)) {
             view_ = View::SIGNUP_FORM;
             error_message_.clear();
-            focus(name_field_);
+            enter_form();
         }
     }
 }
@@ -114,9 +128,7 @@ void LoginSignupScreen::handle_form_event(const SDL_Event& event) {
     if (event.type == SDL_EVENT_KEY_DOWN) {
         // ESC vuelve a la pantalla de eleccion.
         if (event.key.scancode == SDL_SCANCODE_ESCAPE) {
-            name_field_.set_focus(false, window_);
-            password_field_.set_focus(false, window_);
-            view_ = View::CHOICE;
+            leave_form();
             error_message_.clear();
             return;
         }
@@ -237,8 +249,18 @@ void LoginSignupScreen::render() {
         SDL_RenderTexture(renderer_, bg, nullptr, nullptr);
     }
 
-    // TODO(iteracion botones): dibujar campos de texto, botones y demas sobre la
-    // PNG segun la vista. Por ahora solo se muestra la imagen y el error.
+    // En el formulario de signup se dibujan los inputs sobre la PNG.
+    if (view_ == View::SIGNUP_FORM) {
+        draw_text(renderer_, font_, "Nombre",
+                  NAME_BOX.x, NAME_BOX.y - LABEL_DY, COLOR_LABEL);
+        name_field_.render(renderer_, font_);
+
+        draw_text(renderer_, font_, "Contrasena",
+                  PASS_BOX.x, PASS_BOX.y - LABEL_DY, COLOR_LABEL);
+        password_field_.render(renderer_, font_);
+    }
+    // TODO(login): dibujar tambien los inputs en View::LOGIN_FORM.
+
     if (!error_message_.empty()) {
         draw_text(renderer_, font_, error_message_.c_str(), 96.0f, 420.0f, COLOR_ERROR);
     }

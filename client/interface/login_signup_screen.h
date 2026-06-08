@@ -75,6 +75,11 @@ class LoginSignupScreen : public Screen {
 
     // Carga una textura PNG. Lanza si no se pudo cargar.
     SDL_Texture* load_png(const char* path);
+    // Entra a un formulario (login o signup): prende el text-input de la ventana
+    // y enfoca el campo de nombre.
+    void enter_form();
+    // Vuelve a la pantalla de eleccion: apaga el text-input y desenfoca.
+    void leave_form();
     // Pone el foco en un campo y lo saca del otro (un solo campo activo a la vez).
     void focus(TextField& field);
     // Intenta el login sincrono. Llena error_message_ o avanza a GAME.

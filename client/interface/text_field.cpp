@@ -19,16 +19,10 @@ void TextField::handle_event(const SDL_Event& event) {
     }
 }
 
-void TextField::set_focus(bool focus, SDL_Window* window) {
+void TextField::set_focus(bool focus) {
+    // Solo cambia el flag. El SDL_StartTextInput/StopTextInput (estado global por
+    // ventana) lo maneja la pantalla, no el campo.
     focused_ = focus;
-    if (!window) {
-        return;
-    }
-    if (focus) {
-        SDL_StartTextInput(window);
-    } else {
-        SDL_StopTextInput(window);
-    }
 }
 
 bool TextField::is_focused() const { return focused_; }
