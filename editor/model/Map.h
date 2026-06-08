@@ -43,6 +43,12 @@ public:
 
     bool is_collidable(int x, int y) const;
 
+    // Reemplaza todo el estado del mapa (lo usa EditorDocument::open al cargar un
+    // .bin). Reconstruye el indice de tiles a partir de los tilesets dados.
+    void load_from(std::vector<Tileset> tilesets, std::vector<MapLayerData> layers,
+                   std::vector<std::vector<uint8_t>> collision,
+                   std::vector<TeleportDef> teleports);
+
     // Colision: grilla por celda, fuente unica de verdad (independiente de los
     // graficos). La pinta la herramienta Colision y se vuelca a la seccion
     // COLLISION del .bin.

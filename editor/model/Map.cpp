@@ -146,6 +146,16 @@ void Map::remove_teleport(int x, int y) {
     }
 }
 
+void Map::load_from(std::vector<Tileset> tilesets, std::vector<MapLayerData> layers,
+                    std::vector<std::vector<uint8_t>> collision,
+                    std::vector<TeleportDef> teleports) {
+    tilesets_  = std::move(tilesets);
+    layers_    = std::move(layers);
+    collision_ = std::move(collision);
+    teleports_ = std::move(teleports);
+    rebuild_tile_index();
+}
+
 // --- Indice de tiles ---------------------------------------------------------
 void Map::rebuild_tile_index() {
     // Identico a MapLoader::build_tile_index: por cada tileset y cada local en

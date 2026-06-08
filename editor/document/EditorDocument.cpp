@@ -1,5 +1,6 @@
 #include "EditorDocument.h"
 
+#include "binaryMap/binaryMapLoader.h"
 #include "../tools/EraserTool.h"
 #include "../tools/FillTool.h"
 #include "../tools/PencilTool.h"
@@ -217,10 +218,24 @@ void EditorDocument::new_map() {
     emit undoStackChanged();
 }
 
-bool EditorDocument::open(const QString& /*path*/, QString* err) {
-    // TODO(persistencia): cargar con BinaryMapLoader (common/) y reconstruir map_.
-    if (err) *err = "Abrir mapa: no implementado todavia";
-    return false;
+bool EditorDocument::open(const QString& path, QString* err) {
+    try {
+        BinaryMapLoader loader;
+        loader.load(path.toStdString());
+        map_.load_from(loader.get_tilesets(), loader.get_layers(),
+                       loader.get_collision(), loader.get_teleports());
+    } catch (const std::exception& e) {
+        if (err) *err = e.what();
+        return false;
+    }
+    undo_stack_.clear();
+    redo_stack_.clear();
+    path_ = path;
+    set_dirty(false);
+    emit tilesetsChanged();
+    emit mapReset();
+    emit undoStackChanged();
+    return true;
 }
 
 bool EditorDocument::save(const QString& /*path*/, QString* err) {

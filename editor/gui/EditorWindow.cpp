@@ -197,7 +197,7 @@ void EditorWindow::build_tools_toolbar() {
     dest_layout->setContentsMargins(4, 0, 4, 0);
     dest_layout->addWidget(new QLabel("Destino: "));
     auto* dest_combo = new QComboBox(dest_widget);
-    for (Zone z : {ZONE_DESERT, ZONE_CITY, ZONE_FOREST, ZONE_TOWN}) {
+    for (Zone z : {ZONE_DESERT, ZONE_CITY, ZONE_FOREST, ZONE_TOWN, ZONE_DUNGEON}) {
         dest_combo->addItem(QString::fromStdString(ZONE_NAME_MAP_INV.at(z)));
     }
     dest_combo->setCurrentText(QString::fromStdString(doc_.active_dest_zone()));
@@ -280,8 +280,28 @@ void EditorWindow::build_menus() {
     connect(salir, &QAction::triggered, this, &QWidget::close);
 }
 
-void EditorWindow::on_new() { statusBar()->showMessage("Nuevo mapa (pendiente)"); }
-void EditorWindow::on_open() { statusBar()->showMessage("Abrir mapa (pendiente)"); }
+void EditorWindow::on_new() {
+    doc_.new_map();
+    current_path_.clear();
+    statusBar()->showMessage("Nuevo mapa");
+}
+
+void EditorWindow::on_open() {
+    const QString path = QFileDialog::getOpenFileName(
+        this, "Abrir mapa", current_path_, "Mapa binario (*.bin)");
+    if (path.isEmpty()) return;  // cancelado
+
+    QString err;
+    if (!doc_.open(path, &err)) {
+        QMessageBox::warning(this, "Error al abrir",
+                             QString("No se pudo abrir el mapa:\n%1").arg(err));
+        statusBar()->showMessage("Error al abrir");
+        return;
+    }
+    current_path_ = path;
+    refresh_tileset_combo();
+    statusBar()->showMessage(QString("Mapa abierto: %1").arg(path));
+}
 void EditorWindow::on_save() {
     // Sin ruta previa (mapa nunca guardado): comportarse como "Guardar como".
     if (current_path_.isEmpty()) {
