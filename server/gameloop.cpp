@@ -475,6 +475,9 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
         if (result.entity_died) {
             broadcast_npcs_snapshot();
             broadcast_items_snapshot();
+            GameMsg death_msg(MSG_DEATH);
+            death_msg.set_player_name(result.entity_name);
+            client_registry_monitor.notify_clients(death_msg);
         }
         // El atacante gana XP en cada golpe: notificarle su XP actualizada
         GameMsg xp_msg(MSG_XP);
@@ -604,7 +607,7 @@ void GameLoop::handle_private(const ClientCmd& cmd) {
 
 void GameLoop::handle_cheat_kill(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-    // game_map.kill_player(name);
+    game_map.kill_player(name);
     GameMsg msg(MSG_CHEAT_KILL);
     msg.set_player_name(name);
     msg.set_chat_content(name + " murió instantáneamente.");
