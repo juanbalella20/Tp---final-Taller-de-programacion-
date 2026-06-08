@@ -1,7 +1,8 @@
 #include "npcHostile.h"
 #include "../player/player.h"
+#include "../zoneWorld.h"
 #include <cstdlib>
-
+#include <vector>
 #include <iostream>
 
 NPChostile::NPChostile(const std::string& type_id, const std::string& name,
@@ -68,19 +69,28 @@ DamageOutcome NPChostile::receive_damage(int dmg, Player& atacante, bool is_crit
     return {dmg, gold_drop, false, level_up};
 }
 
-void NPChostile::move_towards(int target_x, int target_y) {
-    int old_x = coord_x, old_y = coord_y;
+void NPChostile::move_towards(int target_x, int target_y, ZoneWorld& world, const std::vector<const Player*>& players) {
     int dx = target_x - coord_x;
     int dy = target_y - coord_y;
 
+    int next_x = coord_x;
+    int next_y = coord_y;
+
     if (std::abs(dx) > std::abs(dy)) {
-        coord_x += (dx > 0) ? 1 : -1;
+        next_x += (dx > 0) ? 1 : -1;
     } else if (std::abs(dy) > 0) {
-        coord_y += (dy > 0) ? 1 : -1;
+        next_y += (dy > 0) ? 1 : -1;
     }
 
-    std::cout << "[DEBUG] NPC " << get_name() << " moved from (" << old_x << "," << old_y 
-              << ") to (" << coord_x << "," << coord_y << ")" << std::endl;
+    if (!world.is_blocked_terrain(next_x, next_y) && 
+        !world.has_actor_at(next_x, next_y, players)) {
+        
+        coord_x = next_x;
+        coord_y = next_y;
+    
+        std::cout << "[DEBUG] NPC " << get_name() << " stepped to (" 
+                  << coord_x << "," << coord_y << ")" << std::endl;
+    }
 }
 
 /*

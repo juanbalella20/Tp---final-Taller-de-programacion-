@@ -5,9 +5,12 @@
 #include "../entity.h"
 // #include "itemDataBase.h"
 
+#include <vector>
+
 class Player;
 class Item;
 struct Command;
+class ZoneWorld;
 
 enum class State { DEAD, ALIVE };
 
@@ -53,7 +56,7 @@ class NPChostile : public NPC, public Entity {
         void clear_target() { target_player.clear(); }
         bool has_target() const { return !target_player.empty(); }
         const std::string& get_target() const { return target_player; }
-        void move_towards(int target_x, int target_y); // Mueve 1 tile hacia el objetivo
+        void move_towards(int target_x, int target_y, ZoneWorld& world, const std::vector<const Player*>& players); // Mueve 1 tile hacia el objetivo
         
         // attacks player
         //void interact(Player player, Command cmd) override;

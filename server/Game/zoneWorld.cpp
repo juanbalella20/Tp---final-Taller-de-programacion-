@@ -180,7 +180,7 @@ void ZoneWorld::update_npc_aggro(const std::vector<const Player*>& players_in_zo
                 [&](const Player* p) { return p->get_name() == npc.get_target(); });
 
             if (it != players_in_zone.end()) {
-                npc.move_towards((*it)->get_coord_x(), (*it)->get_coord_y());
+                npc.move_towards((*it)->get_coord_x(), (*it)->get_coord_y(), *this, players_in_zone);
             } else {
                 npc.clear_target();
             }
