@@ -148,6 +148,8 @@ public:
 
     int get_level() const;
 
+    uint32_t max_xp() const;
+
     // Fair play: ¿es newbie (nivel <= 12)?
     bool is_newbie() const;
 

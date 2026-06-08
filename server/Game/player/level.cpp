@@ -10,8 +10,8 @@ int Level::get_number() const {
 }
 
 bool Level::try_level_up(uint32_t experience) {
-    int limit = static_cast<int>(1000 * std::pow(number, 1.8));
-    if (experience >= static_cast<uint32_t>(limit)) {
+    uint32_t limit = max_xp();
+    if (experience >= limit) {
         number += 1;
         return true;
     }
@@ -20,6 +20,10 @@ bool Level::try_level_up(uint32_t experience) {
 
 uint32_t Level::max_gold() const {
     return static_cast<uint32_t>(100 * std::pow(number, 1.1));
+}
+
+uint32_t Level::max_xp() const {
+    return static_cast<uint32_t>(1000 * std::pow(number, 1.8));
 }
 
 uint32_t Level::calculate_gold_drop(uint32_t gold) const {

@@ -13,7 +13,7 @@ Player::Player(const std::string name, PlayerRace& player_race, PlayerClass& pla
     player_race(player_race),
     player_class(player_class),
     player_inventory(),
-    level(14) {
+    level(1) {
 
     lives = max_life();
     gold = 10000;
@@ -353,6 +353,10 @@ bool Player::check_level_up() {
         return true;
     }
     return false;
+}
+
+uint32_t Player::max_xp() const {
+    return level.max_xp();
 }
 
 const std::string& Player::get_race_name() const {

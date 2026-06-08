@@ -106,6 +106,7 @@ public:
         int target_x;
         int target_y;
         bool dodged;  // el target esquivó el golpe (solo PvP)
+        int level;
     };
 
     // Calcula la nueva posicion del player a partir de su posicion actual y la
@@ -158,6 +159,7 @@ public:
     uint32_t get_player_gold(const std::string& name);
     uint32_t get_player_hp(const std::string& name);
     uint32_t get_player_xp(const std::string& name);
+    uint32_t player_max_xp(const std::string& name);
     uint32_t get_player_mana(const std::string& name);
 
     // Cheat /mana: resta `amount` de maná al player (para testear /meditar).

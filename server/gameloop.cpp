@@ -180,6 +180,8 @@ void GameLoop::send_world_snapshot_to(uint32_t client_id, const std::string& nam
     registerMsg.set_hp(game_map.get_player_hp(name));
     registerMsg.set_xp(game_map.get_player_xp(name));
     registerMsg.set_mana(game_map.get_player_mana(name));
+    std::cout << "[DEBUG] max xp: " << p.max_xp() << std::endl;
+    registerMsg.set_max_xp(game_map.player_max_xp(name));
     registerMsg.set_coord_x(p.get_coord_x());
     registerMsg.set_coord_y(p.get_coord_y());
     registerMsg.set_level(p.get_level());
@@ -453,6 +455,12 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
         dmg_msg.set_damage(result.damage);
         client_registry_monitor.notify_client(cmd.get_client_id(), dmg_msg);
 
+        if (result.level != 0) {
+            GameMsg level_msg(MSG_UPDATE_LEVEL);
+            level_msg.set_level(result.level);
+            level_msg.set_max_xp(game_map.player_max_xp(attacker_name));
+            client_registry_monitor.notify_client(cmd.get_client_id(), level_msg);
+        }
         // Feed de combate (estilo AO) en el minichat del ATACANTE: cuánto daño
         // provocó, o si el target esquivó. Viaja como MSG_CHAT.
         GameMsg atk_chat(MSG_CHAT);

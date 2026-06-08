@@ -356,6 +356,7 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
     }
 
     DamageOutcome outcome = attacker->attack(*target, x, y);
+    int level = 0;
     if (target->is_dead()) {
         if (outcome.gold_drop > 0)
             world.spawn_gold(x, y, static_cast<uint32_t>(outcome.gold_drop));
@@ -363,9 +364,15 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
             auto dropped = target_player->drop_inventory();
             world.scatter_items(x, y, std::move(dropped), players_in(z));
         }
-        return {true, true, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged};
+        std::cout << "[DEBUG] nivel: " << attacker->get_level() << std::endl;
+        if (outcome.level_up) {
+            std::cout << "[DEBUG] subiò de nivel" << std::endl;
+            level = attacker->get_level();
+        }
+        return {true, true, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged, level};
     }
-    return {true, false, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged};
+
+    return {true, false, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged, level};
 }
 
 void GameMap::self_cast(const std::string& player_name) {
@@ -479,6 +486,11 @@ void GameMap::cheat_lose_mana(const std::string& name, uint32_t amount) {
 uint32_t GameMap::get_player_xp(const std::string& name) {
     Player* player = find_player_by_name(name);
     return player->get_xp();
+}
+
+uint32_t GameMap::player_max_xp(const std::string& name) {
+    Player* player = find_player_by_name(name);
+    return player->max_xp();
 }
 
 uint32_t GameMap::get_player_mana(const std::string& name) {
