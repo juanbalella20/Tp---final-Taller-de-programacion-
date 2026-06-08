@@ -21,3 +21,23 @@ void NpcSprite::draw(const Camera& camera, SDL_FRect src_crop) {
     const bool has_crop = src_crop.w > 0.0f && src_crop.h > 0.0f;
     SDL_RenderTexture(renderer, texture, has_crop ? &src_crop : nullptr, &dst);
 }
+
+void ClientGUI::crop_goblin() {
+    SDL_FRect frames[] = {
+        {0.0f, 0.0f, 32.0f, 32.0f},
+        {285.0f, 5.0f, 30.0f, 40.0f},
+        {310.0f, 5.0f, 30.0f, 40.0f},
+        {335.0f, 5.0f, 30.0f, 40.0f},
+        {365.0f, 5.0f, 30.0f, 40.0f},
+        {394.0f, 5.0f, 30.0f, 40.0f}
+    };
+
+    enemies_crops["Goblin"] = frames;
+}
+
+void ClientGUI::crop_enemies() {
+
+    enemies_crops["Spider1"] = {0.0f, 0.0f, 64.0f, 64.0f};
+    enemies_crops["Spider2"] = {0.0f, 14.0f, 95.0f, 65.0f};
+    enemies_crops["Spider3"] = {20.0f, 69.0f, 84.0f, 57.0f};
+}
