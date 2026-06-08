@@ -272,16 +272,40 @@ lifepoints = 30
 attack_dmg = 5
 ticks_to_spawn = 100  
  
-[npcs.spider]
-name = "Spider"
+[npcs.spider1]
+name = "Spider1"
 lifepoints = 20
 attack_dmg = 4
 ticks_to_spawn = 40
+
+[npcs.spider2]
+name = "Spider2"
+lifepoints = 30
+attack_dmg = 6
+ticks_to_spawn = 40
+
+[npcs.spider3]
+name = "Spider3"
+lifepoints = 40
+attack_dmg = 8
+ticks_to_spawn = 40
  
-[npcs.skeleton]
-name = "Skeleton"
+[npcs.skeleton1]
+name = "Skeleton1"
 lifepoints = 25
 attack_dmg = 7
+ticks_to_spawn = 60
+
+[npcs.skeleton2]
+name = "Skeleton2"
+lifepoints = 35
+attack_dmg = 9
+ticks_to_spawn = 60
+
+[npcs.skeleton3]
+name = "Skeleton3"
+lifepoints = 45
+attack_dmg = 11
 ticks_to_spawn = 60
  
 [npcs.zombie]
@@ -291,15 +315,27 @@ attack_dmg = 6
 ticks_to_spawn = 80
  
 [npcs.orc]
-name = "Orco"
+name = "Orc"
 lifepoints = 60
 attack_dmg = 12
 ticks_to_spawn = 150
  
-[npcs.golem]
-name = "Golem"
+[npcs.golem1]
+name = "Golem1"
 lifepoints = 80
 attack_dmg = 15
+ticks_to_spawn = 200
+
+[npcs.golem2]
+name = "Golem2"
+lifepoints = 90
+attack_dmg = 25
+ticks_to_spawn = 200
+
+[npcs.golem3]
+name = "Golem3"
+lifepoints = 100
+attack_dmg = 35
 ticks_to_spawn = 200
  
 # Al morir un NPC SIEMPRE deja caer oro base (seccion "Oro" del enunciado):
@@ -328,13 +364,13 @@ npc_gold_drop_max = 0.2
 # (coinciden con las claves de npcs)
 # ------------------------------------------------------------
 [zones.desert]
-allowed_npcs = ["goblin", "spider"]
+allowed_npcs = ["goblin", "skeleton1", "golem1", "skeleton2"]
  
 [zones.forest]
-allowed_npcs = ["spider", "skeleton"]
+allowed_npcs = ["spider1", "spider2", "zombie", "golem3"]
  
 [zones.dungeon]
-allowed_npcs = ["skeleton", "zombie", "orc", "golem"]
+allowed_npcs = ["skeleton3", "zombie", "orc", "golem2", "spider3"]
  
 # ------------------------------------------------------------
 # Clanes
