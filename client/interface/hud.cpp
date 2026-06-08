@@ -33,8 +33,13 @@ HUD::HUD(SDL_Renderer* gui_renderer,
 }
 
 HUD::~HUD() {
+    // Varios ids pueden compartir la misma textura (p.ej. ambas pociones salen
+    // del mismo 100.png): destruir cada textura UNA sola vez para no doble-liberar.
+    std::set<SDL_Texture*> destroyed;
     for (auto& kv : inventory.items_textures) {
-        if (kv.second) SDL_DestroyTexture(kv.second);
+        if (kv.second && destroyed.insert(kv.second).second) {
+            SDL_DestroyTexture(kv.second);
+        }
     }
     if (hp_bar_texture) {
         SDL_DestroyTexture(hp_bar_texture);
@@ -97,9 +102,12 @@ void HUD::set_max_mana(uint32_t max_mana_value) {
     max_mana = max_mana_value;
 }
 
+void HUD::set_max_xp(uint32_t max_xp_value) {
+    max_xp = max_xp_value;
+}
+
 void HUD::set_xp(uint32_t xp) {
-    //player_xp = xp;
-    player_xp = 20;
+    player_xp = xp;
 }
 
 void HUD::set_mana(uint32_t mana) {
@@ -132,12 +140,14 @@ void HUD::set_equipped_slot(int slot_index) {
     equipped_slots.insert(slot_index);
 }
 
-void HUD::set_equipped_by_ids(const std::vector<std::string>& ids) {
+void HUD::set_equipped_by_uids(const std::vector<std::string>& uids) {
+    // Resalta por uid de INSTANCIA: dos copias del mismo tipo tienen distinto
+    // uid, así que solo se resalta la que realmente está equipada.
     equipped_slots.clear();
     for (int i = 0; i < static_cast<int>(inventory.items.size()); ++i) {
-        const std::string& item_id = inventory.items[i].get_id();
-        for (const std::string& id : ids) {
-            if (item_id == id) {
+        const std::string item_uid = std::to_string(inventory.items[i].get_uid());
+        for (const std::string& uid : uids) {
+            if (item_uid == uid) {
                 equipped_slots.insert(i);
                 break;
             }
@@ -159,10 +169,17 @@ void HUD::toggle_equipped_slot(int slot_index) {
 }
 
 void HUD::drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float SLOT_SIZE) {
+    // Textura del item por id; si no está registrada, cae a la de la espada para
+    // que el slot nunca quede vacío (un item siempre se ve con ALGÚN sprite).
+    SDL_Texture* icon = nullptr;
     auto it = inventory.items_textures.find(item.get_id());
     if (it != inventory.items_textures.end() && it->second != nullptr) {
-        SDL_Texture* icon = it->second;
-
+        icon = it->second;
+    } else {
+        auto fallback = inventory.items_textures.find("espada");
+        if (fallback != inventory.items_textures.end()) icon = fallback->second;
+    }
+    if (icon != nullptr) {
         // Crop específico del item; fallback al de la espada si no está registrado.
         SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};
         auto crop_it = inventory.items_crops.find(item.get_id());
@@ -480,6 +497,22 @@ void HUD::load_textures() {
         if (!tex) continue;
         inventory.items_textures[si.id] = tex;
         inventory.items_crops[si.id] = {0.0f, 0.0f, si.w, si.h};
+    }
+
+    // Pociones en el inventario: ambas se recortan del MISMO spritesheet 100.png.
+    // Se carga una sola textura y los dos ids la comparten (el destructor libera
+    // cada textura una sola vez). pocion_vida = botella gris; pocion_mana = azul.
+    SDL_Surface* potion_surf = IMG_Load("imagenes/100.png");
+    if (potion_surf) {
+        SDL_Texture* potion_tex = SDL_CreateTextureFromSurface(gui_renderer, potion_surf);
+        SDL_DestroySurface(potion_surf);
+        if (potion_tex) {
+            SDL_SetTextureBlendMode(potion_tex, SDL_BLENDMODE_BLEND);
+            inventory.items_textures["pocion_vida"] = potion_tex;
+            inventory.items_crops["pocion_vida"] = {392.0f, 159.0f, 16.0f, 26.0f};
+            inventory.items_textures["pocion_mana"] = potion_tex;
+            inventory.items_crops["pocion_mana"] = {424.0f, 159.0f, 17.0f, 26.0f};
+        }
     }
 
     load_stat_texture("imagenes/en_barradevida.bmp", &hp_bar_texture);

@@ -127,8 +127,8 @@ PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
 }
 
 void PlayerDisplay::load_heads() {
-    SDL_Surface* head_surf;
-    SDL_Surface* hat_surf;
+    SDL_Surface* head_surf = nullptr;
+    SDL_Surface* hat_surf = nullptr;
 
     if (race == "human") {
         head_surf = IMG_Load("imagenes/420.png");
@@ -147,6 +147,12 @@ void PlayerDisplay::load_heads() {
         if (!hat_image) {
             throw std::runtime_error(std::string("Creating hat texture: ") + SDL_GetError());
         }
+    } else {
+        // Raza desconocida o vacia (p.ej. raza corrupta en persistencia): caemos
+        // al sprite de cabeza humana para no quedar con head_surf sin cargar.
+        std::cerr << "[WARN] raza desconocida '" << race
+                  << "', usando cabeza humana por defecto" << std::endl;
+        head_surf = IMG_Load("imagenes/420.png");
     }
 
     if (!head_surf) {

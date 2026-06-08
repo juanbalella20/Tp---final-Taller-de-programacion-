@@ -63,7 +63,7 @@ private:
     ZoneWorld& zone_of(const std::string& player_name);
     Zone zone_id_of(const std::string& player_name) const;
     // Punteros (const) a los players que estan en la zona z
-    std::vector<const Player*> players_in(Zone z) const;
+    std::vector<Player*> players_in(Zone z);
 
     // Celda donde aparece un player que llega a la zona dst: adyacente al
     // teleport de esa zona si tiene, o una celda libre random. {-1,-1} si nada.
@@ -106,6 +106,7 @@ public:
         int target_x;
         int target_y;
         bool dodged;  // el target esquivó el golpe (solo PvP)
+        int level;
     };
 
     // Calcula la nueva posicion del player a partir de su posicion actual y la
@@ -119,8 +120,15 @@ public:
     // p.ej. curación). Propaga las excepciones de Baculo::use_item.
     void self_cast(const std::string& player_name);
 
+    // El jugador toma/consume un item de su inventario por uid (p.ej. una poción):
+    // aplica su efecto (cura) y lo saca del inventario. Devuelve true si se
+    // consumió (false si el uid no existe o el item no es consumible).
+    bool use_item(const std::string& player_name, uint64_t item_uid);
+
     // Respawn de NPCs en TODAS las zonas. Devuelve true si hubo alguno
     bool update_npcs();
+
+    std::vector<NPCAttackEvent> update_npc_aggro();
 
     // Avance de tiempo: hace tick() en todos los players. Devuelve los nombres
     // de los que están meditando (su maná cambió: hay que notificarles MSG_MANA).
@@ -144,9 +152,10 @@ public:
     // cargada o no hay celda libre.
     TeleportResult force_zone_change(const std::string& player_name, Zone dest_zone);
 
-    // Equipa/desequipa (toggle) el item del jugador.
+    // Equipa/desequipa (toggle) el item del jugador, identificado por su uid de
+    // instancia (distingue dos copias del mismo tipo).
     // Devuelve true si, tras la operación, el jugador tiene un arma equipada.
-    bool player_equip_item(const std::string& player_name, const std::string& item_id);
+    bool player_equip_item(const std::string& player_name, uint64_t item_uid);
     void spawn_player(const std::string& name, const std::string& race, const std::string& pclass);
     const Player& get_player(const std::string& name);
     // Acceso mutable por nombre para handlers que cambian estado del player
@@ -160,6 +169,7 @@ public:
     uint32_t get_player_gold(const std::string& name);
     uint32_t get_player_hp(const std::string& name);
     uint32_t get_player_xp(const std::string& name);
+    uint32_t player_max_xp(const std::string& name);
     uint32_t get_player_mana(const std::string& name);
 
     // Cheat /mana: resta `amount` de maná al player (para testear /meditar).
@@ -177,6 +187,8 @@ public:
 
     bool pick_up_gold(const std::string& player_name);
 
+    void kill_player(const std::string& player_name);
+    
     bool found_clan(const std::string& player_name, const std::string& clan_name);
     bool join_clan(const std::string& player_name, const std::string& clan_name);
     std::string rev_clan(const std::string& player_name);
@@ -186,6 +198,12 @@ public:
     bool ban_member(const std::string& player_name, const std::string& member);
 
     bool same_clan(Player* player1, Player* player2);
+
+    // --- Persistencia de clanes ---
+    // Acceso de solo lectura al set de clanes vivos (para volcarlos a disco).
+    const std::map<std::string, Clan>& get_clans() const { return clans; }
+    // Reemplaza el set de clanes por los cargados de disco al iniciar el server.
+    void load_clans(std::vector<Clan> persisted_clans);
 
     // Busca al player y su zona, comprueba que esté parado en una celda de teleport
     TeleportResult try_teleport_on_current_cell(const std::string& player_name);

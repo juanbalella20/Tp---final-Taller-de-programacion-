@@ -98,6 +98,17 @@ private:
     // Textura y recorte del sprite de cada item del piso, por id de item.
     std::map<std::string, SDL_Texture*> floor_item_textures;
     std::map<std::string, SDL_FRect> floor_item_crops;
+
+    // --- Tomar una poción manteniendo el click IZQUIERDO 3s sobre su slot ---
+    // Mientras se mantiene presionado, se dibuja un anillo de progreso alrededor
+    // del slot; al completarse los 3s se manda MSG_USE_ITEM y la poción se consume.
+    static constexpr float POTION_HOLD_MS = 3000.0f;  // 3 segundos
+    bool potion_hold_active = false;        // ¿hay un hold en curso?
+    bool potion_hold_sent = false;          // ¿ya se mandó el use (evita repetir)?
+    uint64_t potion_hold_uid = 0;           // uid de instancia de la poción presionada
+    uint64_t potion_hold_start_ms = 0;      // SDL_GetTicks al empezar el hold
+    SDL_FRect potion_hold_slot_rect = {0, 0, 0, 0};  // rect en pantalla del slot
+
     Camera camera;
     SDL_FRect player_pov;
     Zone current_zone;
@@ -152,7 +163,17 @@ private:
     void sendAttackCmd(int tile_x, int tile_y);
     void sendSelfCastCmd();
     void sendEquipCmd(const std::string& item_id);
+    void sendUseItemCmd(const std::string& item_uid);
     void sendChatCmd(const std::string& msg);
+
+    // Devuelve true si el slot que cae bajo (mx,my) en el inventario es una
+    // poción (item consumible); si lo es, deja su uid en out_uid y el rect del
+    // slot en pantalla en out_rect. Reusa la misma geometría que el equipar.
+    bool potion_slot_at(int mx, int my, uint64_t& out_uid, SDL_FRect& out_rect) const;
+    // Avanza el estado del hold de poción: si se cumplieron los 3s, manda el use.
+    void update_potion_hold();
+    // Dibuja el anillo de progreso del hold sobre el slot presionado.
+    void draw_potion_hold_arc();
 
     // recibe mensaje del server y hace el dibujo inicial
     void init_draw();

@@ -89,6 +89,12 @@ ClientDeserializer::ClientDeserializer() {
     handlers[MSG_ATTACK] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
         deserialize_attack(payload, msg);
     };
+    handlers[MSG_UPDATE_LEVEL] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_level(payload, msg);
+    };
+    handlers[MSG_DEATH] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_name(payload, msg);
+    };
 }
 
 
@@ -243,6 +249,18 @@ void ClientDeserializer::deserialize_update_equip(const std::vector<uint8_t>& pa
         }
     }
     msg.set_equipped_ids(ids);
+
+    // Segunda lista: uids de instancia (paralela a ids), para resaltar el slot
+    // exacto del inventario. Clientes/servidores viejos sin esta lista -> vacía.
+    std::vector<std::string> uids;
+    if (offset < payload.size()) {
+        uint8_t n_uids = payload[offset];
+        ++offset;
+        for (uint8_t i = 0; i < n_uids && offset < payload.size(); ++i) {
+            uids.push_back(read_string(payload, offset));
+        }
+    }
+    msg.set_equipped_uids(uids);
 }
 
 uint32_t ClientDeserializer::deserialize_value(const std::vector<uint8_t>& payload, GameMsg& msg) {
@@ -277,9 +295,40 @@ void ClientDeserializer::deserialize_mana(const std::vector<uint8_t>& payload, G
     msg.set_mana(mana);
 }
 
+void ClientDeserializer::deserialize_level(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    if (payload.size() != 2 * sizeof(uint32_t)) {
+        throw std::invalid_argument("Payload inválido para MSG_UPDATE_LEVEL");
+    }
+    
+    size_t offset = 0;
+    uint32_t level_be, max_xp_be;
+    
+    std::memcpy(&level_be, payload.data() + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    
+    std::memcpy(&max_xp_be, payload.data() + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    
+    msg.set_level(static_cast<int>(ntohl(level_be)));
+    msg.set_max_xp(ntohl(max_xp_be));
+}
+
 void ClientDeserializer::deserialize_item(const std::vector<uint8_t>& payload, GameMsg& msg) {
     size_t offset = 0;
     msg.set_item_id(read_string(payload, offset));
+}
+
+// Lee un uint64_t en big-endian del payload (8 bytes).
+static uint64_t read_uint64_be(const std::vector<uint8_t>& payload, size_t& offset) {
+    if (offset + 8 > payload.size()) {
+        throw std::invalid_argument("Payload demasiado corto para leer uint64");
+    }
+    uint64_t value = 0;
+    for (int i = 0; i < 8; ++i) {
+        value = (value << 8) | payload[offset + i];
+    }
+    offset += 8;
+    return value;
 }
 
 void ClientDeserializer::deserialize_inventory(const std::vector<uint8_t>& payload, GameMsg& msg) {
@@ -290,7 +339,8 @@ void ClientDeserializer::deserialize_inventory(const std::vector<uint8_t>& paylo
         std::string id   = read_string(payload, offset);
         std::string name = read_string(payload, offset);
         uint8_t type = payload[offset++];
-        items.emplace_back(id, name, 0, type);
+        uint64_t uid = read_uint64_be(payload, offset);
+        items.emplace_back(id, name, 0, type, uid);
     }
 
     msg.set_items(items);
@@ -378,24 +428,27 @@ void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
         std::string id   = read_string(payload, offset);
         std::string name = read_string(payload, offset);
         uint8_t type = payload[offset++];
-        items.emplace_back(id, name, 0, type);
+        uint64_t uid = read_uint64_be(payload, offset);
+        items.emplace_back(id, name, 0, type, uid);
     }
     msg.set_items(items);
 
-    uint32_t gold_be, hp_be, xp_be, mana_be, level_be;
-    if (offset + 5 * sizeof(uint32_t) > payload.size()) {
+    uint32_t gold_be, hp_be, xp_be, mana_be, max_xp_be, level_be;
+    if (offset + 6 * sizeof(uint32_t) > payload.size()) {
         throw std::invalid_argument("Payload demasiado corto leyendo stats en MSG_REGISTER");
     }
     std::memcpy(&gold_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
     std::memcpy(&hp_be,   payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
     std::memcpy(&xp_be,   payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
     std::memcpy(&mana_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
+    std::memcpy(&max_xp_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
     std::memcpy(&level_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
 
     msg.set_gold(ntohl(gold_be));
     msg.set_hp(ntohl(hp_be));
     msg.set_xp(ntohl(xp_be));
     msg.set_mana(ntohl(mana_be));
+    msg.set_max_xp(ntohl(max_xp_be));
     msg.set_level(static_cast<int>(ntohl(level_be)));
 
     // Posicion de spawn calculada por el servidor.
@@ -414,6 +467,10 @@ void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
         uint8_t race_code = payload[offset++];
         int x = static_cast<int>(read_uint16_be(payload, offset));
         int y = static_cast<int>(read_uint16_be(payload, offset));
+        bool is_ghost = (payload[offset++] != 0);
+
+        std::cout << "[DEBUG] Player " << name << " is_ghost: " << is_ghost << std::endl;
+    
         std::string race;
         switch (race_code) {
             case RACE_HUMAN: race = "human"; break;
@@ -422,7 +479,9 @@ void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
             case RACE_GNOME: race = "gnome"; break;
             default: throw std::invalid_argument("Raza invalida en MSG_REGISTER");
         }
-        players.push_back({std::move(name), race, 0, x, y});
+        PlayerInfo pi{std::move(name), race, 0, x, y};
+        pi.ghost = is_ghost;
+        players.push_back(pi);
     }
     msg.set_players(players);
 }

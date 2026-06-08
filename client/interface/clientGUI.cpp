@@ -3,8 +3,13 @@
 #include "itemSprite.h"
 #include <SDL3_image/SDL_image.h>
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 ClientGUI::ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
     Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name,
@@ -81,8 +86,9 @@ void ClientGUI::freeSDL() {
     }
 
     // Texturas extra de items del piso (las que no son item_texture, p. ej. escudo).
+    // Se saltea gold_texture: lo comparten las pociones del piso y se libera aparte.
     for (auto& kv : floor_item_textures) {
-        if (kv.second && kv.second != item_texture) {
+        if (kv.second && kv.second != item_texture && kv.second != gold_texture) {
             SDL_DestroyTexture(kv.second);
         }
     }
@@ -123,6 +129,104 @@ void ClientGUI::sendEquipCmd(const std::string& item_id) {
     cmd.set_message_type(MSG_EQUIP);
     cmd.set_item_id(item_id);
     outgoing.push(cmd);
+}
+
+void ClientGUI::sendUseItemCmd(const std::string& item_uid) {
+    ClientCmd cmd;
+    cmd.set_message_type(MSG_USE_ITEM);
+    cmd.set_item_id(item_uid);  // uid de INSTANCIA en texto (como MSG_EQUIP)
+    outgoing.push(cmd);
+}
+
+bool ClientGUI::potion_slot_at(int mx, int my, uint64_t& out_uid,
+                               SDL_FRect& out_rect) const {
+    if (!hud) return false;
+    const auto& inv = hud->get_inventory();
+
+    // Misma geometría que el handler de equipar (click izquierdo) más abajo.
+    float image_w = 1021.0f;
+    float image_h = 767.0f;
+    float scale_x = static_cast<float>(GAME_WIDTH + PANEL_WIDTH) / image_w;
+    float scale_y = static_cast<float>(CANVAS_HEIGHT) / image_h;
+
+    float slot_start_size = 48.0f;
+    float slot_margin = 4.0f;
+    float padding = 6.0f;
+    float inv_x = 781.0f;
+    float inv_y = 200.0f;
+    float inv_w = 218.0f;
+
+    float start_x = (inv_x + padding) * scale_x;
+    float start_y = (inv_y + padding) * scale_y;
+    float slot_size = slot_start_size * scale_x;
+    float margin_x = slot_margin * scale_x;
+    float margin_y = slot_margin * scale_y;
+    float limit_x = (inv_x + inv_w - padding) * scale_x;
+
+    float slot_x = start_x;
+    float slot_y = start_y;
+    for (const auto& item : inv) {
+        if (mx >= slot_x && mx <= slot_x + slot_size &&
+            my >= slot_y && my <= slot_y + slot_size) {
+            // Solo las pociones (item consumible, ItemType::OTHER == 4) se toman
+            // manteniendo presionado. Las armas/defensas se equipan con un click.
+            if (item.get_type() != 4) return false;
+            out_uid = item.get_uid();
+            out_rect = {slot_x, slot_y, slot_size, slot_size};
+            return true;
+        }
+        slot_x += slot_size + margin_x;
+        if (slot_x + slot_size > limit_x) {
+            slot_x = start_x;
+            slot_y += slot_size + margin_y;
+        }
+    }
+    return false;
+}
+
+void ClientGUI::update_potion_hold() {
+    if (!potion_hold_active || potion_hold_sent) return;
+    uint64_t elapsed = SDL_GetTicks() - potion_hold_start_ms;
+    if (elapsed >= static_cast<uint64_t>(POTION_HOLD_MS)) {
+        // Se completaron los 3s: pedir al server consumir la poción. El server
+        // valida, aplica el efecto y reenvía el inventario (la poción desaparece).
+        sendUseItemCmd(std::to_string(potion_hold_uid));
+        potion_hold_sent = true;  // no repetir hasta soltar y volver a presionar
+    }
+}
+
+void ClientGUI::draw_potion_hold_arc() {
+    if (!potion_hold_active || potion_hold_sent) return;
+    uint64_t elapsed = SDL_GetTicks() - potion_hold_start_ms;
+    float progress = static_cast<float>(elapsed) / POTION_HOLD_MS;
+    if (progress > 1.0f) progress = 1.0f;
+
+    // Anillo de progreso centrado en el slot. Se dibuja como una serie de
+    // segmentos a lo largo de un arco que va de 0 a (progress * 360°), arrancando
+    // arriba (-90°) y avanzando en sentido horario.
+    float cx = potion_hold_slot_rect.x + potion_hold_slot_rect.w / 2.0f;
+    float cy = potion_hold_slot_rect.y + potion_hold_slot_rect.h / 2.0f;
+    float radius = (potion_hold_slot_rect.w / 2.0f) + 4.0f;
+
+    const int total_segments = 48;
+    int lit = static_cast<int>(progress * total_segments);
+
+    // Fondo del anillo (tenue) + progreso (brillante), dibujados como puntos
+    // gruesos a lo largo de la circunferencia.
+    for (int i = 0; i < total_segments; ++i) {
+        float frac = static_cast<float>(i) / total_segments;
+        float angle = -static_cast<float>(M_PI) / 2.0f + frac * 2.0f * static_cast<float>(M_PI);
+        float px = cx + radius * std::cos(angle);
+        float py = cy + radius * std::sin(angle);
+        if (i < lit) {
+            SDL_SetRenderDrawColor(renderer, 80, 220, 120, 255);  // verde brillante
+        } else {
+            SDL_SetRenderDrawColor(renderer, 40, 60, 40, 120);    // fondo tenue
+        }
+        // "Punto" de 3x3 para que el anillo se vea grueso.
+        SDL_FRect dot = {px - 1.5f, py - 1.5f, 3.0f, 3.0f};
+        SDL_RenderFillRect(renderer, &dot);
+    }
 }
 
 void ClientGUI::sendCoord(int tile_x, int tile_y) {
@@ -226,6 +330,25 @@ void ClientGUI::handleEvents() {
                 int mx = static_cast<int>(lx);
                 int my = static_cast<int>(ly);
 
+                if (event.button.button != SDL_BUTTON_LEFT) break;
+
+                // Click IZQUIERDO sostenido sobre una poción: arranca el hold de 3s
+                // para tomarla. El conteo y el envío del use los maneja
+                // update_potion_hold(). Una poción no se equipa, así que el hold
+                // reemplaza al equip sólo en sus slots; el resto sigue equipando.
+                {
+                    uint64_t uid = 0;
+                    SDL_FRect slot_rect;
+                    if (potion_slot_at(mx, my, uid, slot_rect)) {
+                        potion_hold_active = true;
+                        potion_hold_sent = false;
+                        potion_hold_uid = uid;
+                        potion_hold_start_ms = SDL_GetTicks();
+                        potion_hold_slot_rect = slot_rect;
+                        break;  // sobre una poción: hold, no equipar
+                    }
+                }
+
                 if (mx >= GAME_WIDTH) {
                     if (hud) {
                         const auto& inv = hud->get_inventory();
@@ -261,7 +384,10 @@ void ClientGUI::handleEvents() {
                                 // Sólo pedimos el toggle al server. Él responde con
                                 // MSG_UPDATE_EQUIP y de ahí derivamos el halo amarillo
                                 // y el arma del personaje (estado real, no optimista).
-                                sendEquipCmd(item.get_id());
+                                // Enviamos el uid de INSTANCIA (no el id de tipo): así
+                                // con dos copias del mismo item se equipa exactamente
+                                // la que se clickeó.
+                                sendEquipCmd(std::to_string(item.get_uid()));
                                 break;
                             }
                             slot_x += slot_size + margin_x;
@@ -277,6 +403,15 @@ void ClientGUI::handleEvents() {
                     // Click dentro del hueco visible del mundo (no en el chat ni los bordes).
                     auto coords = translate_tile_to_coord(mx, my);
                     selectCoord(coords[0], coords[1]);
+                }
+                break;
+            }
+            case SDL_EVENT_MOUSE_BUTTON_UP: {
+                // Soltar el botón izquierdo antes de los 3s cancela el hold: la
+                // poción no se toma (hay que volver a mantener presionado).
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    potion_hold_active = false;
+                    potion_hold_sent = false;
                 }
                 break;
             }
@@ -346,6 +481,7 @@ void ClientGUI::update() {
                         hud->set_max_hp(msg.get_hp());
                         hud->set_max_mana(msg.get_mana());
                         hud->set_xp(msg.get_xp());
+                        hud->set_max_xp(msg.get_max_xp());
                         hud->set_mana(msg.get_mana());
                         hud->set_level(msg.get_level());
                     }
@@ -471,8 +607,6 @@ void ClientGUI::update() {
                     chat_inbox.push(msg.get_chat_content());
                     break;
                 case MSG_CHEAT_KILL: {
-                    std::cout << "DEBUG murió" << std::endl;
-
                     if (msg.get_player_name() == own_name) {
                         player->set_ghost(true);
                         player_pov = player->ghost_frame();
@@ -524,7 +658,7 @@ void ClientGUI::update() {
                             // Sprite del personaje con cada item equipado (arma/báculo + escudo).
                             player->set_equipped_items(msg.get_equipped_ids());
                         }
-                        if (hud) hud->set_equipped_by_ids(msg.get_equipped_ids());
+                        if (hud) hud->set_equipped_by_uids(msg.get_equipped_uids());
                         // ¿Equipó un báculo? Lo recordamos para animar su efecto.
                         equipped_spell_id.clear();
                         for (const auto& id : msg.get_equipped_ids()) {
@@ -543,8 +677,27 @@ void ClientGUI::update() {
                     }
                     break;
                 case MSG_UPDATE_LEVEL: {
-                    if (hud) hud->set_level(msg.get_level());
+                    if (hud) {
+                        hud->set_level(msg.get_level());
+                        hud->set_max_xp(msg.get_max_xp());
+                    }
+                    break;
                 }
+                case MSG_DEATH: {
+                    if (msg.get_player_name() == own_name) {
+                        player->set_ghost(true);
+                        player_pov = player->ghost_frame();
+                    } else {
+                        for (auto& p : other_players) {
+                            if (p.name == msg.get_player_name()) {
+                                p.ghost = true;
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
+
                 default:
                     break;
             }
@@ -790,6 +943,9 @@ void ClientGUI::draw() {
         hud->display_player_info(own_name);
     }
 
+    // Anillo de progreso del hold de poción, encima del inventario del HUD.
+    draw_potion_hold_arc();
+
     mini_chat->render(GAME_WIDTH, CANVAS_HEIGHT);
     SDL_RenderPresent(renderer);
 }
@@ -887,6 +1043,17 @@ void ClientGUI::init_draw() {
         SDL_DestroySurface(elem_surf);
     }
 
+    // Pociones en el piso: se recortan del mismo spritesheet 100.png que el oro.
+    // pocion_vida = botella gris; pocion_mana = botella azul (coords medidas en
+    // 100.png). Comparten textura (gold_texture); el cleanup de floor_item_textures
+    // ya saltea las que apuntan a otra textura ya liberada.
+    if (gold_texture) {
+        floor_item_textures["pocion_vida"] = gold_texture;
+        floor_item_crops["pocion_vida"] = {392.0f, 159.0f, 16.0f, 26.0f};
+        floor_item_textures["pocion_mana"] = gold_texture;
+        floor_item_crops["pocion_mana"] = {424.0f, 159.0f, 17.0f, 26.0f};
+    }
+
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
 
     // Spritesheets de efectos de hechizo (animaciones sobre el target).
@@ -900,6 +1067,12 @@ void ClientGUI::init_draw() {
         player_pov = player->back_pov(ViewDirection::BACK);
     } catch (const std::runtime_error& e) {
         std::cout << "[DEBUG] imagenes/1005.png failed: " << e.what() << std::endl;
+    }
+    if (!player) {
+        // No se pudo construir el sprite del jugador (p.ej. raza invalida).
+        // Abortamos la entrada al juego en vez de desreferenciar un puntero null.
+        throw std::runtime_error(
+            "No se pudo crear el PlayerDisplay local (raza='" + race + "')");
     }
     // La posicion real llega en MSG_REGISTER via update().
     // Posicion temporal (0,0) hasta que llegue el mensaje del servidor.
@@ -919,6 +1092,7 @@ void ClientGUI::run() {
         while (is_running && should_keep_running()) {
             handleEvents();
             update();
+            update_potion_hold();  // ¿se cumplieron los 3s del hold de poción?
             draw();
             SDL_Delay(16);
         }

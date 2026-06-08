@@ -15,8 +15,9 @@
 GameLoop::GameLoop(Queue<ClientCmd>& receiving_queue,
                    ClientRegistryMonitor& client_registry_monitor):
         receiving_queue(receiving_queue), client_registry_monitor(client_registry_monitor),
-        persistence(PERSIST_DATA_DIR), auth(persistence) {
+        persistence(PERSIST_DATA_DIR), clan_persistence(PERSIST_DATA_DIR), auth(persistence) {
     register_handlers();
+    load_persisted_clans();
 }
 
 void GameLoop::register_handlers() {
@@ -32,6 +33,7 @@ void GameLoop::register_handlers() {
     handlers[MSG_ATTACK]         = [this](const ClientCmd& cmd) { handle_attack(cmd); };
     handlers[MSG_MEDITATE]       = [this](const ClientCmd& cmd) { handle_meditate(cmd); };
     handlers[MSG_SELF_CAST]      = [this](const ClientCmd& cmd) { handle_self_cast(cmd); };
+    handlers[MSG_USE_ITEM]       = [this](const ClientCmd& cmd) { handle_use_item(cmd); };
     handlers[MSG_TELEPORT]       = [this](const ClientCmd& cmd) { handle_teleport(cmd); };
     handlers[MSG_PRIVATE]        = [this](const ClientCmd& cmd) { handle_private(cmd); };
     handlers[MSG_CHEAT_KILL]     = [this](const ClientCmd& cmd) { handle_cheat_kill(cmd); };
@@ -189,13 +191,15 @@ void GameLoop::send_world_snapshot_to(uint32_t client_id, const std::string& nam
     std::vector<ItemInfo> item_infos;
     for (Item* item : p.get_all_items()) {
         item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(),
-                                static_cast<uint8_t>(item->get_type()));
+                                static_cast<uint8_t>(item->get_type()), item->get_uid());
     }
     registerMsg.set_items(item_infos);
     registerMsg.set_gold(game_map.get_player_gold(name));
     registerMsg.set_hp(game_map.get_player_hp(name));
     registerMsg.set_xp(game_map.get_player_xp(name));
     registerMsg.set_mana(game_map.get_player_mana(name));
+    std::cout << "[DEBUG] max xp: " << p.max_xp() << std::endl;
+    registerMsg.set_max_xp(game_map.player_max_xp(name));
     registerMsg.set_coord_x(p.get_coord_x());
     registerMsg.set_coord_y(p.get_coord_y());
     registerMsg.set_level(p.get_level());
@@ -323,7 +327,7 @@ void GameLoop::handle_sell(const ClientCmd& cmd) {
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
         for (Item* item : p.get_all_items()) {
-            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()), item->get_uid());
         }
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
@@ -356,7 +360,7 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
         for (Item* item : p.get_all_items()) {
-            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()), item->get_uid());
         }
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
@@ -375,12 +379,29 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
 
 void GameLoop::handle_equip(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-    bool has_weapon = game_map.player_equip_item(name, cmd.get_item_id());
+    // El cliente manda el uid de INSTANCIA del item a equipar (en texto decimal).
+    uint64_t item_uid = 0;
+    try {
+        item_uid = std::stoull(cmd.get_item_id());
+    } catch (const std::exception&) {
+        return;  // uid mal formado: ignorar el comando
+    }
+    bool has_weapon = game_map.player_equip_item(name, item_uid);
+    const Player& player = game_map.get_player(name);
+
+    // equipped_ids: type_ids (para el sprite del personaje y detectar báculos).
+    // equipped_uids: uids de instancia (para que el HUD resalte el slot exacto).
+    // Ambas listas viajan como strings; van en paralelo (mismo orden de items).
+    std::vector<uint64_t> uids = player.get_equipped_uids();
+    std::vector<std::string> uid_strs;
+    uid_strs.reserve(uids.size());
+    for (uint64_t u : uids) uid_strs.push_back(std::to_string(u));
 
     GameMsg msg_equip(MSG_UPDATE_EQUIP);
     msg_equip.set_player_name(name);
     msg_equip.set_equipped(has_weapon);
-    msg_equip.set_equipped_ids(game_map.get_player(name).get_equipped_ids());
+    msg_equip.set_equipped_ids(player.get_equipped_type_ids());
+    msg_equip.set_equipped_uids(uid_strs);
 
     client_registry_monitor.notify_clients(msg_equip);
 }
@@ -402,7 +423,7 @@ void GameLoop::handle_take(const ClientCmd& cmd) {
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
         for (Item* item : p.get_all_items()) {
-            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()), item->get_uid());
         }
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
@@ -499,6 +520,12 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
         dmg_msg.set_damage(result.damage);
         client_registry_monitor.notify_client(cmd.get_client_id(), dmg_msg);
 
+        if (result.level != 0) {
+            GameMsg level_msg(MSG_UPDATE_LEVEL);
+            level_msg.set_level(result.level);
+            level_msg.set_max_xp(game_map.player_max_xp(attacker_name));
+            client_registry_monitor.notify_client(cmd.get_client_id(), level_msg);
+        }
         // Feed de combate (estilo AO) en el minichat del ATACANTE: cuánto daño
         // provocó, o si el target esquivó. Viaja como MSG_CHAT.
         GameMsg atk_chat(MSG_CHAT);
@@ -513,6 +540,9 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
         if (result.entity_died) {
             broadcast_npcs_snapshot();
             broadcast_items_snapshot();
+            GameMsg death_msg(MSG_DEATH);
+            death_msg.set_player_name(result.entity_name);
+            client_registry_monitor.notify_clients(death_msg);
         }
         // El atacante gana XP en cada golpe: notificarle su XP actualizada
         GameMsg xp_msg(MSG_XP);
@@ -547,7 +577,7 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
                 const Player& p = game_map.get_player(result.entity_name);
                 std::vector<ItemInfo> item_infos;
                 for (Item* item : p.get_all_items()) {
-                    item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+                    item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()), item->get_uid());
                 }
                 GameMsg inv_msg(MSG_INVENTORY);
                 inv_msg.set_items(item_infos);
@@ -632,6 +662,42 @@ void GameLoop::handle_self_cast(const ClientCmd& cmd) {
     }
 }
 
+void GameLoop::handle_use_item(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    // El cliente manda el uid de INSTANCIA del item a usar (en texto decimal),
+    // igual que MSG_EQUIP.
+    uint64_t item_uid = 0;
+    try {
+        item_uid = std::stoull(cmd.get_item_id());
+    } catch (const std::exception&) {
+        return;  // uid mal formado: ignorar el comando
+    }
+
+    bool consumed = game_map.use_item(name, item_uid);
+    if (!consumed) return;  // uid inexistente o item no consumible: nada que notificar
+
+    // La poción curó vida y/o maná: notificar los valores nuevos.
+    GameMsg hp_msg(MSG_HP);
+    hp_msg.set_hp(game_map.get_player_hp(name));
+    client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
+
+    GameMsg mana_msg(MSG_MANA);
+    mana_msg.set_player_name(name);
+    mana_msg.set_mana(game_map.get_player_mana(name));
+    client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
+
+    // La poción se consumió: reenviar el inventario para que desaparezca del HUD.
+    const Player& p = game_map.get_player(name);
+    std::vector<ItemInfo> item_infos;
+    for (Item* item : p.get_all_items()) {
+        item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(),
+                                static_cast<uint8_t>(item->get_type()), item->get_uid());
+    }
+    GameMsg inv_msg(MSG_INVENTORY);
+    inv_msg.set_items(item_infos);
+    client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
+}
+
 void GameLoop::handle_private(const ClientCmd& cmd) {
     std::string sender = client_registry_monitor.get_name(cmd.get_client_id());
     GameMsg msg(MSG_PRIVATE);
@@ -642,11 +708,23 @@ void GameLoop::handle_private(const ClientCmd& cmd) {
 
 void GameLoop::handle_cheat_kill(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-    // game_map.kill_player(name);
+    game_map.kill_player(name);
     GameMsg msg(MSG_CHEAT_KILL);
     msg.set_player_name(name);
     msg.set_chat_content(name + " murió instantáneamente.");
     client_registry_monitor.notify_clients(msg);
+    broadcast_items_snapshot();
+    GameMsg gold_msg(MSG_GOLD);
+    gold_msg.set_gold(game_map.get_player_gold(name));
+    client_registry_monitor.notify_client_by_name(name, gold_msg);
+    const Player& p = game_map.get_player(name);
+    std::vector<ItemInfo> item_infos;
+    for (Item* item : p.get_all_items()) {
+        item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+    }
+    GameMsg inv_msg(MSG_INVENTORY);
+    inv_msg.set_items(item_infos);
+    client_registry_monitor.notify_client_by_name(name, inv_msg);
 }
 
 void GameLoop::handle_cheat_inf_hp(const ClientCmd& cmd) {
@@ -691,6 +769,7 @@ void GameLoop::handle_clan_foundation(const ClientCmd& cmd) {
     } else {
         clan_msg.set_chat_content("Jugador " + player_name + " fundó el clan " + clan_name);
         client_registry_monitor.notify_clients(clan_msg);
+        persist_clans();
     }
 }
 
@@ -702,6 +781,8 @@ void GameLoop::handle_clan_joining(const ClientCmd& cmd) {
         clan_msg.set_chat_content("No podes solicitar unirte al clan: " + clan_name);
     } else {
         clan_msg.set_chat_content("Solicitud de unión al clan " + clan_name + " enviada");
+        // join_request anexa la solicitud al review del clan: persistir el cambio.
+        persist_clans();
     }
     client_registry_monitor.notify_client(cmd.get_client_id(), clan_msg);
 }
@@ -722,6 +803,7 @@ void GameLoop::handle_clan_accepting(const ClientCmd& cmd) {
     game_map.accept_new_member(player_name, new_member);
     clan_msg.set_chat_content("Jugador " + new_member + " fue aceptado a unirse al clan fundado por " + player_name);
     client_registry_monitor.notify_clients(clan_msg);
+    persist_clans();
 }
 
 void GameLoop::handle_clan_rejecting(const ClientCmd& cmd) {
@@ -746,6 +828,7 @@ void GameLoop::handle_clan_leaving(const ClientCmd& cmd) {
     }
     clan_msg.set_chat_content("Jugador " + player_name + " abandonó el clan " + clan_name);
     client_registry_monitor.notify_clients(clan_msg);
+    persist_clans();
 }
 
 void GameLoop::handle_clan_kick(const ClientCmd& cmd) {
@@ -762,6 +845,7 @@ void GameLoop::handle_clan_kick(const ClientCmd& cmd) {
     }
     clan_msg.set_chat_content("Jugador " + member + " fue echado del clan");
     client_registry_monitor.notify_clients(clan_msg);
+    persist_clans();
 }
 
 void GameLoop::handle_clan_ban(const ClientCmd& cmd) {
@@ -778,6 +862,7 @@ void GameLoop::handle_clan_ban(const ClientCmd& cmd) {
     }
     clan_msg.set_chat_content("Jugador " + member + " fue banneado del clan");
     client_registry_monitor.notify_clients(clan_msg);
+    persist_clans();
 }
 
 void GameLoop::update_npcs_in_map(){
@@ -809,6 +894,8 @@ void GameLoop::run() {
     // por segundo: evita spamear MSG_MANA cada 50ms.
     int ticks_accumulated = 0;
     const int ticks_per_second = cfg.ticks_per_second; // 1000ms / 50ms
+    int npc_move_ticks = 0;
+    const int TICKS_PER_NPC_MOVE = 10;
 
     while (should_keep_running()) {
         next_tick += tick_rate;
@@ -819,6 +906,45 @@ void GameLoop::run() {
                 process_cmd(cmd);
             }
             update_npcs_in_map();
+            if (++npc_move_ticks >= TICKS_PER_NPC_MOVE) {
+                npc_move_ticks = 0;
+                auto npc_attacks = game_map.update_npc_aggro();
+                for (const auto& attack : npc_attacks) {
+                    GameMsg hp_msg(MSG_HP);
+                    hp_msg.set_hp(game_map.get_player_hp(attack.victim_name));
+                    client_registry_monitor.notify_client_by_name(attack.victim_name, hp_msg);
+
+                    GameMsg victim_chat(MSG_CHAT);
+                    if (attack.dodged) {
+                        victim_chat.set_chat_content("¡Has esquivado el ataque de un " + attack.npc_name + "!");
+                    } else {
+                        victim_chat.set_chat_content("Un " + attack.npc_name + " te ha provocado " +
+                                                    std::to_string(attack.damage) + " de daño");
+                    }
+                    client_registry_monitor.notify_client_by_name(attack.victim_name, victim_chat);
+
+                    if (attack.victim_died) {
+                        broadcast_npcs_snapshot();
+                        broadcast_items_snapshot();
+                        GameMsg death_msg(MSG_DEATH);
+                        death_msg.set_player_name(attack.victim_name);
+                        client_registry_monitor.notify_clients(death_msg);
+                        GameMsg gold_msg(MSG_GOLD);
+                        gold_msg.set_gold(game_map.get_player_gold(attack.victim_name));
+                        client_registry_monitor.notify_client_by_name(attack.victim_name, gold_msg);
+                        const Player& p = game_map.get_player(attack.victim_name);
+                        std::vector<ItemInfo> item_infos;
+                        for (Item* item : p.get_all_items()) {
+                            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()));
+                        }
+                        GameMsg inv_msg(MSG_INVENTORY);
+                        inv_msg.set_items(item_infos);
+                        client_registry_monitor.notify_client_by_name(attack.victim_name, inv_msg);
+                    }
+
+                }
+                broadcast_npcs_snapshot();
+            }
 
             if (++ticks_accumulated >= ticks_per_second) {
                 ticks_accumulated = 0;
@@ -828,6 +954,7 @@ void GameLoop::run() {
             // Guardado periodico: red de seguridad ante desconexiones abruptas.
             if (++tick_count % PERSIST_INTERVAL_TICKS == 0) {
                 persist_online_players();
+                persist_clans();
             }
         }
         catch (... ) {
@@ -854,6 +981,23 @@ void GameLoop::persist_online_players() {
     }
 }
 
+void GameLoop::load_persisted_clans() {
+    std::vector<Clan> clans;
+    for (const ClanRecord& rec : clan_persistence.load_all()) {
+        clans.push_back(clan_serializer.from_record(rec));
+    }
+    game_map.load_clans(std::move(clans));
+}
+
+void GameLoop::persist_clans() {
+    std::vector<ClanRecord> records;
+    for (const auto& [name, clan] : game_map.get_clans()) {
+        (void)name;
+        records.push_back(clan_serializer.to_record(clan));
+    }
+    clan_persistence.save_all(records);
+}
+
 void GameLoop::regen_players_mana(double seconds) {
     for (const std::string& name : game_map.tick(seconds)) {
         GameMsg msg(MSG_MANA);
@@ -862,16 +1006,3 @@ void GameLoop::regen_players_mana(double seconds) {
         client_registry_monitor.notify_client_by_name(name, msg);
     }
 }
-
-/*
-Avisar sobre reaparición de NPCs:
-
-std::vector<std::string> npcs_respawned = game_map.update_respawns()
-for (const auto& npc : npcs_respawned) {
-    GameMsg msg(MSG_CHAT)
-    msg.set_chat_content(npc + " ha reaparecido.")
-    client_registry_monitor.notify_clients(msg)
-}
-
-(y algo así para la reaparición de los players...)
-*/

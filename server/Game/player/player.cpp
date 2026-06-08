@@ -13,7 +13,7 @@ Player::Player(const std::string name, PlayerRace& player_race, PlayerClass& pla
     player_race(player_race),
     player_class(player_class),
     player_inventory(),
-    level(14) {
+    level(16) {
 
     lives = max_life();
     gold = 10000;
@@ -263,10 +263,6 @@ bool Player::can_attack_level(int other_level) const {
     return level.can_attack_level(other_level);
 }
  
-int Player::get_clan_id() const {
-    return id_clan;
-}
-
 int Player::damage_attack() {
     // Daño = Fuerza * rand(DañoArmaMin, DañoArmaMax)
     // TODO: cuando Item este definido, usar el arma equipada
@@ -275,6 +271,10 @@ int Player::damage_attack() {
  
 DamageOutcome Player::receive_damage(int damage, Player& atacante, bool is_critical) {
     return state->receive_damage(*this, damage, atacante, is_critical);
+}
+
+DamageOutcome Player::receive_npc_damage(int damage, bool is_critical) {
+    return state->receive_npc_damage(*this, damage, is_critical);
 }
 
 DamageOutcome Player::attack(Entity& target, int target_x, int target_y) {
@@ -289,6 +289,12 @@ void Player::cast_on_self() {
                                   coord_x, coord_y, false);
 }
 
+bool Player::use_consumable(uint64_t item_uid) {
+    // Tomar una poción es una acción: interrumpe la meditación.
+    stop_meditation();
+    return player_inventory.use_consumable(item_uid, *this);
+}
+
 bool Player::ganar_xp(int dano, int nivel_target, bool murio, int vida_max_target) {
     experience += level.xp_per_attack(dano, nivel_target);
     if (murio)
@@ -300,41 +306,42 @@ void Player::add_experience(int exp) {
     experience += exp;
 }
 
-void Player::equip_item(std::string item_id) {
+void Player::equip_item(uint64_t item_uid) {
     // Equipar es una acción: interrumpe la meditación.
     stop_meditation();
-    // Busca el item en el inventario y lo equipa en el slot que corresponde a
-    // su tipo. El Inventory sigue siendo dueño; el DefenseSet solo referencia.
-    Item* item = player_inventory.find_item(item_id);
+    // Busca la INSTANCIA exacta (por uid) y la equipa en el slot que corresponde
+    // a su tipo. El Inventory sigue siendo dueño; el DefenseSet solo referencia.
+    Item* item = player_inventory.find_item(item_uid);
     if (item == nullptr) return;
 
     switch (item->get_type()) {
         case ItemType::WEAPON:
         case ItemType::MAGIC:
-            // Toggle: si ya está equipada, la desequipa; si no, la equipa. Arma y
-            // báculo comparten slot, así que equipar uno desplaza al otro.
-            if (player_inventory.is_equipped(item_id)) {
+            // Toggle: si esta instancia ya está equipada, la desequipa; si no, la
+            // equipa. Arma y báculo comparten slot, así que equipar uno desplaza
+            // al otro.
+            if (player_inventory.is_equipped(item_uid)) {
                 player_inventory.unequip_item();
             } else {
-                player_inventory.equip_item(item_id);
+                player_inventory.equip_item(item_uid);
             }
             break;
         case ItemType::ARMOR:
-            if (defense_set.is_equipped(item_id)) {
+            if (defense_set.is_equipped(item_uid)) {
                 defense_set.unequip_armadura();
             } else {
                 defense_set.equip_armadura(static_cast<DefenseItem*>(item));
             }
             break;
         case ItemType::HELMET:
-            if (defense_set.is_equipped(item_id)) {
+            if (defense_set.is_equipped(item_uid)) {
                 defense_set.unequip_casco();
             } else {
                 defense_set.equip_casco(static_cast<DefenseItem*>(item));
             }
             break;
         case ItemType::SHIELD:
-            if (defense_set.is_equipped(item_id)) {
+            if (defense_set.is_equipped(item_uid)) {
                 defense_set.unequip_escudo();
             } else {
                 defense_set.equip_escudo(static_cast<DefenseItem*>(item));
@@ -345,13 +352,36 @@ void Player::equip_item(std::string item_id) {
     }
 }
 
+void Player::equip_item_by_type(const std::string& type_id) {
+    // Reconstrucción desde persistencia: busca la primera instancia de ese tipo
+    // y delega en equip_item(uid). Al cargar hay a lo sumo un item marcado como
+    // equipado por slot, así que tomar la primera coincidencia es correcto.
+    for (Item* item : player_inventory.get_items()) {
+        if (item->get_id() == type_id) {
+            equip_item(item->get_uid());
+            return;
+        }
+    }
+}
+
 bool Player::has_weapon_equipped() const {
     return player_inventory.has_weapon_equipped();
 }
 
-std::vector<std::string> Player::get_equipped_ids() const {
-    std::vector<std::string> ids = defense_set.get_equipped_ids();
-    std::string weapon_id = player_inventory.get_equipped_weapon_id();
+std::vector<uint64_t> Player::get_equipped_uids() const {
+    std::vector<uint64_t> uids = defense_set.get_equipped_uids();
+    uint64_t weapon_uid = player_inventory.get_equipped_weapon_uid();
+    if (weapon_uid != 0) {
+        uids.push_back(weapon_uid);
+    }
+    return uids;
+}
+
+std::vector<std::string> Player::get_equipped_type_ids() const {
+    // Mismo orden que get_equipped_uids(): defensas (armadura, casco, escudo) y
+    // luego el arma, para que ambas listas queden índice a índice paralelas.
+    std::vector<std::string> ids = defense_set.get_equipped_type_ids();
+    std::string weapon_id = player_inventory.get_equipped_weapon_type_id();
     if (!weapon_id.empty()) {
         ids.push_back(weapon_id);
     }
@@ -371,6 +401,10 @@ bool Player::check_level_up() {
     return false;
 }
 
+uint32_t Player::max_xp() const {
+    return level.max_xp();
+}
+
 const std::string& Player::get_race_name() const {
     return player_race.get_name();
 }
@@ -384,11 +418,14 @@ ClassType Player::get_class_id() const {
 }
 
 void Player::restore(uint32_t gold, uint32_t lives, uint32_t mana,
-                     uint32_t experience, int level, int id_clan) {
+                     uint32_t experience, int level) {
     this->gold = gold;
     this->lives = lives;
     this->mana = mana;
     this->experience = experience;
     this->level = Level(level);
-    this->id_clan = id_clan;
+}
+
+uint32_t Player::gold_drop() {
+    return level.calculate_gold_drop(gold);
 }

@@ -79,9 +79,9 @@ ZoneWorld& GameMap::zone_of(const std::string& player_name) {
     return zones.at(zone_id_of(player_name));
 }
 
-std::vector<const Player*> GameMap::players_in(Zone z) const {
-    std::vector<const Player*> result;
-    for (const auto& p : players) {
+std::vector<Player*> GameMap::players_in(Zone z) {
+    std::vector<Player*> result;
+    for (auto& p : players) {
         auto it = player_zone.find(p.get_name());
         if (it != player_zone.end() && it->second == z) {
             result.push_back(&p);
@@ -95,7 +95,7 @@ Zone GameMap::get_player_zone(const std::string& player_name) const {
 }
 
 std::pair<int, int> GameMap::find_arrival_cell(ZoneWorld& dst, Zone dest_zone) {
-    const std::vector<const Player*> dest_players = players_in(dest_zone);
+    const std::vector<Player*> dest_players = players_in(dest_zone);
     // Si la zona destino tiene teleport, aparecer adyacente a el.
     if (!dst.get_teleports().empty()) {
         const TeleportDef& dest_tp = dst.get_teleports().front();
@@ -240,12 +240,12 @@ bool GameMap::player_exists(const std::string& name) {
     return find_player_by_name(name) != nullptr;
 }
 
-bool GameMap::player_equip_item(const std::string& player_name, const std::string& item_id) {
+bool GameMap::player_equip_item(const std::string& player_name, uint64_t item_uid) {
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) {
         throw std::runtime_error("Player not found: " + player_name);
     }
-    player->equip_item(item_id);
+    player->equip_item(item_uid);
     return player->has_weapon_equipped();
 }
 // TODO: refactorizar funcion
@@ -273,7 +273,7 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     }
 
     ZoneWorld& world = zone_of(player_name);
-    const std::vector<const Player*> here = players_in(zone_id_of(player_name));
+    const std::vector<Player*> here = players_in(zone_id_of(player_name));
 
     int current_x = player->get_coord_x();
     int current_y = player->get_coord_y();
@@ -299,6 +299,7 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     }
 
     player->update_position(new_x, new_y);
+    player_zone[player_name] = zone_id_of(player_name);
     return {true, player_name, new_x, new_y};
 }
 
@@ -357,16 +358,29 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
     }
 
     DamageOutcome outcome = attacker->attack(*target, x, y);
+    int level = 0;
     if (target->is_dead()) {
         if (outcome.gold_drop > 0)
             world.spawn_gold(x, y, static_cast<uint32_t>(outcome.gold_drop));
         if (target_is_player) {
             auto dropped = target_player->drop_inventory();
             world.scatter_items(x, y, std::move(dropped), players_in(z));
+        } else if (outcome.dropped_item) {
+            // Drop de la tabla de un NPC: poción o item al azar. Cae en la celda
+            // del NPC; si está ocupada por otro item, se esparce a una libre.
+            std::vector<std::unique_ptr<Item>> one;
+            one.push_back(std::move(outcome.dropped_item));
+            world.scatter_items(x, y, std::move(one), players_in(z));
         }
-        return {true, true, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged};
+        std::cout << "[DEBUG] nivel: " << attacker->get_level() << std::endl;
+        if (outcome.level_up) {
+            std::cout << "[DEBUG] subiò de nivel" << std::endl;
+            level = attacker->get_level();
+        }
+        return {true, true, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged, level};
     }
-    return {true, false, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged};
+
+    return {true, false, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged, level};
 }
 
 void GameMap::self_cast(const std::string& player_name) {
@@ -375,12 +389,29 @@ void GameMap::self_cast(const std::string& player_name) {
     player->cast_on_self();
 }
 
+bool GameMap::use_item(const std::string& player_name, uint64_t item_uid) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw AttackerNotFoundException();
+    return player->use_consumable(item_uid);
+}
+
 bool GameMap::update_npcs() {
     bool respawned = false;
     for (auto& [zone_id, world] : zones) {
         if (world.update_npcs()) respawned = true;
     }
     return respawned;
+}
+
+std::vector<NPCAttackEvent> GameMap::update_npc_aggro() {
+    std::vector<NPCAttackEvent> all_events;
+
+    for (auto& [zone_id, world] : zones) {
+        auto players_in_zone = players_in(zone_id);
+        auto zone_events = world.update_npc_aggro(players_in_zone);
+        all_events.insert(all_events.end(), zone_events.begin(), zone_events.end());
+    }
+    return all_events;
 }
 
 std::vector<std::string> GameMap::tick(double seconds) {
@@ -482,6 +513,11 @@ uint32_t GameMap::get_player_xp(const std::string& name) {
     return player->get_xp();
 }
 
+uint32_t GameMap::player_max_xp(const std::string& name) {
+    Player* player = find_player_by_name(name);
+    return player->max_xp();
+}
+
 uint32_t GameMap::get_player_mana(const std::string& name) {
     Player* player = find_player_by_name(name);
     return player->get_mana();
@@ -495,9 +531,33 @@ std::vector<PlayerInfo> GameMap::build_players_snapshot(const std::string& playe
         auto it = player_zone.find(p.get_name());
         if (it == player_zone.end() || it->second != z) continue;
 
-        snapshot.push_back({p.get_name(), p.get_race_name(), 0, p.get_coord_x(), p.get_coord_y()});
+        PlayerInfo pi{p.get_name(), p.get_race_name(), 0, p.get_coord_x(), p.get_coord_y()};
+        pi.ghost = p.is_ghost();
+        snapshot.push_back(pi);
     }
     return snapshot;
+}
+
+void GameMap::kill_player(const std::string& player_name) {
+    ZoneWorld& world = zone_of(player_name);
+    const Zone z = zone_id_of(player_name);
+    Player* player = find_player_by_name(player_name);
+    player->set_ghost();
+    int x = player->get_coord_x();
+    int y = player->get_coord_y();
+    uint32_t gold_drop = player->gold_drop();
+    if (gold_drop > 0)
+        world.spawn_gold(x, y, gold_drop);
+    auto dropped = player->drop_inventory();
+    world.scatter_items(x, y, std::move(dropped), players_in(z));
+}
+
+void GameMap::load_clans(std::vector<Clan> persisted_clans) {
+    clans.clear();
+    for (Clan& clan : persisted_clans) {
+        std::string name = clan.get_name();
+        clans.emplace(std::move(name), std::move(clan));
+    }
 }
 
 bool GameMap::found_clan(const std::string& player_name, const std::string& clan_name) {

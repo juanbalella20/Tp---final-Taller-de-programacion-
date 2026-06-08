@@ -38,6 +38,8 @@ public:
     // Fair play: no se puede atacar a otro jugador si la diferencia de niveles
     // supera 10.
     bool can_attack_level(int other_level) const;
+
+    uint32_t max_xp() const;
 };
 
 #endif

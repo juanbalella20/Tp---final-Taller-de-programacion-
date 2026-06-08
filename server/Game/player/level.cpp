@@ -11,9 +11,8 @@ int Level::get_number() const {
 }
 
 bool Level::try_level_up(uint32_t experience) {
-    const auto& cfg = GameConfig::instance();
-    int limit = static_cast<int>(cfg.xp_base * std::pow(number, cfg.xp_exponent));
-    if (experience >= static_cast<uint32_t>(limit)) {
+    uint32_t limit = max_xp();
+    if (experience >= limit) {
         number += 1;
         return true;
     }
@@ -23,6 +22,11 @@ bool Level::try_level_up(uint32_t experience) {
 uint32_t Level::max_gold() const {
     const auto& cfg = GameConfig::instance();
     return static_cast<uint32_t>(cfg.gold_base * std::pow(number, cfg.gold_exponent));
+}
+
+uint32_t Level::max_xp() const {
+    const auto& cfg = GameConfig::instance();
+    return static_cast<uint32_t>(cfg.xp_base * std::pow(number, cfg.xp_exponent));
 }
 
 uint32_t Level::calculate_gold_drop(uint32_t gold) const {

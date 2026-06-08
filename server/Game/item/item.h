@@ -21,15 +21,26 @@ enum class ItemType : uint8_t {
 
 class Item {
 protected:
+    // id de TIPO: compartido por todas las instancias del mismo item (p.ej.
+    // "espada"). Identifica al item en el catalogo y resuelve su imagen/stats.
     std::string id;
     std::string name;
     int price;
+    // id de INSTANCIA: unico por objeto creado. Distingue dos copias del mismo
+    // tipo (dos espadas) para equipar/resaltar la correcta. Se asigna en el ctor
+    // con un contador global y NO se persiste (se regenera al recrear el item).
+    uint64_t uid;
+
+    static uint64_t next_uid;
 
 public:
     Item(const std::string& id, const std::string& name, int price);
     virtual ~Item() = default;
 
     std::string get_id() const;
+
+    // id de instancia unico (ver 'uid' arriba).
+    uint64_t get_uid() const;
 
 
     std::string getName() const;

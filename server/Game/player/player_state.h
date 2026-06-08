@@ -17,6 +17,7 @@ public:
     // Recibe daño de un atacante. Devuelve el resultado del golpe (daño aplicado,
     // oro dropeado al morir, si esquivó). Struct vacío si el estado no recibe daño.
     virtual DamageOutcome receive_damage(Player& self, int damage, Player& attacker, bool is_critical) = 0;
+    virtual DamageOutcome receive_npc_damage(Player& self, int damage, bool is_critical) = 0;
 
     // Resucita al jugador (solo tiene efecto si está muerto).
     virtual void revive(Player& self) = 0;

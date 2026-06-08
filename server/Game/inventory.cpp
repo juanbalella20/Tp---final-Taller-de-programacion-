@@ -1,5 +1,6 @@
 #include "inventory.h"
 #include "../game_exceptions.h"
+#include "player/player.h"  // Player completo: upcast a Entity& en use_consumable
 
 bool Inventory::add_item(std::unique_ptr<Item> item) {
     if (is_full()) return false;
@@ -29,11 +30,11 @@ std::vector<std::unique_ptr<Item>> Inventory::drop_all() {
     return dropped;
 }
 
-void Inventory::equip_item(std::string item_id) {
+void Inventory::equip_item(uint64_t item_uid) {
     // El inventario solo equipa armas en su slot de arma. Los items de defensa
     // (armadura/casco/escudo) no se equipan acá — los maneja el DefenseSet.
     for (const auto& item : items) {
-        if (item->get_id() == item_id) {
+        if (item->get_uid() == item_uid) {
             // Solo armas o báculos ocupan este slot. Como es uno solo, equipar
             // un báculo desplaza al arma y viceversa (no se pueden tener ambos).
             if (item->get_type() != ItemType::WEAPON && item->get_type() != ItemType::MAGIC)
@@ -44,9 +45,9 @@ void Inventory::equip_item(std::string item_id) {
     }
 }
 
-Item* Inventory::find_item(const std::string& item_id) const {
+Item* Inventory::find_item(uint64_t item_uid) const {
     for (const auto& item : items) {
-        if (item->get_id() == item_id) return item.get();
+        if (item->get_uid() == item_uid) return item.get();
     }
     return nullptr;
 }
@@ -55,15 +56,19 @@ void Inventory::unequip_item() {
     equipped_item = nullptr;
 }
 
-bool Inventory::is_equipped(const std::string& item_id) const {
-    return equipped_item != nullptr && equipped_item->get_id() == item_id;
+bool Inventory::is_equipped(uint64_t item_uid) const {
+    return equipped_item != nullptr && equipped_item->get_uid() == item_uid;
 }
 
 bool Inventory::has_weapon_equipped() const {
     return equipped_item != nullptr;
 }
 
-std::string Inventory::get_equipped_weapon_id() const {
+uint64_t Inventory::get_equipped_weapon_uid() const {
+    return equipped_item != nullptr ? equipped_item->get_uid() : 0;
+}
+
+std::string Inventory::get_equipped_weapon_type_id() const {
     return equipped_item != nullptr ? equipped_item->get_id() : std::string();
 }
 
@@ -75,6 +80,20 @@ DamageOutcome Inventory::use_equipped(Entity& target, Player& atacante, int atta
     if (!equipped_item)
         throw NoWeaponEquippedException();
     return equipped_item->use_item(target, atacante, attacker_x, attacker_y, target_x, target_y, is_critical);
+}
+
+bool Inventory::use_consumable(uint64_t item_uid, Player& self) {
+    for (auto it = items.begin(); it != items.end(); ++it) {
+        if ((*it)->get_uid() != item_uid) continue;
+        // Solo se consumen items no equipables (pociones). Un arma/báculo/defensa
+        // no se "toma": se equipa, así que acá se ignora.
+        if ((*it)->get_type() != ItemType::OTHER) return false;
+        // El efecto (curación) recae sobre el propio jugador: es target y usuario.
+        (*it)->use_item(self, self, 0, 0, 0, 0, false);
+        items.erase(it);  // consumida: desaparece del inventario
+        return true;
+    }
+    return false;
 }
 
 std::vector<Item*> Inventory::get_items() const {

@@ -92,6 +92,7 @@ public:
     void set_hp(uint32_t hp);
     void set_max_hp(uint32_t max_hp);
     void set_max_mana(uint32_t max_mana);
+    void set_max_xp(uint32_t max_xp);
     void set_xp(uint32_t xp);
     void set_mana(uint32_t mana);
     void set_equipped_item(const std::string& item_id);
@@ -101,9 +102,10 @@ public:
     void set_equipped_slot(int slot_index);
     // Alterna el resaltado de un slot: si estaba equipado lo desequipa, si no lo equipa.
     void toggle_equipped_slot(int slot_index);
-    // Resalta exactamente los slots cuyos items tengan alguno de estos ids
-    // (estado real de equipo confirmado por el server).
-    void set_equipped_by_ids(const std::vector<std::string>& ids);
+    // Resalta exactamente los slots cuyos items tengan alguno de estos uids de
+    // INSTANCIA (estado real de equipo confirmado por el server). Por uid, no por
+    // tipo: dos copias del mismo item no se resaltan juntas.
+    void set_equipped_by_uids(const std::vector<std::string>& uids);
     void drawInventoryItems();
     void drawAttackButton();
     void drawHp();

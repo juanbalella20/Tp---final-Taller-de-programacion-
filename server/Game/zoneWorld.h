@@ -24,6 +24,14 @@ struct groundItem {
     std::unique_ptr<Item> item;
 };
 
+struct NPCAttackEvent {
+    std::string victim_name;
+    std::string npc_name;
+    int damage;
+    bool dodged;
+    bool victim_died;
+};
+
 
 class ZoneWorld {
 private:
@@ -36,6 +44,10 @@ private:
     std::vector<groundItem> ground_items;
     std::vector<groundGold> ground_gold;
     std::vector<TeleportDef> teleports;
+
+    // persecución de npcs hacia players
+    static constexpr int AGGRO_RANGE = 8;
+    static constexpr int ABANDON_RANGE = 15;
 
 public:
     ZoneWorld() = default;
@@ -59,11 +71,11 @@ public:
     bool in_bounds(int x, int y) const;
     bool is_blocked_terrain(int x, int y) const;  // map[y][x] != empty
     // Hay un actor (npc vivo o alguno de los players_here) en (x,y)?
-    bool has_actor_at(int x, int y, const std::vector<const Player*>& players_here) const;
+    bool has_actor_at(int x, int y, const std::vector<Player*>& players_here) const;
     // Hay un item en el piso en (x,y)?
     bool has_ground_item_at(int x, int y) const;
     std::pair<int, int> find_random_empty_cell(
-        const std::vector<const Player*>& players_here) const;
+        const std::vector<Player*>& players_here) const;
 
     // --- Spawns / mutaciones de esta zona ---
     void spawn_npc(NPChostile&& npc);
@@ -76,10 +88,12 @@ public:
     // o con un item ya tirado. Cada item ocupa una celda libre distinta.
     void scatter_items(int center_x, int center_y,
                        std::vector<std::unique_ptr<Item>> items,
-                       const std::vector<const Player*>& players_here);
+                       const std::vector<Player*>& players_here);
 
     // Respawn de NPCs muertos cuyo timer venció. Devuelve true si hubo alguno.
     bool update_npcs();
+
+    std::vector<NPCAttackEvent> update_npc_aggro(const std::vector<Player*>& players_in_zone);
 
     // --- Snapshots de contenido para mandar al cliente ---
     std::vector<NpcInfo> build_npcs_snapshot() const;
@@ -104,10 +118,9 @@ public:
     // Celda libre (terreno empty, sin actor) adyacente a (tx,ty); si no hay
     // adyacente libre, cae a find_random_empty_cell. Devuelve {-1,-1} si nada.
     std::pair<int, int> free_cell_adjacent_to(
-        int tx, int ty, const std::vector<const Player*>& players_here) const;
+        int tx, int ty, const std::vector<Player*>& players_here) const;
     // Recorre teleports y devuelve el que coincide con (x,y)
     const TeleportDef* teleport_at(int x, int y) const;
-
 };
 
 #endif

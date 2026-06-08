@@ -1,13 +1,18 @@
 #ifndef NPC_HOSTILE_H_
 #define NPC_HOSTILE_H_
 
+#include <memory>
+
 #include "npc.h"
 #include "../entity.h"
 // #include "itemDataBase.h"
 
+#include <vector>
+
 class Player;
 class Item;
 struct Command;
+class ZoneWorld;
 
 enum class State { DEAD, ALIVE };
 
@@ -25,11 +30,18 @@ class NPChostile : public NPC, public Entity {
         int ticks_to_spawn;
         int max_lifepoints;
 
+        // persecución a jugador
+        std::string target_player;
+        int attack_speed_ticks;
+        int current_attack_cooldown;
+
         void death();
         void set_state(State state);
-        // Calcula el oro que deja caer el NPC al morir:
-        // Oro = rand(0, 0.2) * VidaMaxNPC
+        // Oro BASE que deja caer el NPC al morir (cae siempre, sección "Oro"):
+        // Oro = rand(0, npc_gold_drop_max) * VidaMaxNPC
         int drop();
+        // Oro EXTRA del drop según factor: rand(min, max) * VidaMaxNPC.
+        int roll_extra_gold() const;
 
     public:
         NPChostile(const std::string& type_id, const std::string& name,
@@ -44,11 +56,19 @@ class NPChostile : public NPC, public Entity {
         void set_position(int x, int y);
         int get_coord_x() const;
         int get_coord_y() const;
-        
-        
+
+        // Lógica de persecución a jugador
+        void set_target(const std::string& player_name) { target_player = player_name; }
+        void clear_target() { target_player.clear(); }
+        bool has_target() const { return !target_player.empty(); }
+        const std::string& get_target() const { return target_player; }
+        void move_towards(int target_x, int target_y, ZoneWorld& world, const std::vector<Player*>& players); // Mueve 1 tile hacia el objetivo
         
         // attacks player
-        //void interact(Player player, Command cmd) override;
+        bool can_attack() const;
+        void reset_attack_cooldown();
+        void tick_cooldowns();
+        int get_damage() const;
 };
 
 #endif 

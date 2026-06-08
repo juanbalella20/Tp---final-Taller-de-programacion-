@@ -51,13 +51,17 @@ PlayerRecord PlayerSerializer::to_record(const Player& player, Zone zone,
     rec.experience = player.get_xp();
     rec.coord_x    = player.get_coord_x();
     rec.coord_y    = player.get_coord_y();
-    rec.id_clan    = player.get_clan_id();
+    // El clan NO se persiste por jugador: su fuente de verdad es clans.dat (la
+    // membresia vive en Clan::members, por nombre). rec.clan queda en cero (el
+    // memset inicial) como campo reservado/denormalizado.
 
-    // Inventario: un slot por item, guardando SOLO el id. Marca los equipados.
-    std::vector<std::string> equipped = player.get_equipped_ids();
-    auto is_equipped = [&equipped](const std::string& id) {
-        for (const auto& e : equipped) {
-            if (e == id) return true;
+    // Inventario: un slot por item, guardando SOLO el type_id. Marca los
+    // equipados comparando por uid de INSTANCIA (así, con dos copias del mismo
+    // tipo, solo se marca la que está realmente equipada).
+    std::vector<uint64_t> equipped = player.get_equipped_uids();
+    auto is_equipped = [&equipped](uint64_t uid) {
+        for (uint64_t e : equipped) {
+            if (e == uid) return true;
         }
         return false;
     };
@@ -68,7 +72,7 @@ PlayerRecord PlayerSerializer::to_record(const Player& player, Zone zone,
         ItemRecord& slot = rec.items[count];
         copy_to_fixed(slot.id, PERSIST_ITEM_ID_MAX, item->get_id());
         slot.occupied = 1;
-        slot.equipped = is_equipped(item->get_id()) ? 1 : 0;
+        slot.equipped = is_equipped(item->get_uid()) ? 1 : 0;
         ++count;
     }
     rec.inv_count = count;
@@ -86,7 +90,7 @@ Player PlayerSerializer::from_record(const PlayerRecord& rec) const {
     Player player(name, race, klass);
 
     // Estado mutable que el constructor calcula / no tiene setter.
-    player.restore(rec.gold, rec.lives, rec.mana, rec.experience, rec.level, rec.id_clan);
+    player.restore(rec.gold, rec.lives, rec.mana, rec.experience, rec.level);
     player.update_position(rec.coord_x, rec.coord_y);
     if (rec.is_ghost) player.set_ghost();
 
@@ -98,7 +102,9 @@ Player PlayerSerializer::from_record(const PlayerRecord& rec) const {
         auto item = catalog.make_item(id);
         if (!item) continue;  // id desconocido (catalogo desactualizado): se ignora
         player.add_item(std::move(item));
-        if (slot.equipped) player.equip_item(id);
+        // Al recrear, el uid de la instancia es nuevo: se reequipa por TIPO (el
+        // slot persiste solo el type_id, no el uid).
+        if (slot.equipped) player.equip_item_by_type(id);
     }
 
     return player;

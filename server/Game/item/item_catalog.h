@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "item.h"
 
@@ -27,9 +28,22 @@ public:
     // ¿El id existe en el catalogo?
     bool exists(const std::string& id) const;
 
+    // Construye una poción (vida o maná) elegida al azar. Para el drop de NPCs.
+    std::unique_ptr<Item> make_random_potion() const;
+
+    // Construye cualquier objeto del catálogo elegido al azar (incluye pociones).
+    // Para el drop "cualquier otro objeto al azar" de los NPCs.
+    std::unique_ptr<Item> make_random_item() const;
+
 private:
     using Factory = std::function<std::unique_ptr<Item>()>;
     std::unordered_map<std::string, Factory> catalog;
+    // ids de las pociones registradas (subconjunto de catalog), para el drop
+    // "una poción de vida o maná al azar".
+    std::vector<std::string> potion_ids;
+    // ids elegibles para el drop "cualquier otro objeto al azar": todos los
+    // objetos del catálogo salvo las pociones y los alias duplicados.
+    std::vector<std::string> droppable_item_ids;
 };
 
 #endif  // ITEM_CATALOG_H_

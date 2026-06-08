@@ -32,6 +32,9 @@ uint32_t GameMsg::get_hp() const { return this->hp; }
 void GameMsg::set_xp(uint32_t xp) { this->xp = xp; }
 uint32_t GameMsg::get_xp() const { return this->xp; }
 
+void GameMsg::set_max_xp(uint32_t max_xp) { this->max_xp = max_xp; }
+uint32_t GameMsg::get_max_xp() const { return this->max_xp; }
+
 void GameMsg::set_mana(uint32_t mana) { this->mana = mana; }
 uint32_t GameMsg::get_mana() const { return this->mana; }
 
@@ -55,6 +58,9 @@ bool GameMsg::get_equipped() const { return this->equipped; }
 
 void GameMsg::set_equipped_ids(const std::vector<std::string>& ids) { this->equipped_ids = ids; }
 const std::vector<std::string>& GameMsg::get_equipped_ids() const { return this->equipped_ids; }
+
+void GameMsg::set_equipped_uids(const std::vector<std::string>& uids) { this->equipped_uids = uids; }
+const std::vector<std::string>& GameMsg::get_equipped_uids() const { return this->equipped_uids; }
 
 void GameMsg::set_level(int level) { this->level = level; }
 int GameMsg::get_level() const { return this->level; }
