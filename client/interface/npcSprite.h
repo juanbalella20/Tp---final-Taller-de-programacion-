@@ -2,6 +2,9 @@
 #define NPC_SPRITE_H
 
 #include <SDL3/SDL.h>
+#include <vector>
+#include <map>
+#include <string>
 #include "worldEntity.h"
 
 // Sprite para dibujar un NPC en una celda del mapa
@@ -18,7 +21,7 @@ class NpcSprite : public WorldEntity {
     std::map<std::string, std::vector<SDL_FRect>> right_povs;
     std::map<std::string, std::vector<SDL_FRect>> left_povs;
 
-    SDL_FRect current_frame(std::vector<SDL_FRect>& frames);
+    SDL_FRect current_frame(const std::vector<SDL_FRect>& frames);
 
     SDL_FRect npc_back_pov(const std::string& name);
     SDL_FRect npc_front_pov(const std::string& name);
