@@ -270,6 +270,101 @@ void NpcSprite::front_pov_golems() {
     front_povs["Golem3"] = frames3;
 }
 
+void NpcSprite::right_pov_goblin() {
+    std::vector<SDL_FRect> frames;
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    right_povs["Goblin"] = frames;
+}
+
+void NpcSprite::right_pov_zombie() {
+    std::vector<SDL_FRect> frames;
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    right_povs["Zombie"] = frames;
+}
+
+void NpcSprite::right_pov_spiders() {
+    std::vector<SDL_FRect> frames1;
+    std::vector<SDL_FRect> frames2;
+    std::vector<SDL_FRect> frames3;
+
+    frames1.push_back({0.0f, 0.0f, 64.0f, 64.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    frames2.push_back({0.0f, 14.0f, 95.0f, 65.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    frames3.push_back({20.0f, 69.0f, 84.0f, 57.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    right_povs["Spider1"] = frames1;
+    right_povs["Spider2"] = frames2;
+    right_povs["Spider3"] = frames3;
+}
+
+void NpcSprite::right_pov_skeletons() {
+    std::vector<SDL_FRect> frames1;
+    std::vector<SDL_FRect> frames2;
+    std::vector<SDL_FRect> frames3;
+    
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    right_povs["Skeleton1"] = frames1;
+    right_povs["Skeleton2"] = frames2;
+    right_povs["Skeleton3"] = frames3;
+}
+
+void NpcSprite::right_pov_golems() {
+    std::vector<SDL_FRect> frames1;
+    std::vector<SDL_FRect> frames2;
+    std::vector<SDL_FRect> frames3;
+    
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    right_povs["Golem1"] = frames1;
+    right_povs["Golem2"] = frames2;
+    right_povs["Golem3"] = frames3;
+}
+
 void NpcSprite::npcs_back_povs() {
     back_pov_goblin();
     back_pov_zombie();
