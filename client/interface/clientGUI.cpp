@@ -1,6 +1,7 @@
 #include "clientGUI.h"
 #include "npcSprite.h"
 #include "itemSprite.h"
+#include "constants/game_config.h"
 #include <SDL3_image/SDL_image.h>
 #include <algorithm>
 #include <cmath>
@@ -59,31 +60,13 @@ const char* ClientGUI::weapon_sound_path(const std::string& weapon_id) {
 
 // tiene que recibir los 4 sectorPerimiter y mostrar solo eso
 void ClientGUI::loadMedia(Zone zone) {
-    switch (zone)
-    {
-    case ZONE_DESERT : {
-        tilemap = std::make_unique<TileMap>(renderer);
-        tilemap->load_map_bin("data/maps/desert/map-2.bin");
-        break;
-    }
-    case ZONE_CITY : {
-        tilemap = std::make_unique<TileMap>(renderer);
-        tilemap->load_map_bin("data/maps/city/city-2.bin");
-        break;
-    }
-    case ZONE_FOREST : {
-        tilemap = std::make_unique<TileMap>(renderer);
-        tilemap->load_map_bin("data/maps/forest/forest3.bin");
-        break;
-    }
-    case ZONE_DUNGEON : {
-        tilemap = std::make_unique<TileMap>(renderer);
-        tilemap->load_map_bin("data/maps/dungeon/dungeon-v1.bin");
-        break;
-    }
-    default:
-        break;
-    }
+    // Ruta del .bin desde config.toml (zones.<nombre>.map): la MISMA fuente que
+    // usa el servidor, asi nunca se desincronizan los mapas de ambos lados.
+    const std::string& map_path = GameConfig::instance().zone_map_path(zone);
+    if (map_path.empty())
+        return;  // zona sin mapa configurado en config.toml
+    tilemap = std::make_unique<TileMap>(renderer);
+    tilemap->load_map_bin(map_path);
 }
 
 void ClientGUI::freeSDL() {

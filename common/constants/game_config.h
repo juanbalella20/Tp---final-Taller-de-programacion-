@@ -1,8 +1,11 @@
 #ifndef GAME_CONFIG_H_
 #define GAME_CONFIG_H_
 
+#include <map>
 #include <string>
 #include <vector>
+
+#include "protocol_constants.h"  // enum Zone
 
 struct RaceConfig {
     int inteligence;
@@ -59,6 +62,7 @@ struct NpcHostileConfig {
     int lifepoints;
     int attack_dmg;
     int ticks_to_spawn;
+    int level;
 };
 
 class GameConfig {
@@ -137,6 +141,9 @@ public:
     std::vector<std::string> forest_npcs;
     std::vector<std::string> dungeon_npcs;
 
+    // Ruta al .bin de cada zona (zones.<nombre>.map en config.toml).
+    std::map<Zone, std::string> zone_map_paths;
+
     // Clan
     int clan_min_level_to_found;
     int clan_max_members;
@@ -149,6 +156,9 @@ public:
 
     static GameConfig& instance();
     void load(const std::string& toml_path);
+
+    // Ruta al .bin de una zona, o "" si no esta configurada.
+    const std::string& zone_map_path(Zone zone) const;
 
 private:
     GameConfig() = default;

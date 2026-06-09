@@ -266,41 +266,48 @@ heal_mana = 100
 # ------------------------------------------------------------
 # NPCs hostiles
 # ------------------------------------------------------------
+# level: nivel del NPC, usado en el calculo de XP al matarlo.
 [npcs.goblin]
 name = "Goblin"
 lifepoints = 30
 attack_dmg = 5
-ticks_to_spawn = 1000  
- 
+ticks_to_spawn = 1000
+level = 1
+
 [npcs.spider]
 name = "Spider"
 lifepoints = 20
 attack_dmg = 4
 ticks_to_spawn = 400
- 
+level = 1
+
 [npcs.skeleton]
 name = "Skeleton"
 lifepoints = 25
 attack_dmg = 7
 ticks_to_spawn = 600
- 
+level = 2
+
 [npcs.zombie]
 name = "Zombie"
 lifepoints = 35
 attack_dmg = 6
 ticks_to_spawn = 800
- 
+level = 2
+
 [npcs.orc]
 name = "Orco"
 lifepoints = 60
 attack_dmg = 12
 ticks_to_spawn = 1500
- 
+level = 4
+
 [npcs.golem]
 name = "Golem"
 lifepoints = 80
 attack_dmg = 15
 ticks_to_spawn = 2000
+level = 5
  
 # Al morir un NPC SIEMPRE deja caer oro base (seccion "Oro" del enunciado):
 #   OroBase = rand(0, npc_gold_drop_max) * VidaMaxNPC
@@ -327,13 +334,22 @@ npc_gold_drop_max = 0.2
 # Zonas: tipos de NPC permitidos por zona
 # (coinciden con las claves de npcs)
 # ------------------------------------------------------------
+# map: ruta al .bin de la zona. La cargan TANTO el servidor (colision/teleports/
+# estado) como el cliente (render). Deben ser la misma para que ambos lados vean
+# el mismo mapa. La ruta es relativa al cwd (raiz del repo).
 [zones.desert]
+map = "data/maps/desert/map-2.bin"
 allowed_npcs = ["goblin", "spider"]
- 
+
+[zones.city]
+map = "data/maps/city/city-2.bin"
+
 [zones.forest]
+map = "data/maps/forest/forest3.bin"
 allowed_npcs = ["spider", "skeleton"]
- 
+
 [zones.dungeon]
+map = "data/maps/dungeon/dungeon-v1.bin"
 allowed_npcs = ["skeleton", "zombie", "orc", "golem"]
  
 # ------------------------------------------------------------

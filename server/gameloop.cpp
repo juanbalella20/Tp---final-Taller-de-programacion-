@@ -132,11 +132,14 @@ void GameLoop::load_maps() {
     InitialState state_desert = load_initial_state_hardcoded(ZONE_DESERT);
     InitialState state_city = load_initial_state_hardcoded(ZONE_CITY);
     InitialState state_dungeon = load_initial_state_hardcoded(ZONE_DUNGEON);
+    // Rutas a los .bin desde config.toml (zones.<nombre>.map). El cliente lee la
+    // misma fuente, asi servidor y cliente nunca cargan mapas distintos.
+    const auto& cfg = GameConfig::instance();
     std::map<Zone, std::string> zone_paths = {
-        {ZONE_DESERT, "data/maps/desert/map-2.bin"},
-        {ZONE_CITY,   "data/maps/city/city-2.bin"},
-        {ZONE_FOREST, "data/maps/forest/forest3.bin"},
-        {ZONE_DUNGEON, "data/maps/dungeon/dungeon-v1.bin"},
+        {ZONE_DESERT,  cfg.zone_map_path(ZONE_DESERT)},
+        {ZONE_CITY,    cfg.zone_map_path(ZONE_CITY)},
+        {ZONE_FOREST,  cfg.zone_map_path(ZONE_FOREST)},
+        {ZONE_DUNGEON, cfg.zone_map_path(ZONE_DUNGEON)},
     };
     std::map<Zone, InitialState> initial_states = {
         {ZONE_DESERT, state_desert},
