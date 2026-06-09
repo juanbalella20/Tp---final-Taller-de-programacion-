@@ -148,13 +148,8 @@ void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
                 world.spawn_item(x, y, rand_item());
             }
         }
-        // Seller de prueba
+        // Seller de prueba. TODO: eliminar
         world.spawn_seller(1, 1);
-
-        // Item de prueba hardcodeado. TODO: moverlo a state.items cuando este listo.
-        
-        //world.spawn_item(7, 7, std::make_unique<Arma>("espada", cfg.espada.name, cfg.espada.price, cfg.espada.distance, cfg.espada.damage_min, cfg.espada.damage_max));
-
         zones.emplace(zone_id, std::move(world));
     }
 }
@@ -264,16 +259,14 @@ bool GameMap::player_equip_item(const std::string& player_name, uint64_t item_ui
     player->equip_item(item_uid);
     return player->has_weapon_equipped();
 }
-// TODO: refactorizar funcion
-static int dir_to_dx(Direction dir) {
+int GameMap::dir_to_dx(Direction dir) {
     switch (dir) {
         case Direction::DIR_EAST: return 1;
         case Direction::DIR_WEST: return -1;
         default: return 0;
     }
 }
-// TODO: refactorizar funcion
-static int dir_to_dy(Direction dir) {
+int GameMap::dir_to_dy(Direction dir) {
     // En pantalla Y crece hacia abajo: NORTH disminuye y, SOUTH la aumenta.
     switch (dir) {
         case Direction::DIR_NORTH: return -1;

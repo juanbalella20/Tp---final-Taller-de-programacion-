@@ -80,6 +80,11 @@ private:
     // Construye un item concreto elegido al azar. Se devuelve por unique_ptr
     // porque Item es una interfaz abstracta.
     std::unique_ptr<Item> rand_item();
+
+    static int dir_to_dy(Direction dir);
+    static int dir_to_dx(Direction dir);
+
+
 public:
     GameMap();
 

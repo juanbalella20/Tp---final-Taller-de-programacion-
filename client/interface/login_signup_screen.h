@@ -40,7 +40,6 @@ class LoginSignupScreen : public Screen {
     enum class View { CHOICE, LOGIN_FORM, SIGNUP_FORM };
 
     // Rutas de las imagenes PNG (relativas al cwd, resueltas con paths::asset).
-    // TODO: cambiar por los nombres reales de tus PNGs.
     static constexpr char CHOICE_PNG[] = "imagenes/login/choice.png";
     static constexpr char LOGIN_PNG[]  = "imagenes/login/login.png";
     static constexpr char SIGNUP_PNG[] = "imagenes/login/signup.png";

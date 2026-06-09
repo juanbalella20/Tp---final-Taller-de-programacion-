@@ -82,7 +82,6 @@ InitialState GameLoop::load_initial_state_hardcoded(Zone zone) {
     // Los NPCs se spawnean random via rand_npc segun num_npc y los tipos
     // permitidos por zona (ZONE_NPC_TYPES en game_map.cpp).
 
-    // TODO: items hardcodeados en el piso
     return is;
 }
 
