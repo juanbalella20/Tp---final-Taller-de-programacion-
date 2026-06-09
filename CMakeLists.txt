@@ -115,6 +115,7 @@ add_executable(client
     client/clientmain.cpp
     client/clientApp.cpp
     client/audio/zone_music_player.cpp
+    client/audio/sound_player.cpp
     client/interface/minichat.cpp
     client/comunication/clientProtocol.cpp
     client/serializers/deserializer.cpp

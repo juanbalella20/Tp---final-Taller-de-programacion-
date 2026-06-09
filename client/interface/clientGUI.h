@@ -23,6 +23,7 @@
 #include "camera.h"
 #include "hud.h"
 #include "zone_music_player.h"
+#include "sound_player.h"
 #include "../../common/utility/thread.h"
 
 #define WIN_NAME "Argentum"
@@ -77,6 +78,7 @@ private:
     std::unique_ptr<PlayerDisplay> player;
     std::unique_ptr<TileMap> tilemap;
     std::unique_ptr<ZoneMusicPlayer> zone_music;
+    std::unique_ptr<SoundPlayer> sfx;
 
     std::vector<std::vector<elements>> world_map;
     std::vector<NpcInfo> npcs;
@@ -94,6 +96,9 @@ private:
     // Id del baculo actualmente equipado por el jugador local ("" si ninguno o si
     // tiene un arma fisica). Sirve para deducir que efecto animar al castear.
     std::string equipped_spell_id;
+    // Id (clave del config: "espada", "baculo_nudoso", ...) del arma/baculo de
+    // ataque equipado por el jugador local. Sirve para elegir el sonido al atacar.
+    std::string equipped_weapon_id;
     SDL_Texture* frame_texture;
     SDL_Texture* item_texture;
     SDL_Texture* gold_texture;
@@ -202,6 +207,10 @@ private:
     void spawn_spell_animation(const std::string& effect_id, int tile_x, int tile_y);
     // Dibuja y avanza las animaciones de hechizo activas.
     void draw_spell_animations();
+
+    // Ruta (relativa a assets) del sonido del arma/báculo cuyo id es weapon_id,
+    // o nullptr si esa arma no tiene sonido asignado.
+    static const char* weapon_sound_path(const std::string& weapon_id);
 
 public:
     // window/renderer/font son COMPARTIDOS (propiedad del ScreenManager): se

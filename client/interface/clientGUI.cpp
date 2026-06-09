@@ -42,6 +42,18 @@ void ClientGUI::initSDL() {
 
     mini_chat = std::make_unique<MiniChat>(renderer, chat_font, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
     zone_music = std::make_unique<ZoneMusicPlayer>();
+    sfx = std::make_unique<SoundPlayer>();
+}
+
+const char* ClientGUI::weapon_sound_path(const std::string& weapon_id) {
+    // Sonido por arma/báculo de ataque. Los ids son las claves del config.toml.
+    if (weapon_id == "espada")         // golpe de espada (suena aunque se esquive)
+        return "client/audio/sounds/freesound_community-hit-swing-sword-small-2-95566_1_.ogg";
+    if (weapon_id == "baculo_nudoso")  // hechizo "misil"
+        return "client/audio/sounds/bomba.ogg";
+    if (weapon_id == "baculo_engarzado")  // hechizo "explosion"
+        return "client/audio/sounds/bombav2.ogg";
+    return nullptr;
 }
 
 // tiene que recibir los 4 sectorPerimiter y mostrar solo eso
@@ -661,6 +673,12 @@ void ClientGUI::update() {
                             msg.get_damage(), SDL_GetTicks() + DMG_MS
                         });
                     }
+                    // Sonido del arma/báculo equipado. Suena siempre que se
+                    // confirma el ataque, aunque el golpe sea esquivado.
+                    if (sfx) {
+                        const char* sound = weapon_sound_path(equipped_weapon_id);
+                        if (sound != nullptr) sfx->play(sound);
+                    }
                     // Si el atacante tiene un báculo de daño equipado, anima su
                     // efecto sobre el target. La flauta (curación) no aplica acá:
                     // su efecto se dispara localmente al hacer /self-cast.
@@ -691,6 +709,15 @@ void ClientGUI::update() {
                         for (const auto& id : msg.get_equipped_ids()) {
                             if (spell_effects.find(id) != spell_effects.end()) {
                                 equipped_spell_id = id;
+                                break;
+                            }
+                        }
+                        // Arma/báculo de ataque equipado: lo recordamos para
+                        // elegir el sonido al atacar (ver weapon_sound_path).
+                        equipped_weapon_id.clear();
+                        for (const auto& id : msg.get_equipped_ids()) {
+                            if (weapon_sound_path(id) != nullptr) {
+                                equipped_weapon_id = id;
                                 break;
                             }
                         }
