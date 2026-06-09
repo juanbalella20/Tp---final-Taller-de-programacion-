@@ -1012,10 +1012,6 @@ void ClientGUI::init_draw() {
 
     load_enemies_textures();
 
-    // Recorte del 1er tile (esquina sup-izq) de cada spritesheet. La grilla es
-    // 8 columnas: Goblin 256/8=32px, Spider 512/8=64px.
-    crop_enemies();
-    //
     SDL_Surface* frame_surf = IMG_Load("imagenes/frame..png");
     if (frame_surf) {
         frame_texture = SDL_CreateTextureFromSurface(renderer, frame_surf);
