@@ -1,6 +1,7 @@
 #include "character_creation_screen.h"
 
 #include <array>
+#include <cstdio>
 #include <stdexcept>
 #include <utility>
 #include <iostream>
@@ -12,6 +13,7 @@
 #include "../../common/socket/socket.h"
 #include "../../common/commands/clientCmd.h"
 #include "../../common/commands/gameMsg.h"
+#include "../../common/constants/game_config.h"
 #include "../../common/constants/protocol_constants.h"
 
 namespace {
@@ -51,6 +53,47 @@ constexpr SDL_FRect CREATE_BUTTON{780.0f, 850.0f, 520.0f, 120.0f};
 constexpr float DROPDOWN_GAP = 10.0f;
 constexpr float DROPDOWN_OPTION_H = 58.0f;
 constexpr float ERROR_Y = 790.0f;
+
+// Seccion "Atributos" del fondo: centro vertical de cada fila (Fuerza,
+// Agilidad, Inteligencia, Constitucion, Carisma) en pixeles del PNG, que
+// coincide 1:1 con la resolucion logica CREATE_W x CREATE_H. El valor se
+// dibuja a la derecha del adorno que cierra cada fila.
+constexpr std::array<float, 5> ATTR_ROW_CY{464.0f, 536.0f, 610.0f, 684.0f, 757.0f};
+constexpr float ATTR_VALUE_X = 815.0f;
+constexpr float ATTR_VALUE_W = 110.0f;
+constexpr float ATTR_VALUE_H = 44.0f;
+
+// Mismo orden que RACES: human, elf, dwarf, gnome.
+const RaceConfig& race_config_at(int index) {
+    const GameConfig& cfg = GameConfig::instance();
+    switch (index) {
+        case 0: return cfg.human;
+        case 1: return cfg.elf;
+        case 2: return cfg.dwarf;
+        default: return cfg.gnome;
+    }
+}
+
+// Mismo orden que CLASSES: wizard, cleric, paladin, warrior.
+const ClassConfig& class_config_at(int index) {
+    const GameConfig& cfg = GameConfig::instance();
+    switch (index) {
+        case 0: return cfg.wizard;
+        case 1: return cfg.cleric;
+        case 2: return cfg.paladin;
+        default: return cfg.warrior;
+    }
+}
+
+std::string format_stat(float value) {
+    const int entero = static_cast<int>(value);
+    if (value == static_cast<float>(entero)) {
+        return std::to_string(entero);
+    }
+    char buf[16];
+    std::snprintf(buf, sizeof(buf), "%.1f", value);
+    return std::string(buf);
+}
 
 SDL_FRect dropdown_rect(const SDL_FRect& field, int option_count) {
     return SDL_FRect{
@@ -150,6 +193,13 @@ CharacterCreationScreen::CharacterCreationScreen(SDL_Renderer* renderer, SDL_Win
         SDL_Log("CharacterCreationScreen: no se pudo cargar %s: %s",
                 font_path.c_str(), SDL_GetError());
     }
+    stats_font = TTF_OpenFont(font_path.c_str(), STATS_FONT_SIZE);
+    if (!stats_font) {
+        SDL_Log("CharacterCreationScreen: no se pudo cargar %s: %s",
+                font_path.c_str(), SDL_GetError());
+    }
+
+    update_attribute_values();
 }
 
 CharacterCreationScreen::~CharacterCreationScreen() {
@@ -164,6 +214,10 @@ CharacterCreationScreen::~CharacterCreationScreen() {
     if (message_font) {
         TTF_CloseFont(message_font);
         message_font = nullptr;
+    }
+    if (stats_font) {
+        TTF_CloseFont(stats_font);
+        stats_font = nullptr;
     }
 }
 
@@ -263,7 +317,7 @@ void CharacterCreationScreen::handle_mouse_click(float x, float y) {
         if (option >= 0) {
             selected_class = option;
             std::cout << "[character]: " << CLASSES[selected_class].protocol_value << std::endl;
-            // TODO: imputar las stats de esa clase
+            update_attribute_values();
             error_message.clear();
         }
         class_dropdown_open = false;
@@ -274,7 +328,7 @@ void CharacterCreationScreen::handle_mouse_click(float x, float y) {
         const int option = race_option_at(x, y);
         if (option >= 0) {
             selected_race = option;
-            // TODO: imputar las stats de esa raza
+            update_attribute_values();
             error_message.clear();
         }
         race_dropdown_open = false;
@@ -342,6 +396,7 @@ void CharacterCreationScreen::render() {
     }
 
     draw_selection_values();
+    draw_attribute_values();
     draw_dropdowns();
     draw_error_message();
 }
@@ -352,6 +407,32 @@ void CharacterCreationScreen::draw_selection_values() {
                        CLASS_FIELD, COLOR_TEXT);
     draw_centered_text(renderer, value_font, RACES[selected_race].label,
                        RACE_FIELD, COLOR_TEXT);
+}
+
+void CharacterCreationScreen::update_attribute_values() {
+    // Atributos resultantes de la combinacion raza + clase, sumados igual que
+    // los calcula el servidor (ver Player). Carisma no existe en config.toml.
+    const RaceConfig& race = race_config_at(selected_race);
+    const ClassConfig& klass = class_config_at(selected_class);
+    attribute_values[0] = format_stat(race.strength + klass.strength);
+    attribute_values[1] = format_stat(race.agility + klass.agility);
+    attribute_values[2] = format_stat(race.inteligence + klass.inteligence);
+    attribute_values[3] = format_stat(race.endurance + klass.endurance);
+    attribute_values[4] = "-";
+}
+
+void CharacterCreationScreen::draw_attribute_values() {
+    TTF_Font* value_font = stats_font ? stats_font : font;
+    for (size_t i = 0; i < attribute_values.size(); ++i) {
+        const SDL_FRect box{
+            ATTR_VALUE_X,
+            ATTR_ROW_CY[i] - ATTR_VALUE_H * 0.5f,
+            ATTR_VALUE_W,
+            ATTR_VALUE_H
+        };
+        draw_centered_text(renderer, value_font, attribute_values[i].c_str(),
+                           box, COLOR_TEXT);
+    }
 }
 
 void CharacterCreationScreen::draw_dropdowns() {

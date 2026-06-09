@@ -4,6 +4,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
+#include <array>
 #include <string>
 
 #include "Screen.h"
@@ -17,6 +18,10 @@ class CharacterCreationScreen : public Screen {
     static constexpr int CREATE_H = 1086;
     static constexpr int LABEL_FONT_SIZE = 44;
     static constexpr int MESSAGE_FONT_SIZE = 28;
+    static constexpr int STATS_FONT_SIZE = 38;
+    // Filas de la seccion "Atributos" del fondo:
+    // Fuerza, Agilidad, Inteligencia, Constitucion, Carisma.
+    static constexpr int ATTRIBUTE_COUNT = 5;
 
     SDL_Renderer* renderer;   // no-owning
     SDL_Window* window;       // no-owning
@@ -28,9 +33,12 @@ class CharacterCreationScreen : public Screen {
     SDL_Texture* background = nullptr;
     TTF_Font* label_font = nullptr;
     TTF_Font* message_font = nullptr;
+    TTF_Font* stats_font = nullptr;
 
     int selected_race = 0;
     int selected_class = 0;
+    // Valores ya formateados para dibujar junto a cada fila de "Atributos".
+    std::array<std::string, ATTRIBUTE_COUNT> attribute_values;
     std::string error_message;
     ScreenState next = ScreenState::CHARACTER_CREATION;
     bool class_dropdown_open = false;
@@ -42,7 +50,9 @@ class CharacterCreationScreen : public Screen {
     void handle_mouse_click(float x, float y);
     int class_option_at(float x, float y) const;
     int race_option_at(float x, float y) const;
+    void update_attribute_values();
     void draw_selection_values();
+    void draw_attribute_values();
     void draw_dropdowns();
     void draw_error_message();
 
