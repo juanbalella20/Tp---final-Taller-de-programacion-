@@ -157,6 +157,28 @@ void Player::heal(const int healthy_life, const int healthy_mana) {
     heal_mana(healthy_mana);
 }
 
+bool Player::regen_life(double percent) {
+    if (is_dead()) return false;
+    uint32_t max = max_life();
+    if (lives >= max) return false;  // ya al maximo: nada que notificar
+    // Cura un porcentaje de la vida MAXIMA
+    int amount = static_cast<int>(std::ceil(max * percent));
+    if (amount <= 0) return false;
+    heal_life(amount);
+    return true;
+}
+
+bool Player::regen_mana(double percent) {
+    if (is_dead()) return false;
+    uint32_t max = max_mana();
+    if (mana >= max) return false;  // ya al maximo: nada que notificar
+    // Cura un porcentaje del mana máximo
+    int amount = static_cast<int>(std::ceil(max * percent));
+    if (amount <= 0) return false;
+    heal_mana(amount);
+    return true;
+}
+
 void Player::add_gold(const int extra_gold) {
     // Tomar/recibir oro es una acción: interrumpe la meditación.
     stop_meditation();
@@ -250,6 +272,14 @@ uint32_t Player::get_xp() const {
 
 uint32_t Player::get_mana() const {
     return mana;
+}
+
+uint32_t Player::get_max_life() {
+    return max_life();
+}
+
+uint32_t Player::get_max_mana() {
+    return max_mana();
 }
  
 int Player::get_level() const {

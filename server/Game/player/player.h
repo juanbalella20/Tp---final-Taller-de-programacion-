@@ -124,6 +124,14 @@ public:
 
     void heal(const int healthy_life, const int healthy_mana);
 
+    // Regeneracion automatica de vida: cura un 'percent' (0..1) de la vida
+    // maxima. No hace nada si el jugador esta muerto o ya tiene la vida al maximo.
+    // Devuelve true si la vida cambio (hay que notificar MSG_HP al cliente).
+    bool regen_life(double percent);
+
+    // Misma lógica que regen_life()
+    bool regen_mana(double percent);
+
     void add_gold(const int extra_gold);
 
     bool give_gold(const int amount);
@@ -193,6 +201,11 @@ public:
     uint32_t get_xp() const;
 
     uint32_t get_mana() const;
+
+    // Vida/maná maximos actuales (dependen de nivel/raza/clase). Para que el
+    // cliente dibuje las barras del HUD con el tope correcto.
+    uint32_t get_max_life();
+    uint32_t get_max_mana();
 
     const std::string& get_race_name() const;
 

@@ -389,20 +389,22 @@ std::vector<uint8_t> ServerSerializer::serialize_mana(const GameMsg& msg) {
 
 std::vector<uint8_t> ServerSerializer::serialize_level(const GameMsg& msg) {
     std::vector<uint8_t> buf;
-    uint16_t payload_len = 2 * sizeof(uint32_t);  // level + max_xp
+    uint16_t payload_len = 4 * sizeof(uint32_t);  // level + max_xp + max_hp + max_mana
     buf.reserve(LEN_HEADER + payload_len);
     write_header(buf, msg.get_type(), payload_len);
-    
+
     auto append_u32 = [&](uint32_t value) {
         uint32_t be = htonl(value);
         uint8_t bytes[sizeof(uint32_t)];
         std::memcpy(bytes, &be, sizeof(uint32_t));
         buf.insert(buf.end(), bytes, bytes + sizeof(uint32_t));
     };
-    
+
     append_u32(static_cast<uint32_t>(msg.get_level()));
     append_u32(msg.get_max_xp());
-    
+    append_u32(msg.get_max_hp());
+    append_u32(msg.get_max_mana());
+
     return buf;
 }
 
@@ -417,8 +419,12 @@ std::vector<uint8_t> ServerSerializer::serialize_level(const GameMsg& msg) {
 //     [name_size      : 1 byte][name bytes]
 //   [gold            : 4 bytes BE]
 //   [hp              : 4 bytes BE]
+//   [max_hp          : 4 bytes BE]
 //   [xp              : 4 bytes BE]
 //   [mana            : 4 bytes BE]
+//   [max_mana        : 4 bytes BE]
+//   [max_xp          : 4 bytes BE]
+//   [level           : 4 bytes BE]
 //   [spawn_x         : 2 bytes BE]   posicion inicial del jugador en el mapa
 //   [spawn_y         : 2 bytes BE]
 //   [player_count    : 2 bytes BE]   jugadores ya en el mapa al momento del registro
@@ -443,7 +449,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
         payload_len += 1;  // type
         payload_len += 8;  // uid (uint64 big-endian)
     }
-    payload_len += 6 * sizeof(uint32_t);    // gold + hp + xp + mana + max xp + level
+    payload_len += 8 * sizeof(uint32_t);    // gold + hp + max_hp + xp + mana + max_mana + max_xp + level
     payload_len += 2 * LEN_COORD;           // spawn_x + spawn_y
     const auto& players = msg.get_players();
     payload_len += LEN_PLAYER_COUNT;
@@ -493,8 +499,10 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
     };
     append_u32(msg.get_gold());
     append_u32(msg.get_hp());
+    append_u32(msg.get_max_hp());
     append_u32(msg.get_xp());
     append_u32(msg.get_mana());
+    append_u32(msg.get_max_mana());
     append_u32(msg.get_max_xp());
     append_u32(static_cast<uint32_t>(msg.get_level()));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_x()));

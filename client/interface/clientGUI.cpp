@@ -516,8 +516,8 @@ void ClientGUI::update() {
                         hud->set_inventory(msg.get_items());
                         hud->set_gold(msg.get_gold());
                         hud->set_hp(msg.get_hp());
-                        hud->set_max_hp(msg.get_hp());
-                        hud->set_max_mana(msg.get_mana());
+                        hud->set_max_hp(msg.get_max_hp());
+                        hud->set_max_mana(msg.get_max_mana());
                         hud->set_xp(msg.get_xp());
                         hud->set_max_xp(msg.get_max_xp());
                         hud->set_mana(msg.get_mana());
@@ -748,6 +748,8 @@ void ClientGUI::update() {
                     if (hud) {
                         hud->set_level(msg.get_level());
                         hud->set_max_xp(msg.get_max_xp());
+                        hud->set_max_hp(msg.get_max_hp());
+                        hud->set_max_mana(msg.get_max_mana());
                     }
                     break;
                 }

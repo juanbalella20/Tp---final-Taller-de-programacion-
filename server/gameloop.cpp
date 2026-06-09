@@ -218,8 +218,10 @@ void GameLoop::send_world_snapshot_to(uint32_t client_id, const std::string& nam
     registerMsg.set_items(item_infos);
     registerMsg.set_gold(game_map.get_player_gold(name));
     registerMsg.set_hp(game_map.get_player_hp(name));
+    registerMsg.set_max_hp(game_map.get_player_max_hp(name));
     registerMsg.set_xp(game_map.get_player_xp(name));
     registerMsg.set_mana(game_map.get_player_mana(name));
+    registerMsg.set_max_mana(game_map.get_player_max_mana(name));
     std::cout << "[DEBUG] max xp: " << p.max_xp() << std::endl;
     registerMsg.set_max_xp(game_map.player_max_xp(name));
     registerMsg.set_coord_x(p.get_coord_x());
@@ -594,6 +596,10 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
             GameMsg level_msg(MSG_UPDATE_LEVEL);
             level_msg.set_level(result.level);
             level_msg.set_max_xp(game_map.player_max_xp(attacker_name));
+            // Subir de nivel aumenta la vida/maná maximos: que el HUD actualice el
+            // tope de las barras (sin esto se veria vida actual > vida maxima).
+            level_msg.set_max_hp(game_map.get_player_max_hp(attacker_name));
+            level_msg.set_max_mana(game_map.get_player_max_mana(attacker_name));
             client_registry_monitor.notify_client(cmd.get_client_id(), level_msg);
         }
         // Feed de combate (estilo AO) en el minichat del ATACANTE: cuánto daño
@@ -995,6 +1001,11 @@ void GameLoop::run() {
     int npc_move_ticks = 0;
     const int TICKS_PER_NPC_MOVE = 10;
 
+    // Regeneracion automatica de vida: fraccion de la vida maxima que cada
+    // player vivo recupera por segundo real (0.01 = 1%).
+    const double LIFE_REGEN_PER_SECOND = 0.01;
+    const double MANA_REGEN_PER_SECOND = 0.01;
+
     while (should_keep_running()) {
         next_tick += tick_rate;
 
@@ -1046,7 +1057,11 @@ void GameLoop::run() {
 
             if (++ticks_accumulated >= ticks_per_second) {
                 ticks_accumulated = 0;
-                regen_players_mana(1.0);
+                regen_players_mana(1.0);  // maná de meditación (escala con inteligencia)
+                // Regeneracion automatica (pasiva) cada segundo real: todos los
+                // players vivos recuperan un porcentaje de su vida y maná maximos.
+                regen_players_life(LIFE_REGEN_PER_SECOND);
+                regen_players_mana_passive(MANA_REGEN_PER_SECOND);
             }
 
             // Guardado periodico: red de seguridad ante desconexiones abruptas.
@@ -1098,6 +1113,28 @@ void GameLoop::persist_clans() {
 
 void GameLoop::regen_players_mana(double seconds) {
     for (const std::string& name : game_map.tick(seconds)) {
+        GameMsg msg(MSG_MANA);
+        msg.set_player_name(name);
+        msg.set_mana(game_map.get_player_mana(name));
+        client_registry_monitor.notify_client_by_name(name, msg);
+    }
+}
+
+void GameLoop::regen_players_life(double percent) {
+    // Cura 'percent' de la vida maxima a cada player vivo y notifica el HP nuevo
+    // solo a los que cambiaron (los que ya estaban al maximo no entran en la lista).
+    for (const std::string& name : game_map.regen_all_players_life(percent)) {
+        GameMsg msg(MSG_HP);
+        msg.set_player_name(name);
+        msg.set_hp(game_map.get_player_hp(name));
+        client_registry_monitor.notify_client_by_name(name, msg);
+    }
+}
+
+void GameLoop::regen_players_mana_passive(double percent) {
+    // Cura 'percent' del maná maximo a cada player vivo y notifica el maná nuevo
+    // solo a los que cambiaron (los que ya estaban al maximo no entran en la lista).
+    for (const std::string& name : game_map.regen_all_players_mana(percent)) {
         GameMsg msg(MSG_MANA);
         msg.set_player_name(name);
         msg.set_mana(game_map.get_player_mana(name));
