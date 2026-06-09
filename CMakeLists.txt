@@ -15,7 +15,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -ggdb3 -fno-omit-frame-pointer -fno-inline -f
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
-# ── Vendored submodules (SDL3, SDL3_image, SDL3_ttf) ────────────────────────
+# ── Vendored submodules (SDL3, SDL3_image, SDL3_ttf, SDL3_mixer) ────────────
 # If submodules aren't initialized, try to do it automatically; otherwise fail
 # with a clear message instead of a cryptic "CMakeLists.txt not found".
 function(ensure_submodule path)
@@ -50,15 +50,38 @@ endfunction()
 ensure_submodule(vendored/SDL)
 ensure_submodule(vendored/SDL_image)
 ensure_submodule(vendored/SDL_ttf)
+ensure_submodule(vendored/SDL_mixer)
 
 # Build SDL_ttf with vendored third-party deps (freetype/harfbuzz/plutosvg)
 # so external users don't need to apt install extra dev packages.
 set(SDLTTF_VENDORED ON CACHE BOOL "Build SDL_ttf with vendored dependencies" FORCE)
 
+# SDL3_mixer only needs WAV and OGG for the game music. stb_vorbis is included
+# in SDL3_mixer, so this does not require system audio codec packages.
+set(SDLMIXER_VENDORED ON CACHE BOOL "Build SDL3_mixer with vendored dependencies" FORCE)
+set(SDLMIXER_DEPS_SHARED OFF CACHE BOOL "Do not dynamically load mixer dependencies" FORCE)
+set(SDLMIXER_TESTS OFF CACHE BOOL "Do not build SDL3_mixer tests" FORCE)
+set(SDLMIXER_EXAMPLES OFF CACHE BOOL "Do not build SDL3_mixer examples" FORCE)
+set(SDLMIXER_AIFF OFF CACHE BOOL "Disable AIFF support" FORCE)
+set(SDLMIXER_WAVE ON CACHE BOOL "Enable WAV support" FORCE)
+set(SDLMIXER_VOC OFF CACHE BOOL "Disable VOC support" FORCE)
+set(SDLMIXER_AU OFF CACHE BOOL "Disable AU support" FORCE)
+set(SDLMIXER_FLAC OFF CACHE BOOL "Disable FLAC support" FORCE)
+set(SDLMIXER_GME OFF CACHE BOOL "Disable GME support" FORCE)
+set(SDLMIXER_MOD OFF CACHE BOOL "Disable MOD support" FORCE)
+set(SDLMIXER_MP3 OFF CACHE BOOL "Disable MP3 support" FORCE)
+set(SDLMIXER_MIDI OFF CACHE BOOL "Disable MIDI support" FORCE)
+set(SDLMIXER_OPUS OFF CACHE BOOL "Disable Opus support" FORCE)
+set(SDLMIXER_VORBIS_STB ON CACHE BOOL "Enable OGG Vorbis through stb_vorbis" FORCE)
+set(SDLMIXER_VORBIS_VORBISFILE OFF CACHE BOOL "Disable libvorbisfile" FORCE)
+set(SDLMIXER_VORBIS_TREMOR OFF CACHE BOOL "Disable Tremor" FORCE)
+set(SDLMIXER_WAVPACK OFF CACHE BOOL "Disable WavPack support" FORCE)
+
 # SDL3 from vendored source
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(vendored/SDL_image EXCLUDE_FROM_ALL)
 add_subdirectory(vendored/SDL_ttf EXCLUDE_FROM_ALL)
+add_subdirectory(vendored/SDL_mixer EXCLUDE_FROM_ALL)
 
 # ── Common library (shared by client and server) ────────────────────────────
 add_library(common STATIC
@@ -91,6 +114,7 @@ target_include_directories(common PUBLIC
 add_executable(client
     client/clientmain.cpp
     client/clientApp.cpp
+    client/audio/zone_music_player.cpp
     client/interface/minichat.cpp
     client/comunication/clientProtocol.cpp
     client/serializers/deserializer.cpp
@@ -114,11 +138,17 @@ add_executable(client
 )
 target_include_directories(client PRIVATE
     client
+    client/audio
     client/interface
     client/comunication
     client/serializers
 )
-target_link_libraries(client PRIVATE common SDL3::SDL3 SDL3_image::SDL3_image)
+target_link_libraries(client PRIVATE
+    common
+    SDL3::SDL3
+    SDL3_image::SDL3_image
+    SDL3_mixer::SDL3_mixer
+)
 # find_package(SDL3_ttf REQUIRED)
 target_link_libraries(client PRIVATE SDL3_ttf::SDL3_ttf)
 

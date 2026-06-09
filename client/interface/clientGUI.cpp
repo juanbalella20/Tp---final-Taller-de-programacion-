@@ -17,6 +17,7 @@ ClientGUI::ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
     : window(window), renderer(renderer), event{}, chat_font(font),
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
       hud(nullptr), own_name(player_name), race(player_race), player(nullptr), tilemap(nullptr),
+      zone_music(nullptr),
       enemy_texture(nullptr), frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
       camera((float)GAME_VIEW_W, (float)GAME_VIEW_H),
       current_zone(static_cast<Zone>(0xFF)),
@@ -40,6 +41,7 @@ void ClientGUI::initSDL() {
     }
 
     mini_chat = std::make_unique<MiniChat>(renderer, chat_font, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
+    zone_music = std::make_unique<ZoneMusicPlayer>();
 }
 
 // tiene que recibir los 4 sectorPerimiter y mostrar solo eso
@@ -72,6 +74,9 @@ void ClientGUI::loadMedia(Zone zone) {
 }
 
 void ClientGUI::freeSDL() {
+    // Debe cerrarse antes de que ScreenManager destruya SDL.
+    zone_music.reset();
+
     player.reset();
     tilemap.reset();
     hud.reset();
@@ -467,6 +472,9 @@ void ClientGUI::update() {
                     Zone z = msg.get_zone();
                     if (z != current_zone) {
                         loadMedia(z);
+                        if (zone_music) {
+                            zone_music->play_zone(z);
+                        }
                         current_zone = z;
                     }
                     // Los players de la zona anterior dejan de ser visibles. El

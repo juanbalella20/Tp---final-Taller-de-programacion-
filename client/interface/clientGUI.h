@@ -22,6 +22,7 @@
 #include "tileMap.h"
 #include "camera.h"
 #include "hud.h"
+#include "zone_music_player.h"
 #include "../../common/utility/thread.h"
 
 #define WIN_NAME "Argentum"
@@ -75,6 +76,7 @@ private:
 
     std::unique_ptr<PlayerDisplay> player;
     std::unique_ptr<TileMap> tilemap;
+    std::unique_ptr<ZoneMusicPlayer> zone_music;
 
     std::vector<std::vector<elements>> world_map;
     std::vector<NpcInfo> npcs;
