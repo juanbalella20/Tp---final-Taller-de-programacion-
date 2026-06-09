@@ -28,6 +28,7 @@
 #include "TilesetSelectorView.h"
 #include "binaryMap/binaryMapSaver.h"
 #include "protocol_constants.h"  // Zone, ZONE_NAME_MAP_INV
+#include "utility/paths.h"       // resource_relative / resolve_resource
 
 #ifndef EDITOR_DEFAULT_TILESET_PATH
 #define EDITOR_DEFAULT_TILESET_PATH ""
@@ -113,8 +114,23 @@ bool EditorWindow::load_tileset_path(const QString& path) {
     }
 
     const QFileInfo info(path);
+    // El .bin guarda la ruta del tileset RELATIVA a la carpeta de recursos
+    // compartida (ARGENTUM_RESOURCES_DIR), no la ruta absoluta de esta maquina,
+    // para que el cliente la resuelva contra SU carpeta de recursos en cualquier
+    // maquina. Ver paths::resource_relative.
+    const std::string rel_path =
+        paths::resource_relative(info.absoluteFilePath().toStdString());
+    if (QFileInfo(QString::fromStdString(rel_path)).isAbsolute() ||
+        rel_path == info.fileName().toStdString()) {
+        // No quedo debajo de la carpeta de recursos: el cliente quizas no lo
+        // encuentre. Avisamos pero dejamos cargar (util para previsualizar).
+        statusBar()->showMessage(
+            QString("Aviso: el PNG no esta bajo ARGENTUM_RESOURCES_DIR; se "
+                    "guardara como '%1' y el cliente lo buscara ahi.")
+                .arg(QString::fromStdString(rel_path)));
+    }
     const int index = doc_.register_tileset(
-        info.baseName(), info.absoluteFilePath(), library.columns(),
+        info.baseName(), QString::fromStdString(rel_path), library.columns(),
         library.tileCount(), false);
     refresh_tileset_combo();
     tileset_combo_->setCurrentIndex(index);
@@ -149,12 +165,15 @@ void EditorWindow::select_tileset(int index) {
     if (index < 0 || index >= static_cast<int>(tilesets.size())) return;
 
     const Tileset& tileset = tilesets[static_cast<std::size_t>(index)];
-    if (!selector_->setTileset(QString::fromStdString(tileset.file_path),
-                               doc_.map().tile_size(), tileset.firstgid)) {
+    // file_path es relativa a la carpeta de recursos: la resolvemos a absoluta
+    // para poder abrir el PNG y mostrarlo en la paleta.
+    const QString abs_path =
+        QString::fromStdString(paths::resolve_resource(tileset.file_path));
+    if (!selector_->setTileset(abs_path, doc_.map().tile_size(),
+                               tileset.firstgid)) {
         selector_->clearTileset();
         statusBar()->showMessage(
-            QString("No se pudo abrir el tileset: %1")
-                .arg(QString::fromStdString(tileset.file_path)));
+            QString("No se pudo abrir el tileset: %1").arg(abs_path));
     }
 }
 

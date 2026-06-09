@@ -3,6 +3,8 @@
 #include <SDL3_image/SDL_image.h>
 #include <stdexcept>
 
+#include "utility/paths.h"  // resolve_resource
+
 TileMap::TileMap(SDL_Renderer* renderer)
     : renderer(renderer), mapData() {}
 
@@ -43,10 +45,14 @@ void TileMap::load_tileset_textures() {
     const auto& tilesets = mapData.get_tilesets();
     tileset_textures.reserve(tilesets.size());
     for (const auto& ts : tilesets) {
-        SDL_Texture* tex = IMG_LoadTexture(renderer, ts.file_path.c_str());
+        // file_path en el .bin es relativa a la carpeta de recursos compartida
+        // (la que use el editor). La resolvemos contra NUESTRA carpeta de
+        // recursos (ARGENTUM_RESOURCES_DIR, o el cwd del repo). Ver paths.h.
+        const std::string img_path = paths::resolve_resource(ts.file_path);
+        SDL_Texture* tex = IMG_LoadTexture(renderer, img_path.c_str());
         if (!tex) {
-            throw std::runtime_error("TileMap: no pude cargar " +
-                                     ts.file_path + " (" + SDL_GetError() + ")");
+            throw std::runtime_error("TileMap: no pude cargar " + img_path +
+                                     " (" + SDL_GetError() + ")");
         }
         // evitar suavizado al escalar
         SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
