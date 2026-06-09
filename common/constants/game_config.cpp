@@ -258,6 +258,7 @@ void GameConfig::load(const std::string& toml_path) {
     zone_num_priests.clear();
     zone_num_sellers.clear();
     zone_num_bankers.clear();
+    zone_safe.clear();
     for (const auto& [zone_id, zone_name] : ZONE_NAME_MAP_INV) {
         const Zone zone = static_cast<Zone>(zone_id);
         const std::string base = "zones." + zone_name + ".";
@@ -284,6 +285,7 @@ void GameConfig::load(const std::string& toml_path) {
         zone_num_priests[zone] = root.at_path(base + "num_priests").value_or(0);
         zone_num_sellers[zone] = root.at_path(base + "num_sellers").value_or(0);
         zone_num_bankers[zone] = root.at_path(base + "num_bankers").value_or(0);
+        zone_safe[zone] = root.at_path(base + "safe_zone").value_or(false);
     }
     // Aliases legacy (algunos consumidores los usan por nombre de zona).
     desert_npcs = zone_allowed_npcs[ZONE_DESERT];
@@ -304,4 +306,9 @@ const std::string& GameConfig::zone_map_path(Zone zone) const {
     static const std::string empty;
     auto it = zone_map_paths.find(zone);
     return it != zone_map_paths.end() ? it->second : empty;
+}
+
+bool GameConfig::is_safe_zone(Zone zone) const {
+    auto it = zone_safe.find(zone);
+    return it != zone_safe.end() && it->second;
 }

@@ -165,6 +165,9 @@ public:
     std::map<Zone, int> zone_num_priests;
     std::map<Zone, int> zone_num_sellers;
     std::map<Zone, int> zone_num_bankers;
+    // Zona segura (zones.<nombre>.safe_zone): no se permite PvP entre players,
+    // sean o no del mismo clan. Default: false.
+    std::map<Zone, bool> zone_safe;
 
     // Clan
     int clan_min_level_to_found;
@@ -181,6 +184,9 @@ public:
 
     // Ruta al .bin de una zona, o "" si no esta configurada.
     const std::string& zone_map_path(Zone zone) const;
+
+    // ¿La zona es segura (sin PvP)? false si no esta configurada.
+    bool is_safe_zone(Zone zone) const;
 
 private:
     GameConfig() = default;

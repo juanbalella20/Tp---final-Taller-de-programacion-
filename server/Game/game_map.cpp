@@ -258,6 +258,9 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
 
     // Fair play: solo aplica en PvP
     if (target_is_player) {
+        // Zona segura (config.toml: zones.<nombre>.safe_zone): sin PvP para
+        if (GameConfig::instance().is_safe_zone(z))
+            throw AttackNotAllowedException("Estas en una zona segura: no se puede atacar a otros jugadores");
         if (attacker->is_newbie() || target_player->is_newbie())
             throw AttackNotAllowedException("Los newbies no pueden atacar ni ser atacados");
         if (!attacker->can_attack_level(target_player->get_level()))

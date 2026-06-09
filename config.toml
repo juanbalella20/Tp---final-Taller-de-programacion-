@@ -355,6 +355,8 @@ npc_gold_drop_max = 0.2
 # num_items: cuantos items caen al piso en la zona al iniciar.
 # allowed_items: de que items se sortean esos num_items (ids de [items.*]).
 #   Si se omite o queda vacio, se usa el pool global (todos los dropeables).
+# safe_zone: true = zona segura, sin PvP (ningun player puede dañar a otro,
+#   sean o no del mismo clan). Si se omite, false.
 [zones.desert]
 map = "data/maps/desert/map-2.bin"
 allowed_npcs = ["goblin", "spider"]
@@ -364,6 +366,7 @@ allowed_items = ["espada", "hacha", "armadura_cuero", "capucha", "pocion_vida"]
 
 [zones.city]
 map = "data/maps/city/city-2.bin"
+safe_zone = true
 num_items = 5
 allowed_items = ["pocion_vida", "pocion_mana"]
 # Cantidad de NPCs amigos en celdas random (ademas de los nombrados en el .bin).
