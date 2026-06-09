@@ -63,7 +63,9 @@ void ZoneWorld::spawn(const ZoneSpawnConfig& cfg) {
     for (int i = 0; i < cfg.num_items; ++i) {
         auto [x, y] = find_random_empty_cell({});
         if (x == -1 || y == -1) break;
-        spawn_item(x, y, catalog.make_random_item());
+        // Sorteamos del pool permitido de la zona (config.toml); si esta vacio,
+        // make_random_item(pool) cae al pool global por defecto.
+        spawn_item(x, y, catalog.make_random_item(cfg.item_types));
     }
     for (int i = 0; i < cfg.num_priests; ++i) {
         auto [x, y] = find_random_empty_cell({});

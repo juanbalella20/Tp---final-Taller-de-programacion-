@@ -100,3 +100,15 @@ std::unique_ptr<Item> ItemCatalog::make_random_item() const {
     const std::string& id = droppable_item_ids[std::rand() % droppable_item_ids.size()];
     return make_item(id);
 }
+
+std::unique_ptr<Item> ItemCatalog::make_random_item(
+        const std::vector<std::string>& pool) const {
+    // Filtramos a los ids que el catalogo conoce; un id mal escrito en el config
+    // no debe romper el spawn de la zona, solo se descarta.
+    std::vector<const std::string*> valid;
+    for (const std::string& id : pool) {
+        if (exists(id)) valid.push_back(&id);
+    }
+    if (valid.empty()) return make_random_item();  // pool global
+    return make_item(*valid[std::rand() % valid.size()]);
+}

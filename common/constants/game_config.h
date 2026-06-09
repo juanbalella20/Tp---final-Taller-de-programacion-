@@ -129,6 +129,11 @@ public:
     PotionConfig pocion_vida;
     PotionConfig pocion_mana;
 
+    // Inventario inicial de cada nuevo jugador: lista de ids del catalogo de
+    // items (ItemCatalog). Viene de [player].initial_inventory en config.toml,
+    // asi se cambia el equipamiento de arranque sin recompilar.
+    std::vector<std::string> initial_inventory;
+
     // Npc hostile
     NpcHostileConfig goblin;
     NpcHostileConfig spider;
@@ -146,6 +151,10 @@ public:
     std::map<Zone, std::string> zone_map_paths;
     // Tipos de NPC hostil permitidos por zona (zones.<nombre>.allowed_npcs).
     std::map<Zone, std::vector<std::string>> zone_allowed_npcs;
+    // Items que pueden caer al piso por zona (zones.<nombre>.allowed_items): los
+    // num_items de la zona se sortean de esta lista. Vacio => pool global por
+    // defecto (todos los objetos dropeables del catalogo).
+    std::map<Zone, std::vector<std::string>> zone_allowed_items;
     // Cantidades de spawn inicial.
     std::map<Zone, int> zone_num_npc;
     std::map<Zone, int> zone_num_items;

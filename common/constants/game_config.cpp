@@ -199,6 +199,15 @@ void GameConfig::load(const std::string& toml_path) {
     pocion_mana.heal_life = root.at_path("items.pocion_mana.heal_life").value_or(0);
     pocion_mana.heal_mana = root.at_path("items.pocion_mana.heal_mana").value_or(100);
 
+    // Inventario inicial de cada nuevo jugador (ids del catalogo de items).
+    // Si no esta en el config se cae a un equipamiento por defecto.
+    initial_inventory.clear();
+    if (auto arr = root.at_path("player.initial_inventory").as_array()) {
+        for (auto& elem : *arr) {
+            if (auto s = elem.value<std::string>()) initial_inventory.push_back(*s);
+        }
+    }
+
     goblin.name           = root.at_path("npcs.goblin.name").value_or(std::string("Goblin"));
     goblin.lifepoints     = root.at_path("npcs.goblin.lifepoints").value_or(30);
     goblin.attack_dmg     = root.at_path("npcs.goblin.attack_dmg").value_or(5);
@@ -240,6 +249,7 @@ void GameConfig::load(const std::string& toml_path) {
     // El config.toml es la unica fuente de estos datos.
     zone_map_paths.clear();
     zone_allowed_npcs.clear();
+    zone_allowed_items.clear();
     zone_num_npc.clear();
     zone_num_items.clear();
     zone_num_priests.clear();
@@ -259,6 +269,13 @@ void GameConfig::load(const std::string& toml_path) {
             }
         }
         zone_allowed_npcs[zone] = allowed;
+        std::vector<std::string> allowed_items;
+        if (auto arr = root.at_path(base + "allowed_items").as_array()) {
+            for (auto& elem : *arr) {
+                if (auto s = elem.value<std::string>()) allowed_items.push_back(*s);
+            }
+        }
+        zone_allowed_items[zone] = allowed_items;
         zone_num_npc[zone] = root.at_path(base + "num_npc").value_or(0);
         zone_num_items[zone] = root.at_path(base + "num_items").value_or(0);
         zone_num_priests[zone] = root.at_path(base + "num_priests").value_or(0);

@@ -107,6 +107,7 @@ void GameLoop::load_maps() {
         ZoneSpawnConfig zc;
         zc.terrain_path   = path;
         zc.npc_types      = cfg.zone_allowed_npcs.at(zone);
+        zc.item_types     = cfg.zone_allowed_items.at(zone);
         zc.num_npc        = cfg.zone_num_npc.at(zone);
         zc.num_items      = cfg.zone_num_items.at(zone);
         zc.num_priests    = cfg.zone_num_priests.at(zone);

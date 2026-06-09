@@ -264,6 +264,17 @@ heal_life = 0
 heal_mana = 100
 
 # ------------------------------------------------------------
+# Jugador
+# ------------------------------------------------------------
+[player]
+# Inventario inicial de cada nuevo jugador: lista de ids de items (deben
+# coincidir con las claves de [items.*] de arriba; "escudo" es alias de
+# "escudo_tortuga"). Cambiar esta lista cambia el equipamiento de arranque
+# sin recompilar. Si se deja vacia se usa el equipamiento por defecto.
+initial_inventory = ["espada", "escudo", "vara_fresno", "baculo_nudoso",
+                     "baculo_engarzado", "flauta_elfica"]
+
+# ------------------------------------------------------------
 # NPCs hostiles
 # ------------------------------------------------------------
 # level: nivel del NPC, usado en el calculo de XP al matarlo.
@@ -337,15 +348,20 @@ npc_gold_drop_max = 0.2
 # map: ruta al .bin de la zona. La cargan TANTO el servidor (colision/teleports/
 # estado) como el cliente (render). Deben ser la misma para que ambos lados vean
 # el mismo mapa. La ruta es relativa al cwd (raiz del repo).
+# num_items: cuantos items caen al piso en la zona al iniciar.
+# allowed_items: de que items se sortean esos num_items (ids de [items.*]).
+#   Si se omite o queda vacio, se usa el pool global (todos los dropeables).
 [zones.desert]
 map = "data/maps/desert/map-2.bin"
 allowed_npcs = ["goblin", "spider"]
 num_npc = 7
 num_items = 6
+allowed_items = ["espada", "hacha", "armadura_cuero", "capucha", "pocion_vida"]
 
 [zones.city]
 map = "data/maps/city/city-2.bin"
 num_items = 5
+allowed_items = ["pocion_vida", "pocion_mana"]
 # Cantidad de NPCs amigos en celdas random (ademas de los nombrados en el .bin).
 num_priests = 1
 num_npc = 0
@@ -356,12 +372,14 @@ map = "data/maps/forest/forest3.bin"
 allowed_npcs = ["spider", "skeleton"]
 num_npc = 0
 num_items = 5
+allowed_items = ["vara_fresno", "baculo_nudoso", "tunica_azul", "sombrero_magico", "pocion_mana"]
 
 [zones.dungeon]
 map = "data/maps/dungeon/dungeon-v1.bin"
 allowed_npcs = ["skeleton", "zombie", "orc", "golem"]
 num_npc = 12
 num_items = 8
+allowed_items = ["baculo_engarzado", "martillo", "armadura_placas", "casco_hierro", "escudo_hierro", "pocion_vida", "pocion_mana"]
  
 # ------------------------------------------------------------
 # Clanes

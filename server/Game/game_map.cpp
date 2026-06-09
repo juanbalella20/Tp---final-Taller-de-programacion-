@@ -1,8 +1,5 @@
 #include "game_map.h"
 #include "../game_exceptions.h"
-#include "item/arma.h"
-#include "item/escudo.h"
-#include "item/baculo.h"
 #include "item/item_catalog.h"
 #include "game_config.h"
 
@@ -126,16 +123,14 @@ void GameMap::spawn_player(const std::string& name, const std::string& race, con
 
     Player player(name, player_race, player_class);
     player.update_position(start_x, start_y);
-    // Inventario inicial via catalogo (unica fuente de verdad de los stats).
+    // Inventario inicial: la lista de ids vive en [player].initial_inventory
+    // (config.toml); el catalogo es la unica fuente de verdad de los stats.
     ItemCatalog catalog;
-    for (const char* id : {"espada", "escudo", "vara_fresno", "baculo_nudoso",
-                           "baculo_engarzado", "flauta_elfica"}) {
-        player.add_item(catalog.make_item(id));
+    for (const std::string& id : GameConfig::instance().initial_inventory) {
+        if (auto item = catalog.make_item(id)) {
+            player.add_item(std::move(item));
+        }
     }
-    // TODO: ver con cual version qeudarse!
-    player.add_item(std::make_unique<Arma>("espada", cfg.espada.name, cfg.espada.price, cfg.espada.distance, cfg.espada.damage_min, cfg.espada.damage_max));
-    player.add_item(std::make_unique<Escudo>("escudo", cfg.escudo_tortuga.name, cfg.escudo_tortuga.price, cfg.escudo_tortuga.defense_min, cfg.escudo_tortuga.defense_max));
-    //
     players.push_back(std::move(player));
     std::cout << "[DEBUG: spawn_player] " << name << " at ("
               << start_x << "," << start_y << ") zona=" << static_cast<int>(start_zone)
