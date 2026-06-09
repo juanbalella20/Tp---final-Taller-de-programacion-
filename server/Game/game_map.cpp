@@ -35,17 +35,17 @@ NPChostile make_npc_from_spawn(const NpcSpawn& spawn) {
     // en un archivo de configuracion o base de datos.
     const auto& cfg = GameConfig::instance();
     if (spawn.type == "goblin") {
-    NPChostile npc("goblin", cfg.goblin.name, cfg.goblin.lifepoints, cfg.goblin.attack_dmg, cfg.goblin.ticks_to_spawn);        
+    NPChostile npc("goblin", cfg.goblin.name, cfg.goblin.lifepoints, cfg.goblin.attack_dmg, cfg.goblin.ticks_to_spawn, cfg.goblin.level);
     npc.set_position(spawn.x, spawn.y);
         return npc;
     }
     if (spawn.type == "spider") {
-        NPChostile npc("spider", cfg.spider.name, cfg.spider.lifepoints, cfg.spider.attack_dmg, cfg.spider.ticks_to_spawn);
+        NPChostile npc("spider", cfg.spider.name, cfg.spider.lifepoints, cfg.spider.attack_dmg, cfg.spider.ticks_to_spawn, cfg.spider.level);
         npc.set_position(spawn.x, spawn.y);
         return npc;
     }
     // Fallback para tipos desconocidos.
-    NPChostile npc(spawn.type, spawn.type, 10, 1, 50);
+    NPChostile npc(spawn.type, spawn.type, 10, 1, 50, 1);
     npc.set_position(spawn.x, spawn.y);
     return npc;
 }

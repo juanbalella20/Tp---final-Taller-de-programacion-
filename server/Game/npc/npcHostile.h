@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "npc.h"
+#include "levelHostile.h"
 #include "../entity.h"
 // #include "itemDataBase.h"
 
@@ -29,6 +30,7 @@ class NPChostile : public NPC, public Entity {
         int remaining_ticks_to_spawn;
         int ticks_to_spawn;
         int max_lifepoints;
+        LevelHostile level;
 
         // persecución a jugador
         std::string target_player;
@@ -45,7 +47,8 @@ class NPChostile : public NPC, public Entity {
 
     public:
         NPChostile(const std::string& type_id, const std::string& name,
-                   int lifepoints, int attack_dmg, int ticks_to_spawn);
+                   int lifepoints, int attack_dmg, int ticks_to_spawn,
+                   int level);
         std::string get_name() const override;
         const std::string& get_type_id() const;
         DamageOutcome receive_damage(int damage, Player& atacante, bool is_critical) override;

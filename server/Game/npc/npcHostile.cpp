@@ -8,11 +8,17 @@
 #include <vector>
 
 NPChostile::NPChostile(const std::string& type_id, const std::string& name,
-                       int lifepoints, int attack_dmg, int ticks_to_spawn)
+                       int lifepoints, int attack_dmg, int ticks_to_spawn,
+                       int level)
     : type_id(type_id),
-      lifepoints(lifepoints), max_lifepoints(lifepoints), attack_dmg(attack_dmg),
+      // Vida y daño base escalados por el nivel: un NPC de mayor nivel es más
+      // potente que otro. LevelHostile centraliza la fórmula (nivel * base).
+      lifepoints(LevelHostile(level).calculateLife(lifepoints)),
+      attack_dmg(LevelHostile(level).calculateDamage(attack_dmg)),
       state(State::ALIVE), coord_x(0), coord_y(0),
       remaining_ticks_to_spawn(0), ticks_to_spawn(ticks_to_spawn),
+      max_lifepoints(this->lifepoints),
+      level(level),
       attack_speed_ticks(20),
       current_attack_cooldown(0) {
     this->name = name;
@@ -96,9 +102,8 @@ DamageOutcome NPChostile::receive_damage(int dmg, Player& atacante, bool is_crit
         death();
         murio = true;
     }
-    const int nivel_npc = 1;
     // La XP se otorga SIEMPRE, haya muerto o no, antes de retornar el oro.
-    bool level_up = atacante.ganar_xp(dmg, nivel_npc, murio, max_lifepoints);
+    bool level_up = atacante.ganar_xp(dmg, level.get_level(), murio, max_lifepoints);
     return {dmg, gold_drop, false, level_up, std::move(dropped_item)};
 }
 
