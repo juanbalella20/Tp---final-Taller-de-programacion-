@@ -719,16 +719,16 @@ void ClientGUI::drawEnemies() {
         SDL_FRect pov;
         switch (p.direction) {
             case DIR_NORTH: 
-                pov = ns.back_pov();
+                pov = ns.back_pov(npc.name);
                 break;
             case DIR_SOUTH:
-                pov = ns.front_pov();
+                pov = ns.front_pov(npc.name);
                 break;
             case DIR_EAST:
-                pov = ns.right_pov();
+                pov = ns.right_pov(npc.name);
                 break;
             case DIR_WEST:
-                pov = ns.left_pov();
+                pov = ns.left_pov(npc.name);
                 break;
             default: break;
         }
