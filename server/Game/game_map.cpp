@@ -121,28 +121,8 @@ void GameMap::spawn_player(const std::string& name, const std::string& race, con
     int start_x = spawn_pos.first;
     int start_y = spawn_pos.second;
 
-    PlayerRace player_race;
-    PlayerClass player_class;
-
-    if (race == "human") {
-        player_race.set_human();
-    } else if (race == "elf") {
-        player_race.set_elf();
-    } else if (race == "dwarf") {
-        player_race.set_dwarf();
-    } else if (race == "gnome") {
-        player_race.set_gnome();
-    }
-
-    if (pclass == "wizard") {
-        player_class.set_wizard();
-    } else if (pclass == "cleric") {
-        player_class.set_cleric();
-    } else if (pclass == "paladin") {
-        player_class.set_paladin();
-    } else if (pclass == "warrior") {
-        player_class.set_warrior();
-    }
+    PlayerRace player_race = PlayerRace::from_name(race);
+    PlayerClass player_class = PlayerClass::from_name(pclass);
 
     Player player(name, player_race, player_class);
     player.update_position(start_x, start_y);

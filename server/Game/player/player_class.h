@@ -1,6 +1,8 @@
 #ifndef PLAYER_CLASS_H_
 #define PLAYER_CLASS_H_
 
+#include <string>
+
 #include "../../../common/constants/game_constants.h"
 
 class PlayerClass {
@@ -17,6 +19,11 @@ private:
 
 public:
     PlayerClass() {}
+
+    // Construye una clase ya configurada a partir de su nombre ("wizard",
+    // "cleric", "paladin", "warrior"). Nombre desconocido => warrior (fallback
+    // seguro). Unico lugar que mapea string de clase -> set_xxx().
+    static PlayerClass from_name(const std::string& name);
 
     // Identidad de la clase como enum del dominio (para persistir).
     ClassType get_class_id() const;

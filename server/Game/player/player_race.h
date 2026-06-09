@@ -20,6 +20,11 @@ private:
 public:
     PlayerRace() {}
 
+    // Construye una raza ya configurada a partir de su nombre ("human", "elf",
+    // "dwarf", "gnome"). Nombre desconocido => human (fallback seguro). Unico
+    // lugar que mapea string de raza -> set_xxx().
+    static PlayerRace from_name(const std::string& name);
+
     // Identidad de la raza como enum del dominio (para persistir).
     RaceType get_race_id() const;
 

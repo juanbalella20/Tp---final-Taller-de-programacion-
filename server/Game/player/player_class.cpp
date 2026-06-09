@@ -30,6 +30,20 @@ bool PlayerClass::class_can_meditate() const {
     return meditation_factor > 0.0f;
 }
 
+PlayerClass PlayerClass::from_name(const std::string& name) {
+    PlayerClass klass;
+    if (name == "wizard") {
+        klass.set_wizard();
+    } else if (name == "cleric") {
+        klass.set_cleric();
+    } else if (name == "paladin") {
+        klass.set_paladin();
+    } else {
+        klass.set_warrior();  // fallback: warrior
+    }
+    return klass;
+}
+
 ClassType PlayerClass::get_class_id() const {
     return class_id;
 }

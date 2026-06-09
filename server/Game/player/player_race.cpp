@@ -76,6 +76,20 @@ void PlayerRace::set_gnome() {
     race_id = RaceType::GNOME;
 }
 
+PlayerRace PlayerRace::from_name(const std::string& name) {
+    PlayerRace race;
+    if (name == "elf") {
+        race.set_elf();
+    } else if (name == "dwarf") {
+        race.set_dwarf();
+    } else if (name == "gnome") {
+        race.set_gnome();
+    } else {
+        race.set_human();  // fallback: human
+    }
+    return race;
+}
+
 const std::string& PlayerRace::get_name() const {
     return name;
 }
