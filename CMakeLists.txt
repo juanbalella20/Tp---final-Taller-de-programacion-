@@ -202,6 +202,7 @@ add_executable(server
     server/persistence/auth_service.cpp
     server/Game/npc/npc.cpp
     server/Game/npc/npcHostile.cpp
+    server/Game/npc/levelHostile.cpp
     server/Game/npc/npcBanker.cpp
     server/Game/npc/npcPriest.cpp
     server/Game/npc/npcSeller.cpp
