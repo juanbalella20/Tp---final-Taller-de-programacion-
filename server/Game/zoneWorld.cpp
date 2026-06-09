@@ -7,12 +7,79 @@
 
 #include "../../common/mapLoader.h"
 #include "item/item.h"
+#include "item/item_catalog.h"
 #include "player/player.h"
+#include "game_config.h"
 
 // Devuelve true si 'path' termina en 'suffix'.
 static bool ends_with(const std::string& path, const std::string& suffix) {
     if (suffix.size() > path.size()) return false;
     return std::equal(suffix.rbegin(), suffix.rend(), path.rbegin());
+}
+
+NPChostile make_npc_from_spawn(const NpcSpawn& spawn) {
+    // Catalogo de tipos de NPC hostiles. Mas adelante esto puede vivir
+    // en un archivo de configuracion o base de datos.
+    const auto& cfg = GameConfig::instance();
+    if (spawn.type == "goblin") {
+        NPChostile npc("goblin", cfg.goblin.name, cfg.goblin.lifepoints, cfg.goblin.attack_dmg, cfg.goblin.ticks_to_spawn, cfg.goblin.level);
+        npc.set_position(spawn.x, spawn.y);
+        return npc;
+    }
+    if (spawn.type == "spider") {
+        NPChostile npc("spider", cfg.spider.name, cfg.spider.lifepoints, cfg.spider.attack_dmg, cfg.spider.ticks_to_spawn, cfg.spider.level);
+        npc.set_position(spawn.x, spawn.y);
+        return npc;
+    }
+    // Fallback para tipos desconocidos.
+    NPChostile npc(spawn.type, spawn.type, 10, 1, 50, 1);
+    npc.set_position(spawn.x, spawn.y);
+    return npc;
+}
+
+void ZoneWorld::init(const ZoneSpawnConfig& cfg) {
+    load_terrain(cfg.terrain_path);
+    spawn(cfg);
+}
+
+NPChostile ZoneWorld::rand_hostile(const std::vector<std::string>& npc_types) {
+    if (npc_types.empty()) {
+        // Zona sin NPCs permitidos: NPC en {-1,-1}, spawn_npc lo descarta.
+        return make_npc_from_spawn({"", -1, -1});
+    }
+    const std::string& type = npc_types[rand() % npc_types.size()];
+    // En el spawn inicial no hay players en la zona todavía.
+    auto [x, y] = find_random_empty_cell({});
+    return make_npc_from_spawn({type, x, y});
+}
+
+void ZoneWorld::spawn(const ZoneSpawnConfig& cfg) {
+    // Orden: NPCs hostiles -> items -> NPCs amigos (preserva el comportamiento
+    // previo donde los items no pisaban celdas ya ocupadas por NPCs).
+    for (int i = 0; i < cfg.num_npc; ++i) {
+        spawn_npc(rand_hostile(cfg.npc_types));
+    }
+    ItemCatalog catalog;
+    for (int i = 0; i < cfg.num_items; ++i) {
+        auto [x, y] = find_random_empty_cell({});
+        if (x == -1 || y == -1) break;
+        spawn_item(x, y, catalog.make_random_item());
+    }
+    for (int i = 0; i < cfg.num_priests; ++i) {
+        auto [x, y] = find_random_empty_cell({});
+        if (x == -1) break;
+        spawn_priest(x, y);
+    }
+    for (int i = 0; i < cfg.num_sellers; ++i) {
+        auto [x, y] = find_random_empty_cell({});
+        if (x == -1) break;
+        spawn_seller(x, y);
+    }
+    for (int i = 0; i < cfg.num_bankers; ++i) {
+        auto [x, y] = find_random_empty_cell({});
+        if (x == -1) break;
+        spawn_banker(x, y);
+    }
 }
 
 void ZoneWorld::load_terrain(const std::string& map_path) {

@@ -62,33 +62,6 @@ void GameLoop::load_world() {
 
 }
 
-InitialState GameLoop::load_initial_state_hardcoded(Zone zone) {
-    InitialState is{0, 0};
-
-    switch (zone)
-    {
-    case ZONE_CITY:
-        is.num_items = 5;
-        is.num_npc = 0;
-        break;
-    case ZONE_DESERT:
-        is.num_items = 6;
-        is.num_npc = 7;
-        break;
-    case ZONE_DUNGEON: 
-        is.num_npc = 12;
-        is.num_items = 8;
-        break;
-    default:
-        break;
-    }
-
-    // Los NPCs se spawnean random via rand_npc segun num_npc y los tipos
-    // permitidos por zona (ZONE_NPC_TYPES en game_map.cpp).
-
-    return is;
-}
-
 void GameLoop::broadcast_npcs_snapshot() {
     // Cada cliente ve los NPCs de SU zona
     for (const auto& [client_id, name] : client_registry_monitor.get_active_clients()) {
@@ -124,30 +97,24 @@ void GameLoop::send_items_snapshot_to(uint32_t client_id) {
 }
 
 void GameLoop::load_maps() {
-    // TODO:
-    // funcion para persistencia
-    // InitialState load_initial_state_from_file(path,zone);
-
-    // harcoded:
-    InitialState state_desert = load_initial_state_hardcoded(ZONE_DESERT);
-    InitialState state_city = load_initial_state_hardcoded(ZONE_CITY);
-    InitialState state_dungeon = load_initial_state_hardcoded(ZONE_DUNGEON);
-    // Rutas a los .bin desde config.toml (zones.<nombre>.map). El cliente lee la
-    // misma fuente, asi servidor y cliente nunca cargan mapas distintos.
+    // Cada zona se inicializa con su receta de poblado, leida ENTERA de
+    // config.toml ([zones.<nombre>]): path del .bin, tipos de NPC permitidos,
+    // cantidades y NPCs amigos. El cliente lee la misma fuente, asi servidor y
+    // cliente nunca cargan mapas distintos.
     const auto& cfg = GameConfig::instance();
-    std::map<Zone, std::string> zone_paths = {
-        {ZONE_DESERT,  cfg.zone_map_path(ZONE_DESERT)},
-        {ZONE_CITY,    cfg.zone_map_path(ZONE_CITY)},
-        {ZONE_FOREST,  cfg.zone_map_path(ZONE_FOREST)},
-        {ZONE_DUNGEON, cfg.zone_map_path(ZONE_DUNGEON)},
-    };
-    std::map<Zone, InitialState> initial_states = {
-        {ZONE_DESERT, state_desert},
-        {ZONE_CITY,   state_city},
-        {ZONE_FOREST, state_city},
-        {ZONE_DUNGEON, state_dungeon},
-    };
-    game_map.init_world(zone_paths, initial_states);
+    std::map<Zone, ZoneSpawnConfig> zone_configs;
+    for (const auto& [zone, path] : cfg.zone_map_paths) {
+        ZoneSpawnConfig zc;
+        zc.terrain_path   = path;
+        zc.npc_types      = cfg.zone_allowed_npcs.at(zone);
+        zc.num_npc        = cfg.zone_num_npc.at(zone);
+        zc.num_items      = cfg.zone_num_items.at(zone);
+        zc.num_priests    = cfg.zone_num_priests.at(zone);
+        zc.num_sellers    = cfg.zone_num_sellers.at(zone);
+        zc.num_bankers    = cfg.zone_num_bankers.at(zone);
+        zone_configs.emplace(zone, std::move(zc));
+    }
+    game_map.init_world(zone_configs);
 }
 
 

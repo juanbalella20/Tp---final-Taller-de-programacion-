@@ -21,23 +21,6 @@
 #include <utility>
 #include "playerinfo.h"
 
-struct NpcSpawn {
-    std::string type;
-    int x;
-    int y;
-};
-
-struct ItemSpawn {
-    std::string type;
-    int x;
-    int y;
-};
-
-struct InitialState {
-    int num_npc;
-    int num_items;
-};
-
 struct TeleportResult {
         bool on_tile;
         Zone dest_zone;
@@ -47,9 +30,6 @@ struct TeleportResult {
         // Solo es válida si on_tile == true.
         Zone src_zone = ZONE_DEFAULT;
 };
-
-// Factory: construye un NPChostile a partir de un NpcSpawn
-NPChostile make_npc_from_spawn(const NpcSpawn& spawn);
 
 
 class GameMap {
@@ -71,15 +51,6 @@ private:
     // Celda donde aparece un player que llega a la zona dst: adyacente al
     // teleport de esa zona si tiene, o una celda libre random. {-1,-1} si nada.
     std::pair<int, int> find_arrival_cell(ZoneWorld& dst, Zone dest_zone);
-
-    // Recibe una Zona y su mundo, elige un tipo de NPC permitido en esa zona y
-    // genera un NPChostile random ubicado en una celda libre. Si la zona no
-    // tiene tipos permitidos, devuelve un NPC en {-1,-1} (no se spawnea).
-    NPChostile rand_npc(Zone zone, ZoneWorld& world);
-
-    // Construye un item concreto elegido al azar. Se devuelve por unique_ptr
-    // porque Item es una interfaz abstracta.
-    std::unique_ptr<Item> rand_item();
 
     static int dir_to_dy(Direction dir);
     static int dir_to_dx(Direction dir);
@@ -214,12 +185,11 @@ public:
     // restaurando vida/maná al máximo.
     void revive_player(const std::string& player_name);
     /*
-     * Carga TODAS las zonas al iniciar el server. Por cada (zone_id, path):
-     * crea la ZoneWorld, carga su terreno y spawnea sus actores segun el
-     * InitialState correspondiente.
+     * Carga TODAS las zonas al iniciar el server. Por cada (zone_id, cfg):
+     * crea la ZoneWorld y le pide que se cargue y se pueble a sí misma segun
+     * su ZoneSpawnConfig (terreno + NPCs + items).
      */
-    void init_world(const std::map<Zone, std::string>& zone_paths,
-                    const std::map<Zone, InitialState>& initial_states);
+    void init_world(const std::map<Zone, ZoneSpawnConfig>& zone_configs);
 
     bool pick_up_gold(const std::string& player_name);
 

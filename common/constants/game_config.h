@@ -141,8 +141,18 @@ public:
     std::vector<std::string> forest_npcs;
     std::vector<std::string> dungeon_npcs;
 
-    // Ruta al .bin de cada zona (zones.<nombre>.map en config.toml).
+    // --- Receta de poblado por zona (bloque [zones.<nombre>] de config.toml) ---
+    // Ruta al .bin de cada zona (zones.<nombre>.map).
     std::map<Zone, std::string> zone_map_paths;
+    // Tipos de NPC hostil permitidos por zona (zones.<nombre>.allowed_npcs).
+    std::map<Zone, std::vector<std::string>> zone_allowed_npcs;
+    // Cantidades de spawn inicial.
+    std::map<Zone, int> zone_num_npc;
+    std::map<Zone, int> zone_num_items;
+    // Cantidad de NPCs amigos adicionales en celdas random.
+    std::map<Zone, int> zone_num_priests;
+    std::map<Zone, int> zone_num_sellers;
+    std::map<Zone, int> zone_num_bankers;
 
     // Clan
     int clan_min_level_to_found;

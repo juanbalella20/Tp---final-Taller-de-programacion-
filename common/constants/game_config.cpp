@@ -235,34 +235,40 @@ void GameConfig::load(const std::string& toml_path) {
     golem.ticks_to_spawn = root.at_path("npcs.golem.ticks_to_spawn").value_or(200);
     golem.level = root.at_path("npcs.golem.level").value_or(5);
 
-    if (auto arr = root.at_path("zones.desert.allowed_npcs").as_array()) {
-        for (auto& elem : *arr) {
-            if (auto s = elem.value<std::string>()) {
-                desert_npcs.push_back(*s);
-            }
-        }
-    }
-    if (auto arr = root.at_path("zones.forest.allowed_npcs").as_array()) {
-        for (auto& elem : *arr) {
-            if (auto s = elem.value<std::string>()) {
-                forest_npcs.push_back(*s);
-            }
-        }
-    }
-    if (auto arr = root.at_path("zones.dungeon.allowed_npcs").as_array()) {
-        for (auto& elem : *arr) {
-            if (auto s = elem.value<std::string>()) {
-                dungeon_npcs.push_back(*s);
-            }
-        }
-    }
-
+    // Receta de poblado por zona: recorremos cada [zones.<nombre>] y volcamos
+    // map / allowed_npcs / num_npc / num_items / spawn_* a los mapas por Zone.
+    // El config.toml es la unica fuente de estos datos.
     zone_map_paths.clear();
+    zone_allowed_npcs.clear();
+    zone_num_npc.clear();
+    zone_num_items.clear();
+    zone_num_priests.clear();
+    zone_num_sellers.clear();
+    zone_num_bankers.clear();
     for (const auto& [zone_id, zone_name] : ZONE_NAME_MAP_INV) {
-        if (auto path = root.at_path("zones." + zone_name + ".map").value<std::string>()) {
-            zone_map_paths[static_cast<Zone>(zone_id)] = *path;
+        const Zone zone = static_cast<Zone>(zone_id);
+        const std::string base = "zones." + zone_name + ".";
+
+        if (auto path = root.at_path(base + "map").value<std::string>()) {
+            zone_map_paths[zone] = *path;
         }
+        std::vector<std::string> allowed;
+        if (auto arr = root.at_path(base + "allowed_npcs").as_array()) {
+            for (auto& elem : *arr) {
+                if (auto s = elem.value<std::string>()) allowed.push_back(*s);
+            }
+        }
+        zone_allowed_npcs[zone] = allowed;
+        zone_num_npc[zone] = root.at_path(base + "num_npc").value_or(0);
+        zone_num_items[zone] = root.at_path(base + "num_items").value_or(0);
+        zone_num_priests[zone] = root.at_path(base + "num_priests").value_or(0);
+        zone_num_sellers[zone] = root.at_path(base + "num_sellers").value_or(0);
+        zone_num_bankers[zone] = root.at_path(base + "num_bankers").value_or(0);
     }
+    // Aliases legacy (algunos consumidores los usan por nombre de zona).
+    desert_npcs = zone_allowed_npcs[ZONE_DESERT];
+    forest_npcs = zone_allowed_npcs[ZONE_FOREST];
+    dungeon_npcs = zone_allowed_npcs[ZONE_DUNGEON];
 
     clan_min_level_to_found = root.at_path("clans.min_level_to_found").value_or(6);
     clan_max_members = root.at_path("clans.max_members").value_or(16);

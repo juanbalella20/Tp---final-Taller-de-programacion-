@@ -55,11 +55,6 @@ class GameLoop : public Thread {
     // Regeneracion pasiva de maná: cura un porcentaje del maná máximo a TODOS
     // los players vivos (mediten o no) y notifica MSG_MANA a los que cambiaron.
     void regen_players_mana_passive(double percent);
-    // Busca en la matriz de IntitialState (previamente parseada desde config.TOML)
-    // y devulve el estado inicial por zona: cantidad de npcs, cantidad de items que genera esa zona
-    InitialState load_initial_state_from_file(Zone zone);
-    // Version hardcodeada. TODO: eliminar cuando este implementada la persistencia
-    InitialState load_initial_state_hardcoded(Zone zone);
     void broadcast_npcs_snapshot();
     void send_npcs_snapshot_to(uint32_t client_id);
     void broadcast_items_snapshot();

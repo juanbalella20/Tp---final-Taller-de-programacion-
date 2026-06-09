@@ -13,64 +13,6 @@
 #include <vector>
 #include <cstdlib>
 
-namespace {
-// Que tipos de NPC hostil pueden generarse en cada zona. Los strings deben
-// coincidir con los que reconoce make_npc_from_spawn.
-//
-// Se construye en cada llamada (no como objeto estatico) para leer la config
-// DESPUES de GameConfig::load().
-// ZONE_CITY: sin NPCs hostiles.
-std::map<Zone, std::vector<std::string>> zone_npc_types() {
-    return {
-        {ZONE_DESERT, GameConfig::instance().desert_npcs},
-        {ZONE_FOREST, GameConfig::instance().forest_npcs},
-        {ZONE_DUNGEON, GameConfig::instance().dungeon_npcs}
-    };
-}
-}  // namespace
-
-// Esto tienen que ser posiciones aleatorias
-NPChostile make_npc_from_spawn(const NpcSpawn& spawn) {
-    // Catalogo de tipos de NPC hostiles. Mas adelante esto puede vivir
-    // en un archivo de configuracion o base de datos.
-    const auto& cfg = GameConfig::instance();
-    if (spawn.type == "goblin") {
-    NPChostile npc("goblin", cfg.goblin.name, cfg.goblin.lifepoints, cfg.goblin.attack_dmg, cfg.goblin.ticks_to_spawn, cfg.goblin.level);
-    npc.set_position(spawn.x, spawn.y);
-        return npc;
-    }
-    if (spawn.type == "spider") {
-        NPChostile npc("spider", cfg.spider.name, cfg.spider.lifepoints, cfg.spider.attack_dmg, cfg.spider.ticks_to_spawn, cfg.spider.level);
-        npc.set_position(spawn.x, spawn.y);
-        return npc;
-    }
-    // Fallback para tipos desconocidos.
-    NPChostile npc(spawn.type, spawn.type, 10, 1, 50, 1);
-    npc.set_position(spawn.x, spawn.y);
-    return npc;
-}
-
-NPChostile GameMap::rand_npc(Zone zone, ZoneWorld& world) {
-    const auto types = zone_npc_types();
-    auto it = types.find(zone);
-    if (it == types.end() || it->second.empty()) {
-        // Zona sin NPCs permitidos: NPC en {-1,-1}, spawn_npc lo descarta.
-        return make_npc_from_spawn({"", -1, -1});
-    }
-    const std::vector<std::string>& allowed = it->second;
-    const std::string& type = allowed[rand() % allowed.size()];
-
-    // Celda libre random en el mundo de esta zona.
-    auto [x, y] = world.find_random_empty_cell(players_in(zone));
-
-    return make_npc_from_spawn({type, x, y});
-}
-
-std::unique_ptr<Item> GameMap::rand_item() {
-    ItemCatalog catalog;
-    return catalog.make_random_item();
-}
-
 GameMap::GameMap() = default;
 Zone GameMap::zone_id_of(const std::string& player_name) const {
     auto it = player_zone.find(player_name);
@@ -129,33 +71,10 @@ TeleportResult GameMap::force_zone_change(const std::string& player_name,
     player->update_position(nx, ny);
     return {true, dest_zone, nx, ny, src_zone};
 }
-void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
-                         const std::map<Zone, InitialState>& initial_states) {
-    for (const auto& [zone_id, path] : zone_paths) {
+void GameMap::init_world(const std::map<Zone, ZoneSpawnConfig>& zone_configs) {
+    for (const auto& [zone_id, cfg] : zone_configs) {
         ZoneWorld world;
-        world.load_terrain(path);
-        const auto& cfg = GameConfig::instance();
-        auto state_it = initial_states.find(zone_id);
-        if (state_it != initial_states.end()) {
-            // spawn de npcs random segun los tipos permitidos en la zona
-            for (int i = 0; i < state_it->second.num_npc; i++) {
-                world.spawn_npc(rand_npc(zone_id, world));
-            }
-            // spawn de items
-            for (int i = 0; i < state_it->second.num_items; i++) {
-                auto [x, y] = world.find_random_empty_cell(players_in(zone_id));
-                if (x == -1 || y == -1) break;
-                world.spawn_item(x, y, rand_item());
-            }
-        }
-        if (zone_id == ZONE_CITY) {
-            // TODO: refactorizar ?
-            auto [x1, y1] = world.find_random_empty_cell(players_in(zone_id));
-            auto [x2, y2] = world.find_random_empty_cell(players_in(zone_id));
-            world.spawn_priest(x1,y1);
-            world.spawn_seller(x2, y2);
-        }
-        // Seller de prueba. TODO: eliminar
+        world.init(cfg);  // carga su terreno y se puebla a sí misma
         zones.emplace(zone_id, std::move(world));
     }
 }

@@ -34,6 +34,35 @@ struct NPCAttackEvent {
     bool victim_died;
 };
 
+// Punto de spawn de un NPC hostil (tipo + posicion). Lo consume el factory
+// make_npc_from_spawn.
+struct NpcSpawn {
+    std::string type;
+    int x;
+    int y;
+};
+
+// Receta de poblado de una zona: qué cargar (terreno) y con qué llenarla.
+// La arma quien conoce GameConfig (GameLoop), de modo que ZoneWorld no depende
+// del singleton: recibe los datos ya resueltos.
+struct ZoneSpawnConfig {
+    std::string terrain_path;
+    int num_npc = 0;
+    int num_items = 0;
+    // Tipos de NPC hostil permitidos en la zona (strings que reconoce
+    // make_npc_from_spawn). Vacío => no se spawnean hostiles.
+    std::vector<std::string> npc_types;
+    // Cantidad de NPCs amigos a spawnear en celdas random (además de los que
+    // vengan como [[spawn]] nombrados en el .bin). 0 = ninguno.
+    int num_priests = 0;
+    int num_sellers = 0;
+    int num_bankers = 0;
+};
+
+// Factory: construye un NPChostile a partir de un NpcSpawn, resolviendo sus
+// stats desde GameConfig segun el tipo.
+NPChostile make_npc_from_spawn(const NpcSpawn& spawn);
+
 
 class ZoneWorld {
 private:
@@ -53,6 +82,16 @@ private:
     static constexpr int AGGRO_RANGE = 8;
     static constexpr int ABANDON_RANGE = 15;
 
+    // Pobla la zona segun la receta: NPCs hostiles random (de cfg.npc_types),
+    // luego items random, luego NPCs amigos. Se llama desde init() con el
+    // terreno ya cargado y sin players en la zona.
+    void spawn(const ZoneSpawnConfig& cfg);
+
+    // Elige un tipo permitido al azar y construye un NPChostile en una celda
+    // libre. Si no hay tipos permitidos, devuelve un NPC en {-1,-1} (descartado
+    // por spawn_npc).
+    NPChostile rand_hostile(const std::vector<std::string>& npc_types);
+
 public:
     ZoneWorld() = default;
 
@@ -61,6 +100,11 @@ public:
     ZoneWorld& operator=(const ZoneWorld&) = delete;
     ZoneWorld(ZoneWorld&&) = default;
     ZoneWorld& operator=(ZoneWorld&&) = default;
+
+    // Punto de entrada único de inicialización: carga el terreno desde
+    // cfg.terrain_path y puebla la zona (NPCs hostiles, items y NPCs amigos)
+    // segun cfg. Tras esta llamada la zona queda lista para usarse.
+    void init(const ZoneSpawnConfig& cfg);
 
     // Carga el terreno desde un TOML: setea width/height, arma la matriz con
     // los tiles colidables como elements::buildings y copia los spawns.

@@ -340,17 +340,28 @@ npc_gold_drop_max = 0.2
 [zones.desert]
 map = "data/maps/desert/map-2.bin"
 allowed_npcs = ["goblin", "spider"]
+num_npc = 7
+num_items = 6
 
 [zones.city]
 map = "data/maps/city/city-2.bin"
+num_items = 5
+# Cantidad de NPCs amigos en celdas random (ademas de los nombrados en el .bin).
+num_priests = 1
+num_npc = 0
+num_sellers = 1
 
 [zones.forest]
 map = "data/maps/forest/forest3.bin"
 allowed_npcs = ["spider", "skeleton"]
+num_npc = 0
+num_items = 5
 
 [zones.dungeon]
 map = "data/maps/dungeon/dungeon-v1.bin"
 allowed_npcs = ["skeleton", "zombie", "orc", "golem"]
+num_npc = 12
+num_items = 8
  
 # ------------------------------------------------------------
 # Clanes
