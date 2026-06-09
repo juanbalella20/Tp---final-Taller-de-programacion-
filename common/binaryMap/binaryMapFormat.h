@@ -58,7 +58,9 @@
  *       string file_path        (RELATIVO a la carpeta de recursos compartida;
  *                                se resuelve con paths::resolve_resource. Ej:
  *                                "data/maps/forest/5108.png". Mapas viejos pueden
- *                                tener ruta absoluta: resolve_resource la deja igual)
+ *                                tener ruta absoluta: si no existe en esta maquina,
+ *                                resolve_resource rescata la cola "data/..." y la
+ *                                resuelve contra la carpeta de recursos local)
  *       uint32 columns
  *       uint32 tile_count
  *       uint32 firstgid

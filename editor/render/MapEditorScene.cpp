@@ -13,6 +13,7 @@
 #include "../model/Map.h"
 #include "../tools/ToolType.h"
 #include "TileLibrary.h"
+#include "utility/paths.h"  // resolve_resource
 
 namespace {
 
@@ -90,8 +91,11 @@ void MapEditorScene::rebuildTileCache() {
     const Map& map = m_document->map();
     for (const Tileset& tileset : map.tilesets()) {
         TileLibrary library;
+        // file_path viene relativo a la carpeta de recursos (o absoluto en
+        // .bin viejos): se resuelve igual que en la paleta (select_tileset).
         const bool loaded = library.loadTileset(
-            QString::fromStdString(tileset.file_path), map.tile_size());
+            QString::fromStdString(paths::resolve_resource(tileset.file_path)),
+            map.tile_size());
 
         for (int localId = 0; localId < tileset.tile_count; ++localId) {
             const int gid = tileset.firstgid + localId;

@@ -39,13 +39,17 @@ std::string resources_dir();
 
 // Convierte una ruta absoluta a un PNG (la que el usuario eligio en el editor)
 // en una ruta relativa a resources_dir(), para guardar en el .bin. Si el PNG no
-// esta debajo de la carpeta de recursos, devuelve solo el nombre del archivo
-// como ultimo recurso (y el cliente lo buscara en la raiz de recursos).
+// esta debajo de la carpeta de recursos pero tiene un componente "data" (esta
+// dentro de un checkout del repo), guarda la cola "data/..." que es igual en
+// cualquier maquina. Como ultimo recurso devuelve solo el nombre del archivo
+// (y el cliente lo buscara en la raiz de recursos).
 std::string resource_relative(const std::string& absolute_png);
 
 // Resuelve una ruta de tileset guardada en el .bin (relativa a la carpeta de
-// recursos) a una ruta absoluta cargable. Si ya viniera absoluta (mapas viejos)
-// la devuelve tal cual, para no romper compatibilidad.
+// recursos) a una ruta absoluta cargable. Si viniera absoluta (mapas viejos):
+// se usa tal cual solo si existe en esta maquina; si no, se rescata la cola
+// "data/..." y se resuelve contra la carpeta de recursos local, para que un
+// .bin guardado en otra compu cargue igual desde este repo.
 std::string resolve_resource(const std::string& relative);
 
 }  // namespace paths

@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <vector>
 
 namespace {
 
@@ -32,6 +33,25 @@ std::string resolve(const fs::path& installed, const std::string& relative) {
     if (fs::exists(candidate))
         return candidate.string();
     return relative;  // fallback: layout del repo (desarrollo)
+}
+
+// Cola de `p` desde su ULTIMO componente "data", p.ej.
+// "/home/juan/repo/data/maps/city/5125.png" -> "data/maps/city/5125.png".
+// Devuelve "" si el path no tiene componente "data". Sirve para rescatar la
+// parte compartida del layout del repo de una ruta absoluta de otra maquina.
+std::string data_tail(const fs::path& p) {
+    std::vector<fs::path> parts(p.begin(), p.end());
+    int last_data = -1;
+    for (int i = 0; i < static_cast<int>(parts.size()); ++i) {
+        if (parts[i] == "data")
+            last_data = i;
+    }
+    if (last_data < 0)
+        return "";
+    fs::path tail;
+    for (int i = last_data; i < static_cast<int>(parts.size()); ++i)
+        tail /= parts[i];
+    return tail.generic_string();
 }
 
 }  // namespace
@@ -79,6 +99,14 @@ std::string resource_relative(const std::string& absolute_png) {
         return rel.generic_string();
     }
 
+    // Fuera de la carpeta de recursos pero con componente "data": guardamos la
+    // cola "data/..." (el layout del repo), que existe igual en el checkout de
+    // cualquier maquina. Cubre correr el editor desde un cwd que no es la raiz
+    // del repo eligiendo un PNG que SI esta dentro de un repo.
+    const std::string tail = data_tail(png_c);
+    if (!tail.empty())
+        return tail;
+
     // El PNG esta fuera de la carpeta de recursos: guardamos solo el nombre. El
     // cliente lo buscara en la raiz de recursos. Avisamos por stderr para que el
     // mapeador note que deberia mover/elegir el PNG desde la carpeta correcta.
@@ -87,9 +115,26 @@ std::string resource_relative(const std::string& absolute_png) {
 
 std::string resolve_resource(const std::string& relative) {
     fs::path p(relative);
-    if (p.is_absolute())
-        return relative;  // mapas viejos con ruta absoluta: sin tocar
-    return (fs::path(resources_dir()) / p).string();
+    fs::path root(resources_dir());
+    if (!p.is_absolute())
+        return (root / p).string();
+
+    // Ruta absoluta: .bin viejo guardado sin relativizar. Si existe aca (esta
+    // es la maquina que lo autoreo), se usa tal cual. Si no, se rescata la
+    // cola "data/..." y se resuelve contra la carpeta de recursos LOCAL, asi
+    // un .bin con rutas de otra compu carga igual desde este repo.
+    std::error_code ec;
+    if (fs::exists(p, ec))
+        return relative;
+    const fs::path norm = p.lexically_normal();
+    const std::string tail = data_tail(norm);
+    if (!tail.empty())
+        return (root / tail).string();
+    // Sin componente "data": ultimo intento por nombre de archivo en la raiz.
+    const fs::path by_name = root / norm.filename();
+    if (fs::exists(by_name, ec))
+        return by_name.string();
+    return relative;  // irrecuperable: se devuelve igual para un error claro
 }
 
 }  // namespace paths
