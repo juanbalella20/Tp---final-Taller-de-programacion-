@@ -440,6 +440,26 @@ std::vector<std::string> GameMap::tick(double seconds) {
     return meditating;
 }
 
+std::vector<std::string> GameMap::regen_all_players_life(double percent) {
+    std::vector<std::string> regenerated;
+    for (auto& player : players) {
+        if (player.regen_life(percent)) {
+            regenerated.push_back(player.get_name());
+        }
+    }
+    return regenerated;
+}
+
+std::vector<std::string> GameMap::regen_all_players_mana(double percent) {
+    std::vector<std::string> regenerated;
+    for (auto& player : players) {
+        if (player.regen_mana(percent)) {
+            regenerated.push_back(player.get_name());
+        }
+    }
+    return regenerated;
+}
+
 std::vector<NpcInfo> GameMap::build_npcs_snapshot(const std::string& player_name) {
     return zone_of(player_name).build_npcs_snapshot();
 }
@@ -537,6 +557,16 @@ uint32_t GameMap::player_max_xp(const std::string& name) {
 uint32_t GameMap::get_player_mana(const std::string& name) {
     Player* player = find_player_by_name(name);
     return player->get_mana();
+}
+
+uint32_t GameMap::get_player_max_hp(const std::string& name) {
+    Player* player = find_player_by_name(name);
+    return player->get_max_life();
+}
+
+uint32_t GameMap::get_player_max_mana(const std::string& name) {
+    Player* player = find_player_by_name(name);
+    return player->get_max_mana();
 }
 
 std::vector<PlayerInfo> GameMap::build_players_snapshot(const std::string& player_name) {

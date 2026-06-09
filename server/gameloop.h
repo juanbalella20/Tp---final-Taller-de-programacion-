@@ -46,8 +46,15 @@ class GameLoop : public Thread {
     void load_maps();
     void load_world();
     void update_npcs_in_map();
-    // Regenera maná de los players que meditan y les notifica MSG_MANA.
+    // Regenera maná de los players que MEDITAN y les notifica MSG_MANA (delega
+    // en game_map.tick(); el maná de meditación escala con inteligencia).
     void regen_players_mana(double seconds);
+    // Regenera un porcentaje de vida a todos los players vivos (cada segundo
+    // real) y notifica MSG_HP a los que cambiaron.
+    void regen_players_life(double percent);
+    // Regeneracion pasiva de maná: cura un porcentaje del maná máximo a TODOS
+    // los players vivos (mediten o no) y notifica MSG_MANA a los que cambiaron.
+    void regen_players_mana_passive(double percent);
     // Busca en la matriz de IntitialState (previamente parseada desde config.TOML)
     // y devulve el estado inicial por zona: cantidad de npcs, cantidad de items que genera esa zona
     InitialState load_initial_state_from_file(Zone zone);

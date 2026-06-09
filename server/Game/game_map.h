@@ -145,6 +145,13 @@ public:
     // de los que están meditando (su maná cambió: hay que notificarles MSG_MANA).
     std::vector<std::string> tick(double seconds);
 
+    // Regeneracion automatica de vida: cura un 'percent' (0..1) de la vida
+    // maxima a todos los players vivos. Devuelve los nombres de los que
+    // cambiaron de vida (hay que notificarles MSG_HP).
+    std::vector<std::string> regen_all_players_life(double percent);
+
+    std::vector<std::string> regen_all_players_mana(double percent);
+
     // Snapshots de la zona del player indicado
     std::vector<NpcInfo> build_npcs_snapshot(const std::string& player_name);
     std::vector<ItemFloorInfo> build_items_snapshot(const std::string& player_name);
@@ -182,6 +189,8 @@ public:
     uint32_t get_player_xp(const std::string& name);
     uint32_t player_max_xp(const std::string& name);
     uint32_t get_player_mana(const std::string& name);
+    uint32_t get_player_max_hp(const std::string& name);
+    uint32_t get_player_max_mana(const std::string& name);
 
     // Cheat /mana: resta `amount` de maná al player (para testear /meditar).
     void cheat_lose_mana(const std::string& name, uint32_t amount);

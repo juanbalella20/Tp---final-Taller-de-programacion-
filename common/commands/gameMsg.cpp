@@ -29,6 +29,9 @@ const std::vector<ItemFloorInfo>& GameMsg::get_items_on_floor() const { return i
 void GameMsg::set_hp(uint32_t hp) { this->hp = hp; }
 uint32_t GameMsg::get_hp() const { return this->hp; }
 
+void GameMsg::set_max_hp(uint32_t max_hp) { this->max_hp = max_hp; }
+uint32_t GameMsg::get_max_hp() const { return this->max_hp; }
+
 void GameMsg::set_xp(uint32_t xp) { this->xp = xp; }
 uint32_t GameMsg::get_xp() const { return this->xp; }
 
@@ -37,6 +40,9 @@ uint32_t GameMsg::get_max_xp() const { return this->max_xp; }
 
 void GameMsg::set_mana(uint32_t mana) { this->mana = mana; }
 uint32_t GameMsg::get_mana() const { return this->mana; }
+
+void GameMsg::set_max_mana(uint32_t max_mana) { this->max_mana = max_mana; }
+uint32_t GameMsg::get_max_mana() const { return this->max_mana; }
 
 void GameMsg::set_players(const std::vector<PlayerInfo>& new_players) { this->players = new_players; }
 const std::vector<PlayerInfo>& GameMsg::get_players() const { return players; }

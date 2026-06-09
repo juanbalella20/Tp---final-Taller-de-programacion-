@@ -25,9 +25,11 @@ class GameMsg {
     std::vector<NpcInfo> npcs;
     std::vector<ItemFloorInfo> items_on_floor;
     uint32_t hp;
+    uint32_t max_hp;
     uint32_t xp;
     uint32_t max_xp;
     uint32_t mana;
+    uint32_t max_mana;
     int level;
     std::vector<PlayerInfo> players;
     Zone zone;
@@ -73,6 +75,9 @@ class GameMsg {
     void set_hp(uint32_t hp);
     uint32_t get_hp() const;
 
+    void set_max_hp(uint32_t max_hp);
+    uint32_t get_max_hp() const;
+
     void set_xp(uint32_t xp);
     uint32_t get_xp() const;
 
@@ -81,6 +86,9 @@ class GameMsg {
 
     void set_mana(uint32_t mana);
     uint32_t get_mana() const;
+
+    void set_max_mana(uint32_t max_mana);
+    uint32_t get_max_mana() const;
 
     void set_race(const std::string& race);
     const std::string& get_race() const;

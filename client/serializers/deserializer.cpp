@@ -301,21 +301,29 @@ void ClientDeserializer::deserialize_mana(const std::vector<uint8_t>& payload, G
 }
 
 void ClientDeserializer::deserialize_level(const std::vector<uint8_t>& payload, GameMsg& msg) {
-    if (payload.size() != 2 * sizeof(uint32_t)) {
+    if (payload.size() != 4 * sizeof(uint32_t)) {
         throw std::invalid_argument("Payload inválido para MSG_UPDATE_LEVEL");
     }
-    
+
     size_t offset = 0;
-    uint32_t level_be, max_xp_be;
-    
+    uint32_t level_be, max_xp_be, max_hp_be, max_mana_be;
+
     std::memcpy(&level_be, payload.data() + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
-    
+
     std::memcpy(&max_xp_be, payload.data() + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
-    
+
+    std::memcpy(&max_hp_be, payload.data() + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+
+    std::memcpy(&max_mana_be, payload.data() + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+
     msg.set_level(static_cast<int>(ntohl(level_be)));
     msg.set_max_xp(ntohl(max_xp_be));
+    msg.set_max_hp(ntohl(max_hp_be));
+    msg.set_max_mana(ntohl(max_mana_be));
 }
 
 void ClientDeserializer::deserialize_item(const std::vector<uint8_t>& payload, GameMsg& msg) {
@@ -438,21 +446,25 @@ void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
     }
     msg.set_items(items);
 
-    uint32_t gold_be, hp_be, xp_be, mana_be, max_xp_be, level_be;
-    if (offset + 6 * sizeof(uint32_t) > payload.size()) {
+    uint32_t gold_be, hp_be, max_hp_be, xp_be, mana_be, max_mana_be, max_xp_be, level_be;
+    if (offset + 8 * sizeof(uint32_t) > payload.size()) {
         throw std::invalid_argument("Payload demasiado corto leyendo stats en MSG_REGISTER");
     }
     std::memcpy(&gold_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
     std::memcpy(&hp_be,   payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
+    std::memcpy(&max_hp_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
     std::memcpy(&xp_be,   payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
     std::memcpy(&mana_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
+    std::memcpy(&max_mana_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
     std::memcpy(&max_xp_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
     std::memcpy(&level_be, payload.data() + offset, sizeof(uint32_t)); offset += sizeof(uint32_t);
 
     msg.set_gold(ntohl(gold_be));
     msg.set_hp(ntohl(hp_be));
+    msg.set_max_hp(ntohl(max_hp_be));
     msg.set_xp(ntohl(xp_be));
     msg.set_mana(ntohl(mana_be));
+    msg.set_max_mana(ntohl(max_mana_be));
     msg.set_max_xp(ntohl(max_xp_be));
     msg.set_level(static_cast<int>(ntohl(level_be)));
 
