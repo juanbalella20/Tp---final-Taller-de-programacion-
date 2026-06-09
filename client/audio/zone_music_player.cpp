@@ -133,6 +133,12 @@ const char* ZoneMusicPlayer::music_path(Zone zone) {
     switch (zone) {
         case ZONE_CITY:
             return "client/audio/music/city.ogg";
+        case ZONE_DESERT:
+            return "client/audio/music/desert.ogg";
+        case ZONE_FOREST:
+            return "client/audio/music/nature_music.ogg";
+        case ZONE_DUNGEON:
+            return "client/audio/music/dungeon.ogg";
         default:
             return nullptr;
     }

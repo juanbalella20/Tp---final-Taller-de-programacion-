@@ -17,7 +17,7 @@ private:
     std::unordered_map<std::string, MIX_Audio*> audio_cache;
     std::optional<Zone> current_zone;
     std::size_t active_track = 0;
-    float volume = 0.5f;
+    float volume = 0.05f;
     bool sdl_audio_initialized = false;
     bool mixer_initialized = false;
 

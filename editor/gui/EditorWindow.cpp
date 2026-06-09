@@ -343,9 +343,21 @@ void EditorWindow::on_save_as() {
 
 bool EditorWindow::save_to(const QString& path) {
     const Map& map = doc_.map();
+
+    // El .bin DEBE guardar el file_path del tileset RELATIVO a la carpeta de
+    // recursos: si guardamos la ruta absoluta de esta maquina, el cliente la
+    // resuelve como (base_dir / absoluta) y std::filesystem descarta base_dir,
+    // dejando una ruta que solo existe aca. Esto pasa sobre todo al re-guardar
+    // un .bin abierto: el loader ya entrego file_path como absoluto.
+    // resource_relative normaliza a relativo (y deja igual lo que ya lo este).
+    std::vector<Tileset> tilesets = map.tilesets();
+    for (Tileset& ts : tilesets) {
+        ts.file_path = paths::resource_relative(ts.file_path);
+    }
+
     try {
         BinaryMapSaver::save(path.toStdString(), map.tile_size(), map.width(),
-                             map.height(), map.tilesets(), map.layers(),
+                             map.height(), tilesets, map.layers(),
                              map.teleports(), map.collision());
     } catch (const std::exception& e) {
         QMessageBox::warning(this, "Error al guardar",
