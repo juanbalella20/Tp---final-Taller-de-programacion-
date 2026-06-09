@@ -1,5 +1,9 @@
 #include "npcSprite.h"
 
+#include <SDL3/SDL.h>
+#include <vector>
+#include <map>
+#include <string>
 
 NpcSprite::NpcSprite(SDL_Renderer* renderer, SDL_Texture* texture,
               int tile_x, int tile_y, int tile_size)
@@ -44,7 +48,7 @@ SDL_FRect NpcSprite::left_pov(const std::string& npc_name) {
     return npc_left_pov(npc_name);
 }
 
-SDL_FRect NpcSprite::current_frame(std::vector<SDL_FRect>& frames) {
+SDL_FRect NpcSprite::current_frame(const std::vector<SDL_FRect>& frames) {
     int current_frame = walk_frame % 4;
 
     SDL_FRect frame = frames[current_frame];
@@ -169,6 +173,101 @@ void NpcSprite::back_pov_golems() {
     back_povs["Golem1"] = frames1;
     back_povs["Golem2"] = frames2;
     back_povs["Golem3"] = frames3;
+}
+
+void NpcSprite::front_pov_goblin() {
+    std::vector<SDL_FRect> frames;
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    front_povs["Goblin"] = frames;
+}
+
+void NpcSprite::front_pov_zombie() {
+    std::vector<SDL_FRect> frames;
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    front_povs["Zombie"] = frames;
+}
+
+void NpcSprite::front_pov_spiders() {
+    std::vector<SDL_FRect> frames1;
+    std::vector<SDL_FRect> frames2;
+    std::vector<SDL_FRect> frames3;
+
+    frames1.push_back({0.0f, 0.0f, 64.0f, 64.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    frames2.push_back({0.0f, 14.0f, 95.0f, 65.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    frames3.push_back({20.0f, 69.0f, 84.0f, 57.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    front_povs["Spider1"] = frames1;
+    front_povs["Spider2"] = frames2;
+    front_povs["Spider3"] = frames3;
+}
+
+void NpcSprite::front_pov_skeletons() {
+    std::vector<SDL_FRect> frames1;
+    std::vector<SDL_FRect> frames2;
+    std::vector<SDL_FRect> frames3;
+    
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    front_povs["Skeleton1"] = frames1;
+    front_povs["Skeleton2"] = frames2;
+    front_povs["Skeleton3"] = frames3;
+}
+
+void NpcSprite::front_pov_golems() {
+    std::vector<SDL_FRect> frames1;
+    std::vector<SDL_FRect> frames2;
+    std::vector<SDL_FRect> frames3;
+    
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames1.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames2.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+    frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
+
+    front_povs["Golem1"] = frames1;
+    front_povs["Golem2"] = frames2;
+    front_povs["Golem3"] = frames3;
 }
 
 void NpcSprite::npcs_back_povs() {
