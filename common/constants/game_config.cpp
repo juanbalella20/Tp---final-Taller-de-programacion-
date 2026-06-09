@@ -208,6 +208,9 @@ void GameConfig::load(const std::string& toml_path) {
         }
     }
 
+    // Cantidad maxima de items del inventario de un jugador.
+    max_inventory_slots = root.at_path("player.max_inventory_slots").value_or(16);
+
     goblin.name           = root.at_path("npcs.goblin.name").value_or(std::string("Goblin"));
     goblin.lifepoints     = root.at_path("npcs.goblin.lifepoints").value_or(30);
     goblin.attack_dmg     = root.at_path("npcs.goblin.attack_dmg").value_or(5);

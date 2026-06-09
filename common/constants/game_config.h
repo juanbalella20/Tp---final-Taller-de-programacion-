@@ -133,6 +133,9 @@ public:
     // items (ItemCatalog). Viene de [player].initial_inventory en config.toml,
     // asi se cambia el equipamiento de arranque sin recompilar.
     std::vector<std::string> initial_inventory;
+    // Cantidad maxima de items que puede tener el inventario de un jugador
+    // ([player].max_inventory_slots en config.toml).
+    int max_inventory_slots;
 
     // Npc hostile
     NpcHostileConfig goblin;

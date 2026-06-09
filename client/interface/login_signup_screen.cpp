@@ -266,6 +266,7 @@ void LoginSignupScreen::submit_signup() {
 void LoginSignupScreen::update() {}
 
 void LoginSignupScreen::render() {
+    SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
     SDL_RenderClear(renderer_);
 
     // Fondo segun la vista activa (la PNG ocupa toda la pantalla logica).

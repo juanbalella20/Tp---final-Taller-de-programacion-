@@ -64,13 +64,20 @@ void NPCseller::interact(Player& player, Command cmd) {
  
         int price = store_item->getPrice();
         if (player.get_gold() < price) throw std::runtime_error("No tenes suficiente oro.");
- 
-        player.give_gold(price);
+
+        // El inventario tiene un tope (config.toml: player.max_inventory_slots).
+        // Verificamos ANTES de cobrar: si esta lleno, add_item descartaria el
+        // item en silencio y el jugador perderia el oro sin recibir nada.
+        if (player.get_inventory().is_full())
+            throw std::runtime_error("Inventario lleno.");
 
         // Reconstruye el item con su subtipo y stats reales via catalogo
         // (antes se creaba siempre como Arma con stats inventados -> bug).
         auto new_item = catalog.make_item(store_item->get_id());
-        if (new_item) player.add_item(std::move(new_item));
+        if (new_item == nullptr) return;
+
+        player.give_gold(price);
+        player.add_item(std::move(new_item));
     }
 }
 

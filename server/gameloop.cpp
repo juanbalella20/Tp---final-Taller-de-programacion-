@@ -372,8 +372,8 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
         game_map.player_buy_item(name, 0, 0, item_id);
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
-        for (Item* item : p.get_inventory().get_items()) {
-            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice());
+        for (Item* item : p.get_all_items()) {
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()), item->get_uid());
         }
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
@@ -509,8 +509,16 @@ void GameLoop::handle_select(const ClientCmd& cmd) {
 
 void GameLoop::handle_take(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-    auto item = game_map.pick_up_item(name);
     GameMsg msg(MSG_TAKE);
+    // Tope de inventario (config.toml: player.max_inventory_slots). Si ya esta
+    // lleno NO levantamos el item del piso, para no perderlo: pick_up_item lo
+    // saca del suelo y add_item lo descartaria silenciosamente.
+    if (game_map.get_player(name).get_inventory().is_full()) {
+        msg.set_chat_content("Inventario lleno.");
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+        return;
+    }
+    auto item = game_map.pick_up_item(name);
     if (item) {
         game_map.give_item_to_player(name, std::move(item));
         msg.set_chat_content("Recogiste un objeto.");

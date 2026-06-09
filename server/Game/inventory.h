@@ -17,8 +17,6 @@ private:
     std::vector<std::unique_ptr<Item>> items;
     Item* equipped_item = nullptr;
 
-    static constexpr int MAX_SLOTS = 25;  //a definir
-
 public:
     Inventory() {}
 

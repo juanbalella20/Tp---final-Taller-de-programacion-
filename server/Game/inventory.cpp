@@ -1,6 +1,7 @@
 #include "inventory.h"
 #include "../game_exceptions.h"
 #include "player/player.h"  // Player completo: upcast a Entity& en use_consumable
+#include "../../common/constants/game_config.h"  // tope de slots configurable
 
 bool Inventory::add_item(std::unique_ptr<Item> item) {
     if (is_full()) return false;
@@ -73,7 +74,7 @@ std::string Inventory::get_equipped_weapon_type_id() const {
 }
 
 bool Inventory::is_full() const {
-    return (int)items.size() >= MAX_SLOTS;
+    return (int)items.size() >= GameConfig::instance().max_inventory_slots;
 }
 
 DamageOutcome Inventory::use_equipped(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical) {

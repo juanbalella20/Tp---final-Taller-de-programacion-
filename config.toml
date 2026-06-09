@@ -274,6 +274,10 @@ heal_mana = 100
 initial_inventory = ["espada", "escudo", "vara_fresno", "baculo_nudoso",
                      "baculo_engarzado", "flauta_elfica"]
 
+# Cantidad maxima (N) de items que puede tener el inventario de cualquier
+# jugador. Al llegar al tope, add_item lo rechaza (los items quedan en el piso).
+max_inventory_slots = 16
+
 # ------------------------------------------------------------
 # NPCs hostiles
 # ------------------------------------------------------------
