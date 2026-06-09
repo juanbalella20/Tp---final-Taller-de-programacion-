@@ -35,6 +35,12 @@ public:
     // Para el drop "cualquier otro objeto al azar" de los NPCs.
     std::unique_ptr<Item> make_random_item() const;
 
+    // Construye un objeto elegido al azar de entre 'pool' (lista de ids). Los ids
+    // que no existen en el catalogo se ignoran. Si 'pool' esta vacio o no tiene
+    // ningun id valido, cae a make_random_item() (pool global). Lo usa el spawn de
+    // items por zona, cuyo pool permitido vive en config.toml.
+    std::unique_ptr<Item> make_random_item(const std::vector<std::string>& pool) const;
+
 private:
     using Factory = std::function<std::unique_ptr<Item>()>;
     std::unordered_map<std::string, Factory> catalog;

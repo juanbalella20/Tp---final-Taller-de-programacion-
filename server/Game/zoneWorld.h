@@ -52,6 +52,9 @@ struct ZoneSpawnConfig {
     // Tipos de NPC hostil permitidos en la zona (strings que reconoce
     // make_npc_from_spawn). Vacío => no se spawnean hostiles.
     std::vector<std::string> npc_types;
+    // Ids de items que pueden caer en la zona (los reconoce ItemCatalog). Los
+    // num_items se sortean de esta lista. Vacío => pool global por defecto.
+    std::vector<std::string> item_types;
     // Cantidad de NPCs amigos a spawnear en celdas random (además de los que
     // vengan como [[spawn]] nombrados en el .bin). 0 = ninguno.
     int num_priests = 0;
