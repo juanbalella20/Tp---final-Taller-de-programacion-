@@ -60,6 +60,7 @@ public:
     // Solo se consumen items no equipables (ItemType::OTHER). Devuelve true si se
     // consumió; false si el uid no existe o el item no es consumible.
     bool use_consumable(uint64_t item_uid, Player& self);
+    Item* find_by_id(const std::string& item_id) const;
 };
 
 

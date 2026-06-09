@@ -1,61 +1,79 @@
 #include "npcBanker.h"
 #include <map>
 #include <vector>
+#include <iostream>
+#include "inventory.h"
+#include "../player/player.h"
 
-NPCbanker::NPCbanker() {
-    set_npc_name("Banker");
+NPCbanker::NPCbanker(int x, int y) : pos_x(x), pos_y(y) {}
+
+int NPCbanker::get_coord_x() const { return pos_x; }
+
+int NPCbanker::get_coord_y() const { return pos_y; }
+
+void NPCbanker::deposit_item(Player& player, const std::string& item_id) {
+    std::unique_ptr<Item> item = player.take_item_from_inventory(item_id);
+    item_bank[player.get_name()].push_back(std::move(item));
 }
 
-void NPCbanker::receive_item(Player player, Item item) {
-    item_bank.insert(player.get_name(), item);
+void NPCbanker::deposit_gold(Player& player, int amount) {
+    if (player.get_gold() < (uint32_t)amount)
+        throw std::runtime_error("No tenes suficiente oro.");
+    player.give_gold(amount);
+    gold_bank[player.get_name()] += amount;
 }
 
-void NPCbanker::receive_gold(Player player, int ammount) {
-    if (!player.give_gold(ammount)) {
-        break;
-    }
-    auto it = gold_bank.find(player.get_name());
-    int actual_gold = it->first;
-    gold_bank.insert(player.get_name+ammount);
-}
-
-void NPCbanker::transfer_item(Player player, Item item) {
-    auto it = item_bank.find(player.get_name());
-    std::vector<Item> pl_items =  it->first;
-    for (auto it = pl_items.begin(); it != pl_items.end(); ++it) {
-        if (it = item) {
-            player.add_item(item);
-            pl_items.erase(current_position);
-            break;
+void NPCbanker::retire_item(Player& player, const std::string& item_id) {
+    auto& items = item_bank[player.get_name()];
+    for (auto it = items.begin(); it != items.end(); ++it) {
+        if ((*it)->get_id() == item_id) {
+            std::unique_ptr<Item> item = std::move(*it);
+            items.erase(it);
+            player.add_item(std::move(item));
+            return;
         }
     }
+    throw std::runtime_error("No tenes ese item en el banco.");
 }
 
-void NPCbanker::transfer_gold(Player player, int ammount) {
-    auto it = gold_bank.find(player.get_name());
-    int actual_gold = it->first;
-    if (ammount > actual_gold) {
-        // throw message to player = not enough money
-        break;
+void NPCbanker::retire_gold(Player& player, int amount) {
+    int& saved = gold_bank[player.get_name()];
+    if (saved < amount)
+        throw std::runtime_error("No tenes suficiente oro en el banco.");
+    saved -= amount;
+    player.add_gold(amount);
+}
+
+std::vector<ItemInfo> NPCbanker::list_bank_items(const std::string& player_name) const {
+    std::vector<ItemInfo> result;
+    std::map<std::string, std::vector<std::unique_ptr<Item>>>::const_iterator it = item_bank.find(player_name);
+    if (it != item_bank.end()) {
+        for (const std::unique_ptr<Item>& item : it->second) {
+            result.emplace_back(item->get_id(), item->getName(), item->getPrice());
+        }
     }
-    player.add_gold(ammount);
-    gold_bank.insert(player.get_name(), actual_gold-ammount);
+    return result;
 }
 
+int NPCbanker::get_bank_gold(const std::string& player_name) const {
+    std::map<std::string, int>::const_iterator it = gold_bank.find(player_name);
+    if (it == gold_bank.end()) return 0;
+    return it->second;
+}
 
-void NPCbanker::interact(Player player, Command cmd) {
-    switch (cmd.type) {
-        case RECV_ITEM : 
-            receive_item(player,cmd.item);
+void NPCbanker::interact(Player& player, Command cmd) {
+    switch (cmd.action) {
+        case ACTION_DEPOSIT:
+            deposit_item(player, cmd.item_id);
             break;
-        case RECV_GOLD : 
-            receive_gold(player,cmd.cantidad);
+        case ACTION_DEPOSIT_GOLD:
+            deposit_gold(player, cmd.cantidad);
             break;
-        case TR_ITEM :
-            transfer_item(player, cmd.item);
+        case ACTION_RETIRE:
+            retire_item(player, cmd.item_id);
             break;
-        case TR_GOLD : 
-            transfer_gold(player,cmd.cantidad);
+        case ACTION_RETIRE_GOLD:
+            retire_gold(player, cmd.cantidad);
             break;
         default:
             break;

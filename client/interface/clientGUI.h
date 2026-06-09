@@ -116,6 +116,9 @@ private:
     uint64_t potion_hold_start_ms = 0;      // SDL_GetTicks al empezar el hold
     SDL_FRect potion_hold_slot_rect = {0, 0, 0, 0};  // rect en pantalla del slot
 
+    SDL_Texture* seller_texture;
+    SDL_Texture* banker_texture;
+    SDL_Texture* priest_texture;
     Camera camera;
     SDL_FRect player_pov;
     Zone current_zone;

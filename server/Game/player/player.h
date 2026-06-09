@@ -150,6 +150,8 @@ public:
 
     // Todos los items del jugador (inventario + defensa equipada), para mostrar.
     std::vector<Item*> get_all_items() const;
+    std::unique_ptr<Item> take_item_from_inventory(const std::string& item_id);
+
     bool is_ghost() const;
     bool is_dead() const override;
     bool can_interact() const;

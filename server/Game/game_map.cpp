@@ -148,8 +148,14 @@ void GameMap::init_world(const std::map<Zone, std::string>& zone_paths,
                 world.spawn_item(x, y, rand_item());
             }
         }
+        if (zone_id == ZONE_CITY) {
+            // TODO: refactorizar ?
+            auto [x1, y1] = world.find_random_empty_cell(players_in(zone_id));
+            auto [x2, y2] = world.find_random_empty_cell(players_in(zone_id));
+            world.spawn_priest(x1,y1);
+            world.spawn_seller(x2, y2);
+        }
         // Seller de prueba. TODO: eliminar
-        world.spawn_seller(1, 1);
         zones.emplace(zone_id, std::move(world));
     }
 }
@@ -466,8 +472,8 @@ bool GameMap::player_sell_item(const std::string& player_name, int x, int y,
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) throw std::runtime_error("Player not found: " + player_name);
 
-    NPCseller* seller = zone_of(player_name).seller_at(x, y);
-    if (seller == nullptr) throw std::runtime_error("No hay un comerciante en esa posicion.");
+    NPCseller* seller = zone_of(player_name).seller_at(player->get_coord_x(), player->get_coord_y());
+    if (seller == nullptr) throw std::runtime_error("No hay un comerciante adyacente.");
 
     Command cmd;
     cmd.action = ACTION_SELL;
@@ -481,7 +487,7 @@ bool GameMap::player_buy_item(const std::string& player_name, int x, int y,
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) throw std::runtime_error("Player not found: " + player_name);
 
-    NPCseller* seller = zone_of(player_name).seller_at(x, y);
+    NPCseller* seller = zone_of(player_name).seller_at(player->get_coord_x(), player->get_coord_y());
     if (seller == nullptr) throw std::runtime_error("No hay un comerciante en esa posicion.");
 
     Command cmd;
@@ -492,7 +498,69 @@ bool GameMap::player_buy_item(const std::string& player_name, int x, int y,
 }
 
 std::vector<ItemInfo> GameMap::list_seller_items(const std::string& player_name, int x, int y) {
-    return zone_of(player_name).list_seller_items(x, y);
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found: " + player_name);
+    return zone_of(player_name).list_seller_items(player->get_coord_x(), player->get_coord_y());
+}
+
+void GameMap::player_deposit_item(const std::string& player_name, const std::string& item_id) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    NPCbanker* banker = zone_of(player_name).banker_adjacent_to(player->get_coord_x(), player->get_coord_y());
+    if (banker == nullptr) throw std::runtime_error("No hay un banquero adyacente.");
+    Command cmd;
+    cmd.action = ACTION_DEPOSIT;
+    cmd.item_id = item_id;
+    banker->interact(*player, cmd);
+}
+
+void GameMap::player_deposit_gold(const std::string& player_name, int amount) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    NPCbanker* banker = zone_of(player_name).banker_adjacent_to(player->get_coord_x(), player->get_coord_y());
+    if (banker == nullptr) throw std::runtime_error("No hay un banquero adyacente.");
+    Command cmd;
+    cmd.action = ACTION_DEPOSIT_GOLD;
+    cmd.cantidad = amount;
+    banker->interact(*player, cmd);
+}
+
+void GameMap::player_retire_item(const std::string& player_name, const std::string& item_id) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    NPCbanker* banker = zone_of(player_name).banker_adjacent_to(player->get_coord_x(), player->get_coord_y());
+    if (banker == nullptr) throw std::runtime_error("No hay un banquero adyacente.");
+    Command cmd;
+    cmd.action = ACTION_RETIRE;
+    cmd.item_id = item_id;
+    banker->interact(*player, cmd);
+}
+
+void GameMap::player_retire_gold(const std::string& player_name, int amount) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    NPCbanker* banker = zone_of(player_name).banker_adjacent_to(player->get_coord_x(), player->get_coord_y());
+    if (banker == nullptr) throw std::runtime_error("No hay un banquero adyacente.");
+    Command cmd;
+    cmd.action = ACTION_RETIRE_GOLD;
+    cmd.cantidad = amount;
+    banker->interact(*player, cmd);
+}
+
+std::vector<ItemInfo> GameMap::list_banker_items(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    NPCbanker* banker = zone_of(player_name).banker_adjacent_to(player->get_coord_x(), player->get_coord_y());
+    if (banker == nullptr) throw std::runtime_error("No hay un banquero adyacente.");
+    return banker->list_bank_items(player_name);
+}
+
+int GameMap::get_banker_gold(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    NPCbanker* banker = zone_of(player_name).banker_adjacent_to(player->get_coord_x(), player->get_coord_y());
+    if (banker == nullptr) throw std::runtime_error("No hay un banquero adyacente.");
+    return banker->get_bank_gold(player_name);
 }
 
 std::unique_ptr<Item> GameMap::pick_up_item(const std::string& player_name) {
@@ -512,6 +580,12 @@ bool GameMap::pick_up_gold(const std::string& player_name) {
         return true;
     }
     return false;
+}
+
+std::string GameMap::get_adjacent_npc_type(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    return zone_of(player_name).get_adjacent_friendly_type(player->get_coord_x(), player->get_coord_y());
 }
 
 void GameMap::give_item_to_player(const std::string& player_name, std::unique_ptr<Item> item) {

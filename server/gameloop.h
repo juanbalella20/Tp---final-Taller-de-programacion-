@@ -102,6 +102,10 @@ class GameLoop : public Thread {
     void handle_list(const ClientCmd& cmd);
     void handle_sell(const ClientCmd& cmd);
     void handle_buy(const ClientCmd& cmd);
+    void handle_deposit(const ClientCmd& cmd);
+    void handle_deposit_gold(const ClientCmd& cmd);
+    void handle_retire_item(const ClientCmd& cmd);
+    void handle_retire_gold(const ClientCmd& cmd);
     void handle_equip(const ClientCmd& cmd);
     void handle_select(const ClientCmd& cmd);
     void handle_take(const ClientCmd& cmd);

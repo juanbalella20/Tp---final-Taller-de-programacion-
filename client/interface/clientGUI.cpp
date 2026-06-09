@@ -21,6 +21,7 @@ ClientGUI::ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
       enemy_texture(nullptr), frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
       camera((float)GAME_VIEW_W, (float)GAME_VIEW_H),
       current_zone(static_cast<Zone>(0xFF)),
+      seller_texture(nullptr), banker_texture(nullptr), priest_texture(nullptr),
       selected_npc_tile_x(-1), selected_npc_tile_y(-1) {}
 
 
@@ -96,6 +97,18 @@ void ClientGUI::freeSDL() {
     if (enemy_texture) {
         SDL_DestroyTexture(enemy_texture);
         enemy_texture = nullptr;
+    }
+    if (seller_texture) { 
+        SDL_DestroyTexture(seller_texture); 
+        seller_texture = nullptr; 
+    }
+    if (banker_texture) { 
+        SDL_DestroyTexture(banker_texture); 
+        banker_texture = nullptr; 
+    }
+    if (priest_texture) { 
+        SDL_DestroyTexture(priest_texture); 
+        priest_texture = nullptr;
     }
     if (frame_texture) {
         SDL_DestroyTexture(frame_texture);
@@ -799,6 +812,7 @@ void ClientGUI::drawEnemies() {
     }
 }
 
+/*
 void ClientGUI::draw_npc_friends() {
     if (!enemy_texture || !tilemap) return;
     const int tileSize = tilemap->getTileSize();
@@ -811,6 +825,21 @@ void ClientGUI::draw_npc_friends() {
                       static_cast<int>(x), static_cast<int>(y), tileSize)
                 .draw(camera, {});
         }
+    }
+}*/
+
+void ClientGUI::draw_npc_friends() {
+    if (!tilemap) return;
+    const int tileSize = tilemap->getTileSize();
+    for (const auto& npc : npcs) {
+        SDL_Texture* tex = nullptr;
+        if (npc.type == "seller") tex = seller_texture;
+        else if (npc.type == "banker") tex = banker_texture;
+        else if (npc.type == "priest") tex = priest_texture;
+        else continue;
+        if (!tex) continue;
+        SDL_FRect src = {0.0f, 0.0f, 30.0f, 40.0f};
+        NpcSprite(renderer, tex, npc.x, npc.y, tileSize).draw(camera, src);
     }
 }
 
@@ -1132,6 +1161,21 @@ void ClientGUI::init_draw() {
         floor_item_crops["pocion_vida"] = {392.0f, 159.0f, 16.0f, 26.0f};
         floor_item_textures["pocion_mana"] = gold_texture;
         floor_item_crops["pocion_mana"] = {424.0f, 159.0f, 17.0f, 26.0f};
+    }
+    SDL_Surface* seller_surf = IMG_Load("imagenes/4055.png");
+    if (seller_surf) {
+        seller_texture = SDL_CreateTextureFromSurface(renderer, seller_surf);
+        SDL_DestroySurface(seller_surf);
+    }
+    SDL_Surface* banker_surf = IMG_Load("imagenes/4051.png");
+    if (banker_surf) {
+        banker_texture = SDL_CreateTextureFromSurface(renderer, banker_surf);
+        SDL_DestroySurface(banker_surf);
+    }
+    SDL_Surface* priest_surf = IMG_Load("imagenes/4057.png");
+    if (priest_surf) {
+        priest_texture = SDL_CreateTextureFromSurface(renderer, priest_surf);
+        SDL_DestroySurface(priest_surf);
     }
 
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);

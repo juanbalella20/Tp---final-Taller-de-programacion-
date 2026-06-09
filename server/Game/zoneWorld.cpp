@@ -40,6 +40,22 @@ void ZoneWorld::load_terrain(const std::string& map_path) {
     spawns = md.get_spawns();
     // [[teleport]] = tiles de teletransporte hacia otra zona.
     teleports = md.get_teleports();
+    for (const auto& [name, pos] : spawns) {
+        if (name == "seller") { 
+            spawn_seller(pos.x, pos.y);
+            std::cout << "[DEBUG seleer]: " << name << "at" << pos.x << pos.y << std::endl;
+        }
+        else if (name == "banker") {
+            spawn_banker(pos.x, pos.y);
+            std::cout << "[DEBUG banker]: " << name << "at" << pos.x << pos.y << std::endl;
+
+        }
+        else if (name == "priest") { 
+            std::cout << "[DEBUG priest]: " << name << "at" << pos.x << pos.y << std::endl;
+            spawn_priest(pos.x, pos.y);
+        }
+    }
+
 }
 
 bool ZoneWorld::in_bounds(int x, int y) const {
@@ -144,6 +160,19 @@ void ZoneWorld::scatter_items(int center_x, int center_y,
         }
     }
 }
+void ZoneWorld::spawn_banker(int x, int y) {
+    if (in_bounds(x, y)) {
+        bankers.emplace_back(x, y);
+        map[y][x] = elements::npcs;
+    }
+}
+
+void ZoneWorld::spawn_priest(int x, int y) {
+    if (in_bounds(x, y)) {
+        priests.emplace_back(x, y);
+        map[y][x] = elements::npcs;
+    }
+}
 
 bool ZoneWorld::update_npcs() {
     bool respawned = false;
@@ -245,6 +274,31 @@ std::vector<NpcInfo> ZoneWorld::build_npcs_snapshot() const {
         npcinfo.y = npc.get_coord_y();
         snapshot.push_back(npcinfo);
     }
+    for (const auto& s : sellers) {
+        NpcInfo npcinfo;
+        npcinfo.name = "Comerciante";
+        npcinfo.type = "seller";
+        npcinfo.x = s.get_coord_x();
+        npcinfo.y = s.get_coord_y();
+        snapshot.push_back(npcinfo);
+    }
+    for (const auto& b : bankers) {
+        NpcInfo npcinfo;
+        npcinfo.name = "Banquero";
+        npcinfo.type = "banker";
+        npcinfo.x = b.get_coord_x();
+        npcinfo.y = b.get_coord_y();
+        snapshot.push_back(npcinfo);
+    }
+    for (const auto& p : priests) {
+        NpcInfo npcinfo;
+        npcinfo.name = "Sacerdote";
+        npcinfo.type = "priest";
+        npcinfo.x = p.get_coord_x();
+        npcinfo.y = p.get_coord_y();
+        snapshot.push_back(npcinfo);
+    }
+
     return snapshot;
 }
 
@@ -261,21 +315,48 @@ std::vector<ItemFloorInfo> ZoneWorld::build_items_snapshot() const {
     return snapshot;
 }
 
-NPCseller* ZoneWorld::seller_at(int x, int y) {
+static bool is_adyacent(const positionCoord& a, const positionCoord& b) {
+    return std::abs(a.x - b.x) + std::abs(a.y - b.y) <= 1;
+}
+
+NPCseller* ZoneWorld::seller_adjacent_to(int px, int py) {
+    positionCoord player_pos{px, py};
     for (auto& s : sellers) {
-        if (s.get_coord_x() == x && s.get_coord_y() == y) return &s;
+        positionCoord seller_pos{s.get_coord_x(), s.get_coord_y()};
+        if (is_adyacent(player_pos, seller_pos)) return &s;
     }
     return nullptr;
 }
 
-std::vector<ItemInfo> ZoneWorld::list_seller_items(int x, int y) {
-    NPCseller* seller = seller_at(x, y);
-    if (seller == nullptr) throw std::runtime_error("No hay un comerciante en esa posicion.");
+NPCseller* ZoneWorld::seller_at(int x, int y) {
+    positionCoord player_pos{x, y};
+    for (auto& s : sellers) {
+        positionCoord seller_pos{s.get_coord_x(), s.get_coord_y()};
+        if (is_adyacent(player_pos, seller_pos)) return &s;
+    }
+    return nullptr;
+}
+
+std::vector<ItemInfo> ZoneWorld::list_seller_items(int px, int py) {
+    NPCseller* seller = seller_adjacent_to(px, py);
+    if (seller == nullptr) throw std::runtime_error("No hay un comerciante adyacente.");
     return seller->list_items();
 }
 
-static bool is_adyacent(const positionCoord& a, const positionCoord& b) {
-    return std::abs(a.x - b.x) + std::abs(a.y - b.y) <= 1;
+NPCbanker* ZoneWorld::banker_adjacent_to(int px, int py) {
+    positionCoord player_pos{px, py};
+    for (auto& b : bankers) {
+        positionCoord banker_pos{b.get_coord_x(), b.get_coord_y()};
+        if (is_adyacent(player_pos, banker_pos)) return &b;
+    }
+    return nullptr;
+}
+
+std::string ZoneWorld::get_adjacent_friendly_type(int px, int py) {
+    if (seller_at(px, py) != nullptr) return "seller";
+    if (banker_adjacent_to(px, py) != nullptr) return "banker";
+    //if (priest_adjacent_to(px, py) != nullptr) return "priest";
+    return "";
 }
 
 std::unique_ptr<Item> ZoneWorld::take_item_near(int px, int py) {

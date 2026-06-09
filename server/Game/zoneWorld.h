@@ -14,6 +14,8 @@
 #include "../../common/mapLoader.h"
 #include "npc/npcHostile.h"
 #include "npc/npcSeller.h"
+#include "npc/npcBanker.h"
+#include "npc/npcPriest.h"
 
 class Player;
 class Item;
@@ -41,6 +43,8 @@ private:
     std::map<std::string, positionCoord> spawns;
     std::vector<NPChostile> npcs;
     std::vector<NPCseller> sellers;
+    std::vector<NPCbanker> bankers;
+    std::vector<NPCpriest> priests;
     std::vector<groundItem> ground_items;
     std::vector<groundGold> ground_gold;
     std::vector<TeleportDef> teleports;
@@ -80,6 +84,8 @@ public:
     // --- Spawns / mutaciones de esta zona ---
     void spawn_npc(NPChostile&& npc);
     void spawn_seller(int x, int y);
+    void spawn_banker(int x, int y);
+    void spawn_priest(int x, int y);
     void spawn_item(int x, int y, std::unique_ptr<Item> item);
     void spawn_gold(int x, int y, int amount);
 
@@ -103,6 +109,10 @@ public:
     // Devuelve el seller en (x,y) o nullptr si no hay.
     NPCseller* seller_at(int x, int y);
     std::vector<ItemInfo> list_seller_items(int x, int y);
+    NPCseller* seller_adjacent_to(int px, int py);
+    //--- Bankers---
+    NPCbanker* banker_adjacent_to(int px, int py);
+    std::string get_adjacent_friendly_type(int px, int py);
 
     // --- Items / oro en el piso ---
     // Saca y devuelve un item adyacente a (px,py), o nullptr.

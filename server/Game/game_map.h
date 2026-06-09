@@ -165,7 +165,13 @@ public:
     bool player_sell_item(const std::string& player_name, int x, int y, const std::string& item_id);
     bool player_buy_item(const std::string& player_name, int x, int y, const std::string& item_id);
     std::vector<ItemInfo> list_seller_items(const std::string& player_name, int x, int y);
-
+    void player_deposit_item(const std::string& player_name, const std::string& item_id);
+    void player_deposit_gold(const std::string& player_name, int amount);
+    void player_retire_item(const std::string& player_name, const std::string& item_id);
+    void player_retire_gold(const std::string& player_name, int amount);
+    std::vector<ItemInfo> list_banker_items(const std::string& player_name);
+    int get_banker_gold(const std::string& player_name);
+    
     // Zona actual del player (para MSG_ZONE_CHANGE)
     Zone get_player_zone(const std::string& player_name) const;
 
@@ -196,6 +202,7 @@ public:
     uint32_t get_player_mana(const std::string& name);
     uint32_t get_player_max_hp(const std::string& name);
     uint32_t get_player_max_mana(const std::string& name);
+    std::string get_adjacent_npc_type(const std::string& player_name);
 
     // Cheat /mana: resta `amount` de maná al player (para testear /meditar).
     void cheat_lose_mana(const std::string& name, uint32_t amount);

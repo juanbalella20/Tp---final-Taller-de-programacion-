@@ -104,3 +104,10 @@ std::vector<Item*> Inventory::get_items() const {
     }
     return result;
 }
+
+Item* Inventory::find_by_id(const std::string& item_id) const {
+    for (const auto& item : items) {
+        if (item->get_id() == item_id) return item.get();
+    }
+    return nullptr;
+}

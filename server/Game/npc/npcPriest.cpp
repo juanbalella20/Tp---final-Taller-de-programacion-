@@ -1,6 +1,6 @@
 #include "npcPriest.h"
 
-
+/*
 NPCpriest::NPCpriest() { 
     set_npc_name("Priest");
 }
@@ -46,3 +46,4 @@ void NPCpriest::interact(Player player, Command cmd) {
             break;
     }
 }
+*/
