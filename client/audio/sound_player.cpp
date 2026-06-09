@@ -39,6 +39,14 @@ SoundPlayer::SoundPlayer() {
             return;
         }
     }
+
+    hold_track = MIX_CreateTrack(mixer);
+    if (hold_track == nullptr) {
+        std::cerr << "[sfx] MIX_CreateTrack (hold) failed: " << SDL_GetError()
+                  << std::endl;
+        release();
+        return;
+    }
 }
 
 SoundPlayer::~SoundPlayer() {
@@ -77,6 +85,35 @@ bool SoundPlayer::play(const std::string& relative_path) {
     return true;
 }
 
+bool SoundPlayer::play_hold(const std::string& relative_path) {
+    if (!is_available() || hold_track == nullptr) return false;
+
+    MIX_Audio* audio = load_audio(relative_path);
+    if (audio == nullptr) return false;
+
+    if (MIX_TrackPlaying(hold_track)) {
+        MIX_StopTrack(hold_track, 0);
+    }
+    if (!MIX_SetTrackAudio(hold_track, audio) ||
+        !MIX_SetTrackGain(hold_track, volume)) {
+        std::cerr << "[sfx] No se pudo preparar el sonido sostenido: "
+                  << SDL_GetError() << std::endl;
+        return false;
+    }
+    if (!MIX_PlayTrack(hold_track, 0)) {
+        std::cerr << "[sfx] No se pudo reproducir " << relative_path << ": "
+                  << SDL_GetError() << std::endl;
+        return false;
+    }
+    return true;
+}
+
+void SoundPlayer::stop_hold() {
+    if (hold_track != nullptr && MIX_TrackPlaying(hold_track)) {
+        MIX_StopTrack(hold_track, 0);
+    }
+}
+
 void SoundPlayer::set_volume(float new_volume) {
     volume = std::clamp(new_volume, 0.0f, 1.0f);
 }
@@ -106,6 +143,13 @@ void SoundPlayer::release() {
             MIX_DestroyTrack(track);
             track = nullptr;
         }
+    }
+
+    if (hold_track != nullptr) {
+        MIX_StopTrack(hold_track, 0);
+        MIX_SetTrackAudio(hold_track, nullptr);
+        MIX_DestroyTrack(hold_track);
+        hold_track = nullptr;
     }
 
     for (auto& [path, audio] : audio_cache) {

@@ -209,6 +209,8 @@ void ClientGUI::update_potion_hold() {
         // valida, aplica el efecto y reenvía el inventario (la poción desaparece).
         sendUseItemCmd(std::to_string(potion_hold_uid));
         potion_hold_sent = true;  // no repetir hasta soltar y volver a presionar
+        // El anillo dejó de girar (hold completo): cortar el sonido.
+        if (sfx) sfx->stop_hold();
     }
 }
 
@@ -362,6 +364,13 @@ void ClientGUI::handleEvents() {
                         potion_hold_uid = uid;
                         potion_hold_start_ms = SDL_GetTicks();
                         potion_hold_slot_rect = slot_rect;
+                        // Sonido mientras gira el anillo. Se corta al completar el
+                        // hold o al soltar antes de tiempo, así dura lo mismo que
+                        // el anillo (cualquier poción, mismo sonido).
+                        if (sfx) {
+                            sfx->play_hold(
+                                "client/audio/sounds/Mini-escudo-sonido-fortnite.ogg");
+                        }
                         break;  // sobre una poción: hold, no equipar
                     }
                 }
@@ -427,6 +436,11 @@ void ClientGUI::handleEvents() {
                 // Soltar el botón izquierdo antes de los 3s cancela el hold: la
                 // poción no se toma (hay que volver a mantener presionado).
                 if (event.button.button == SDL_BUTTON_LEFT) {
+                    // Cortar el sonido sólo si el anillo seguía girando (hold no
+                    // completado). Si ya se completó, el sonido se cortó al enviar.
+                    if (potion_hold_active && !potion_hold_sent && sfx) {
+                        sfx->stop_hold();
+                    }
                     potion_hold_active = false;
                     potion_hold_sent = false;
                 }

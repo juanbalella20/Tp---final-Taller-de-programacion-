@@ -18,6 +18,10 @@ private:
 
     MIX_Mixer* mixer = nullptr;
     std::array<MIX_Track*, NUM_TRACKS> tracks{};
+    // Pista reservada para sonidos sostenidos que se cortan a voluntad (p.ej. el
+    // sonido mientras gira el anillo de la poción). Separada de las one-shot para
+    // poder pararla sin afectar a las demás.
+    MIX_Track* hold_track = nullptr;
     std::unordered_map<std::string, MIX_Audio*> audio_cache;
     std::size_t next_track = 0;
     float volume = 0.6f;
@@ -40,6 +44,12 @@ public:
     // Reproduce el .ogg en relative_path una vez. relative_path es relativo a la
     // raíz de assets (igual que ZoneMusicPlayer), p. ej. "client/audio/sounds/x.ogg".
     bool play(const std::string& relative_path);
+    // Reproduce el sonido en la pista reservada (one-shot, sin loop). Pensado para
+    // sonidos que se cortan antes de terminar con stop_hold(). Si ya había uno
+    // sonando en esa pista, lo reemplaza.
+    bool play_hold(const std::string& relative_path);
+    // Corta el sonido de la pista reservada (no-op si no había nada sonando).
+    void stop_hold();
     void set_volume(float new_volume);
 };
 
