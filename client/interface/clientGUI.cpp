@@ -717,7 +717,7 @@ void ClientGUI::drawEnemies() {
     for (const auto& npc : npcs) {
         NpcSprite ns(renderer, enemies_textures[npc.name], npc.x, npc.y, tileSize);
         SDL_FRect pov;
-        switch (p.direction) {
+        switch (npc.direction) {
             case DIR_NORTH: 
                 pov = ns.back_pov(npc.name);
                 break;
