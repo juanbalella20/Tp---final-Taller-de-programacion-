@@ -55,7 +55,10 @@
  *     uint32 tileset_count
  *     repeat tileset_count:
  *       string name
- *       string file_path        (RELATIVO al .bin: "sand.png", "tiles/x.png")
+ *       string file_path        (RELATIVO a la carpeta de recursos compartida;
+ *                                se resuelve con paths::resolve_resource. Ej:
+ *                                "data/maps/forest/5108.png". Mapas viejos pueden
+ *                                tener ruta absoluta: resolve_resource la deja igual)
  *       uint32 columns
  *       uint32 tile_count
  *       uint32 firstgid

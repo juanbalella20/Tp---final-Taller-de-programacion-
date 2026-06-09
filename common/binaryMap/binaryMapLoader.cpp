@@ -154,8 +154,12 @@ void BinaryMapLoader::parse_tilesets_section(ByteReader& section_reader,
     for (uint32_t i = 0; i < count; ++i) {
         Tileset ts;
         ts.name = section_reader.read_string();
-        std::string rel = section_reader.read_string();
-        ts.file_path = (std::filesystem::path(base_dir) / rel).string();
+        // file_path se guarda RELATIVO a la carpeta de recursos compartida (no al
+        // .bin): el consumidor lo resuelve con paths::resolve_resource. NO hay que
+        // anteponer base_dir aca, o se duplica el prefijo (ej:
+        // "data/maps/forest/data/maps/forest/x.png"). base_dir queda sin usar.
+        (void)base_dir;
+        ts.file_path = section_reader.read_string();
         ts.columns    = static_cast<int>(section_reader.read_u32());
         ts.tile_count = static_cast<int>(section_reader.read_u32());
         ts.firstgid   = static_cast<int>(section_reader.read_u32());

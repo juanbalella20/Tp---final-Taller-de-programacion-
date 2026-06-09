@@ -135,7 +135,7 @@ void GameLoop::load_maps() {
     std::map<Zone, std::string> zone_paths = {
         {ZONE_DESERT, "data/maps/desert/map-2.bin"},
         {ZONE_CITY,   "data/maps/city/city-2.bin"},
-        {ZONE_FOREST, "data/maps/forest/forest2.bin"},
+        {ZONE_FOREST, "data/maps/forest/forest3.bin"},
         {ZONE_DUNGEON, "data/maps/dungeon/dungeon-v1.bin"},
     };
     std::map<Zone, InitialState> initial_states = {
