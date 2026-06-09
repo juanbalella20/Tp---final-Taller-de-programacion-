@@ -199,6 +199,19 @@ void GameConfig::load(const std::string& toml_path) {
     pocion_mana.heal_life = root.at_path("items.pocion_mana.heal_life").value_or(0);
     pocion_mana.heal_mana = root.at_path("items.pocion_mana.heal_mana").value_or(100);
 
+    // Inventario inicial de cada nuevo jugador (ids del catalogo de items).
+    // Si no esta en el config se cae a un equipamiento por defecto.
+    initial_inventory.clear();
+    if (auto arr = root.at_path("player.initial_inventory").as_array()) {
+        for (auto& elem : *arr) {
+            if (auto s = elem.value<std::string>()) initial_inventory.push_back(*s);
+        }
+    }
+    if (initial_inventory.empty()) {
+        initial_inventory = {"espada", "escudo", "vara_fresno", "baculo_nudoso",
+                             "baculo_engarzado", "flauta_elfica"};
+    }
+
     goblin.name           = root.at_path("npcs.goblin.name").value_or(std::string("Goblin"));
     goblin.lifepoints     = root.at_path("npcs.goblin.lifepoints").value_or(30);
     goblin.attack_dmg     = root.at_path("npcs.goblin.attack_dmg").value_or(5);

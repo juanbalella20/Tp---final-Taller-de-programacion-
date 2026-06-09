@@ -129,6 +129,11 @@ public:
     PotionConfig pocion_vida;
     PotionConfig pocion_mana;
 
+    // Inventario inicial de cada nuevo jugador: lista de ids del catalogo de
+    // items (ItemCatalog). Viene de [player].initial_inventory en config.toml,
+    // asi se cambia el equipamiento de arranque sin recompilar.
+    std::vector<std::string> initial_inventory;
+
     // Npc hostile
     NpcHostileConfig goblin;
     NpcHostileConfig spider;

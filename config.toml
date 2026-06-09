@@ -264,6 +264,17 @@ heal_life = 0
 heal_mana = 100
 
 # ------------------------------------------------------------
+# Jugador
+# ------------------------------------------------------------
+[player]
+# Inventario inicial de cada nuevo jugador: lista de ids de items (deben
+# coincidir con las claves de [items.*] de arriba; "escudo" es alias de
+# "escudo_tortuga"). Cambiar esta lista cambia el equipamiento de arranque
+# sin recompilar. Si se deja vacia se usa el equipamiento por defecto.
+initial_inventory = ["espada", "escudo", "vara_fresno", "baculo_nudoso",
+                     "baculo_engarzado", "flauta_elfica"]
+
+# ------------------------------------------------------------
 # NPCs hostiles
 # ------------------------------------------------------------
 # level: nivel del NPC, usado en el calculo de XP al matarlo.
