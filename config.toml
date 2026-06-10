@@ -294,36 +294,42 @@ name = "Spider1"
 lifepoints = 20
 attack_dmg = 4
 ticks_to_spawn = 40
+level = 1
 
 [npcs.spider2]
 name = "Spider2"
 lifepoints = 30
 attack_dmg = 6
 ticks_to_spawn = 40
+level = 2
 
 [npcs.spider3]
 name = "Spider3"
 lifepoints = 40
 attack_dmg = 8
 ticks_to_spawn = 40
- 
+level = 2
+
 [npcs.skeleton1]
 name = "Skeleton1"
 lifepoints = 25
 attack_dmg = 7
 ticks_to_spawn = 60
+level = 2
 
 [npcs.skeleton2]
 name = "Skeleton2"
 lifepoints = 35
 attack_dmg = 9
 ticks_to_spawn = 60
+level = 3
 
 [npcs.skeleton3]
 name = "Skeleton3"
 lifepoints = 45
 attack_dmg = 11
 ticks_to_spawn = 60
+level = 3
  
 [npcs.zombie]
 name = "Zombie"
@@ -343,18 +349,21 @@ name = "Golem1"
 lifepoints = 80
 attack_dmg = 15
 ticks_to_spawn = 200
+level = 4
 
 [npcs.golem2]
 name = "Golem2"
 lifepoints = 90
 attack_dmg = 25
 ticks_to_spawn = 200
+level = 5
 
 [npcs.golem3]
 name = "Golem3"
 lifepoints = 100
 attack_dmg = 35
 ticks_to_spawn = 200
+level = 6
  
 # Al morir un NPC SIEMPRE deja caer oro base (seccion "Oro" del enunciado):
 #   OroBase = rand(0, npc_gold_drop_max) * VidaMaxNPC

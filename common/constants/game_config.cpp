@@ -233,31 +233,37 @@ void GameConfig::load(const std::string& toml_path) {
     spider1.lifepoints = root.at_path("npcs.spider1.lifepoints").value_or(20);
     spider1.attack_dmg = root.at_path("npcs.spider1.attack_dmg").value_or(4);
     spider1.ticks_to_spawn = root.at_path("npcs.spider1.ticks_to_spawn").value_or(40);
+    spider1.level = root.at_path("npcs.spider1.level").value_or(1);
 
     spider2.name = root.at_path("npcs.spider2.name").value_or(std::string("Spider2"));
     spider2.lifepoints = root.at_path("npcs.spider2.lifepoints").value_or(30);
     spider2.attack_dmg = root.at_path("npcs.spider2.attack_dmg").value_or(6);
     spider2.ticks_to_spawn = root.at_path("npcs.spider2.ticks_to_spawn").value_or(40);
+    spider2.level = root.at_path("npcs.spider2.level").value_or(2);
 
     spider3.name = root.at_path("npcs.spider3.name").value_or(std::string("Spider3"));
     spider3.lifepoints = root.at_path("npcs.spider3.lifepoints").value_or(40);
     spider3.attack_dmg = root.at_path("npcs.spider3.attack_dmg").value_or(8);
     spider3.ticks_to_spawn = root.at_path("npcs.spider3.ticks_to_spawn").value_or(40);
+    spider3.level = root.at_path("npcs.spider3.level").value_or(2);
 
     skeleton1.name = root.at_path("npcs.skeleton1.name").value_or(std::string("Skeleton1"));
     skeleton1.lifepoints = root.at_path("npcs.skeleton1.lifepoints").value_or(25);
     skeleton1.attack_dmg = root.at_path("npcs.skeleton1.attack_dmg").value_or(7);
     skeleton1.ticks_to_spawn = root.at_path("npcs.skeleton1.ticks_to_spawn").value_or(60);
+    skeleton1.level = root.at_path("npcs.skeleton1.level").value_or(2);
 
     skeleton2.name = root.at_path("npcs.skeleton2.name").value_or(std::string("Skeleton2"));
     skeleton2.lifepoints = root.at_path("npcs.skeleton2.lifepoints").value_or(35);
     skeleton2.attack_dmg = root.at_path("npcs.skeleton2.attack_dmg").value_or(9);
     skeleton2.ticks_to_spawn = root.at_path("npcs.skeleton2.ticks_to_spawn").value_or(60);
+    skeleton2.level = root.at_path("npcs.skeleton2.level").value_or(3);
 
     skeleton3.name = root.at_path("npcs.skeleton3.name").value_or(std::string("Skeleton3"));
     skeleton3.lifepoints = root.at_path("npcs.skeleton3.lifepoints").value_or(45);
     skeleton3.attack_dmg = root.at_path("npcs.skeleton3.attack_dmg").value_or(11);
     skeleton3.ticks_to_spawn = root.at_path("npcs.skeleton3.ticks_to_spawn").value_or(60);
+    skeleton3.level = root.at_path("npcs.skeleton3.level").value_or(3);
 
     zombie.name = root.at_path("npcs.zombie.name").value_or(std::string("Zombie"));
     zombie.lifepoints = root.at_path("npcs.zombie.lifepoints").value_or(35);
@@ -275,16 +281,19 @@ void GameConfig::load(const std::string& toml_path) {
     golem1.lifepoints = root.at_path("npcs.golem1.lifepoints").value_or(80);
     golem1.attack_dmg = root.at_path("npcs.golem1.attack_dmg").value_or(15);
     golem1.ticks_to_spawn = root.at_path("npcs.golem1.ticks_to_spawn").value_or(200);
+    golem1.level = root.at_path("npcs.golem1.level").value_or(4);
 
     golem2.name = root.at_path("npcs.golem2.name").value_or(std::string("Golem2"));
     golem2.lifepoints = root.at_path("npcs.golem2.lifepoints").value_or(90);
     golem2.attack_dmg = root.at_path("npcs.golem2.attack_dmg").value_or(25);
     golem2.ticks_to_spawn = root.at_path("npcs.golem2.ticks_to_spawn").value_or(200);
+    golem2.level = root.at_path("npcs.golem2.level").value_or(5);
 
     golem3.name = root.at_path("npcs.golem3.name").value_or(std::string("Golem3"));
     golem3.lifepoints = root.at_path("npcs.golem3.lifepoints").value_or(100);
     golem3.attack_dmg = root.at_path("npcs.golem3.attack_dmg").value_or(35);
     golem3.ticks_to_spawn = root.at_path("npcs.golem3.ticks_to_spawn").value_or(200);
+    golem3.level = root.at_path("npcs.golem3.level").value_or(6);
 
     // Receta de poblado por zona: recorremos cada [zones.<nombre>] y volcamos
     // map / allowed_npcs / num_npc / num_items / spawn_* a los mapas por Zone.
