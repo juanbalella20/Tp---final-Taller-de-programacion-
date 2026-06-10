@@ -828,7 +828,14 @@ void ClientGUI::drawEnemies() {
     if (!enemy_texture || !tilemap) return;
     const int tileSize = tilemap->getTileSize();
     for (const auto& npc : npcs) {
-        NpcSprite ns(renderer, enemies_textures[npc.name], npc.x, npc.y, tileSize);
+        // Solo los NPC hostiles tienen textura/pov registrados (por nombre). Los
+        // amigos (seller/priest/banker) y cualquier nombre desconocido se saltean
+        // aca: los dibuja draw_npc_friends() por tipo. Sin este guard, el pov
+        // (back/front/...) hace .at(npc.name) sobre un nombre inexistente y lanza
+        // std::out_of_range ("map::at"), que mata la entrada al juego.
+        auto tex_it = enemies_textures.find(npc.name);
+        if (tex_it == enemies_textures.end()) continue;
+        NpcSprite ns(renderer, tex_it->second, npc.x, npc.y, tileSize);
         SDL_FRect pov;
         switch (npc.direction) {
             case DIR_NORTH: 

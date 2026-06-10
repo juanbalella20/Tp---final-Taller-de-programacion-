@@ -17,6 +17,7 @@
 #include "npc/npcBanker.h"
 #include "npc/npcPriest.h"
 
+
 class Player;
 class Item;
 

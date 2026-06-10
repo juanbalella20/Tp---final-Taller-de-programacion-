@@ -11,6 +11,7 @@
 #include "player/player.h"
 #include "game_config.h"
 
+
 // Devuelve true si 'path' termina en 'suffix'.
 static bool ends_with(const std::string& path, const std::string& suffix) {
     if (suffix.size() > path.size()) return false;
@@ -21,18 +22,62 @@ NPChostile make_npc_from_spawn(const NpcSpawn& spawn) {
     // Catalogo de tipos de NPC hostiles. Mas adelante esto puede vivir
     // en un archivo de configuracion o base de datos.
     const auto& cfg = GameConfig::instance();
-    if (spawn.type == "goblin") {
+if (spawn.type == "goblin") {
         NPChostile npc("goblin", cfg.goblin.name, cfg.goblin.lifepoints, cfg.goblin.attack_dmg, cfg.goblin.ticks_to_spawn, cfg.goblin.level);
         npc.set_position(spawn.x, spawn.y);
         return npc;
     }
-    if (spawn.type == "spider") {
-        NPChostile npc("spider", cfg.spider.name, cfg.spider.lifepoints, cfg.spider.attack_dmg, cfg.spider.ticks_to_spawn, cfg.spider.level);
+    if (spawn.type == "zombie") {
+        NPChostile npc("zombie", cfg.zombie.name, cfg.zombie.lifepoints, cfg.zombie.attack_dmg, cfg.zombie.ticks_to_spawn, cfg.zombie.level);
         npc.set_position(spawn.x, spawn.y);
         return npc;
     }
-    // Fallback para tipos desconocidos.
-    NPChostile npc(spawn.type, spawn.type, 10, 1, 50, 1);
+    if (spawn.type == "orc") {
+        NPChostile npc("orc", cfg.orc.name, cfg.orc.lifepoints, cfg.orc.attack_dmg, cfg.orc.ticks_to_spawn, cfg.orc.level);
+        npc.set_position(spawn.x, spawn.y);
+        return npc;
+    }
+if (spawn.type == "spider1") {
+        NPChostile npc("spider1", cfg.spider1.name, cfg.spider1.lifepoints, cfg.spider1.attack_dmg, cfg.spider1.ticks_to_spawn, cfg.spider1.level);
+        npc.set_position(spawn.x, spawn.y);
+        return npc;
+    }
+    if (spawn.type == "spider2") {
+        NPChostile npc("spider2", cfg.spider2.name, cfg.spider2.lifepoints, cfg.spider2.attack_dmg, cfg.spider2.ticks_to_spawn, cfg.spider2.level);
+        npc.set_position(spawn.x, spawn.y);
+        return npc;
+    }
+    if (spawn.type == "spider3") {
+        NPChostile npc("spider3", cfg.spider3.name, cfg.spider3.lifepoints, cfg.spider3.attack_dmg, cfg.spider3.ticks_to_spawn, cfg.spider3.level);
+        npc.set_position(spawn.x, spawn.y);
+        return npc;
+    }
+if (spawn.type == "skeleton1") {
+        NPChostile npc("skeleton1", cfg.skeleton1.name, cfg.skeleton1.lifepoints, cfg.skeleton1.attack_dmg, cfg.skeleton1.ticks_to_spawn, cfg.skeleton1.level);
+        npc.set_position(spawn.x, spawn.y);
+        return npc;
+    }
+    if (spawn.type == "skeleton2") {
+        NPChostile npc("skeleton2", cfg.skeleton2.name, cfg.skeleton2.lifepoints, cfg.skeleton2.attack_dmg, cfg.skeleton2.ticks_to_spawn, cfg.skeleton2.level);
+        npc.set_position(spawn.x, spawn.y);
+        return npc;
+    }
+    if (spawn.type == "skeleton3") {
+        NPChostile npc("skeleton3", cfg.skeleton3.name, cfg.skeleton3.lifepoints, cfg.skeleton3.attack_dmg, cfg.skeleton3.ticks_to_spawn, cfg.skeleton3.level);
+        npc.set_position(spawn.x, spawn.y);
+        return npc;
+    }
+    if (spawn.type == "golem1") {
+        NPChostile npc("golem1", cfg.golem1.name, cfg.golem1.lifepoints, cfg.golem1.attack_dmg, cfg.golem1.ticks_to_spawn, cfg.golem1.level);
+        npc.set_position(spawn.x, spawn.y);
+        return npc;
+    }
+    if (spawn.type == "golem2") {
+        NPChostile npc("golem2", cfg.golem2.name, cfg.golem2.lifepoints, cfg.golem2.attack_dmg, cfg.golem2.ticks_to_spawn, cfg.golem2.level);
+        npc.set_position(spawn.x, spawn.y);
+        return npc;
+    }
+    NPChostile npc("golem3", cfg.golem3.name, cfg.golem3.lifepoints, cfg.golem3.attack_dmg, cfg.golem3.ticks_to_spawn, cfg.golem3.level);
     npc.set_position(spawn.x, spawn.y);
     return npc;
 }
