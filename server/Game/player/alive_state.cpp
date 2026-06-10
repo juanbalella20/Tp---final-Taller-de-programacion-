@@ -46,7 +46,8 @@ DamageOutcome AliveState::receive_npc_damage(Player& self, int damage, bool is_c
     if (!is_critical) {
         int agility = self.player_race.race_agility() + self.player_class.class_agility();
         double rnd = std::rand() / static_cast<double>(RAND_MAX);
-        if (std::pow(rnd, agility) < 0.001) return {0, 0, true};  // esquivó
+        const auto& cfg = GameConfig::instance();
+        if (std::pow(rnd, agility) < cfg.dodge_threshold) return {0, 0, true};  // esquivó
 
         // Defensa: armadura + escudo + casco
         int defense = self.calculate_defense();

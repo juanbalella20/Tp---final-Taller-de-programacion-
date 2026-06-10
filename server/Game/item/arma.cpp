@@ -24,10 +24,10 @@ DamageOutcome Arma::use_item(Entity& target, Player& atacante, int attacker_x, i
     int roll = (rango > 0) ? (std::rand() % (rango + 1)) : 0;
     int damage = atacante.damage_attack() * (damage_min + roll);
 
-    // Crítico: probabilidad 10%, daño doble, no puede ser esquivado
+    // Crítico: probabilidad cfg.crit_chance, daño x cfg.crit_multiplier, no esquivable.
     const auto& cfg = GameConfig::instance();
     bool critical = is_critical || ((std::rand() / static_cast<double>(RAND_MAX)) < cfg.crit_chance);
-    if (critical) damage *= 2;
+    if (critical) damage *= cfg.crit_multiplier;
 
     return target.receive_damage(damage, atacante, critical);
 }

@@ -1051,12 +1051,12 @@ void GameLoop::run() {
     int ticks_accumulated = 0;
     const int ticks_per_second = cfg.ticks_per_second; // 1000ms / 50ms
     int npc_move_ticks = 0;
-    const int TICKS_PER_NPC_MOVE = 10;
+    const int TICKS_PER_NPC_MOVE = cfg.npc_move_every_ticks;
 
-    // Regeneracion automatica de vida: fraccion de la vida maxima que cada
-    // player vivo recupera por segundo real (0.01 = 1%).
-    const double LIFE_REGEN_PER_SECOND = 0.01;
-    const double MANA_REGEN_PER_SECOND = 0.01;
+    // Regeneracion automatica de vida/mana: fraccion de la maxima que cada player
+    // vivo recupera por segundo real ([player] en config.toml, 0.01 = 1%).
+    const double LIFE_REGEN_PER_SECOND = cfg.life_regen_per_second;
+    const double MANA_REGEN_PER_SECOND = cfg.mana_regen_per_second;
 
     while (should_keep_running()) {
         next_tick += tick_rate;

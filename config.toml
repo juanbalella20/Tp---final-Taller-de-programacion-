@@ -33,9 +33,11 @@ level_diff_max = 10   # Diferencia maxima de nivel para poder atacar
 # Combate
 # ------------------------------------------------------------
 [combat]
-# Probabilidad de critico (daño doble, no esquivable)
+# Probabilidad de critico (no esquivable)
 crit_chance = 0.1
- 
+# Multiplicador de daño cuando el golpe es critico (2 = daño doble).
+crit_multiplier = 2
+
 # Esquive: rand(0,1)^Agilidad < dodge_threshold
 dodge_threshold = 0.001
 
@@ -268,6 +270,14 @@ heal_mana = 100
 # Jugador
 # ------------------------------------------------------------
 [player]
+# Estado con el que arranca un jugador recien creado.
+initial_level = 1
+initial_gold = 0
+# Regeneracion automatica de vida/mana por segundo real, como fraccion de la
+# vida/mana maxima (0.01 = 1% por segundo). La aplica el game loop.
+life_regen_per_second = 0.01
+mana_regen_per_second = 0.01
+
 # Inventario inicial de cada nuevo jugador: lista de ids de items (deben
 # coincidir con las claves de [items.*] de arriba; "escudo" es alias de
 # "escudo_tortuga"). Cambiar esta lista cambia el equipamiento de arranque
@@ -283,6 +293,13 @@ max_inventory_slots = 16
 # ------------------------------------------------------------
 # NPCs hostiles
 # ------------------------------------------------------------
+# Parametros comunes a todos los NPC hostiles (en ticks del game loop, 50ms c/u):
+# attack_speed_ticks = 20 -> 1 ataque por segundo.
+# move_every_ticks  = 10 -> avanza una celda cada 10 ticks (2 celdas/segundo).
+[npcs]
+attack_speed_ticks = 20
+move_every_ticks = 10
+
 # level: nivel del NPC, usado en el calculo de XP al matarlo.
 [npcs.goblin]
 name = "Goblin"

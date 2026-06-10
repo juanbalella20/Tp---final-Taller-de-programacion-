@@ -2,6 +2,7 @@
 #include "../entity.h"
 #include "../player/player.h"
 #include "../../game_exceptions.h"
+#include "game_config.h"
 #include <cmath>
 #include <cstdlib>
 
@@ -40,11 +41,11 @@ DamageOutcome Baculo::use_item(Entity& target, Player& atacante, int attacker_x,
 
     atacante.lose_mana(mana_cost);
 
-    // Crítico: probabilidad 10%, daño doble, no puede ser esquivado.
+    // Crítico: probabilidad cfg.crit_chance, daño x cfg.crit_multiplier, no esquivable.
     int damage = value;
-    static constexpr double CRIT_CHANCE = 0.1;
-    bool critical = is_critical || ((std::rand() / static_cast<double>(RAND_MAX)) < CRIT_CHANCE);
-    if (critical) damage *= 2;
+    const auto& cfg = GameConfig::instance();
+    bool critical = is_critical || ((std::rand() / static_cast<double>(RAND_MAX)) < cfg.crit_chance);
+    if (critical) damage *= cfg.crit_multiplier;
 
     return target.receive_damage(damage, atacante, critical);
 }

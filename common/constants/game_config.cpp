@@ -30,6 +30,7 @@ void GameConfig::load(const std::string& toml_path) {
 
     // Combat
     crit_chance = root.at_path("combat.crit_chance").value_or(0.1);
+    crit_multiplier = root.at_path("combat.crit_multiplier").value_or(2);
     dodge_threshold = root.at_path("combat.dodge_threshold").value_or(0.001);
 
     // Drop al morir un NPC (oro base siempre + tabla de drop extra).
@@ -222,6 +223,16 @@ void GameConfig::load(const std::string& toml_path) {
 
     // Cantidad maxima de items del inventario de un jugador.
     max_inventory_slots = root.at_path("player.max_inventory_slots").value_or(16);
+
+    // Estado inicial y regeneracion del jugador.
+    player_initial_level = root.at_path("player.initial_level").value_or(1);
+    player_initial_gold  = root.at_path("player.initial_gold").value_or(0);
+    life_regen_per_second = root.at_path("player.life_regen_per_second").value_or(0.01);
+    mana_regen_per_second = root.at_path("player.mana_regen_per_second").value_or(0.01);
+
+    // Parametros comunes de los NPC hostiles (en ticks del game loop).
+    npc_attack_speed_ticks = root.at_path("npcs.attack_speed_ticks").value_or(20);
+    npc_move_every_ticks   = root.at_path("npcs.move_every_ticks").value_or(10);
 
     goblin.name           = root.at_path("npcs.goblin.name").value_or(std::string("Goblin"));
     goblin.lifepoints     = root.at_path("npcs.goblin.lifepoints").value_or(30);

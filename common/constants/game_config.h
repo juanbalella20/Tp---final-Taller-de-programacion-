@@ -80,6 +80,7 @@ public:
 
     // Combat
     double crit_chance;
+    int crit_multiplier;
     double dodge_threshold;
 
     // Drop al morir un NPC (ver [npcs.drop] en config.toml).
@@ -138,8 +139,17 @@ public:
     // Cantidad maxima de items que puede tener el inventario de un jugador
     // ([player].max_inventory_slots en config.toml).
     int max_inventory_slots;
+    // Estado inicial de un jugador recien creado ([player] en config.toml).
+    int player_initial_level;
+    int player_initial_gold;
+    // Regeneracion automatica de vida/mana por segundo (fraccion de la maxima).
+    double life_regen_per_second;
+    double mana_regen_per_second;
 
-    // Npc hostile
+    // Npc hostile: parametros comunes (en ticks del game loop).
+    int npc_attack_speed_ticks;
+    int npc_move_every_ticks;
+
     NpcHostileConfig goblin;
     NpcHostileConfig spider1;
     NpcHostileConfig spider2;

@@ -3,6 +3,7 @@
 #include "alive_state.h"
 #include "ghost_state.h"
 #include "meditate_state.h"
+#include "game_config.h"
 
 #include <cmath>
 
@@ -13,10 +14,10 @@ Player::Player(const std::string name, PlayerRace& player_race, PlayerClass& pla
     player_race(player_race),
     player_class(player_class),
     player_inventory(),
-    level(16) {
+    level(GameConfig::instance().player_initial_level) {
 
     lives = max_life();
-    gold = 10000;
+    gold = GameConfig::instance().player_initial_gold;
     experience = 0;
     mana = max_mana();
 }
