@@ -5,6 +5,9 @@
 #include "game_config.h"
 #include "../item/item.h"
 #include "../item/item_catalog.h"
+#include <array>
+#include <queue>
+#include <utility>
 #include <vector>
 
 NPChostile::NPChostile(const std::string& type_id, const std::string& name,
@@ -19,6 +22,7 @@ NPChostile::NPChostile(const std::string& type_id, const std::string& name,
       remaining_ticks_to_spawn(0), ticks_to_spawn(ticks_to_spawn),
       max_lifepoints(this->lifepoints),
       level(level),
+      current_direction(DIR_SOUTH),
       // En ticks de 50ms (los decrementa ZoneWorld::update_npcs cada tick):
       // npc_attack_speed_ticks (config.toml [npcs]) controla la cadencia.
       attack_speed_ticks(GameConfig::instance().npc_attack_speed_ticks),
@@ -110,36 +114,79 @@ DamageOutcome NPChostile::receive_damage(int dmg, Player& atacante, bool is_crit
 }
 
 void NPChostile::move_towards(int target_x, int target_y, ZoneWorld& world, const std::vector<Player*>& players) {
-    int dx = target_x - coord_x;
-    int dy = target_y - coord_y;
+    const int width = world.get_width();
+    const int height = world.get_height();
+    if (width <= 0 || height <= 0) return;
 
-    int next_x = coord_x;
-    int next_y = coord_y;
+    const auto index_of = [width](int x, int y) { return y * width + x; };
+    const auto x_of = [width](int index) { return index % width; };
+    const auto y_of = [width](int index) { return index / width; };
+    const auto is_adjacent_to_target = [target_x, target_y](int x, int y) {
+        return std::abs(x - target_x) + std::abs(y - target_y) == 1;
+    };
+    if (is_adjacent_to_target(coord_x, coord_y)) return;
 
-    if (std::abs(dx) > std::abs(dy)) {
-        if (dx > 0) {
-            next_x++;
-            current_direction = DIR_EAST;
-        } else {
-            next_x--;
-            current_direction = DIR_WEST;
+    const int start = index_of(coord_x, coord_y);
+    std::vector<int> parent(width * height, -1);
+    std::queue<int> pending;
+    parent[start] = start;
+    pending.push(start);
+
+    int goal = -1;
+    static constexpr std::array<std::pair<int, int>, 4> directions = {{
+        {0, -1},
+        {1, 0},
+        {0, 1},
+        {-1, 0},
+    }};
+
+    while (!pending.empty()) {
+        const int current = pending.front();
+        pending.pop();
+
+        const int current_x = x_of(current);
+        const int current_y = y_of(current);
+        if (current != start && is_adjacent_to_target(current_x, current_y)) {
+            goal = current;
+            break;
         }
-    } else if (std::abs(dy) > 0) {
-        if (dy > 0) {
-            next_y++;
-            current_direction = DIR_SOUTH;
-        } else {
-            next_y--;
-            current_direction = DIR_NORTH;
+
+        for (const auto& [step_x, step_y] : directions) {
+            const int next_x = current_x + step_x;
+            const int next_y = current_y + step_y;
+            if (!world.in_bounds(next_x, next_y)) continue;
+
+            const int next = index_of(next_x, next_y);
+            if (parent[next] != -1) continue;
+            if (world.is_blocked_terrain(next_x, next_y)) continue;
+            if (world.has_actor_at(next_x, next_y, players)) continue;
+
+            parent[next] = current;
+            pending.push(next);
         }
     }
 
-    if (!world.is_blocked_terrain(next_x, next_y) && 
-        !world.has_actor_at(next_x, next_y, players)) {
-        
-        coord_x = next_x;
-        coord_y = next_y;
+    if (goal == -1) return;
+
+    int first_step = goal;
+    while (parent[first_step] != start) {
+        first_step = parent[first_step];
     }
+
+    const int next_x = x_of(first_step);
+    const int next_y = y_of(first_step);
+    if (next_x > coord_x) {
+        current_direction = DIR_EAST;
+    } else if (next_x < coord_x) {
+        current_direction = DIR_WEST;
+    } else if (next_y > coord_y) {
+        current_direction = DIR_SOUTH;
+    } else {
+        current_direction = DIR_NORTH;
+    }
+
+    coord_x = next_x;
+    coord_y = next_y;
 }
 
 bool NPChostile::can_attack() const {
