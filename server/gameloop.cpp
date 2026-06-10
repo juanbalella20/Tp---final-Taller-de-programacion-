@@ -1077,6 +1077,7 @@ void GameLoop::run() {
                     client_registry_monitor.notify_client_by_name(attack.victim_name, victim_chat);
 
                     if (attack.victim_died) {
+                        game_map.kill_player(attack.victim_name);
                         broadcast_npcs_snapshot();
                         broadcast_items_snapshot();
                         GameMsg death_msg(MSG_DEATH);

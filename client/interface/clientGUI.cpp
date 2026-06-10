@@ -890,48 +890,69 @@ void ClientGUI::draw_npc_friends() {
 void ClientGUI::drawOtherPlayers() {
     if (!tilemap) return;
     const int tileSize = tilemap->getTileSize();
+
+    // Purga los sprites de jugadores que ya no estan en other_players (se
+    // fueron de la zona o cambiamos de zona): libera sus texturas.
+    for (auto it = other_player_displays.begin(); it != other_player_displays.end();) {
+        const std::string& cached_name = it->first;
+        bool still_here = std::any_of(other_players.begin(), other_players.end(),
+            [&cached_name](const PlayerInfo& p) { return p.name == cached_name; });
+        it = still_here ? std::next(it) : other_player_displays.erase(it);
+    }
+
     for (const auto& p : other_players) {
-        try {
-            PlayerDisplay pd(renderer, "imagenes/1005.png", tileSize, p.race);
-            pd.setTilePosition(p.x, p.y);
-            pd.set_equipped_weapon(p.has_equipped_weapon);
-            pd.set_ghost(p.ghost);
-            SDL_FRect pov;
-            switch (p.direction) {
-                case DIR_NORTH: 
-                    if (pd.is_ghost()) {
-                        pov = pd.ghost_frame();
-                    } else {
-                        pov = pd.back_pov(ViewDirection::BACK);
-                    }
-                    break;
-                case DIR_SOUTH:
-                    if (pd.is_ghost()) {
-                        pov = pd.ghost_frame();
-                    } else {
-                        pov = pd.front_pov(ViewDirection::FRONT);
-                    } 
-                    break;
-                case DIR_EAST:
-                    if (pd.is_ghost()) {
-                        pov = pd.ghost_frame();
-                    } else {
-                        pov = pd.right_pov(ViewDirection::RIGHT);
-                    }  
-                    break;
-                case DIR_WEST:
-                    if (pd.is_ghost()) {
-                        pov = pd.ghost_frame();
-                    } else {
-                        pov = pd.left_pov(ViewDirection::LEFT);
-                    }   
-                    break;
-                default: break;
+        auto it = other_player_displays.find(p.name);
+        if (it == other_player_displays.end()) {
+            try {
+                it = other_player_displays
+                         .try_emplace(p.name, renderer, "imagenes/1005.png", tileSize, p.race)
+                         .first;
+            } catch (const std::runtime_error& e) {
+                std::cout << "[DEBUG: drawOtherPlayers] textura fallida: " << e.what() << std::endl;
+                continue;
             }
-            pd.draw(camera, pov);
-        } catch (const std::runtime_error& e) {
-            std::cout << "[DEBUG: drawOtherPlayers] textura fallida: " << e.what() << std::endl;
         }
+        PlayerDisplay& pd = it->second;
+        pd.setTilePosition(p.x, p.y);
+        pd.set_equipped_weapon(p.has_equipped_weapon);
+        pd.set_ghost(p.ghost);
+        // Los *_pov avanzan walk_frame en cada llamada; los otros jugadores se
+        // dibujan siempre con el frame 0 de su direccion, asi que se resetea
+        // antes de pedir el pov.
+        pd.reset_frame();
+        SDL_FRect pov;
+        switch (p.direction) {
+            case DIR_NORTH:
+                if (pd.is_ghost()) {
+                    pov = pd.ghost_frame();
+                } else {
+                    pov = pd.back_pov(ViewDirection::BACK);
+                }
+                break;
+            case DIR_SOUTH:
+                if (pd.is_ghost()) {
+                    pov = pd.ghost_frame();
+                } else {
+                    pov = pd.front_pov(ViewDirection::FRONT);
+                }
+                break;
+            case DIR_EAST:
+                if (pd.is_ghost()) {
+                    pov = pd.ghost_frame();
+                } else {
+                    pov = pd.right_pov(ViewDirection::RIGHT);
+                }
+                break;
+            case DIR_WEST:
+                if (pd.is_ghost()) {
+                    pov = pd.ghost_frame();
+                } else {
+                    pov = pd.left_pov(ViewDirection::LEFT);
+                }
+                break;
+            default: break;
+        }
+        pd.draw(camera, pov);
     }
 }
 

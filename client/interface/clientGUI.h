@@ -85,6 +85,11 @@ private:
     std::vector<NpcInfo> npcs;
     std::vector<ItemFloorInfo> items_on_floor;
     std::vector<PlayerInfo> other_players;
+    // Sprite persistente de cada jugador ajeno, por nombre. Construir un
+    // PlayerDisplay carga ~20 PNGs de disco y crea sus texturas: debe hacerse
+    // UNA vez por jugador y reusarse entre frames (hacerlo por frame quemaba
+    // el CPU apenas habia otro jugador en la zona).
+    std::map<std::string, PlayerDisplay> other_player_displays;
     SDL_Texture* enemy_texture;
     std::map<std::string, SDL_Texture*> enemies_textures;
     

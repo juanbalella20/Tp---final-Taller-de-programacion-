@@ -2,7 +2,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
-#include "game_config.h" 
+#include "game_config.h"
+#include "utility/paths.h"
 
 int main(int argc, char* argv[]) {
 
@@ -14,7 +15,9 @@ int main(int argc, char* argv[]) {
     // Semilla del RNG una sola vez al arrancar. Sin esto, std::rand() repite
     // siempre la misma secuencia (daño, esquive, crítico, defensa) en cada
     // ejecución del servidor.
-    GameConfig::instance().load("config.toml"); 
+    // paths::config: ~/.config/argentum/config.toml si existe (instalado), si no
+    // el config.toml del cwd (desarrollo en el repo).
+    GameConfig::instance().load(paths::config("config.toml"));
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
     const char* port = argv[1];

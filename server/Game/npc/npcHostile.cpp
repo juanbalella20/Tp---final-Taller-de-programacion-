@@ -19,6 +19,8 @@ NPChostile::NPChostile(const std::string& type_id, const std::string& name,
       remaining_ticks_to_spawn(0), ticks_to_spawn(ticks_to_spawn),
       max_lifepoints(this->lifepoints),
       level(level),
+      // En ticks de 50ms (los decrementa ZoneWorld::update_npcs cada tick):
+      // 20 ticks = 1 ataque por segundo.
       attack_speed_ticks(20),
       current_attack_cooldown(0) {
     this->name = name;

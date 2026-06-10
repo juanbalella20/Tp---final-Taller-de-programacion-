@@ -27,8 +27,8 @@ if (spawn.type == "goblin") {
         npc.set_position(spawn.x, spawn.y);
         return npc;
     }
-    if (spawn.type == "zombie") {
-        NPChostile npc("zombie", cfg.zombie.name, cfg.zombie.lifepoints, cfg.zombie.attack_dmg, cfg.zombie.ticks_to_spawn, cfg.zombie.level);
+    if (spawn.type == "spider") {
+        NPChostile npc("spider", cfg.spider1.name, cfg.spider1.lifepoints, cfg.spider1.attack_dmg, cfg.spider1.ticks_to_spawn, cfg.spider1.level);
         npc.set_position(spawn.x, spawn.y);
         return npc;
     }
@@ -291,7 +291,13 @@ void ZoneWorld::spawn_priest(int x, int y) {
 bool ZoneWorld::update_npcs() {
     bool respawned = false;
     for (auto& npc : npcs) {
-        if (!npc.is_dead()) continue;
+        if (!npc.is_dead()) {
+            // El cooldown de ataque cuenta ticks reales (50ms), así que se
+            // decrementa acá, que corre todos los ticks; update_npc_aggro corre
+            // solo uno de cada TICKS_PER_NPC_MOVE.
+            npc.tick_cooldowns();
+            continue;
+        }
         npc.reduce_ticks_to_spawn();
         if (!npc.can_spawn()) continue;
 
@@ -311,7 +317,6 @@ std::vector<NPCAttackEvent> ZoneWorld::update_npc_aggro(const std::vector<Player
 
     for (auto& npc : npcs) {
         if (npc.is_dead()) continue;
-        npc.tick_cooldowns();
 
         // Busca jugador más cercano
         int best_distance = INT_MAX;
