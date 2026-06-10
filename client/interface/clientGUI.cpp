@@ -773,6 +773,7 @@ void ClientGUI::update() {
                         for (auto& p : other_players) {
                             if (p.name == msg.get_player_name()) {
                                 p.has_equipped_weapon = msg.get_equipped();
+                                p.equipped_ids = msg.get_equipped_ids();
                                 break;
                             }
                         }
@@ -915,6 +916,7 @@ void ClientGUI::drawOtherPlayers() {
         PlayerDisplay& pd = it->second;
         pd.setTilePosition(p.x, p.y);
         pd.set_equipped_weapon(p.has_equipped_weapon);
+        pd.set_equipped_items(p.equipped_ids);
         pd.set_ghost(p.ghost);
         // Los *_pov avanzan walk_frame en cada llamada; los otros jugadores se
         // dibujan siempre con el frame 0 de su direccion, asi que se resetea
