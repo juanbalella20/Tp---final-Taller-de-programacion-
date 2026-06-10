@@ -610,6 +610,9 @@ void ClientGUI::update() {
                         Direction dir = static_cast<Direction>(msg.get_direction());
                         if (it != other_players.end()) {
                             bool ghost = it->ghost;
+                            bool moved = (it->x != x || it->y != y);
+                            it->moving = moved;
+                            it->update_frame = true;
                             it->x = x;
                             it->y = y;
                             it->direction = dir;
@@ -617,6 +620,8 @@ void ClientGUI::update() {
                         } else {
                             PlayerInfo pi{mover, msg.get_race(), 0, x, y, dir};
                             pi.ghost = false;
+                            pi.moving = false;
+                            pi.update_frame = true;
                             other_players.push_back(pi);
                         }
                     }
@@ -901,7 +906,7 @@ void ClientGUI::drawOtherPlayers() {
         it = still_here ? std::next(it) : other_player_displays.erase(it);
     }
 
-    for (const auto& p : other_players) {
+    for (auto& p : other_players) {
         auto it = other_player_displays.find(p.name);
         if (it == other_player_displays.end()) {
             try {
@@ -918,43 +923,47 @@ void ClientGUI::drawOtherPlayers() {
         pd.set_equipped_weapon(p.has_equipped_weapon);
         pd.set_equipped_items(p.equipped_ids);
         pd.set_ghost(p.ghost);
-        // Los *_pov avanzan walk_frame en cada llamada; los otros jugadores se
-        // dibujan siempre con el frame 0 de su direccion, asi que se resetea
-        // antes de pedir el pov.
-        pd.reset_frame();
-        SDL_FRect pov;
-        switch (p.direction) {
-            case DIR_NORTH:
-                if (pd.is_ghost()) {
-                    pov = pd.ghost_frame();
-                } else {
-                    pov = pd.back_pov(ViewDirection::BACK);
-                }
-                break;
-            case DIR_SOUTH:
-                if (pd.is_ghost()) {
-                    pov = pd.ghost_frame();
-                } else {
-                    pov = pd.front_pov(ViewDirection::FRONT);
-                }
-                break;
-            case DIR_EAST:
-                if (pd.is_ghost()) {
-                    pov = pd.ghost_frame();
-                } else {
-                    pov = pd.right_pov(ViewDirection::RIGHT);
-                }
-                break;
-            case DIR_WEST:
-                if (pd.is_ghost()) {
-                    pov = pd.ghost_frame();
-                } else {
-                    pov = pd.left_pov(ViewDirection::LEFT);
-                }
-                break;
-            default: break;
+
+        if (p.update_frame) {
+            if (!p.moving) {
+                pd.reset_frame();
+            }
+            SDL_FRect pov;
+            switch (p.direction) {
+                case DIR_NORTH:
+                    if (pd.is_ghost()) {
+                        pov = pd.ghost_frame();
+                    } else {
+                        pov = pd.back_pov(ViewDirection::BACK);
+                    }
+                    break;
+                case DIR_SOUTH:
+                    if (pd.is_ghost()) {
+                        pov = pd.ghost_frame();
+                    } else {
+                        pov = pd.front_pov(ViewDirection::FRONT);
+                    }
+                    break;
+                case DIR_EAST:
+                    if (pd.is_ghost()) {
+                        pov = pd.ghost_frame();
+                    } else {
+                        pov = pd.right_pov(ViewDirection::RIGHT);
+                    }
+                    break;
+                case DIR_WEST:
+                    if (pd.is_ghost()) {
+                        pov = pd.ghost_frame();
+                    } else {
+                        pov = pd.left_pov(ViewDirection::LEFT);
+                    }
+                    break;
+                default: break;
+            }
+            other_players_povs[p.name] = pov; 
+            p.update_frame = false;
         }
-        pd.draw(camera, pov);
+        pd.draw(camera, other_players_povs[p.name]);
     }
 }
 

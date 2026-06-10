@@ -16,6 +16,8 @@ struct PlayerInfo {
     bool has_equipped_weapon = false;
     bool ghost = false;
     std::vector<std::string> equipped_ids;
+    bool moving = false;
+    bool update_frame = true;
 };
 
 
