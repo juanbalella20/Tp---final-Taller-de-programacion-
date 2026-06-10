@@ -38,12 +38,23 @@ Zone GameMap::get_player_zone(const std::string& player_name) const {
     return zone_id_of(player_name);
 }
 
-std::pair<int, int> GameMap::find_arrival_cell(ZoneWorld& dst, Zone dest_zone) {
+std::pair<int, int> GameMap::find_arrival_cell(ZoneWorld& dst, Zone dest_zone, Zone src_zone) {
     const std::vector<Player*> dest_players = players_in(dest_zone);
-    // Si la zona destino tiene teleport, aparecer adyacente a el.
-    if (!dst.get_teleports().empty()) {
-        const TeleportDef& dest_tp = dst.get_teleports().front();
-        return dst.free_cell_adjacent_to(dest_tp.x, dest_tp.y, dest_players);
+    // Si la zona destino tiene teleports, aparecer adyacente al que apunta de
+    // vuelta a la zona de origen (el "par" del que se acaba de usar). Si
+    // ninguno apunta ahi (p.ej. /tp a una zona sin camino de vuelta), se cae
+    // al primero de la lista.
+    const auto& tps = dst.get_teleports();
+    if (!tps.empty()) {
+        const TeleportDef* dest_tp = &tps.front();
+        for (const TeleportDef& tp : tps) {
+            auto it = ZONE_NAME_MAP.find(tp.dest_zone);
+            if (it != ZONE_NAME_MAP.end() && it->second == src_zone) {
+                dest_tp = &tp;
+                break;
+            }
+        }
+        return dst.free_cell_adjacent_to(dest_tp->x, dest_tp->y, dest_players);
     }
     // Si no, cualquier celda libre.
     return dst.find_random_empty_cell(dest_players);
@@ -58,12 +69,14 @@ TeleportResult GameMap::force_zone_change(const std::string& player_name,
     if (dit == zones.end()) return {false, ZONE_DESERT, 0, 0};  // zona no cargada
     ZoneWorld& dst = dit->second;
 
-    auto [nx, ny] = find_arrival_cell(dst, dest_zone);
+    // Zona de origen ANTES de re-etiquetar: decide a que teleport de la zona
+    // destino se llega, y el gameloop la usa para avisar a los que quedan en
+    // esa zona que el player se fue.
+    Zone src_zone = zone_id_of(player_name);
+
+    auto [nx, ny] = find_arrival_cell(dst, dest_zone, src_zone);
     if (nx == -1) return {false, ZONE_DESERT, 0, 0};  // sin lugar libre
 
-    // Zona de origen ANTES de re-etiquetar: el gameloop la usa para avisar a los
-    // que quedan en esa zona que el player se fue.
-    Zone src_zone = zone_id_of(player_name);
     player_zone[player_name] = dest_zone;
     player->update_position(nx, ny);
     return {true, dest_zone, nx, ny, src_zone};

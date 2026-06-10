@@ -48,9 +48,13 @@ private:
     // Punteros (const) a los players que estan en la zona z
     std::vector<Player*> players_in(Zone z);
 
-    // Celda donde aparece un player que llega a la zona dst: adyacente al
-    // teleport de esa zona si tiene, o una celda libre random. {-1,-1} si nada.
-    std::pair<int, int> find_arrival_cell(ZoneWorld& dst, Zone dest_zone);
+    // Celda donde aparece un player que llega a la zona dst viniendo de
+    // src_zone: adyacente al teleport de dst que apunta DE VUELTA a src_zone
+    // (si hay varios teleports, volver de forest debe dejarte en el que va a
+    // forest, no en el primero de la lista); si ninguno apunta a src_zone cae
+    // al primero, y si la zona no tiene teleports, a una celda libre random.
+    // {-1,-1} si no hay lugar.
+    std::pair<int, int> find_arrival_cell(ZoneWorld& dst, Zone dest_zone, Zone src_zone);
 
     static int dir_to_dy(Direction dir);
     static int dir_to_dx(Direction dir);
