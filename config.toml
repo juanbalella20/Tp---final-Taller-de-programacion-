@@ -168,8 +168,9 @@ spell = "flecha_magica"
 name = "Flauta elfica"
 price = 300
 distance = 5
-damage_min = 0
-damage_max = 0
+# Para el hechizo de curacion, damage_min/max es el rango de vida restaurada.
+damage_min = 30
+damage_max = 50
 mana_cost = 100
 spell = "curar"
  
