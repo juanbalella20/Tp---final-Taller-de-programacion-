@@ -8,12 +8,6 @@
  * Extensible: agregar un valor aca (p.ej. PlaceNpc) + su Tool concreta es lo
  * unico necesario para sumar un tipo de edicion, sin tocar la logica existente.
  */
-enum class ToolType {
-    Pencil,
-    Eraser,
-    Fill,
-    Teleport,
-    Collision
-};
+enum class ToolType { Pencil, Eraser, Fill, Teleport, Collision };
 
-#endif  // EDITOR_TOOL_TYPE_H
+#endif // EDITOR_TOOL_TYPE_H

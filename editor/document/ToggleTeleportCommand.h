@@ -20,21 +20,21 @@ class Map;
  */
 class ToggleTeleportCommand : public Command {
 public:
-    // 'dest_zone' es la zona destino activa, usada si el toggle AGREGA.
-    ToggleTeleportCommand(Map* map, int x, int y, std::string dest_zone);
+  // 'dest_zone' es la zona destino activa, usada si el toggle AGREGA.
+  ToggleTeleportCommand(Map *map, int x, int y, std::string dest_zone);
 
-    void execute() override;  // toggle: agrega (con dest_zone) o quita
-    void undo() override;     // restaura el estado previo de la celda
+  void execute() override; // toggle: agrega (con dest_zone) o quita
+  void undo() override;    // restaura el estado previo de la celda
 
 private:
-    Map* map_;
-    int x_;
-    int y_;
-    std::string dest_zone_;  // zona a usar si execute() agrega
+  Map *map_;
+  int x_;
+  int y_;
+  std::string dest_zone_; // zona a usar si execute() agrega
 
-    // Estado previo de la celda (capturado en el constructor) para el undo.
-    bool was_present_;
-    std::string prev_zone_;
+  // Estado previo de la celda (capturado en el constructor) para el undo.
+  bool was_present_;
+  std::string prev_zone_;
 };
 
-#endif  // EDITOR_TOGGLE_TELEPORT_COMMAND_H
+#endif // EDITOR_TOGGLE_TELEPORT_COMMAND_H

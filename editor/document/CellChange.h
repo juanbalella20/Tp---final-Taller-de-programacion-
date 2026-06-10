@@ -8,10 +8,10 @@
  * Tipo compartido del contrato: lo usan Tool, SetTilesCommand y EditorDocument.
  */
 struct CellChange {
-    int x;
-    int y;
-    int old_gid;
-    int new_gid;
+  int x;
+  int y;
+  int old_gid;
+  int new_gid;
 };
 
-#endif  // EDITOR_CELL_CHANGE_H
+#endif // EDITOR_CELL_CHANGE_H

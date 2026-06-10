@@ -12,32 +12,32 @@ class QMouseEvent;
 class QPainter;
 
 class TilesetSelectorView : public QGraphicsView {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
-    explicit TilesetSelectorView(QWidget* parent = nullptr);
+  explicit TilesetSelectorView(QWidget *parent = nullptr);
 
-    bool setTileset(const QString& path, int tileSize, int firstGid);
-    void clearTileset();
+  bool setTileset(const QString &path, int tileSize, int firstGid);
+  void clearTileset();
 
-    int tileIdAt(const QPointF& scenePosition) const;
-    int selectedGid() const;
-    QRectF selectionRect() const;
-    const TileLibrary& tileLibrary() const;
+  int tileIdAt(const QPointF &scenePosition) const;
+  int selectedGid() const;
+  QRectF selectionRect() const;
+  const TileLibrary &tileLibrary() const;
 
 signals:
-    void tileSelected(int gid, QPixmap pixmap);
+  void tileSelected(int gid, QPixmap pixmap);
 
 protected:
-    void drawForeground(QPainter* painter, const QRectF& rect) override;
-    void mousePressEvent(QMouseEvent* event) override;
+  void drawForeground(QPainter *painter, const QRectF &rect) override;
+  void mousePressEvent(QMouseEvent *event) override;
 
 private:
-    QGraphicsScene* m_sheetScene = nullptr;
-    QGraphicsPixmapItem* m_sheetItem = nullptr;
-    TileLibrary m_library;
-    int m_firstGid = 0;
-    int m_selectedLocalId = -1;
+  QGraphicsScene *m_sheetScene = nullptr;
+  QGraphicsPixmapItem *m_sheetItem = nullptr;
+  TileLibrary m_library;
+  int m_firstGid = 0;
+  int m_selectedLocalId = -1;
 };
 
-#endif  // EDITOR_TILESET_SELECTOR_VIEW_H
+#endif // EDITOR_TILESET_SELECTOR_VIEW_H

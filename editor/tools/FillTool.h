@@ -12,11 +12,11 @@
  */
 class FillTool : public Tool {
 public:
-    std::vector<CellChange> on_press(const Map& map, int layer,
-                                     int x, int y, int active_gid) override;
-    std::vector<CellChange> on_drag(const Map& map, int layer,
-                                    int x, int y, int active_gid) override;
-    bool paints_on_drag() const override;
+  std::vector<CellChange> on_press(const Map &map, int layer, int x, int y,
+                                   int active_gid) override;
+  std::vector<CellChange> on_drag(const Map &map, int layer, int x, int y,
+                                  int active_gid) override;
+  bool paints_on_drag() const override;
 };
 
-#endif  // EDITOR_FILL_TOOL_H
+#endif // EDITOR_FILL_TOOL_H
