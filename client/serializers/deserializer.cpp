@@ -28,7 +28,7 @@ ClientDeserializer::ClientDeserializer() {
         (uint8_t)MSG_MEDITATE, (uint8_t)MSG_RESURRECT, (uint8_t)MSG_CURE, (uint8_t)MSG_LIST,
         (uint8_t)MSG_FOUND_CLAN, (uint8_t)MSG_JOIN_CLAN, (uint8_t)MSG_LEFT_CLAN, (uint8_t)MSG_CLAN_ACEP,
         (uint8_t)MSG_CLAN_BAN, (uint8_t)MSG_CLAN_KICK, (uint8_t)MSG_CLAN_RECH, (uint8_t)MSG_REV_CLAN,
-        (uint8_t)MSG_CHAT, (uint8_t)MSG_TAKE, (uint8_t)MSG_AUTH_ERROR
+        (uint8_t)MSG_CHAT, (uint8_t)MSG_TAKE, (uint8_t)MSG_AUTH_ERROR, (uint8_t)MSG_CLAN_UPDATE
     }) {
         handlers[type] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
             deserialize_text(payload, msg);
@@ -404,14 +404,16 @@ void ClientDeserializer::deserialize_npcs_snapshot(const std::vector<uint8_t>& p
 
 // Ver formato en serverSerializer::serialize_register.
 // MSG_CONFIRM_SESSION: confirmacion de auth exitoso (login/registro).
-// Payload: [name_len:1][name][race_len:1][race][class_len:1][class]
+// Payload: [name_len:1][name][race_len:1][race][class_len:1][class][clan_len:1][clan]
 // El motivo: el cliente necesita name/race/class del personaje ANTES de entrar
-// al juego (en login la raza/clase reales viven en el server).
+// al juego (en login la raza/clase reales viven en el server). El clan propio
+// viaja en chat_content y lo usa la GUI para colorear los nombres de los demas.
 void ClientDeserializer::deserialize_confirm_session(const std::vector<uint8_t>& payload, GameMsg& msg) {
     size_t offset = 0;
     msg.set_player_name(read_string(payload, offset));
     msg.set_race(read_string(payload, offset));
     msg.set_class(read_string(payload, offset));
+    msg.set_chat_content(read_string(payload, offset));
 }
 
 void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payload, GameMsg& msg) {
@@ -556,14 +558,19 @@ void ClientDeserializer::deserialize_players_snapshot(const std::vector<uint8_t>
         uint8_t items_count = payload[offset++];
         std::vector<std::string> equipped_ids;
         equipped_ids.reserve(items_count);
-        
+
         for (uint8_t j = 0; j < items_count; ++j) {
             equipped_ids.push_back(read_string(payload, offset));
         }
 
+        // Nombre del clan (puede ser vacío): define el color del nombre sobre
+        // el jugador (verde mismo clan / rojo otro clan).
+        std::string clan_name = read_string(payload, offset);
+
         PlayerInfo pi{std::move(name), race, 0, x, y};
         pi.ghost = is_ghost;
         pi.equipped_ids = std::move(equipped_ids);
+        pi.clan_name = std::move(clan_name);
         players.push_back(pi);
     }
 

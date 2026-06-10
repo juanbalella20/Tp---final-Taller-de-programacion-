@@ -16,6 +16,7 @@ struct AuthSession {
     std::string password;   // en claro hasta enviarlo; descartar tras autenticar
     std::string race;       // elegida por el usuario (registro) o del confirm (login)
     std::string klass;      // idem race
+    std::string clan;       // clan propio del jugador ("" si no tiene), del confirm
 
     // Conexion viva una vez que el usuario intenta autenticarse. Se transfiere
     // (move) a los threads de red al entrar al juego.

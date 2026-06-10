@@ -44,6 +44,9 @@ ServerSerializer::ServerSerializer() {
     handlers[MSG_DEATH] = [this](const GameMsg& msg) { return serialize_name(msg); };
     // MSG_PLAYER_LEFT: mismo formato que MSG_DEATH ([name_size:1B][name]).
     handlers[MSG_PLAYER_LEFT] = [this](const GameMsg& msg) { return serialize_name(msg); };
+    // MSG_CLAN_UPDATE: reusa el formato de texto ([name][content]); name = jugador
+    // afectado, content = su clan nuevo.
+    handlers[MSG_CLAN_UPDATE] = [this](const GameMsg& msg) { return serialize_text(msg); };
     handlers[MSG_CONFIRM_SESSION] = [this](const GameMsg& msg) { return serialize_confirm_session(msg); };
 }
 
@@ -194,10 +197,14 @@ std::vector<uint8_t> ServerSerializer::serialize_confirm_session(const GameMsg& 
     const std::string& name = msg.get_player_name();
     const std::string& race = msg.get_race();
     const std::string& klass = msg.get_class();
+    // Clan propio del jugador (puede ser vacío): el cliente lo guarda para
+    // decidir el color del nombre de los demás jugadores (mismo clan / otro).
+    const std::string& clan = msg.get_chat_content();
 
     uint16_t payload_len = 1 + static_cast<uint16_t>(name.size())
                          + 1 + static_cast<uint16_t>(race.size())
-                         + 1 + static_cast<uint16_t>(klass.size());
+                         + 1 + static_cast<uint16_t>(klass.size())
+                         + 1 + static_cast<uint16_t>(clan.size());
 
     std::vector<uint8_t> buf;
     buf.reserve(LEN_HEADER + payload_len);
@@ -208,6 +215,8 @@ std::vector<uint8_t> ServerSerializer::serialize_confirm_session(const GameMsg& 
     buf.insert(buf.end(), race.begin(), race.end());
     buf.push_back(static_cast<uint8_t>(klass.size()));
     buf.insert(buf.end(), klass.begin(), klass.end());
+    buf.push_back(static_cast<uint8_t>(clan.size()));
+    buf.insert(buf.end(), clan.begin(), clan.end());
     return buf;
 }
 
@@ -553,6 +562,7 @@ std::vector<uint8_t> ServerSerializer::serialize_players_snapshot(const GameMsg&
         for (const auto& id : p.equipped_ids) {
             payload_len += 1 + static_cast<uint16_t>(id.size());
         }
+        payload_len += 1 + static_cast<uint16_t>(p.clan_name.size()); // clan
     }
 
     std::vector<uint8_t> buf;
@@ -584,6 +594,11 @@ std::vector<uint8_t> ServerSerializer::serialize_players_snapshot(const GameMsg&
             buf.push_back(static_cast<uint8_t>(id.size()));
             buf.insert(buf.end(), id.begin(), id.end());
         }
+
+        // Nombre del clan (puede ser vacío). El cliente lo compara con su propio
+        // clan para pintar el nombre del jugador verde (mismo clan) o rojo.
+        buf.push_back(static_cast<uint8_t>(p.clan_name.size()));
+        buf.insert(buf.end(), p.clan_name.begin(), p.clan_name.end());
     }
 
     return buf;

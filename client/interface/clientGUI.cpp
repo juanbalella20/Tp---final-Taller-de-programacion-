@@ -14,10 +14,11 @@
 
 ClientGUI::ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
     Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name,
-    const std::string& player_race)
+    const std::string& player_race, const std::string& player_clan)
     : window(window), renderer(renderer), event{}, chat_font(font),
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
-      hud(nullptr), own_name(player_name), race(player_race), player(nullptr), tilemap(nullptr),
+      hud(nullptr), own_name(player_name), race(player_race), own_clan(player_clan),
+      player(nullptr), tilemap(nullptr),
       zone_music(nullptr),
       enemy_texture(nullptr), frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
       camera((float)GAME_VIEW_W, (float)GAME_VIEW_H),
@@ -678,6 +679,14 @@ void ClientGUI::update() {
                     chat_inbox.push(msg.get_chat_content());
                     break;
                 }
+                case MSG_CLAN_UPDATE:
+                    // Cambió nuestro propio clan (nos unimos/aceptaron/salimos/
+                    // nos echaron). Actualiza own_clan para recolorear en vivo los
+                    // nombres de los demás jugadores (verde mismo clan / rojo).
+                    if (msg.get_player_name() == own_name) {
+                        own_clan = msg.get_chat_content();
+                    }
+                    break;
                 case MSG_GOLD:
                     if (hud) hud->set_gold(msg.get_gold());
                     break;
@@ -957,7 +966,46 @@ void ClientGUI::drawOtherPlayers() {
             default: break;
         }
         pd.draw(camera, pov);
+
+        // Nombre sobre el jugador: verde si es de nuestro clan, bordó si es de
+        // otro (o no tiene). Sin clan propio, todos van en bordó.
+        bool mismo_clan = !own_clan.empty() && p.clan_name == own_clan;
+        SDL_Color color = mismo_clan ? SDL_Color{0, 200, 0, 255}
+                                     : SDL_Color{128, 0, 32, 255};  // bordó
+        draw_player_name(p.name, p.x, p.y, color);
     }
+}
+
+void ClientGUI::draw_player_name(const std::string& name, int tile_x, int tile_y,
+                                 SDL_Color color) {
+    if (!chat_font || name.empty() || !tilemap) return;
+
+    SDL_Surface* surface = TTF_RenderText_Blended(chat_font, name.c_str(), 0, color);
+    if (!surface) return;
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_DestroySurface(surface);
+    if (!texture) return;
+
+    float text_w = 0.0f, text_h = 0.0f;
+    SDL_GetTextureSize(texture, &text_w, &text_h);
+    // El nombre se dibuja chico (la fuente del chat es grande para el sprite):
+    // escalamos la textura para que quede legible sin tapar al personaje.
+    const float NAME_SCALE = 0.6f;
+    text_w *= NAME_SCALE;
+    text_h *= NAME_SCALE;
+
+    const int tileSize = tilemap->getTileSize();
+    // Posicion del sprite en pixeles del mundo (igual que PlayerDisplay::rect).
+    float world_x = static_cast<float>(tile_x * tileSize);
+    float world_y = static_cast<float>(tile_y * tileSize);
+    // Centrado horizontalmente sobre la celda y un poco por encima de la cabeza
+    // (la cabeza se dibuja arriba de rect.y).
+    float screen_x = camera.world_to_screen_x(world_x) + (tileSize - text_w) / 2.0f;
+    float screen_y = camera.world_to_screen_y(world_y) - text_h - tileSize * 0.5f;
+
+    SDL_FRect dst = {screen_x, screen_y, text_w, text_h};
+    SDL_RenderTexture(renderer, texture, nullptr, &dst);
+    SDL_DestroyTexture(texture);
 }
 
 

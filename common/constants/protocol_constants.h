@@ -92,6 +92,12 @@ enum MessageType : uint8_t {
     // zona). El cliente lo borra de other_players. Payload: [name_len:1B][name]
     // (mismo formato que MSG_DEATH).
     MSG_PLAYER_LEFT = 0x3B,
+    // Server->cliente: el clan propio del jugador cambió (se unió/abandonó/fue
+    // echado o baneado). Solo se manda al jugador afectado, para que actualice
+    // su propio clan y recoloree los nombres de los demás (verde/rojo) en vivo.
+    // Reusa el formato de texto: [name_len:1B][name][clan_len:1B][clan], donde
+    // name = jugador afectado y clan = su clan nuevo ("" si quedó sin clan).
+    MSG_CLAN_UPDATE = 0x3C,
 };
 
 enum Direction : uint8_t {

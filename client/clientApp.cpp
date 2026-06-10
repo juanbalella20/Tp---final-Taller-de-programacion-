@@ -33,7 +33,7 @@ void ClientApp::run() {
     // 3) Juego sobre el MISMO window/renderer/font del ScreenManager.
     ClientGUI gui(screen_manager.get_window(), screen_manager.get_renderer(),
                   screen_manager.get_font(), sendingQueue, receivingQueue,
-                  session.name, session.race);
+                  session.name, session.race, session.clan);
 
     sender.start();
     receiver.start();

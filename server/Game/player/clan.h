@@ -33,7 +33,7 @@ public:
 
     bool leave(const std::string& player_name);
 
-    bool joined(const std::string& player_name);
+    bool joined(const std::string& player_name) const;
 
     std::string& get_name() { return clan_name; }
     const std::string& get_name() const { return clan_name; }

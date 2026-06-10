@@ -62,7 +62,7 @@ bool Clan::leave(const std::string& player_name) {
     return false;
 }
 
-bool Clan::joined(const std::string& player_name) {
+bool Clan::joined(const std::string& player_name) const {
     if (player_name == founder_name) {
         return true;
     }

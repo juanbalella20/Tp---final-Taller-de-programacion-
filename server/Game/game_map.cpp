@@ -230,6 +230,15 @@ bool GameMap::same_clan(Player* player1, Player* player2) {
     return false;
 }
 
+std::string GameMap::clan_of(const std::string& player_name) const {
+    for (const auto& [name, clan] : clans) {
+        if (clan.joined(player_name)) {
+            return name;
+        }
+    }
+    return "";
+}
+
 GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, int y) {
     Player* attacker = find_player_by_name(attacker_name);
     if (attacker == nullptr) throw AttackerNotFoundException();
@@ -545,6 +554,7 @@ std::vector<PlayerInfo> GameMap::build_players_snapshot(const std::string& playe
         PlayerInfo pi{p.get_name(), p.get_race_name(), 0, p.get_coord_x(), p.get_coord_y()};
         pi.ghost = p.is_ghost();
         pi.equipped_ids = p.get_equipped_type_ids();
+        pi.clan_name = clan_of(p.get_name());
         snapshot.push_back(pi);
     }
     return snapshot;

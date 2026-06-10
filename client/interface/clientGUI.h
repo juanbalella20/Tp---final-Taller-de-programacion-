@@ -75,6 +75,8 @@ private:
     std::unique_ptr<HUD> hud;
     std::string own_name;  // nombre del jugador local
     std::string race;      // raza del jugador local
+    std::string own_clan;  // clan del jugador local ("" si no tiene): decide el
+                           // color del nombre de los demas (verde mismo clan / rojo)
 
     std::unique_ptr<PlayerDisplay> player;
     std::unique_ptr<TileMap> tilemap;
@@ -225,12 +227,18 @@ private:
     void load_npc_texture(const std::string& npc_name, const std::string& image_path);
     void load_enemies_textures();
 
+    // Dibuja el nombre de un jugador centrado sobre su sprite. tile_x/tile_y son
+    // las coords en celdas; el color lo decide el clan (verde mismo clan / rojo).
+    void draw_player_name(const std::string& name, int tile_x, int tile_y,
+                          SDL_Color color);
+
 public:
     // window/renderer/font son COMPARTIDOS (propiedad del ScreenManager): se
     // reciben, no se crean ni se destruyen aca.
     ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
               Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving,
-              const std::string& player_name, const std::string& player_race);
+              const std::string& player_name, const std::string& player_race,
+              const std::string& player_clan = "");
     ~ClientGUI();
 
     ClientGUI(const ClientGUI&) = delete;

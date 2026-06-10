@@ -16,6 +16,10 @@ struct PlayerInfo {
     bool has_equipped_weapon = false;
     bool ghost = false;
     std::vector<std::string> equipped_ids;
+    // Nombre del clan al que pertenece el jugador ("" si no tiene clan). Lo usa
+    // el cliente para pintar el nombre sobre el jugador: verde si es del mismo
+    // clan que el jugador local, rojo si es de otro clan (o sin clan).
+    std::string clan_name;
 };
 
 

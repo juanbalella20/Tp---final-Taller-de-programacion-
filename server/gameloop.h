@@ -62,6 +62,13 @@ class GameLoop : public Thread {
     void send_players_snapshot_to(uint32_t client_id, const std::string& player_name);
     void send_player_snapshot_to_other_players(uint32_t client_id, const std::string& player_name,
          const std::string& player_race);
+    // Reenvía a cada cliente conectado su snapshot de jugadores (con el clan
+    // actualizado de cada uno). Se llama tras un cambio de membresía de clan
+    // para que el color de los nombres (verde/rojo) se actualice en vivo.
+    void broadcast_players_snapshot();
+    // Avisa al jugador `player_name` cuál es su clan AHORA (MSG_CLAN_UPDATE), para
+    // que actualice su propio clan y recoloree a sus compañeros sin reloguear.
+    void notify_own_clan(const std::string& player_name);
     void broadcast_player_equipment(const std::string& player_name);
 
     // Notifica 'msg' SOLO a los clientes cuyo player está en la zona 'zone'

@@ -153,9 +153,31 @@ void GameLoop::send_player_snapshot_to_other_players(uint32_t client_id, const s
     GameMsg msg(MSG_PLAYERS_SNAPSHOT);
     PlayerInfo pi{player_name, player_race, 0, p.get_coord_x(), p.get_coord_y()};
     pi.ghost = p.is_ghost();
+    pi.clan_name = game_map.clan_of(player_name);
     msg.set_player(pi);
     std::cout << "[DEBUG: MSG_PLAYERS_SNAPSHOT] Notificando a la zona sobre nuevo jugador " << msg.get_players().front().name << std::endl;
     notify_zone(game_map.get_player_zone(player_name), msg, player_name);
+}
+
+void GameLoop::broadcast_players_snapshot() {
+    // Cada cliente recibe el snapshot de los jugadores de SU zona, con el clan
+    // de cada uno ya actualizado (build_players_snapshot llama a clan_of). Así,
+    // tras un cambio de membresía, todos recolorean en vivo los nombres ajenos.
+    for (const auto& [client_id, name] : client_registry_monitor.get_active_clients()) {
+        if (name.empty() || !game_map.player_exists(name)) continue;
+        GameMsg msg(MSG_PLAYERS_SNAPSHOT);
+        msg.set_players(game_map.build_players_snapshot(name));
+        client_registry_monitor.notify_client(client_id, msg);
+    }
+}
+
+void GameLoop::notify_own_clan(const std::string& player_name) {
+    // Le decimos al jugador cuál es su clan AHORA para que actualice own_clan en
+    // el cliente y vea verde a sus compañeros (el snapshot no incluye a uno mismo).
+    GameMsg msg(MSG_CLAN_UPDATE);
+    msg.set_player_name(player_name);
+    msg.set_chat_content(game_map.clan_of(player_name));  // clan nuevo ("" si ninguno)
+    client_registry_monitor.notify_client_by_name(player_name, msg);
 }
 
 void GameLoop::process_cmd(const ClientCmd& cmd) {
@@ -175,6 +197,10 @@ void GameLoop::send_confirm_session(uint32_t client_id, const std::string& name,
     msg.set_player_name(name);
     msg.set_race(race);
     msg.set_class(klass);
+    // Clan propio del jugador ("" si no tiene): lo viaja en chat_content y el
+    // cliente lo guarda para comparar contra el clan de los demás jugadores y
+    // pintar sus nombres verde (mismo clan) o rojo.
+    msg.set_chat_content(game_map.clan_of(name));
     client_registry_monitor.notify_client(client_id, msg);
 }
 
@@ -926,6 +952,10 @@ void GameLoop::handle_clan_foundation(const ClientCmd& cmd) {
         clan_msg.set_chat_content("Jugador " + player_name + " fundó el clan " + clan_name);
         client_registry_monitor.notify_clients(clan_msg);
         persist_clans();
+        // El fundador ahora tiene clan: que actualice su propio color y todos
+        // recoloreen los nombres en vivo.
+        notify_own_clan(player_name);
+        broadcast_players_snapshot();
     }
 }
 
@@ -960,6 +990,9 @@ void GameLoop::handle_clan_accepting(const ClientCmd& cmd) {
     clan_msg.set_chat_content("Jugador " + new_member + " fue aceptado a unirse al clan fundado por " + player_name);
     client_registry_monitor.notify_clients(clan_msg);
     persist_clans();
+    // El nuevo miembro ve verde a sus compañeros y ellos a él, en vivo.
+    notify_own_clan(new_member);
+    broadcast_players_snapshot();
 }
 
 void GameLoop::handle_clan_rejecting(const ClientCmd& cmd) {
@@ -985,6 +1018,9 @@ void GameLoop::handle_clan_leaving(const ClientCmd& cmd) {
     clan_msg.set_chat_content("Jugador " + player_name + " abandonó el clan " + clan_name);
     client_registry_monitor.notify_clients(clan_msg);
     persist_clans();
+    // Quedó sin clan: que se vea a sí mismo y a los demás en rojo, en vivo.
+    notify_own_clan(player_name);
+    broadcast_players_snapshot();
 }
 
 void GameLoop::handle_clan_kick(const ClientCmd& cmd) {
@@ -1002,6 +1038,9 @@ void GameLoop::handle_clan_kick(const ClientCmd& cmd) {
     clan_msg.set_chat_content("Jugador " + member + " fue echado del clan");
     client_registry_monitor.notify_clients(clan_msg);
     persist_clans();
+    // El echado pierde el clan: actualizar su color y el de todos en vivo.
+    notify_own_clan(member);
+    broadcast_players_snapshot();
 }
 
 void GameLoop::handle_clan_ban(const ClientCmd& cmd) {
@@ -1019,6 +1058,9 @@ void GameLoop::handle_clan_ban(const ClientCmd& cmd) {
     clan_msg.set_chat_content("Jugador " + member + " fue banneado del clan");
     client_registry_monitor.notify_clients(clan_msg);
     persist_clans();
+    // El baneado pierde el clan: actualizar su color y el de todos en vivo.
+    notify_own_clan(member);
+    broadcast_players_snapshot();
 }
 
 void GameLoop::update_npcs_in_map(){

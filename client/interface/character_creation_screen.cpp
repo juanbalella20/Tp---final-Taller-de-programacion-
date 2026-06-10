@@ -285,6 +285,7 @@ void CharacterCreationScreen::try_register() {
             session.name = msg.get_player_name();
             session.race = msg.get_race();
             session.klass = msg.get_class();
+            session.clan = msg.get_chat_content();
             session.authenticated = true;
             next = ScreenState::GAME;
         }

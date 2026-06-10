@@ -231,6 +231,7 @@ void LoginSignupScreen::try_login() {
             session_.name = msg.get_player_name();
             session_.race = msg.get_race();
             session_.klass = msg.get_class();
+            session_.clan = msg.get_chat_content();
             session_.authenticated = true;
             error_message_.clear();
             next_ = ScreenState::GAME;

@@ -205,6 +205,11 @@ public:
 
     bool same_clan(Player* player1, Player* player2);
 
+    // Devuelve el nombre del clan al que pertenece el jugador, o "" si no está
+    // en ninguno. Se usa para informar al cliente el clan de cada jugador del
+    // snapshot (y así pintar su nombre verde/rojo según sea del mismo clan).
+    std::string clan_of(const std::string& player_name) const;
+
     // --- Persistencia de clanes ---
     // Acceso de solo lectura al set de clanes vivos (para volcarlos a disco).
     const std::map<std::string, Clan>& get_clans() const { return clans; }
