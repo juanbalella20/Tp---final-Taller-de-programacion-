@@ -35,24 +35,28 @@ class NpcSprite : public WorldEntity {
 
     void back_pov_goblin();
     void back_pov_zombie();
+    void back_pov_orc();
     void back_pov_spiders();
     void back_pov_skeletons();
     void back_pov_golems();
 
     void front_pov_goblin();
     void front_pov_zombie();
+    void front_pov_orc();
     void front_pov_spiders();
     void front_pov_skeletons();
     void front_pov_golems();
 
     void right_pov_goblin();
     void right_pov_zombie();
+    void right_pov_orc();
     void right_pov_spiders();
     void right_pov_skeletons();
     void right_pov_golems();
 
     void left_pov_goblin();
     void left_pov_zombie();
+    void left_pov_orc();
     void left_pov_spiders();
     void left_pov_skeletons();
     void left_pov_golems();
