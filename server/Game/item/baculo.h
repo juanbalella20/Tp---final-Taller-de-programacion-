@@ -34,6 +34,7 @@ public:
     int get_mana_cost() const;
 
     ItemType get_type() const override { return ItemType::MAGIC; }
+    bool can_target_self() const override { return kind == SpellKind::CURAR; }
 
     // Lanza el hechizo. Si el atacante no puede usar magia lanza
     // CannotCastException; si no le alcanza el maná, NotEnoughManaException.

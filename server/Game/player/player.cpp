@@ -308,6 +308,7 @@ int Player::damage_attack() {
 }
  
 DamageOutcome Player::receive_damage(int damage, Player& atacante, bool is_critical) {
+    if (&atacante == this) return {0, 0, false, false, nullptr};
     if (inmortal) return {0,0,false,false,nullptr};
     return state->receive_damage(*this, damage, atacante, is_critical);
 }

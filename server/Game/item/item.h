@@ -50,6 +50,10 @@ public:
     // Tipo del item (para que el cliente lo ubique en el slot correcto del HUD).
     virtual ItemType get_type() const = 0;
 
+    // Por defecto un item equipado no puede usarse sobre su propio portador.
+    // Los items de soporte deben habilitarlo explicitamente.
+    virtual bool can_target_self() const { return false; }
+
     virtual DamageOutcome use_item(Entity& target, Player& atacante, int attacker_x, int attacker_y, int target_x, int target_y, bool is_critical) = 0;
 };
 

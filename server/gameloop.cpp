@@ -782,6 +782,10 @@ void GameLoop::handle_self_cast(const ClientCmd& cmd) {
         GameMsg msg(MSG_CHAT);
         msg.set_chat_content(e.what());
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    } catch (const AttackNotAllowedException& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
     }
 }
 
