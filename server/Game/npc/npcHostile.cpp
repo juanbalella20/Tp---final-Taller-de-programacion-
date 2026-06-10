@@ -113,32 +113,60 @@ void NPChostile::move_towards(int target_x, int target_y, ZoneWorld& world, cons
     int dx = target_x - coord_x;
     int dy = target_y - coord_y;
 
-    int next_x = coord_x;
-    int next_y = coord_y;
+    if (std::abs(dx) + std::abs(dy) == 1) return; // ya está pegado al jugador
+
+    auto is_free = [&](int x, int y) {
+        return !world.is_blocked_terrain(x, y) && 
+               !world.has_actor_at(x, y, players);
+    };
+
+    int step_x = (dx > 0) ? 1 : ((dx < 0) ? -1 : 0);
+    int step_y = (dy > 0) ? 1 : ((dy < 0) ? -1 : 0);
+
+    bool moved = false;
 
     if (std::abs(dx) > std::abs(dy)) {
-        if (dx > 0) {
-            next_x++;
-            current_direction = DIR_EAST;
-        } else {
-            next_x--;
-            current_direction = DIR_WEST;
+        // eje x
+        if (step_x != 0 && is_free(coord_x + step_x, coord_y)) {
+            coord_x += step_x;
+            current_direction = (step_x > 0) ? DIR_EAST : DIR_WEST;
+            moved = true;
+        } 
+        // eje x bloqueado, intentamos "deslizarnos" por el eje Y
+        else if (step_y != 0 && is_free(coord_x, coord_y + step_y)) {
+            coord_y += step_y;
+            current_direction = (step_y > 0) ? DIR_SOUTH : DIR_NORTH;
+            moved = true;
         }
-    } else if (std::abs(dy) > 0) {
-        if (dy > 0) {
-            next_y++;
-            current_direction = DIR_SOUTH;
-        } else {
-            next_y--;
-            current_direction = DIR_NORTH;
+    } else {
+        // eje y
+        if (step_y != 0 && is_free(coord_x, coord_y + step_y)) {
+            coord_y += step_y;
+            current_direction = (step_y > 0) ? DIR_SOUTH : DIR_NORTH;
+            moved = true;
+        } 
+        // eje y bloqueado, intentamos "deslizarnos" por el eje X
+        else if (step_x != 0 && is_free(coord_x + step_x, coord_y)) {
+            coord_x += step_x;
+            current_direction = (step_x > 0) ? DIR_EAST : DIR_WEST;
+            moved = true;
         }
     }
 
-    if (!world.is_blocked_terrain(next_x, next_y) && 
-        !world.has_actor_at(next_x, next_y, players)) {
-        
-        coord_x = next_x;
-        coord_y = next_y;
+    if (!moved) {
+        if (step_y == 0 && step_x != 0) {
+            if (is_free(coord_x, coord_y + 1)) { 
+                coord_y++; current_direction = DIR_SOUTH; 
+            } else if (is_free(coord_x, coord_y - 1)) { 
+                coord_y--; current_direction = DIR_NORTH; 
+            }
+        } else if (step_x == 0 && step_y != 0) {
+            if (is_free(coord_x + 1, coord_y)) { 
+                coord_x++; current_direction = DIR_EAST; 
+            } else if (is_free(coord_x - 1, coord_y)) { 
+                coord_x--; current_direction = DIR_WEST; 
+            }
+        }
     }
 }
 
