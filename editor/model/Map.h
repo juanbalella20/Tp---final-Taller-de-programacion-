@@ -1,5 +1,5 @@
-#ifndef EDITOR_MAP_H
-#define EDITOR_MAP_H
+#ifndef EDITOR_MODEL_MAP_H_
+#define EDITOR_MODEL_MAP_H_
 
 #include <cstdint>
 #include <string>
@@ -74,4 +74,4 @@ private:
   void rebuild_tile_index();
 };
 
-#endif // EDITOR_MAP_H
+#endif // EDITOR_MODEL_MAP_H_

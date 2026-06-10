@@ -1,5 +1,5 @@
-#ifndef EDITOR_WINDOW_H
-#define EDITOR_WINDOW_H
+#ifndef EDITOR_GUI_EDITORWINDOW_H_
+#define EDITOR_GUI_EDITORWINDOW_H_
 
 #include <QMainWindow>
 #include <QString>
@@ -61,4 +61,4 @@ private:
   QString current_path_;
 };
 
-#endif
+#endif // EDITOR_GUI_EDITORWINDOW_H_

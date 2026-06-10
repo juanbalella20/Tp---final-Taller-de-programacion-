@@ -1,5 +1,5 @@
-#ifndef EDITOR_DOCUMENT_H
-#define EDITOR_DOCUMENT_H
+#ifndef EDITOR_DOCUMENT_EDITORDOCUMENT_H_
+#define EDITOR_DOCUMENT_EDITORDOCUMENT_H_
 
 #include <memory>
 #include <string>
@@ -133,4 +133,4 @@ private:
   void set_dirty(bool d);
 };
 
-#endif // EDITOR_DOCUMENT_H
+#endif // EDITOR_DOCUMENT_EDITORDOCUMENT_H_

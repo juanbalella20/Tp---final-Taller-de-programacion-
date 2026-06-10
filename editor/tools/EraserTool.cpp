@@ -1,4 +1,5 @@
 #include "EraserTool.h"
+#include <vector>
 
 #include "../model/Map.h"
 

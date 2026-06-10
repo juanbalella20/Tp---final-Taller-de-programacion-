@@ -1,4 +1,6 @@
 #include "SetTilesCommand.h"
+#include <utility>
+#include <vector>
 
 #include "../model/Map.h"
 

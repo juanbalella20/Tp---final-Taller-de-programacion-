@@ -1,6 +1,9 @@
 #include "Map.h"
 
 #include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 // ============================================================================
 // Implementacion del modelo puro del mapa  SIN Qt.

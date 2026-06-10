@@ -1,5 +1,5 @@
-#ifndef EDITOR_SET_TILES_COMMAND_H
-#define EDITOR_SET_TILES_COMMAND_H
+#ifndef EDITOR_DOCUMENT_SETTILESCOMMAND_H_
+#define EDITOR_DOCUMENT_SETTILESCOMMAND_H_
 
 #include <vector>
 
@@ -30,4 +30,4 @@ private:
   std::vector<CellChange> changes_;
 };
 
-#endif // EDITOR_SET_TILES_COMMAND_H
+#endif // EDITOR_DOCUMENT_SETTILESCOMMAND_H_

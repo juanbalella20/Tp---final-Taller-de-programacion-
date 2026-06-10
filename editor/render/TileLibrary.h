@@ -1,5 +1,5 @@
-#ifndef EDITOR_TILE_LIBRARY_H
-#define EDITOR_TILE_LIBRARY_H
+#ifndef EDITOR_RENDER_TILELIBRARY_H_
+#define EDITOR_RENDER_TILELIBRARY_H_
 
 #include <QPixmap>
 #include <QString>
@@ -31,4 +31,4 @@ private:
   int m_rows = 0;
 };
 
-#endif // EDITOR_TILE_LIBRARY_H
+#endif // EDITOR_RENDER_TILELIBRARY_H_

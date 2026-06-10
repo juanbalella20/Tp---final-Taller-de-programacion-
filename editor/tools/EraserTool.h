@@ -1,7 +1,8 @@
-#ifndef EDITOR_ERASER_TOOL_H
-#define EDITOR_ERASER_TOOL_H
+#ifndef EDITOR_TOOLS_ERASERTOOL_H_
+#define EDITOR_TOOLS_ERASERTOOL_H_
 
 #include "Tool.h"
+#include <vector>
 
 /*
  * Goma: escribe gid 0 (celda vacia) en (x,y) de la capa activa. Es un lapiz que
@@ -18,4 +19,4 @@ public:
   bool paints_on_drag() const override;
 };
 
-#endif // EDITOR_ERASER_TOOL_H
+#endif // EDITOR_TOOLS_ERASERTOOL_H_

@@ -1,7 +1,8 @@
-#ifndef EDITOR_FILL_TOOL_H
-#define EDITOR_FILL_TOOL_H
+#ifndef EDITOR_TOOLS_FILLTOOL_H_
+#define EDITOR_TOOLS_FILLTOOL_H_
 
 #include "Tool.h"
+#include <vector>
 
 /*
  * Relleno (flood fill 4-conexo): desde (x,y), reemplaza la region contigua de
@@ -19,4 +20,4 @@ public:
   bool paints_on_drag() const override;
 };
 
-#endif // EDITOR_FILL_TOOL_H
+#endif // EDITOR_TOOLS_FILLTOOL_H_

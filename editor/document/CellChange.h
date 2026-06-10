@@ -1,5 +1,5 @@
-#ifndef EDITOR_CELL_CHANGE_H
-#define EDITOR_CELL_CHANGE_H
+#ifndef EDITOR_DOCUMENT_CELLCHANGE_H_
+#define EDITOR_DOCUMENT_CELLCHANGE_H_
 
 /*
  * Delta de una celda: su gid anterior y el nuevo. Es la unidad de cambio que
@@ -14,4 +14,4 @@ struct CellChange {
   int new_gid;
 };
 
-#endif // EDITOR_CELL_CHANGE_H
+#endif // EDITOR_DOCUMENT_CELLCHANGE_H_

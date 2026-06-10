@@ -1,5 +1,5 @@
-#ifndef EDITOR_COMMAND_H
-#define EDITOR_COMMAND_H
+#ifndef EDITOR_DOCUMENT_COMMAND_H_
+#define EDITOR_DOCUMENT_COMMAND_H_
 
 /*
  * Interfaz del patron Command para el undo/redo. Cada operacion de edicion
@@ -21,4 +21,4 @@ public:
   virtual void undo() = 0;
 };
 
-#endif // EDITOR_COMMAND_H
+#endif // EDITOR_DOCUMENT_COMMAND_H_

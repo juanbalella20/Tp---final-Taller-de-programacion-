@@ -1,5 +1,5 @@
-#ifndef EDITOR_TOOL_TYPE_H
-#define EDITOR_TOOL_TYPE_H
+#ifndef EDITOR_TOOLS_TOOLTYPE_H_
+#define EDITOR_TOOLS_TOOLTYPE_H_
 
 /*
  * Herramientas de edicion disponibles. La GUI (toolbar) selecciona una y la
@@ -10,4 +10,4 @@
  */
 enum class ToolType { Pencil, Eraser, Fill, Teleport, Collision };
 
-#endif // EDITOR_TOOL_TYPE_H
+#endif // EDITOR_TOOLS_TOOLTYPE_H_

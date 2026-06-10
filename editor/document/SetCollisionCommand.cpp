@@ -1,4 +1,6 @@
 #include "SetCollisionCommand.h"
+#include <utility>
+#include <vector>
 
 #include "../model/Map.h"
 

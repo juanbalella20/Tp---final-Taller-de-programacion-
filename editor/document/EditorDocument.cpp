@@ -1,4 +1,8 @@
 #include "EditorDocument.h"
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "../tools/EraserTool.h"
 #include "../tools/FillTool.h"
@@ -66,7 +70,8 @@ std::unique_ptr<Tool> EditorDocument::make_tool(ToolType t) const {
   case ToolType::Collision:
     return std::make_unique<PencilTool>();
   }
-  return std::make_unique<PencilTool>(); // fallback defensivo
+  // fallback defensivo
+  return std::make_unique<PencilTool>();
 }
 
 // --- Punto de entrada de las herramientas (lo llama el canvas) ---------------
@@ -146,7 +151,8 @@ void EditorDocument::paint_collision(int x, int y) {
     return;
   bool old_blocked = map_.is_blocked_cell(x, y);
   if (old_blocked == collision_paint_value_)
-    return; // ya esta en ese estado
+    // ya esta en ese estado
+    return;
   map_.set_blocked(x, y, collision_paint_value_);
   collision_changes_.push_back({x, y, old_blocked, collision_paint_value_});
   set_dirty(true);

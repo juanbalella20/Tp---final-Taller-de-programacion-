@@ -1,5 +1,5 @@
-#ifndef EDITOR_TILESET_SELECTOR_VIEW_H
-#define EDITOR_TILESET_SELECTOR_VIEW_H
+#ifndef EDITOR_GUI_TILESETSELECTORVIEW_H_
+#define EDITOR_GUI_TILESETSELECTORVIEW_H_
 
 #include <QGraphicsView>
 #include <QRectF>
@@ -40,4 +40,4 @@ private:
   int m_selectedLocalId = -1;
 };
 
-#endif // EDITOR_TILESET_SELECTOR_VIEW_H
+#endif // EDITOR_GUI_TILESETSELECTORVIEW_H_

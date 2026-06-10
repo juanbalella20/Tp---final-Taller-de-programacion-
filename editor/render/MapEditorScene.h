@@ -1,5 +1,5 @@
-#ifndef EDITOR_MAP_EDITOR_SCENE_H
-#define EDITOR_MAP_EDITOR_SCENE_H
+#ifndef EDITOR_RENDER_MAPEDITORSCENE_H_
+#define EDITOR_RENDER_MAPEDITORSCENE_H_
 
 #include <QGraphicsScene>
 #include <QHash>
@@ -46,4 +46,4 @@ private:
   QRectF cellRect(int column, int row) const;
 };
 
-#endif // EDITOR_MAP_EDITOR_SCENE_H
+#endif // EDITOR_RENDER_MAPEDITORSCENE_H_

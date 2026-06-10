@@ -1,4 +1,6 @@
 #include "ToggleTeleportCommand.h"
+#include <string>
+#include <utility>
 
 #include "../model/Map.h"
 

@@ -1,4 +1,5 @@
 #include "PencilTool.h"
+#include <vector>
 
 #include "../model/Map.h"
 

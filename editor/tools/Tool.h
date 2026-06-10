@@ -1,5 +1,5 @@
-#ifndef EDITOR_TOOL_H
-#define EDITOR_TOOL_H
+#ifndef EDITOR_TOOLS_TOOL_H_
+#define EDITOR_TOOLS_TOOL_H_
 
 #include <vector>
 
@@ -33,4 +33,4 @@ public:
   virtual bool paints_on_drag() const = 0;
 };
 
-#endif // EDITOR_TOOL_H
+#endif // EDITOR_TOOLS_TOOL_H_
