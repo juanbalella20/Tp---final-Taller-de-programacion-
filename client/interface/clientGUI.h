@@ -87,9 +87,7 @@ private:
     std::vector<PlayerInfo> other_players;
     SDL_Texture* enemy_texture;
     std::map<std::string, SDL_Texture*> enemies_textures;
-    // Recorte del 1er tile del spritesheet por tipo de NPC (nombre -> src crop)
-    // TODO: refactorizar para permitir movimientos de los npcs
-    std::map<std::string, SDL_FRect> enemies_crops;
+    
     std::vector<DamageNumber> damage_numbers;
     // Efectos de hechizo: catalogo (id de baculo -> spritesheet) y animaciones activas.
     std::map<std::string, SpellEffectDef> spell_effects;
@@ -219,6 +217,8 @@ private:
     // Ruta (relativa a assets) del sonido del arma/báculo cuyo id es weapon_id,
     // o nullptr si esa arma no tiene sonido asignado.
     static const char* weapon_sound_path(const std::string& weapon_id);
+    void load_npc_texture(const std::string& npc_name, const std::string& image_path);
+    void load_enemies_textures();
 
 public:
     // window/renderer/font son COMPARTIDOS (propiedad del ScreenManager): se

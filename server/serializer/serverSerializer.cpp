@@ -284,6 +284,7 @@ std::vector<uint8_t> ServerSerializer::serialize_npcs_snapshot(const GameMsg& ms
         payload_len += LEN_NPC_TYPE_SIZE + static_cast<uint16_t>(n.type.size());
         payload_len += LEN_NPC_NAME_SIZE + static_cast<uint16_t>(n.name.size());
         payload_len += 2 * LEN_COORD;
+        payload_len += 1;
     }
 
     std::vector<uint8_t> buf;
@@ -299,6 +300,7 @@ std::vector<uint8_t> ServerSerializer::serialize_npcs_snapshot(const GameMsg& ms
         buf.insert(buf.end(), n.name.begin(), n.name.end());
         append_uint16_be(buf, static_cast<uint16_t>(n.x));
         append_uint16_be(buf, static_cast<uint16_t>(n.y));
+        buf.push_back(static_cast<uint8_t>(n.direction));
     }
 
     return buf;
@@ -451,6 +453,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
     }
     payload_len += 8 * sizeof(uint32_t);    // gold + hp + max_hp + xp + mana + max_mana + max_xp + level
     payload_len += 2 * LEN_COORD;           // spawn_x + spawn_y
+    payload_len += 1; // is_ghost
     const auto& players = msg.get_players();
     payload_len += LEN_PLAYER_COUNT;
     for (const auto& pl : players) {
@@ -507,7 +510,7 @@ std::vector<uint8_t> ServerSerializer::serialize_register(const GameMsg& msg) {
     append_u32(static_cast<uint32_t>(msg.get_level()));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_x()));
     append_uint16_be(buf, static_cast<uint16_t>(msg.get_coord_y()));
-
+    buf.push_back(msg.get_ghost() ? 1 : 0);
     append_uint16_be(buf, static_cast<uint16_t>(players.size()));
     for (const auto& pl : players) {
         buf.push_back(static_cast<uint8_t>(pl.name.size()));

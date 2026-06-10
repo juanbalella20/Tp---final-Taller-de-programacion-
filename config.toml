@@ -287,23 +287,44 @@ max_inventory_slots = 16
 name = "Goblin"
 lifepoints = 30
 attack_dmg = 5
-ticks_to_spawn = 1000
-level = 1
-
-[npcs.spider]
-name = "Spider"
+ticks_to_spawn = 100  
+ 
+[npcs.spider1]
+name = "Spider1"
 lifepoints = 20
 attack_dmg = 4
-ticks_to_spawn = 400
-level = 1
+ticks_to_spawn = 40
 
-[npcs.skeleton]
-name = "Skeleton"
+[npcs.spider2]
+name = "Spider2"
+lifepoints = 30
+attack_dmg = 6
+ticks_to_spawn = 40
+
+[npcs.spider3]
+name = "Spider3"
+lifepoints = 40
+attack_dmg = 8
+ticks_to_spawn = 40
+ 
+[npcs.skeleton1]
+name = "Skeleton1"
 lifepoints = 25
 attack_dmg = 7
-ticks_to_spawn = 600
-level = 2
+ticks_to_spawn = 60
 
+[npcs.skeleton2]
+name = "Skeleton2"
+lifepoints = 35
+attack_dmg = 9
+ticks_to_spawn = 60
+
+[npcs.skeleton3]
+name = "Skeleton3"
+lifepoints = 45
+attack_dmg = 11
+ticks_to_spawn = 60
+ 
 [npcs.zombie]
 name = "Zombie"
 lifepoints = 35
@@ -312,18 +333,28 @@ ticks_to_spawn = 800
 level = 2
 
 [npcs.orc]
-name = "Orco"
+name = "Orc"
 lifepoints = 60
 attack_dmg = 12
-ticks_to_spawn = 1500
-level = 4
-
-[npcs.golem]
-name = "Golem"
+ticks_to_spawn = 150
+ 
+[npcs.golem1]
+name = "Golem1"
 lifepoints = 80
 attack_dmg = 15
-ticks_to_spawn = 2000
-level = 5
+ticks_to_spawn = 200
+
+[npcs.golem2]
+name = "Golem2"
+lifepoints = 90
+attack_dmg = 25
+ticks_to_spawn = 200
+
+[npcs.golem3]
+name = "Golem3"
+lifepoints = 100
+attack_dmg = 35
+ticks_to_spawn = 200
  
 # Al morir un NPC SIEMPRE deja caer oro base (seccion "Oro" del enunciado):
 #   OroBase = rand(0, npc_gold_drop_max) * VidaMaxNPC
@@ -380,17 +411,18 @@ num_sellers = 1
 
 [zones.forest]
 map = "data/maps/forest/forest3.bin"
-allowed_npcs = ["spider", "skeleton"]
+allowed_npcs = ["goblin", "skeleton1", "golem1", "skeleton2"]
 num_npc = 0
 num_items = 5
 allowed_items = ["vara_fresno", "baculo_nudoso", "tunica_azul", "sombrero_magico", "pocion_mana"]
 
 [zones.dungeon]
 map = "data/maps/dungeon/dungeon-v1.bin"
-allowed_npcs = ["skeleton", "zombie", "orc", "golem"]
+allowed_npcs = ["skeleton3", "zombie", "orc", "golem2", "spider3"]
 num_npc = 12
 num_items = 8
 allowed_items = ["baculo_engarzado", "martillo", "armadura_placas", "casco_hierro", "escudo_hierro", "pocion_vida", "pocion_mana"]
+
  
 # ------------------------------------------------------------
 # Clanes

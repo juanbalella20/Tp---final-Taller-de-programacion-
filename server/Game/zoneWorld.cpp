@@ -341,6 +341,7 @@ std::vector<NpcInfo> ZoneWorld::build_npcs_snapshot() const {
         npcinfo.type = npc.get_type_id();
         npcinfo.x = npc.get_coord_x();
         npcinfo.y = npc.get_coord_y();
+        npcinfo.direction = npc.get_direction();
         snapshot.push_back(npcinfo);
     }
     for (const auto& s : sellers) {

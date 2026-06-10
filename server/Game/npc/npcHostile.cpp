@@ -115,9 +115,21 @@ void NPChostile::move_towards(int target_x, int target_y, ZoneWorld& world, cons
     int next_y = coord_y;
 
     if (std::abs(dx) > std::abs(dy)) {
-        next_x += (dx > 0) ? 1 : -1;
+        if (dx > 0) {
+            next_x++;
+            current_direction = DIR_EAST;
+        } else {
+            next_x--;
+            current_direction = DIR_WEST;
+        }
     } else if (std::abs(dy) > 0) {
-        next_y += (dy > 0) ? 1 : -1;
+        if (dy > 0) {
+            next_y++;
+            current_direction = DIR_SOUTH;
+        } else {
+            next_y--;
+            current_direction = DIR_NORTH;
+        }
     }
 
     if (!world.is_blocked_terrain(next_x, next_y) && 
