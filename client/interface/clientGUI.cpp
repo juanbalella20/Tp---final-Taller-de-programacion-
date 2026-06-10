@@ -655,6 +655,7 @@ void ClientGUI::update() {
                         for (auto& p : other_players) {
                             if (p.name == msg.get_player_name()) {
                                 p.ghost = true;
+                                p.has_equipped_weapon = false;
                                 break;
                             }
                         }
@@ -795,6 +796,7 @@ void ClientGUI::update() {
                         for (auto& p : other_players) {
                             if (p.name == msg.get_player_name()) {
                                 p.ghost = true;
+                                p.has_equipped_weapon = false;
                                 break;
                             }
                         }

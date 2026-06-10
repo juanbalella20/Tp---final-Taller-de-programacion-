@@ -62,6 +62,7 @@ class GameLoop : public Thread {
     void send_players_snapshot_to(uint32_t client_id, const std::string& player_name);
     void send_player_snapshot_to_other_players(uint32_t client_id, const std::string& player_name,
          const std::string& player_race);
+    void broadcast_player_equipment(const std::string& player_name);
 
     // Notifica 'msg' SOLO a los clientes cuyo player está en la zona 'zone'
     // (visibilidad por zona). Si 'except_name' no está vacío, salta a ese player.

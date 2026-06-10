@@ -231,6 +231,10 @@ void PlayerDisplay::reset_frame() {
 
 void PlayerDisplay::set_ghost(bool is_ghost) {
     ghost = is_ghost;
+    if (ghost) {
+        has_equipped_weapon = false;
+        equipped_item_ids.clear();
+    }
 }
 
 bool PlayerDisplay::is_ghost() const {
@@ -626,15 +630,19 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
 }
 
 void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) {
-    // Pasada 1: items que van DETRÁS del cuerpo (armas/escudo cuando el personaje
-    // da la espalda). draw_equipped_item filtra cuáles corresponden a esta pasada.
-    draw_equipped_item(camera, /*behind_body=*/true);
+    if (!ghost) {
+        // Pasada 1: items que van DETRÁS del cuerpo (armas/escudo cuando el personaje
+        // da la espalda). draw_equipped_item filtra cuáles corresponden a esta pasada.
+        draw_equipped_item(camera, /*behind_body=*/true);
+    }
 
     draw_player(camera, body_pov);
 
-    // Pasada 2: items que van DELANTE del cuerpo (armas/escudo de frente, y
-    // siempre la armadura y el casco).
-    draw_equipped_item(camera, /*behind_body=*/false);
+    if (!ghost) {
+        // Pasada 2: items que van DELANTE del cuerpo (armas/escudo de frente, y
+        // siempre la armadura y el casco).
+        draw_equipped_item(camera, /*behind_body=*/false);
+    }
 }
 
 int PlayerDisplay::get_x() {

@@ -481,9 +481,12 @@ void GameLoop::handle_equip(const ClientCmd& cmd) {
     } catch (const std::exception&) {
         return;  // uid mal formado: ignorar el comando
     }
-    bool has_weapon = game_map.player_equip_item(name, item_uid);
-    const Player& player = game_map.get_player(name);
+    game_map.player_equip_item(name, item_uid);
+    broadcast_player_equipment(name);
+}
 
+void GameLoop::broadcast_player_equipment(const std::string& player_name) {
+    const Player& player = game_map.get_player(player_name);
     // equipped_ids: type_ids (para el sprite del personaje y detectar báculos).
     // equipped_uids: uids de instancia (para que el HUD resalte el slot exacto).
     // Ambas listas viajan como strings; van en paralelo (mismo orden de items).
@@ -493,8 +496,8 @@ void GameLoop::handle_equip(const ClientCmd& cmd) {
     for (uint64_t u : uids) uid_strs.push_back(std::to_string(u));
 
     GameMsg msg_equip(MSG_UPDATE_EQUIP);
-    msg_equip.set_player_name(name);
-    msg_equip.set_equipped(has_weapon);
+    msg_equip.set_player_name(player_name);
+    msg_equip.set_equipped(player.has_weapon_equipped());
     msg_equip.set_equipped_ids(player.get_equipped_type_ids());
     msg_equip.set_equipped_uids(uid_strs);
 
@@ -702,7 +705,7 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
                 GameMsg inv_msg(MSG_INVENTORY);
                 inv_msg.set_items(item_infos);
                 client_registry_monitor.notify_client_by_name(result.entity_name, inv_msg);
-
+                broadcast_player_equipment(result.entity_name);
             }
         }
     } catch (const NoEntityException& e) {
@@ -845,6 +848,7 @@ void GameLoop::handle_cheat_kill(const ClientCmd& cmd) {
     GameMsg inv_msg(MSG_INVENTORY);
     inv_msg.set_items(item_infos);
     client_registry_monitor.notify_client_by_name(name, inv_msg);
+    broadcast_player_equipment(name);
 }
 
 void GameLoop::handle_cheat_inf_hp(const ClientCmd& cmd) {
@@ -1094,6 +1098,7 @@ void GameLoop::run() {
                         GameMsg inv_msg(MSG_INVENTORY);
                         inv_msg.set_items(item_infos);
                         client_registry_monitor.notify_client_by_name(attack.victim_name, inv_msg);
+                        broadcast_player_equipment(attack.victim_name);
                     }
 
                 }
