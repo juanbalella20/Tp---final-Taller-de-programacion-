@@ -20,6 +20,8 @@ struct PlayerInfo {
     // el cliente para pintar el nombre sobre el jugador: verde si es del mismo
     // clan que el jugador local, rojo si es de otro clan (o sin clan).
     std::string clan_name;
+    bool moving = false;
+    bool update_frame = true;
 };
 
 
