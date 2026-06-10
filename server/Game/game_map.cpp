@@ -544,6 +544,7 @@ std::vector<PlayerInfo> GameMap::build_players_snapshot(const std::string& playe
 
         PlayerInfo pi{p.get_name(), p.get_race_name(), 0, p.get_coord_x(), p.get_coord_y()};
         pi.ghost = p.is_ghost();
+        pi.equipped_ids = p.get_equipped_type_ids();
         snapshot.push_back(pi);
     }
     return snapshot;
