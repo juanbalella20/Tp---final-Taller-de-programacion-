@@ -549,6 +549,10 @@ std::vector<uint8_t> ServerSerializer::serialize_players_snapshot(const GameMsg&
          payload_len += 1; // race
         payload_len += 2 * LEN_COORD;  // x + y
         payload_len += 1; // ghost
+        payload_len += 1; // 1 byte para la cantidad de ítems equipados
+        for (const auto& id : p.equipped_ids) {
+            payload_len += 1 + static_cast<uint16_t>(id.size());
+        }
     }
 
     std::vector<uint8_t> buf;
@@ -574,6 +578,12 @@ std::vector<uint8_t> ServerSerializer::serialize_players_snapshot(const GameMsg&
         append_uint16_be(buf, static_cast<uint16_t>(p.x));
         append_uint16_be(buf, static_cast<uint16_t>(p.y));
         buf.push_back(p.ghost ? 1 : 0);
+
+        buf.push_back(static_cast<uint8_t>(p.equipped_ids.size()));
+        for (const auto& id : p.equipped_ids) {
+            buf.push_back(static_cast<uint8_t>(id.size()));
+            buf.insert(buf.end(), id.begin(), id.end());
+        }
     }
 
     return buf;

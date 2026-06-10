@@ -15,6 +15,7 @@ struct PlayerInfo {
     Direction direction = DIR_SOUTH;
     bool has_equipped_weapon = false;
     bool ghost = false;
+    std::vector<std::string> equipped_ids;
 };
 
 

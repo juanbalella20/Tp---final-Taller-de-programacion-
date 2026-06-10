@@ -549,8 +549,21 @@ void ClientDeserializer::deserialize_players_snapshot(const std::vector<uint8_t>
         }
 
         bool is_ghost = (payload[offset++] != 0);
+
+        if (offset >= payload.size()) {
+            throw std::invalid_argument("Payload demasiado corto leyendo cantidad de items en MSG_PLAYERS_SNAPSHOT");
+        }
+        uint8_t items_count = payload[offset++];
+        std::vector<std::string> equipped_ids;
+        equipped_ids.reserve(items_count);
+        
+        for (uint8_t j = 0; j < items_count; ++j) {
+            equipped_ids.push_back(read_string(payload, offset));
+        }
+
         PlayerInfo pi{std::move(name), race, 0, x, y};
         pi.ghost = is_ghost;
+        pi.equipped_ids = std::move(equipped_ids);
         players.push_back(pi);
     }
 
