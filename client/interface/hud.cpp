@@ -288,13 +288,14 @@ void HUD::drawBigStat(SDL_Texture* tex, float pos_y, int current, int max, TextC
     displayValue(current, max, text_dest, text_scale, cache);
 }
 
-void HUD::drawSmallStat(SDL_Texture* tex, float pos_y, int current, int max, TextCache& cache) {
+void HUD::drawXpBar(SDL_Texture* tex, int current, int max, TextCache& cache) {
     float tex_w, tex_h;
     SDL_GetTextureSize(tex, &tex_w, &tex_h);
 
-    float start_x = 788.0f;
-    const float bar_w = 89.0f;
-    const float bar_h = 12.0f;
+    float start_x = 767.0f;
+    float pos_y = 99.0f;
+    const float bar_w = 243.0f;
+    const float bar_h = 23.0f;
 
     float x = start_x * scale_x;
     float y = pos_y * scale_y;
@@ -312,7 +313,7 @@ void HUD::drawSmallStat(SDL_Texture* tex, float pos_y, int current, int max, Tex
     }
 
     SDL_FRect text_dest = { x, y, w, h };
-    float text_scale = 0.55f;
+    float text_scale = 0.60f;
     displayValue(current, max, text_dest, text_scale, cache);
 }
 
@@ -389,7 +390,7 @@ void HUD::drawHp() {
 
 void HUD::drawXp() {
     if (xp_bar_texture) {
-        drawSmallStat(xp_bar_texture, 658.0f, player_xp, max_xp, xp_text_cache);
+        drawXpBar(xp_bar_texture, player_xp, max_xp, xp_text_cache);
     }
 }
 

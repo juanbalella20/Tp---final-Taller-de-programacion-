@@ -70,7 +70,7 @@ private:
     void load_textures();
     void load_stat_texture(const std::string& path, SDL_Texture** texture);
     void drawBigStat(SDL_Texture* tex, float pos_y, int current, int max, TextCache& cache);
-    void drawSmallStat(SDL_Texture* tex, float pos_y, int current, int max, TextCache& cache);
+    void drawXpBar(SDL_Texture* tex, int current, int max, TextCache& cache);
     void displayValue(int current, int max, SDL_FRect& dest, float text_scale, TextCache& cache);
     void drawText(const std::string& text, float x, float y, SDL_Color color, TextCache& cache);
     // Regenera la textura del cache solo si el texto/color cambiaron; si no, la reusa.
