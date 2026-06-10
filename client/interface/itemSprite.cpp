@@ -12,11 +12,17 @@ void ItemSprite::draw(const Camera& camera, SDL_FRect src_crop) {
     const float wx = static_cast<float>(tile_x * tile_size);
     const float wy = static_cast<float>(tile_y * tile_size);
 
+    // El crop define qué región del spritesheet se recorta. En pantalla se dibuja
+    // a ese mismo tamaño, SALVO que no entre en el tile: ahí se achica al tile
+    // manteniendo la relación de aspecto (caso de los PNG de sprite único, p. ej.
+    // 1024x1024). Los íconos chicos (espada, poción, ~30px) quedan igual que antes.
     float dest_w = static_cast<float>(tile_size);
     float dest_h = static_cast<float>(tile_size);
     if (src_crop.w > 0.0f && src_crop.h > 0.0f) {
-        dest_w = src_crop.w;
-        dest_h = src_crop.h;
+        float scale = SDL_min(1.0f, SDL_min(tile_size / src_crop.w,
+                                            tile_size / src_crop.h));
+        dest_w = src_crop.w * scale;
+        dest_h = src_crop.h * scale;
     }
 
     SDL_FRect dest {

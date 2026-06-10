@@ -7,6 +7,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <set>
 #include "minichat.h"
 #include "displayPlayer.h"
 #include "parser.h"
@@ -99,6 +100,10 @@ private:
     // Id (clave del config: "espada", "baculo_nudoso", ...) del arma/baculo de
     // ataque equipado por el jugador local. Sirve para elegir el sonido al atacar.
     std::string equipped_weapon_id;
+    // Uids (de INSTANCIA, en texto) de los items de defensa equipados en el ultimo
+    // MSG_UPDATE_EQUIP. Sirve para detectar cuando se equipa una defensa NUEVA y
+    // reproducir el sonido de equipacion solo en ese caso (no al desequipar).
+    std::set<std::string> equipped_defense_uids;
     SDL_Texture* frame_texture;
     SDL_Texture* item_texture;
     SDL_Texture* gold_texture;

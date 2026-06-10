@@ -109,6 +109,8 @@ public:
     WeaponConfig espada;
     WeaponConfig hacha;
     WeaponConfig martillo;
+    WeaponConfig arco_simple;
+    WeaponConfig arco_compuesto;
     // Magic Weapons
     MagicWeaponConfig vara_fresno;
     MagicWeaponConfig flauta_elfica;

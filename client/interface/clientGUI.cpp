@@ -51,6 +51,12 @@ const char* ClientGUI::weapon_sound_path(const std::string& weapon_id) {
     // Sonido por arma/báculo de ataque. Los ids son las claves del config.toml.
     if (weapon_id == "espada")         // golpe de espada (suena aunque se esquive)
         return "client/audio/sounds/freesound_community-hit-swing-sword-small-2-95566_1_.ogg";
+    if (weapon_id == "hacha")          // golpe de hacha
+        return "client/audio/sounds/sonido-hacha.ogg";
+    if (weapon_id == "martillo")       // golpe de martillo
+        return "client/audio/sounds/sonido-martillo.ogg";
+    if (weapon_id == "arco_simple" || weapon_id == "arco_compuesto")  // flechazo
+        return "client/audio/sounds/arco-flecha.ogg";
     if (weapon_id == "baculo_nudoso")  // hechizo "misil"
         return "client/audio/sounds/bomba.ogg";
     if (weapon_id == "baculo_engarzado")  // hechizo "explosion"
@@ -731,6 +737,37 @@ void ClientGUI::update() {
                                 break;
                             }
                         }
+                        // Sonido de equipación de armadura: suena cuando se equipa
+                        // una defensa NUEVA (no al desequipar ni en updates que no
+                        // agregan defensas). Cruzamos los uids equipados que confirma
+                        // el server con el inventario del HUD para saber su tipo
+                        // (1=armadura, 2=casco, 3=escudo) y comparamos contra el
+                        // estado anterior para detectar la transición.
+                        std::set<std::string> new_defense_uids;
+                        if (hud) {
+                            const auto& inv = hud->get_inventory();
+                            for (const auto& uid : msg.get_equipped_uids()) {
+                                for (const auto& item : inv) {
+                                    if (std::to_string(item.get_uid()) != uid)
+                                        continue;
+                                    uint8_t t = item.get_type();
+                                    if (t == 1 || t == 2 || t == 3)
+                                        new_defense_uids.insert(uid);
+                                    break;
+                                }
+                            }
+                        }
+                        bool equipped_new_defense = false;
+                        for (const auto& uid : new_defense_uids) {
+                            if (equipped_defense_uids.count(uid) == 0) {
+                                equipped_new_defense = true;
+                                break;
+                            }
+                        }
+                        if (equipped_new_defense && sfx) {
+                            sfx->play("client/audio/sounds/equipacion-de-armadura.ogg");
+                        }
+                        equipped_defense_uids = std::move(new_defense_uids);
                     } else {
                         for (auto& p : other_players) {
                             if (p.name == msg.get_player_name()) {
@@ -1097,35 +1134,57 @@ void ClientGUI::init_draw() {
         floor_item_crops["espada"] = {224.0f, 96.0f, 30.0f, 30.0f};
     }
 
+    // El sprite 2141.png en el piso es el "escudo de hierro" (la imagen que antes
+    // se mostraba bajo el alias "escudo"). El escudo de tortuga usa su propio PNG.
     SDL_Surface* shield_surf = IMG_Load("imagenes/2141.png");
     if (!shield_surf) { shield_surf = IMG_Load("2141.png"); }
     if (shield_surf) {
         SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, shield_surf);
         SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
         SDL_DestroySurface(shield_surf);
-        floor_item_textures["escudo"] = tex;
-        floor_item_crops["escudo"] = {0.0f, 0.0f, 32.0f, 32.0f};
+        floor_item_textures["escudo_hierro"] = tex;
+        floor_item_crops["escudo_hierro"] = {0.0f, 0.0f, 32.0f, 32.0f};
     }
 
-    // Báculos/varas en el piso: misma imagen que el ícono del HUD. La clave es
-    // el id del item (igual que en el server) para que cada uno se vea como su
-    // sprite y no caiga al fallback de la espada.
-    struct FloorIcon { const char* id; const char* path; float w; float h; };
-    const FloorIcon staff_floor_icons[] = {
-        {"vara_fresno",      "imagenes/icon_vara_fresno.png",       27.0f,   29.0f},
-        {"baculo_nudoso",    "imagenes/icon_baculo_nudoso.png",     30.0f,   29.0f},
-        {"baculo_engarzado", "imagenes/icon_baculo_engarzado.png",  34.0f,   40.0f},
-        {"flauta_elfica",    "imagenes/icon_flauta_elfica.png",     40.0f,   40.0f},
+    // Resto de los items en el piso: misma imagen que el ícono del HUD. La clave
+    // es el id del item (igual que en el server) para que cada uno se vea como su
+    // sprite y no caiga al fallback de la espada. Los PNG de sprite único cubren
+    // toda la imagen (crop = tamaño del surface leído en runtime).
+    struct FloorIcon { const char* id; const char* path; };
+    const FloorIcon floor_icons[] = {
+        // Varas/báculos.
+        {"vara_fresno",      "imagenes/icon_vara_fresno.png"},
+        {"baculo_nudoso",    "imagenes/icon_baculo_nudoso.png"},
+        {"baculo_engarzado", "imagenes/icon_baculo_engarzado.png"},
+        {"flauta_elfica",    "imagenes/icon_flauta_elfica.png"},
+        // Armas físicas.
+        {"hacha",            "imagenes/hacha.png"},
+        {"martillo",         "imagenes/martillo.png"},
+        {"arco_simple",      "imagenes/arco-simple.png"},
+        {"arco_compuesto",   "imagenes/arco-compuesto.png"},
+        // Armaduras.
+        {"armadura_cuero",   "imagenes/Armadura-de-cuero.png"},
+        {"armadura_placas",  "imagenes/armadura-de-placas.png"},
+        {"tunica_azul",      "imagenes/tunica-azul.png"},
+        // Cascos.
+        {"capucha",          "imagenes/capucha.png"},
+        {"casco_hierro",     "imagenes/casco-de-hierro.png"},
+        {"sombrero_magico",  "imagenes/sombrero-magico.png"},
+        // Escudo de tortuga (+ alias histórico "escudo": misma imagen).
+        {"escudo_tortuga",   "imagenes/escudo-tortuga.png"},
+        {"escudo",           "imagenes/escudo-tortuga.png"},
     };
-    for (const auto& fi : staff_floor_icons) {
+    for (const auto& fi : floor_icons) {
         SDL_Surface* surf = IMG_Load(fi.path);
         if (!surf) continue;
+        float w = static_cast<float>(surf->w);
+        float h = static_cast<float>(surf->h);
         SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
         SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
         SDL_DestroySurface(surf);
         if (!tex) continue;
         floor_item_textures[fi.id] = tex;
-        floor_item_crops[fi.id] = {0.0f, 0.0f, fi.w, fi.h};
+        floor_item_crops[fi.id] = {0.0f, 0.0f, w, h};
     }
 
     SDL_Surface* elem_surf = IMG_Load("imagenes/100.png");

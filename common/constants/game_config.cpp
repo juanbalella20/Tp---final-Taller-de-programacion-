@@ -121,6 +121,18 @@ void GameConfig::load(const std::string& toml_path) {
     martillo.damage_min = root.at_path("items.martillo.damage_min").value_or(1);
     martillo.damage_max = root.at_path("items.martillo.damage_max").value_or(9);
 
+    arco_simple.name = root.at_path("items.arco_simple.name").value_or(std::string("Arco simple"));
+    arco_simple.price = root.at_path("items.arco_simple.price").value_or(80);
+    arco_simple.distance = root.at_path("items.arco_simple.distance").value_or(5);
+    arco_simple.damage_min = root.at_path("items.arco_simple.damage_min").value_or(1);
+    arco_simple.damage_max = root.at_path("items.arco_simple.damage_max").value_or(4);
+
+    arco_compuesto.name = root.at_path("items.arco_compuesto.name").value_or(std::string("Arco compuesto"));
+    arco_compuesto.price = root.at_path("items.arco_compuesto.price").value_or(200);
+    arco_compuesto.distance = root.at_path("items.arco_compuesto.distance").value_or(7);
+    arco_compuesto.damage_min = root.at_path("items.arco_compuesto.damage_min").value_or(4);
+    arco_compuesto.damage_max = root.at_path("items.arco_compuesto.damage_max").value_or(16);
+
     vara_fresno.name = root.at_path("items.vara_fresno.name").value_or(std::string("Vara de fresno"));
     vara_fresno.price = root.at_path("items.vara_fresno.price").value_or(90);
     vara_fresno.distance = root.at_path("items.vara_fresno.distance").value_or(5);

@@ -272,7 +272,8 @@ heal_mana = 100
 # "escudo_tortuga"). Cambiar esta lista cambia el equipamiento de arranque
 # sin recompilar. Si se deja vacia se usa el equipamiento por defecto.
 initial_inventory = ["espada", "escudo", "vara_fresno", "baculo_nudoso",
-                     "baculo_engarzado", "flauta_elfica"]
+                     "baculo_engarzado", "flauta_elfica", "arco_simple",
+                     "arco_compuesto","martillo"]
 
 # Cantidad maxima (N) de items que puede tener el inventario de cualquier
 # jugador. Al llegar al tope, add_item lo rechaza (los items quedan en el piso).
@@ -361,8 +362,11 @@ npc_gold_drop_max = 0.2
 map = "data/maps/desert/map-2.bin"
 allowed_npcs = ["goblin", "spider"]
 num_npc = 7
-num_items = 6
-allowed_items = ["espada", "hacha", "armadura_cuero", "capucha", "pocion_vida"]
+# Pool ampliado para probar la impresión de los items que no aparecían en otras
+# zonas (arcos y escudo de tortuga). num_items alto para que caigan varios.
+num_items = 10
+allowed_items = ["espada", "hacha", "armadura_cuero", "capucha", "pocion_vida",
+                 "arco_simple", "arco_compuesto", "escudo_tortuga"]
 
 [zones.city]
 map = "data/maps/city/city-2.bin"

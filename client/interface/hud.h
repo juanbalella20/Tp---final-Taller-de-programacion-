@@ -46,9 +46,18 @@ private:
     SDL_Texture* mana_bar_texture;
     SDL_Texture* gold_texture;
     SDL_Texture* game_texture;
+    // Fondo oscuro que tapa los íconos de stats de la parte inferior del panel y
+    // sirve de fondo al panel de estado de equipo (escudo/armadura/casco).
+    SDL_Texture* info_area_texture;
     // Slots actualmente equipados (índices en inventory.items). Hay como máximo
-    // uno por tipo de item (arma, armadura, casco, escudo).
+    // uno por tipo de item (arma, armadura, casco, escudo). DERIVADO de
+    // equipped_uids: se recalcula cada vez que cambia el inventario.
     std::set<int> equipped_slots;
+    // Uids de INSTANCIA equipados (estado real confirmado por el server). Es la
+    // fuente de verdad del resaltado: equipped_slots se deriva de acá. Persiste
+    // entre cambios de inventario (tomar/soltar items) para que el halo amarillo
+    // no se pierda al reordenarse o agregarse items al inventario.
+    std::vector<std::string> equipped_uids;
     std::string equipped_item_id;
 
     // Texturas de texto cacheadas (una por cada valor que se dibuja como texto).
@@ -58,6 +67,9 @@ private:
     TextCache xp_text_cache;
     TextCache name_text_cache;
     TextCache level_text_cache;
+    // Una por fila del panel de equipo (escudo, armadura, casco) para no
+    // re-rasterizar el texto EQUIPED/NOT EQUIPED cada frame.
+    TextCache equip_status_caches[3];
 
     float game_width;
     float panel_width;
@@ -77,6 +89,14 @@ private:
     void update_text_cache(TextCache& cache, const std::string& text, SDL_Color color);
     void drawItems();
     void drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float SLOT_SIZE);
+    // Recalcula equipped_slots (índices a resaltar) a partir de equipped_uids y el
+    // inventario actual. Se llama cada vez que cambia el inventario o el equipo.
+    void refresh_equipped_slots();
+    // Panel inferior con el estado de equipo de las defensas (escudo/armadura/
+    // casco): por cada una que esté en el inventario, su ícono + EQUIPED/NOT.
+    void drawEquipStatus();
+    // true si el item del slot dado está equipado (su uid figura en equipped_uids).
+    bool is_slot_equipped(int slot_index) const;
 
 public:
     HUD(SDL_Renderer* gui_renderer,

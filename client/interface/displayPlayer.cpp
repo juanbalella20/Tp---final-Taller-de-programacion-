@@ -45,15 +45,36 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
 void PlayerDisplay::load_equip_sprites() {
     // Sprite que se dibuja sobre el jugador por cada item equipado. La clave es
     // el id del item (igual que en el server/HUD). Crop = recorte dentro de su
-    // spritesheet (toda la imagen para los íconos ya recortados).
-    struct Def { const char* id; const char* path; SDL_FRect crop; bool use_crop; };
+    // spritesheet (toda la imagen para los íconos ya recortados). kind decide
+    // CÓMO se posiciona el sprite sobre el personaje (ver draw_equipped_item):
+    // arma en la mano (animada), escudo/armadura sobre el torso, casco en la
+    // cabeza. Los PNG de sprite único (1024x1024) usan use_crop=false (toda la
+    // imagen); los íconos recortados de un spritesheet llevan su crop explícito.
+    struct Def { const char* id; const char* path; SDL_FRect crop; bool use_crop; EquipKind kind; };
     const Def defs[] = {
-        {"espada",            "imagenes/espada.png",                   {}, false},
-        {"escudo",            "imagenes/2141.png",                  {0.0f, 0.0f, 32.0f, 32.0f}, true},
-        {"vara_fresno",       "imagenes/icon_vara_fresno.png",      {0.0f, 0.0f, 27.0f, 29.0f}, true},
-        {"baculo_nudoso",     "imagenes/icon_baculo_nudoso.png",    {0.0f, 0.0f, 30.0f, 29.0f}, true},
-        {"baculo_engarzado",  "imagenes/icon_baculo_engarzado.png", {0.0f, 0.0f, 34.0f, 40.0f}, true},
-        {"flauta_elfica",     "imagenes/icon_flauta_elfica.png",    {0.0f, 0.0f, 40.0f, 40.0f}, true},
+        // Armas físicas (van en la mano, animadas con la caminata).
+        {"espada",            "imagenes/espada.png",                {}, false, EquipKind::WEAPON},
+        {"hacha",             "imagenes/hacha.png",                 {}, false, EquipKind::WEAPON},
+        {"martillo",          "imagenes/martillo.png",              {}, false, EquipKind::WEAPON},
+        {"arco_simple",       "imagenes/arco-simple.png",           {}, false, EquipKind::WEAPON},
+        {"arco_compuesto",    "imagenes/arco-compuesto.png",        {}, false, EquipKind::WEAPON},
+        // Varas/báculos (también en la mano).
+        {"vara_fresno",       "imagenes/icon_vara_fresno.png",      {0.0f, 0.0f, 27.0f, 29.0f}, true, EquipKind::WEAPON},
+        {"baculo_nudoso",     "imagenes/icon_baculo_nudoso.png",    {0.0f, 0.0f, 30.0f, 29.0f}, true, EquipKind::WEAPON},
+        {"baculo_engarzado",  "imagenes/icon_baculo_engarzado.png", {0.0f, 0.0f, 34.0f, 40.0f}, true, EquipKind::WEAPON},
+        {"flauta_elfica",     "imagenes/icon_flauta_elfica.png",    {0.0f, 0.0f, 40.0f, 40.0f}, true, EquipKind::WEAPON},
+        // Escudos (fijos sobre el torso).
+        {"escudo",            "imagenes/escudo-tortuga.png",        {}, false, EquipKind::SHIELD},
+        {"escudo_tortuga",    "imagenes/escudo-tortuga.png",        {}, false, EquipKind::SHIELD},
+        {"escudo_hierro",     "imagenes/2141.png",                  {0.0f, 0.0f, 32.0f, 32.0f}, true, EquipKind::SHIELD},
+        // Armaduras (cubren el torso/cuerpo).
+        {"armadura_cuero",    "imagenes/Armadura-de-cuero.png",     {}, false, EquipKind::ARMOR},
+        {"armadura_placas",   "imagenes/armadura-de-placas.png",    {}, false, EquipKind::ARMOR},
+        {"tunica_azul",       "imagenes/tunica-azul.png",           {}, false, EquipKind::ARMOR},
+        // Cascos (sobre la cabeza).
+        {"capucha",           "imagenes/capucha.png",               {}, false, EquipKind::HELMET},
+        {"casco_hierro",      "imagenes/casco-de-hierro.png",       {}, false, EquipKind::HELMET},
+        {"sombrero_magico",   "imagenes/sombrero-magico.png",       {}, false, EquipKind::HELMET},
     };
     for (const auto& d : defs) {
         SDL_Surface* surf = IMG_Load(d.path);
@@ -62,7 +83,7 @@ void PlayerDisplay::load_equip_sprites() {
         SDL_DestroySurface(surf);
         if (!tex) continue;
         SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
-        equip_sprites[d.id] = {tex, d.crop, d.use_crop};
+        equip_sprites[d.id] = {tex, d.crop, d.use_crop, d.kind};
     }
 }
 
@@ -514,35 +535,83 @@ void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_d
     }
 }
 
-void PlayerDisplay::draw_equipped_item(const Camera& camera) {
+void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
     // Dibuja cada item equipado con su sprite real. Arma/báculo van en la mano
-    // (siguen la animación de caminata con weapon_dx/dy); el escudo en el otro
-    // lado. Si no hay sprite registrado para el id, no se dibuja nada.
+    // (siguen la animación de caminata con weapon_dx/dy); el escudo sobre el
+    // torso; la armadura cubre el cuerpo; el casco va en la cabeza. Si no hay
+    // sprite registrado para el id, no se dibuja nada.
+    //
+    // behind_body distingue las dos pasadas de draw(): las armas y el escudo se
+    // dibujan DETRÁS del cuerpo cuando el personaje da la espalda (BACK/LEFT) y
+    // delante cuando mira al frente (FRONT/RIGHT). La armadura y el casco van
+    // SIEMPRE delante del cuerpo (se ven en cualquier dirección).
     for (const auto& id : equipped_item_ids) {
         auto it = equip_sprites.find(id);
         if (it == equip_sprites.end()) continue;
         const EquipSprite& sprite = it->second;
 
+        // La armadura y el casco NO se dibujan sobre el personaje: su estado
+        // (equipado o no) se muestra en el panel del HUD (drawEquipStatus). Sobre
+        // el jugador solo se ven el arma/báculo (en la mano) y el escudo (torso).
+        if (sprite.kind == EquipKind::ARMOR || sprite.kind == EquipKind::HELMET) {
+            continue;
+        }
+
+        // Filtrado por pasada: arma/escudo van detrás del cuerpo cuando el
+        // personaje da la espalda (BACK/LEFT) y delante en FRONT/RIGHT.
+        bool item_behind = (current_direction == ViewDirection::BACK ||
+                            current_direction == ViewDirection::LEFT);
+        if (item_behind != behind_body) continue;
+
         float off_x, off_y, size;
         double angle = 0.0;
         SDL_FlipMode flip = SDL_FLIP_NONE;
 
-        if (id == "escudo") {
-            // El escudo va FIJO sobre el pecho/torso (no sigue la mano: con offset
-            // animado terminaba cayendo en la pierna en algunos frames de caminata).
-            // El cuerpo se dibuja en rect.y..rect.y+rect.h (la cabeza va aparte y
-            // arriba), así que el torso está cerca del top del cuerpo.
-            size = rect.w * 0.4f;
-            off_x = 0.30f;
-            off_y = 0.05f;
-        } else {
-            // Arma/báculo: en la mano, animado con la caminata.
-            size = rect.w * 0.5f;
-            off_x = weapon_dx;
-            off_y = weapon_dy;
-            if (current_direction == ViewDirection::FRONT || current_direction == ViewDirection::LEFT) {
-                angle = 270.0;
-            }
+        switch (sprite.kind) {
+            case EquipKind::WEAPON:
+                // Arma/báculo: en la mano, animado con la caminata. Se rota 270°
+                // mirando al frente/izquierda para que apunte hacia adelante.
+                size = rect.w * 0.5f;
+                off_x = weapon_dx;
+                off_y = weapon_dy;
+                if (current_direction == ViewDirection::FRONT ||
+                    current_direction == ViewDirection::LEFT) {
+                    angle = 270.0;
+                }
+                break;
+
+            case EquipKind::SHIELD:
+                // El escudo va FIJO sobre el torso, del lado contrario a la mano que
+                // sostiene el arma. El cuerpo se dibuja en rect.y..rect.y+rect.h (la
+                // cabeza va aparte y arriba), así que el torso está cerca del top.
+                // El lado depende de hacia dónde mira el personaje.
+                size = rect.w * 0.4f;
+                off_y = 0.10f;
+                switch (current_direction) {
+                    case ViewDirection::LEFT:  off_x = 0.05f; break;  // brazo izquierdo
+                    case ViewDirection::RIGHT: off_x = 0.55f; break;  // brazo derecho
+                    default:                   off_x = 0.30f; break;  // de frente/espalda: centrado
+                }
+                break;
+
+            case EquipKind::ARMOR:
+                // Armadura: cubre el torso/cuerpo. Centrada sobre el cuerpo y del
+                // mismo tamaño, en todas las direcciones (se ve similar de frente
+                // y de espalda).
+                size = rect.w * 0.85f;
+                off_x = (1.0f - 0.85f) / 2.0f;  // centrada horizontalmente
+                off_y = 0.20f;                  // un poco por debajo de la cabeza
+                break;
+
+            case EquipKind::HELMET:
+            default:
+                // Casco: sobre la cabeza. La cabeza se dibuja por encima del cuerpo
+                // (rect.y es el top del cuerpo), así que el casco va con offset_y
+                // negativo para subir hasta la cabeza.
+                size = rect.w * 0.55f;
+                off_x = (1.0f - 0.55f) / 2.0f;  // centrado horizontalmente
+                off_y = -0.45f;                 // sobre la cabeza
+                break;
         }
 
         SDL_FRect dst = {
@@ -557,15 +626,15 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera) {
 }
 
 void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) {
-    if (current_direction == ViewDirection::BACK || current_direction == ViewDirection::LEFT) {
-        draw_equipped_item(camera);
-    }
+    // Pasada 1: items que van DETRÁS del cuerpo (armas/escudo cuando el personaje
+    // da la espalda). draw_equipped_item filtra cuáles corresponden a esta pasada.
+    draw_equipped_item(camera, /*behind_body=*/true);
 
     draw_player(camera, body_pov);
 
-    if (current_direction == ViewDirection::FRONT || current_direction == ViewDirection::RIGHT) {
-        draw_equipped_item(camera);
-    }
+    // Pasada 2: items que van DELANTE del cuerpo (armas/escudo de frente, y
+    // siempre la armadura y el casco).
+    draw_equipped_item(camera, /*behind_body=*/false);
 }
 
 int PlayerDisplay::get_x() {

@@ -19,6 +19,7 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       mana_bar_texture(nullptr),
       gold_texture(nullptr),
       game_texture(nullptr),
+      info_area_texture(nullptr),
       game_width(game_width),
       panel_width(panel_width),
       canvas_height(canvas_height) {
@@ -56,6 +57,9 @@ HUD::~HUD() {
     if (game_texture) {
         SDL_DestroyTexture(game_texture);
     }
+    if (info_area_texture) {
+        SDL_DestroyTexture(info_area_texture);
+    }
     if (gold_text_cache.texture) {
         SDL_DestroyTexture(gold_text_cache.texture);
     }
@@ -74,6 +78,9 @@ HUD::~HUD() {
     if (level_text_cache.texture) {
         SDL_DestroyTexture(level_text_cache.texture);
     }
+    for (auto& cache : equip_status_caches) {
+        if (cache.texture) SDL_DestroyTexture(cache.texture);
+    }
 
     if (font) {
         TTF_CloseFont(font);
@@ -82,8 +89,11 @@ HUD::~HUD() {
 
 void HUD::set_inventory(const std::vector<ItemInfo>& items) {
     inventory.items = items;
-    // inventory cambió -> limpiar resaltados optimistas
-    equipped_slots.clear();
+    // El inventario cambió (p.ej. se tomó/soltó un item): los índices viejos ya
+    // no sirven, pero el equipo real no cambió. Re-derivamos el resaltado a
+    // partir de los uids equipados (fuente de verdad) para que el halo amarillo
+    // sobreviva al reordenamiento.
+    refresh_equipped_slots();
 }
 
 void HUD::set_gold(uint32_t amount) {
@@ -142,17 +152,31 @@ void HUD::set_equipped_slot(int slot_index) {
 
 void HUD::set_equipped_by_uids(const std::vector<std::string>& uids) {
     // Resalta por uid de INSTANCIA: dos copias del mismo tipo tienen distinto
-    // uid, así que solo se resalta la que realmente está equipada.
+    // uid, así que solo se resalta la que realmente está equipada. Guardamos los
+    // uids como fuente de verdad para poder re-derivar el resaltado cuando cambie
+    // el inventario (ver set_inventory / refresh_equipped_slots).
+    equipped_uids = uids;
+    refresh_equipped_slots();
+}
+
+void HUD::refresh_equipped_slots() {
+    // Recalcula qué slots resaltar a partir de equipped_uids y el inventario
+    // actual. Es seguro llamarla cada vez que cambia cualquiera de los dos.
     equipped_slots.clear();
     for (int i = 0; i < static_cast<int>(inventory.items.size()); ++i) {
-        const std::string item_uid = std::to_string(inventory.items[i].get_uid());
-        for (const std::string& uid : uids) {
-            if (item_uid == uid) {
-                equipped_slots.insert(i);
-                break;
-            }
-        }
+        if (is_slot_equipped(i)) equipped_slots.insert(i);
     }
+}
+
+bool HUD::is_slot_equipped(int slot_index) const {
+    if (slot_index < 0 || slot_index >= static_cast<int>(inventory.items.size())) {
+        return false;
+    }
+    const std::string item_uid = std::to_string(inventory.items[slot_index].get_uid());
+    for (const std::string& uid : equipped_uids) {
+        if (item_uid == uid) return true;
+    }
+    return false;
 }
 
 void HUD::toggle_equipped_slot(int slot_index) {
@@ -399,6 +423,90 @@ void HUD::drawMana() {
     }
 }
 
+void HUD::drawEquipStatus() {
+    // Panel inferior: estado de equipo de las defensas. Tapa los íconos de stats
+    // que trae la imagen de fondo del HUD con info-area-center y encima dibuja,
+    // por cada tipo (escudo, armadura, casco) que el jugador TENGA en el
+    // inventario: el ícono del item + "<Tipo> EQUIPPED" (verde) / "<Tipo> NOT
+    // EQUIPPED" (rojo). Los tipos que no se tienen no aparecen. Coordenadas en el
+    // espacio de la imagen base (1021x767), igual que el resto del HUD.
+    if (!font) return;
+
+    // Zona del contenido (coords base) y fondo ajustado al ancho real del panel.
+    // El fondo deja visible únicamente el borde decorativo lateral del HUD.
+    const float content_x = 775.0f;
+    const float area_y = 672.0f;
+    const float area_h = 92.0f;
+    const float panel_border_inset = 8.0f;
+
+    if (info_area_texture) {
+        SDL_FRect area_dst = {
+            game_width + panel_border_inset,
+            area_y * scale_y,
+            panel_width - panel_border_inset * 2.0f,
+            area_h * scale_y
+        };
+        SDL_RenderTexture(gui_renderer, info_area_texture, nullptr, &area_dst);
+    }
+
+    // Tipos a mostrar, en orden, con su etiqueta. (1=armadura, 2=casco,
+    // 3=escudo en ItemInfo).
+    struct Row { uint8_t type; const char* label; };
+    const Row rows[] = {
+        {3, "Escudo"},
+        {1, "Armadura"},
+        {2, "Casco"},
+    };
+
+    // Geometría de las filas dentro de la zona cubierta.
+    const float row_h   = 26.0f;
+    const float first_y = area_y + 6.0f;
+    const float icon_sz = 20.0f;
+    const float icon_pad = 8.0f;
+
+    int drawn = 0;  // filas efectivamente dibujadas (para apilarlas sin huecos)
+    int cache_idx = 0;
+    for (const Row& row : rows) {
+        // Buscar el primer item de este tipo en el inventario; saber si alguno de
+        // ese tipo está equipado.
+        const ItemInfo* item = nullptr;
+        bool equipped = false;
+        for (int i = 0; i < static_cast<int>(inventory.items.size()); ++i) {
+            if (inventory.items[i].get_type() != row.type) continue;
+            if (item == nullptr) item = &inventory.items[i];
+            if (is_slot_equipped(i)) { equipped = true; break; }
+        }
+        if (item == nullptr) continue;  // no se tiene ese tipo: fila oculta
+
+        float row_y = first_y + drawn * row_h;
+        ++drawn;
+
+        // Ícono del item (reutiliza el mapeo id->textura/crop del inventario).
+        float icon_slot = icon_sz * scale_x;
+        float icon_x = (content_x + icon_pad) * scale_x;
+        float icon_y = (row_y + (row_h - icon_sz) / 2.0f) * scale_y;
+        drawIconItem(*item, icon_x, icon_y, icon_slot);
+
+        // Texto "<Tipo> EQUIPPED / NOT EQUIPPED" a la derecha del ícono. El color
+        // marca el estado (verde = equipado, rojo = no).
+        std::string text = std::string(row.label) +
+                           (equipped ? " EQUIPPED" : " NOT EQUIPPED");
+        SDL_Color color = equipped ? SDL_Color{40, 200, 60, 255}
+                                   : SDL_Color{210, 50, 50, 255};
+        TextCache& cache = equip_status_caches[cache_idx++];
+        update_text_cache(cache, text, color);
+        if (cache.texture) {
+            float text_scale = 0.60f;
+            float tw = cache.w * text_scale;
+            float th = cache.h * text_scale;
+            float text_x = (content_x + icon_pad * 2.0f + icon_sz) * scale_x;
+            float text_y = (row_y * scale_y) + (row_h * scale_y - th) / 2.0f;
+            SDL_FRect dest = { text_x, text_y, tw, th };
+            SDL_RenderTexture(gui_renderer, cache.texture, nullptr, &dest);
+        }
+    }
+}
+
 void HUD::display_player_info(const std::string& player_name) {
     if (!font) return;
     
@@ -445,6 +553,7 @@ void HUD::render() {
     drawHp();
     drawMana();
     drawXp();
+    drawEquipStatus();
 }
 
 void HUD::load_stat_texture(const std::string& path, SDL_Texture** texture) {
@@ -469,34 +578,64 @@ void HUD::load_textures() {
         SDL_DestroySurface(sword_surf);
     }
 
+    // El sprite 2141.png es el "escudo de hierro" (la imagen que se mostraba
+    // antes bajo el alias "escudo"). El escudo de tortuga usa su propio PNG.
     SDL_Surface* shield_surf = IMG_Load("imagenes/2141.png");
     if (shield_surf) {
         SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, shield_surf);
         SDL_SetTextureBlendMode(tex, SDL_SCALEMODE_LINEAR);
-        inventory.items_textures["escudo"] = tex;
+        inventory.items_textures["escudo_hierro"] = tex;
         // Primer sprite del escudo (esquina superior izquierda del spritesheet).
-        inventory.items_crops["escudo"] = {0.0f, 0.0f, 32.0f, 32.0f};
+        inventory.items_crops["escudo_hierro"] = {0.0f, 0.0f, 32.0f, 32.0f};
         SDL_DestroySurface(shield_surf);
     }
 
-    // Íconos de los báculos/varas. Cada PNG es un único sprite, así que el crop
-    // cubre toda la imagen. La clave es el id del item (igual que el server).
-    struct StaffIcon { const char* id; const char* path; float w; float h; };
-    const StaffIcon staff_icons[] = {
-        {"vara_fresno",      "imagenes/icon_vara_fresno.png",       27.0f,   29.0f},
-        {"baculo_nudoso",    "imagenes/icon_baculo_nudoso.png",     30.0f,   29.0f},
-        {"baculo_engarzado", "imagenes/icon_baculo_engarzado.png",   34.0f,  40.0f},
-        {"flauta_elfica",    "imagenes/icon_flauta_elfica.png",      40.0f,   40.0f},
+    // Resto de los items: cada PNG es un único sprite que ocupa toda la imagen
+    // (1024x1024), así que el crop cubre la imagen entera y drawIconItem la
+    // escala al slot. La clave es el id del item (igual que el server). El
+    // escudo de tortuga se asigna también al alias histórico "escudo" (misma
+    // textura: el destructor deduplica, así que no hay doble-free).
+    struct ItemIcon { const char* id; const char* path; };
+    const ItemIcon item_icons[] = {
+        // Varas/báculos.
+        {"vara_fresno",      "imagenes/icon_vara_fresno.png"},
+        {"baculo_nudoso",    "imagenes/icon_baculo_nudoso.png"},
+        {"baculo_engarzado", "imagenes/icon_baculo_engarzado.png"},
+        {"flauta_elfica",    "imagenes/icon_flauta_elfica.png"},
+        // Armas físicas.
+        {"hacha",            "imagenes/hacha.png"},
+        {"martillo",         "imagenes/martillo.png"},
+        {"arco_simple",      "imagenes/arco-simple.png"},
+        {"arco_compuesto",   "imagenes/arco-compuesto.png"},
+        // Armaduras.
+        {"armadura_cuero",   "imagenes/Armadura-de-cuero.png"},
+        {"armadura_placas",  "imagenes/armadura-de-placas.png"},
+        {"tunica_azul",      "imagenes/tunica-azul.png"},
+        // Cascos.
+        {"capucha",          "imagenes/capucha.png"},
+        {"casco_hierro",     "imagenes/casco-de-hierro.png"},
+        {"sombrero_magico",  "imagenes/sombrero-magico.png"},
+        // Escudos.
+        {"escudo_tortuga",   "imagenes/escudo-tortuga.png"},
     };
-    for (const auto& si : staff_icons) {
-        SDL_Surface* surf = IMG_Load(si.path);
+    for (const auto& ii : item_icons) {
+        SDL_Surface* surf = IMG_Load(ii.path);
         if (!surf) continue;
+        float w = static_cast<float>(surf->w);
+        float h = static_cast<float>(surf->h);
         SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
         SDL_SetTextureBlendMode(tex, SDL_SCALEMODE_LINEAR);
         SDL_DestroySurface(surf);
         if (!tex) continue;
-        inventory.items_textures[si.id] = tex;
-        inventory.items_crops[si.id] = {0.0f, 0.0f, si.w, si.h};
+        inventory.items_textures[ii.id] = tex;
+        inventory.items_crops[ii.id] = {0.0f, 0.0f, w, h};
+    }
+
+    // Alias histórico "escudo" -> escudo de tortuga (comparte textura/crop).
+    auto tortuga_tex = inventory.items_textures.find("escudo_tortuga");
+    if (tortuga_tex != inventory.items_textures.end()) {
+        inventory.items_textures["escudo"] = tortuga_tex->second;
+        inventory.items_crops["escudo"] = inventory.items_crops["escudo_tortuga"];
     }
 
     // Pociones en el inventario: ambas se recortan del MISMO spritesheet 100.png.
@@ -520,4 +659,6 @@ void HUD::load_textures() {
     load_stat_texture("imagenes/en_barrademana.bmp", &mana_bar_texture);
     load_stat_texture("imagenes/100.png", &gold_texture);
     load_stat_texture("imagenes/en_ventanaprincipal.png", &game_texture);
+    // Fondo del panel de estado de equipo (el archivo se llama con doble punto).
+    load_stat_texture("imagenes/info-area-center..png", &info_area_texture);
 }

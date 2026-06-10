@@ -42,11 +42,15 @@ private:
     bool has_equipped_weapon = false;
 
     ViewDirection current_direction = ViewDirection::BACK;
+    // Categoría de item equipable: decide CÓMO se posiciona el sprite sobre el
+    // personaje (mano animada, torso fijo, cabeza). Ver draw_equipped_item.
+    enum class EquipKind { WEAPON, SHIELD, ARMOR, HELMET };
     // Sprite de cada item equipable, por id (textura + recorte en su spritesheet).
     struct EquipSprite {
         SDL_Texture* texture;
         SDL_FRect crop;
         bool use_crop;
+        EquipKind kind;
     };
     std::map<std::string, EquipSprite> equip_sprites;
     // Ids de los items actualmente equipados, para dibujarlos sobre el jugador.
@@ -63,7 +67,7 @@ private:
     void draw_player(const Camera& camera, SDL_FRect body_pov);
     void draw_player_head(const Camera& camera);
     void draw_gnome_hat(const Camera& camera, const SDL_FRect& head_dst);
-    void draw_equipped_item(const Camera& camera);
+    void draw_equipped_item(const Camera& camera, bool behind_body);
 
     void weapon_back_offset(int current_frame);
     void weapon_front_offset(int current_frame);

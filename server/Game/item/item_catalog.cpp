@@ -24,6 +24,10 @@ ItemCatalog::ItemCatalog() {
     catalog["hacha"]    = [ha]   { return std::make_unique<Arma>("hacha",    ha.name,   ha.price,   ha.distance,   ha.damage_min,   ha.damage_max); };
     const auto& ma = cfg.martillo;
     catalog["martillo"] = [ma]   { return std::make_unique<Arma>("martillo", ma.name,   ma.price,   ma.distance,   ma.damage_min,   ma.damage_max); };
+    const auto& as = cfg.arco_simple;
+    catalog["arco_simple"]    = [as] { return std::make_unique<Arma>("arco_simple",    as.name, as.price, as.distance, as.damage_min, as.damage_max); };
+    const auto& acomp = cfg.arco_compuesto;
+    catalog["arco_compuesto"] = [acomp] { return std::make_unique<Arma>("arco_compuesto", acomp.name, acomp.price, acomp.distance, acomp.damage_min, acomp.damage_max); };
 
     // --- Magia (Baculo: tipo, costo_mana, distancia_min, valor_min, valor_max) ---
     const auto& vf = cfg.vara_fresno;
@@ -71,7 +75,7 @@ ItemCatalog::ItemCatalog() {
     // Objetos elegibles para "cualquier otro objeto al azar": armas, magia,
     // armaduras, cascos y escudos (sin pociones ni el alias "escudo").
     droppable_item_ids = {
-        "espada", "hacha", "martillo",
+        "espada", "hacha", "martillo", "arco_simple", "arco_compuesto",
         "vara_fresno", "baculo_nudoso", "baculo_engarzado", "flauta_elfica",
         "armadura_cuero", "armadura_placas", "tunica_azul",
         "capucha", "casco_hierro", "sombrero_magico",
