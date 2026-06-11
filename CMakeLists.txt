@@ -230,3 +230,9 @@ else()
     message(WARNING "Qt6 Widgets no encontrado: se omite el target map_editor. "
                     "Instalar con: sudo apt install qt6-base-dev")
 endif()
+
+# ── Tests unitarios del protocolo (GoogleTest) ───────────────────────────────
+# El enunciado exige que el protocolo de comunicacion este testeado con GTest.
+# GoogleTest se baja con FetchContent para no depender de paquetes del sistema.
+enable_testing()
+add_subdirectory(tests)
