@@ -27,6 +27,7 @@ void GameConfig::load(const std::string& toml_path) {
     gold_excess_factor = root.at_path("level.gold_excess_factor").value_or(1.5);
     newbie_max_level = root.at_path("level.newbie_max_level").value_or(12);
     level_diff_max = root.at_path("level.level_diff_max").value_or(10);
+    revive_life_factor = root.at_path("level.revive_life_factor").value_or(0.1);
 
     // Combat
     crit_chance = root.at_path("combat.crit_chance").value_or(0.1);

@@ -617,7 +617,21 @@ void ClientGUI::update() {
                 }
                 case MSG_PRIVATE:
                 case MSG_MEDITATE:
-                case MSG_RESURRECT:
+                case MSG_RESURRECT: {
+                    if (msg.get_player_name() == own_name) {
+                        player->set_ghost(false);
+                        player_pov = player->front_pov(ViewDirection::FRONT);
+                    } else {
+                        for (auto& p : other_players) {
+                            if (p.name == msg.get_player_name()) {
+                                p.ghost = false;
+                                break;
+                            }
+                        }
+                    }
+                    chat_inbox.push(msg.get_chat_content());
+                    break;
+                }
                 case MSG_CURE:
                 case MSG_LIST:
                 case MSG_BUY:
