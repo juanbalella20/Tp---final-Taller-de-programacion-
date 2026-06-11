@@ -239,6 +239,120 @@ OH -> OC: actualiza posición del jugador
 
 ---
 
+## Diagrama de clases — Jugador y NPC hostil
+
+![Jugador y NPC hostil](../diagrams%20/server/jugador_npc_hostil.png)
+
+---
+
+## Escenario PvP: J1 mata a J2 de un golpe
+
+### Los dos jugadores
+
+#### J1 — atacante
+
+| Atributo | Valor | De dónde sale |
+|---|---|---|
+| Raza / Clase | Gnome / Warrior | `[races.gnome]`, `[classes.warrior]` |
+| Nivel | **13** | dejó de ser newbie (newbie ≤ 12) |
+| Fuerza | **17** | `race_strength` 8 + `class_strength` 9 |
+| Arma equipada | **Arco compuesto** | `[items.weapons.arco_compuesto]`, daño 4–16 |
+
+> **Daño Z (según enunciado):** `Z = Fuerza * rand(daño_arma_min, daño_arma_max)`
+> = `17 * rand(4, 16)` ⇒ rango **68 … 272**.
+> Para el golpe que ocurre en los diagramas fijamos el roll en **rand = 10**, así
+> **Z = 17 * 10 = 170**.
+
+#### J2 — víctima
+
+| Atributo | Valor | De dónde sale |
+|---|---|---|
+| Raza / Clase | Human / Wizard | `[races.human]`, `[classes.wizard]` |
+| Nivel | **13** | \|X−Y\| = 0 ≤ 10 ✓ ; no newbie ✓ |
+| **Vida máxima** | **65** | `constitución(0.5) * class_life_factor(2) * race_life_factor(5) * nivel(13)` |
+| Vida al momento del golpe | **65** (full) | |
+| **Casco** | **Casco de hierro** | `[items.helmets.casco_hierro]`, defensa 4–8 |
+| **Armadura** | **Armadura de cuero** | `[items.armors.armadura_cuero]`, defensa 2–6 |
+| Escudo | (sin escudo) | |
+| Oro | **300** | excede el oro seguro de su nivel ⇒ dropeará el excedente |
+
+### ¿Por qué pueden atacarse? (X = 13, Y = 13)
+
+Validado en `GameMap::attack` antes de aplicar el golpe:
+
+| Regla (`config.toml`) | Chequeo | Resultado |
+|---|---|---|
+| Zona segura (`safe_zone`) | atacan fuera de `city` | OK |
+| Newbie (`newbie_max_level = 12`) | J1 = 13 y J2 = 13, ninguno ≤ 12 | OK |
+| Diferencia de nivel (`level_diff_max = 10`) | \|13 − 13\| = 0 ≤ 10 | OK |
+| Mismo clan | J1 y J2 en clanes distintos | OK |
+
+### El golpe: por qué muere de uno solo (aun con casco + armadura)
+
+`AliveState::receive_damage` sobre J2:
+
+1. **Esquive** (solo si no es crítico): `rand(0,1)^Agilidad < dodge_threshold (0.001)`. En el escenario **no esquiva**.
+2. **Defensa** = suma de los `DefenseItem` equipados, cada uno `defense_min + rand(0, max−min)`:
+   - Casco de hierro: `4 + rand(0,4)` ⇒ fijamos **6**
+   - Armadura de cuero: `2 + rand(0,4)` ⇒ fijamos **4**
+   - **Defensa total = 10**
+3. **Daño neto** = `max(0, Z − defensa)` = `max(0, 170 − 10)` = **160**.
+4. Como `lives (65) ≤ daño (160)` ⇒ `lives = 0`, **`murio = true`**.
+
+**160 de daño contra 65 de vida: muere de un solo golpe**, aun teniendo casco y armadura equipados.
+
+### Consecuencias de la muerte de J2
+
+- **XP para J1** (`Player::ganar_xp` → `Level`):
+  - `xp_per_attack = daño * max(Ytarget − Xnivel + xp_level_offset, 0)` = `160 * max(13 − 13 + 10, 0)` = **1600 XP**.
+  - `xp_per_kill`: bonus aleatorio adicional por la kill (`rand(0, 0.1) * VidaMaxJ2(65) * factor(10)`).
+  - `check_level_up`: si la XP acumulada supera `1000 * nivel^1.8`, **sube de nivel**.
+- **Oro que dropea J2** (`Level::calculate_gold_drop`): J2 cargaba oro por encima de su tope de nivel 13, así que **suelta el excedente** en su celda.
+- **Items que dropea J2** (`Player::drop_inventory` → `DefenseSet::clear` + `Inventory::drop_all`): caen al piso **todos** sus items, incluidos el **casco de hierro** y la **armadura de cuero**.
+- **Estado de J2**: pasa a **`GhostState`** (fantasma) en el servidor.
+
+### Diagramas de secuencia
+
+> **Alcance:** estos diagramas modelan **solo la parte del juego (server-side)**. Quedan fuera el cliente (click, `ClientGUI`, HUD/sprites) y la capa de red/serialización. La secuencia arranca en el `GameLoop` cuando saca el comando de la cola y termina cuando el server entrega los mensajes resultantes.
+
+#### 1a — Arranque del server
+
+![pvp kill 1a](../diagrams%20/server/pvp_kill_1a_init_server.png)
+
+#### 1b — Spawn + equipamiento de J1 (atacante)
+
+![pvp kill 1b](../diagrams%20/server/pvp_kill_1b_spawn_j1.png)
+
+#### 1c — Spawn + equipamiento de J2 (víctima)
+
+![pvp kill 1c](../diagrams%20/server/pvp_kill_1c_spawn_j2.png)
+
+#### 2a — `GameMap::attack`: ubicar target + fair play
+
+![pvp kill 2a](../diagrams%20/server/pvp_kill_2a_gamemap_validacion.png)
+
+#### 2b-1 — Cadena de delegación del golpe
+
+![pvp kill 2b-1](../diagrams%20/server/pvp_kill_2b1_cadena_golpe.png)
+
+#### 2b-2 — Cálculo de daño, muerte y XP dentro de J2
+
+![pvp kill 2b-2](../diagrams%20/server/pvp_kill_2b2_dano_interno.png)
+
+#### 2c — Drop de oro e inventario tras la muerte
+
+![pvp kill 2c](../diagrams%20/server/pvp_kill_2c_drop.png)
+
+#### 3a — Broadcast de `MSG_DEATH` a todos los clientes
+
+![pvp kill 3a](../diagrams%20/server/pvp_kill_3a_broadcast_muerte.png)
+
+#### 3b — Mensajes dirigidos solo a J2 (víctima)
+
+![pvp kill 3b](../diagrams%20/server/pvp_kill_3b_mensajes_victima.png)
+
+---
+
 ## Componente: Cliente
 
 ### Responsabilidades

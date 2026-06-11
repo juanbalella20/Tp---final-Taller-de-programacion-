@@ -1,0 +1,73 @@
+@startuml pvp_kill_2b2_dano_interno
+' =====================================================================
+'  PvP kill - Diagrama 2b-2: calculo interno en AliveState de J2
+'
+'  receive_damage: esquive, defensa (casco+armadura), dano neto,
+'  muerte de J2, XP para J1 y gold drop.
+'  Viene del Diagrama 2b-1 (arma -> j2.receive_damage).
+' =====================================================================
+title PvP kill (2b-2) - Calculo de dano, muerte y XP dentro de J2
+
+participant "j2:Player" as j2
+participant "s2:AliveState" as s2
+participant "def:DefenseSet" as def
+participant "j1:Player" as j1
+participant "lvl:Level" as lvl
+
+activate j2
+j2 -> s2 : receive_damage(self=j2: Player&, damage=170: int,\n  attacker=j1: Player&, is_critical=false): DamageOutcome
+activate s2
+
+s2 -> s2 : esquive: pow(rand, agility=12) < dodge_threshold(0.001) ? => false
+
+s2 -> j2 : calculate_defense(): int
+activate j2
+j2 -> def : calculate_defense(): int
+activate def
+note right of def
+  Casco de hierro:  4 + rand(0,4) => 6
+  Armadura de cuero: 2 + rand(0,4) => 4
+end note
+def --> j2 : 10
+deactivate def
+j2 --> s2 : 10
+deactivate j2
+
+s2 -> s2 : damage = max(0, 170 - 10) = 160
+note right of s2
+  lives(65) <= damage(160)  =>  lives = 0 ; murio = true
+  Muere de UN solo golpe pese al casco + armadura.
+end note
+s2 -> s2 : lives = 0 ; murio = true
+
+s2 -> j1 : ganar_xp(dano=160: int, nivel_target=13: int,\n  murio=true, vida_max_target=65): bool
+activate j1
+j1 -> lvl : xp_per_attack(damage=160, target_level=13): int
+activate lvl
+lvl --> j1 : 1600   (160 * max(13-13+10, 0))
+j1 -> lvl : xp_per_kill(target_max_life=65, target_level=13): int
+lvl --> j1 : bonus  (rand(0,0.1) * 65 * 10)
+deactivate lvl
+j1 -> j1 : check_level_up(): bool
+j1 --> s2 : level_up: bool
+deactivate j1
+
+s2 -> lvl : calculate_gold_drop(gold=300: uint32_t): uint32_t
+activate lvl
+lvl --> s2 : drop   (oro por encima del tope seguro del nivel)
+deactivate lvl
+s2 -> j2 : gold -= drop
+s2 -> j2 : to_ghost(): void
+note right of j2
+  state pasa a GhostState: J2 ya es fantasma en el server.
+end note
+s2 --> j2 : DamageOutcome{ damage=160, gold_drop=drop, dodged=false, level_up }
+deactivate s2
+deactivate j2
+
+note over j2, lvl
+  Continua en Diagrama 2b-1: DamageOutcome sube por la cadena
+  arma -> inv -> s1 -> j1 -> map.
+end note
+
+@enduml
