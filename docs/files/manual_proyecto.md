@@ -18,6 +18,7 @@
 |--------|--------|----------|
 | Juan Balella | 110271 | juanbalella20 |
 | Agustín Trombetta | 111754 |  |
+| Mercedes González Lago | 110796 | mercedesgonzalezlago |
 
 ---
 
