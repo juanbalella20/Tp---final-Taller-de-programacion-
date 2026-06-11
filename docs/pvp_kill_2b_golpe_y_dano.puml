@@ -1,0 +1,99 @@
+@startuml pvp_kill_2b_golpe_y_dano
+' =====================================================================
+'  PvP kill - Diagrama 2b: parte 2 de GameMap::attack: EL GOLPE Y EL DANO (J2 muere)
+'
+'  Segunda parte de GameMap::attack: delega el golpe en j1.attack ->
+'  AliveState -> Inventory::use_equipped -> Item::use_item, que llama
+'  a j2.receive_damage. El AliveState de J2 descuenta la defensa
+'  (casco + armadura = 10), pero el dano neto (160) supera la vida (65):
+'  J2 muere (lives = 0), J1 gana XP y J2 pasa a fantasma.
+'
+'  Numeros (docs/pvp_kill_escenario.md): Z = 170, defensa 10, vida 65.
+' =====================================================================
+title PvP kill (2b) - Golpe: dano, defensa y muerte de J2
+
+participant "map:GameMap" as map
+participant "j1:Player" as j1
+participant "s1:AliveState" as s1
+participant "inv:Inventory" as inv
+participant "arma:Item" as arma
+participant "j2:Player" as j2
+participant "s2:AliveState" as s2
+participant "def:DefenseSet" as def
+participant "lvl:Level" as lvl
+
+map -> j1 : attack(target=j2: Entity&, x: int, y: int): DamageOutcome
+activate j1
+j1 -> s1 : attack(self=j1: Player&, target=j2: Entity&, x: int, y: int): DamageOutcome
+activate s1
+s1 -> inv : use_equipped(target=j2: Entity&, atacante=j1: Player&,\n  attacker_x: int, attacker_y: int, target_x: int, target_y: int,\n  is_critical=false): DamageOutcome
+activate inv
+inv -> arma : use_item(target=j2: Entity&, atacante=j1: Player&,\n  attacker_x: int, attacker_y: int, target_x: int, target_y: int,\n  is_critical=false): DamageOutcome
+activate arma
+arma -> j1 : damage_attack(): int
+j1 --> arma : Z = 170   (Fuerza 17 * rand(4,16)=10, segun enunciado)
+arma -> j2 : receive_damage(damage=170: int, atacante=j1: Player&, is_critical=false): DamageOutcome
+activate j2
+
+j2 -> s2 : receive_damage(self=j2: Player&, damage=170: int, attacker=j1: Player&, is_critical=false): DamageOutcome
+activate s2
+s2 -> s2 : esquive: pow(rand, agility=12) < dodge_threshold(0.001) ?  => false
+s2 -> j2 : calculate_defense(): int
+activate j2
+j2 -> def : calculate_defense(): int
+activate def
+note right of def
+  Casco de hierro: 4 + rand(0,4) => 6
+  Armadura de cuero: 2 + rand(0,4) => 4
+end note
+def --> j2 : 10
+deactivate def
+j2 --> s2 : 10
+deactivate j2
+s2 -> s2 : damage = max(0, 170 - 10) = 160
+note right of s2
+  lives(65) <= damage(160)  =>  lives = 0 ; murio = true
+  Muere de UN solo golpe pese al casco + armadura.
+end note
+s2 -> s2 : lives = 0 ; murio = true
+
+s2 -> j1 : ganar_xp(dano=160: int, nivel_target=13: int,\n  murio=true, vida_max_target=65): bool
+activate j1
+j1 -> lvl : xp_per_attack(damage=160, target_level=13): int
+activate lvl
+lvl --> j1 : 1600   (160 * max(13-13+10,0))
+j1 -> lvl : xp_per_kill(target_max_life=65, target_level=13): int
+lvl --> j1 : bonus  (rand(0,0.1) * 65 * 10)
+deactivate lvl
+j1 -> j1 : check_level_up(): bool
+j1 --> s2 : level_up: bool
+deactivate j1
+
+s2 -> lvl : calculate_gold_drop(gold=300: uint32_t): uint32_t
+activate lvl
+lvl --> s2 : drop   (oro por encima del tope seguro del nivel)
+deactivate lvl
+s2 -> j2 : gold -= drop
+s2 -> j2 : to_ghost(): void
+note right of j2
+  state pasa a GhostState: J2 ya es fantasma en el server.
+end note
+s2 --> j2 : DamageOutcome{ damage=160, gold_drop=drop, dodged=false, level_up }
+deactivate s2
+j2 --> arma : DamageOutcome
+deactivate j2
+arma --> inv : DamageOutcome
+deactivate arma
+inv --> s1 : DamageOutcome
+deactivate inv
+s1 --> j1 : DamageOutcome
+deactivate s1
+j1 --> map : outcome: DamageOutcome
+deactivate j1
+
+note over map
+  Continua en el Diagrama 2c: con outcome y target->is_dead()==true,
+  GameMap spawnea el oro, dropea el inventario y arma el AttackResult.
+end note
+
+@enduml

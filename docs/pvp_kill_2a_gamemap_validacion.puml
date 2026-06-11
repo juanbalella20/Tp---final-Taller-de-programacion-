@@ -1,0 +1,62 @@
+@startuml pvp_kill_2a_gamemap_validacion
+' =====================================================================
+'  PvP kill - Diagrama 2a: parte 1 de GameMap::attack: GAMEMAP - UBICAR TARGET Y FAIR PLAY
+'
+'  Primera parte de GameMap::attack: ubica al atacante J1, encuentra a
+'  J2 en la celda (x,y) y valida el fair play (solo PvP). Termina con
+'  todas las validaciones OK; el golpe se aplica en el Diagrama 2b.
+'
+'  Situacion en docs/pvp_kill_escenario.md (J1/J2 nivel 13).
+' =====================================================================
+title PvP kill (2a) - GameMap::attack: ubicar target + fair play
+
+participant "loop:GameLoop" as loop
+participant "map:GameMap" as map
+participant "cfg:GameConfig" as cfg
+participant "j1:Player" as j1
+participant "j2:Player" as j2
+
+loop -> map : attack(attacker_name="J1", x: int, y: int): AttackResult
+activate map
+
+map -> map : find_player_by_name("J1"): Player*
+note right of map
+  attacker = &j1
+end note
+map -> map : zone_of("J1"): ZoneWorld&
+map -> map : zone_id_of("J1"): Zone   // z
+
+map -> map : recorre players de la zona z buscando (x,y)
+note right of map
+  Encuentra a j2 en (x,y):
+  target = &j2 ; target_player = &j2 ; target_is_player = true
+end note
+
+group Fair play (solo PvP) -- todas pasan con J1=J2=nivel 13
+    map -> cfg : is_safe_zone(z: Zone): bool
+    activate cfg
+    cfg --> map : false   (no es zona segura)
+    deactivate cfg
+
+    map -> j1 : is_newbie(): bool
+    j1 --> map : false   (nivel 13 > 12)
+    map -> j2 : is_newbie(): bool
+    j2 --> map : false   (nivel 13 > 12)
+
+    map -> j1 : can_attack_level(other_level=13): bool
+    j1 --> map : true   (|13 - 13| = 0 <= 10)
+
+    map -> map : same_clan(j1: Player*, j2: Player*): bool
+    note right of map
+      false: estan en clanes distintos.
+      Todas las validaciones OK => se puede atacar.
+    end note
+end
+
+note over map
+  Continua en el Diagrama 2b:
+  outcome = attacker->attack(*target, x, y)
+end note
+deactivate map
+
+@enduml
