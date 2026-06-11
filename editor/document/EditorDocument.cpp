@@ -63,14 +63,12 @@ std::unique_ptr<Tool> EditorDocument::make_tool(ToolType t) const {
     return std::make_unique<EraserTool>();
   case ToolType::Fill:
     return std::make_unique<FillTool>();
-  // Teleport y Collision no son Tools de gids: se manejan aparte en
-  // apply_tool_press. Fallback defensivo al lapiz si llegan aca.
+  // Teleport y Collision se desvian antes en begin_tool_gesture; nunca deberian
+  // llegar aca. Devolvemos un lapiz por las dudas.
   case ToolType::Teleport:
-    return std::make_unique<PencilTool>();
   case ToolType::Collision:
     return std::make_unique<PencilTool>();
   }
-  // fallback defensivo
   return std::make_unique<PencilTool>();
 }
 
@@ -224,10 +222,13 @@ void EditorDocument::redo() {
 bool EditorDocument::can_undo() const { return !undo_stack_.empty(); }
 bool EditorDocument::can_redo() const { return !redo_stack_.empty(); }
 
-// --- Persistencia (STUB: pendiente de integrar BinaryMapLoader/Saver) --------
+// --- Persistencia ------------------------------------------------------------
+// open() reconstruye el Map desde un .bin via BinaryMapLoader. El guardado lo
+// hace EditorWindow::save_to (con BinaryMapSaver); save()/save_as() de aca son
+// stubs que no se usan.
 
 void EditorDocument::new_map() {
-  // TODO(persistencia): reemplazar map_ por un Map vacio y limpiar el estado.
+  // Vuelve al mapa vacio inicial y limpia todo el estado de edicion.
   map_ = Map();
   undo_stack_.clear();
   redo_stack_.clear();
@@ -260,7 +261,7 @@ bool EditorDocument::open(const QString &path, QString *err) {
 }
 
 bool EditorDocument::save(const QString & /*path*/, QString *err) {
-  // TODO(persistencia): extraer los datos de map_ y delegar en BinaryMapSaver.
+  // Stub sin usar: el guardado real vive en EditorWindow::save_to.
   if (err)
     *err = "Guardar mapa: no implementado todavia";
   return false;

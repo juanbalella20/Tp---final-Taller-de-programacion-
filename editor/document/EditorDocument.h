@@ -23,9 +23,9 @@
  * solo le mandan intenciones y leen su estado. No hay logica de negocio en los
  * widgets. Hereda de QObject solo para emitir senales que la GUI escucha.
  *
- * Hace de puente con la persistencia (common/): al guardar extrae los datos del
- * Map y se los pasa a BinaryMapSaver; al abrir reconstruye el Map desde
- * BinaryMapLoader. BinaryMapSaver/Loader NO conocen al Map.
+ * Lado de carga de la persistencia (common/): open() reconstruye el Map desde
+ * un .bin con BinaryMapLoader. El guardado, en cambio, lo hace
+ * EditorWindow::save_to con BinaryMapSaver (save()/save_as() de aca son stubs).
  *
  */
 class EditorDocument : public QObject {
@@ -69,11 +69,11 @@ public:
   bool can_undo() const;
   bool can_redo() const;
 
-  // Persistencia (delega en common/ BinaryMapSaver/Loader)
+  // Persistencia
   void new_map();
-  bool open(const QString &path, QString *err);
-  bool save(const QString &path, QString *err);
-  bool save_as(const QString &path, QString *err);
+  bool open(const QString &path, QString *err); // via BinaryMapLoader
+  bool save(const QString &path, QString *err);  // stub: ver EditorWindow::save_to
+  bool save_as(const QString &path, QString *err); // stub
 
   bool is_dirty() const;
   QString file_path() const;
