@@ -259,16 +259,14 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
         return;
     }
 
-    // Nombre libre: crear el personaje y persistirlo de inmediato (red de
-    // seguridad ante una desconexion antes del primer guardado periodico).
+  
     client_registry_monitor.assign_name(client_id, name);
     game_map.spawn_player(name, cmd.get_race(), cmd.get_class());
     persistence.save(name, player_serializer.to_record(
             game_map.get_player(name), game_map.get_player_zone(name), cmd.get_password()));
     std::cout << "[REGISTER] nuevo personaje creado y persistido: " << name << std::endl;
 
-    // Confirmacion de auth EXITOSO antes del world snapshot: el cliente lee
-    // exactamente un mensaje de auth (MSG_AUTH_ERROR o MSG_CONFIRM_SESSION).
+    
     send_confirm_session(client_id, name, cmd.get_race(), cmd.get_class());
     send_world_snapshot_to(client_id, name, cmd.get_race());
 }
@@ -735,7 +733,7 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
         dmg_msg.set_damage(result.damage);
         client_registry_monitor.notify_client(cmd.get_client_id(), dmg_msg);
 
-        if (result.level != 0) {
+        if (result.leveled_up) {
             GameMsg level_msg(MSG_UPDATE_LEVEL);
             level_msg.set_level(result.level);
             level_msg.set_max_xp(game_map.player_max_xp(attacker_name));
@@ -744,6 +742,18 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
             level_msg.set_max_hp(game_map.get_player_max_hp(attacker_name));
             level_msg.set_max_mana(game_map.get_player_max_mana(attacker_name));
             client_registry_monitor.notify_client(cmd.get_client_id(), level_msg);
+
+            // El level-up restaura la vida/maná del atacante al nuevo máximo
+            // (ver Player::check_level_up). Notificarle su HP/maná actuales para
+            // que el HUD muestre las barras llenas, no a medias.
+            GameMsg lvl_hp_msg(MSG_HP);
+            lvl_hp_msg.set_hp(game_map.get_player_hp(attacker_name));
+            client_registry_monitor.notify_client(cmd.get_client_id(), lvl_hp_msg);
+
+            GameMsg lvl_mana_msg(MSG_MANA);
+            lvl_mana_msg.set_player_name(attacker_name);
+            lvl_mana_msg.set_mana(game_map.get_player_mana(attacker_name));
+            client_registry_monitor.notify_client(cmd.get_client_id(), lvl_mana_msg);
         }
         // Feed de combate (estilo AO) en el minichat del ATACANTE: cuánto daño
         // provocó, o si el target esquivó. Viaja como MSG_CHAT.

@@ -293,7 +293,10 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
     }
 
     DamageOutcome outcome = attacker->attack(*target, x, y);
-    int level = 0;
+    // El level-up puede ocurrir en CUALQUIER golpe (ganar_xp corre siempre, no
+    // solo al matar). Lo capturamos acá para propagarlo aunque el target siga vivo.
+    bool leveled_up = outcome.level_up;
+    int level = leveled_up ? attacker->get_level() : 0;
     if (target->is_dead()) {
         if (outcome.gold_drop > 0)
             world.spawn_gold(x, y, static_cast<uint32_t>(outcome.gold_drop));
@@ -307,15 +310,10 @@ GameMap::AttackResult GameMap::attack(const std::string& attacker_name, int x, i
             one.push_back(std::move(outcome.dropped_item));
             world.scatter_items(x, y, std::move(one), players_in(z));
         }
-        std::cout << "[DEBUG] nivel: " << attacker->get_level() << std::endl;
-        if (outcome.level_up) {
-            std::cout << "[DEBUG] subiò de nivel" << std::endl;
-            level = attacker->get_level();
-        }
-        return {true, true, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged, level};
+        return {true, true, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged, leveled_up, level};
     }
 
-    return {true, false, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged, level};
+    return {true, false, target_is_player, target->get_name(), outcome.damage, x, y, outcome.dodged, leveled_up, level};
 }
 
 void GameMap::self_cast(const std::string& player_name) {
