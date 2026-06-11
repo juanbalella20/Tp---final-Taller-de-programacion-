@@ -515,6 +515,10 @@ void ClientGUI::update() {
                 }
                 case MSG_REGISTER: {
                     world_map = msg.get_map();
+                    // HP inicial del spawn: lo registramos como base SIN disparar
+                    // el flash (todavia no hubo daño, solo es el valor de arranque).
+                    last_known_hp = msg.get_hp();
+                    has_known_hp = true;
                     if (hud) {
                         hud->set_inventory(msg.get_items());
                         hud->set_gold(msg.get_gold());
@@ -697,6 +701,7 @@ void ClientGUI::update() {
                     break;
                 case MSG_HP:
                     if (hud) hud->set_hp(msg.get_hp());
+                    note_local_hp(msg.get_hp());
                     break;
                 case MSG_ATTACK:
                     if (msg.get_damage() > 0) {
@@ -1142,6 +1147,72 @@ void ClientGUI::draw_damage_numbers() {
     }
 }
 
+void ClientGUI::note_local_hp(uint32_t new_hp) {
+    // La primera vez solo fijamos la base: no hay con que comparar todavia.
+    if (!has_known_hp) {
+        last_known_hp = new_hp;
+        has_known_hp = true;
+        return;
+    }
+    // Solo nos interesa la BAJA de vida (recibir daño). Curarse o regenerar
+    // mana no debe teñir la pantalla.
+    if (new_hp < last_known_hp) {
+        damage_flash_until_ms = SDL_GetTicks() + DAMAGE_FLASH_MS;
+    }
+    last_known_hp = new_hp;
+}
+
+void ClientGUI::draw_damage_flash() {
+    const uint64_t now = SDL_GetTicks();
+    if (now >= damage_flash_until_ms) return;
+
+    // Intensidad de 1.0 (recien golpeado) a 0.0 (flash por terminar): el rojo
+    // entra de golpe y se desvanece suave.
+    const float remaining = static_cast<float>(damage_flash_until_ms - now);
+    const float intensity = remaining / static_cast<float>(DAMAGE_FLASH_MS);
+
+    // Estamos dentro del viewport del juego: el origen (0,0) es su esquina
+    // sup-izq y el area util mide GAME_VIEW_W x GAME_VIEW_H.
+    const float w = static_cast<float>(GAME_VIEW_W);
+    const float h = static_cast<float>(GAME_VIEW_H);
+
+    // Viñeta: el rojo es mas opaco pegado al borde y se difumina hacia el
+    // centro. Lo logramos apilando bandas concentricas cada vez mas finas en
+    // alpha; con blend aditivo simple sobre cada borde alcanza para un degrade
+    // suave y leve. El grosor maximo escala con el lado mas corto.
+    const int   bands = 18;                         // pasos del degrade
+    const float max_depth = h * 0.28f;              // que tan adentro llega
+    // Alpha pico leve: ~70/255 en el borde con el flash a full. Se mantiene
+    // sutil para no tapar el juego.
+    const Uint8 peak_alpha = static_cast<Uint8>(70.0f * intensity);
+    if (peak_alpha == 0) return;
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    for (int i = 0; i < bands; ++i) {
+        // t: 0 en el borde exterior, 1 en el borde interior de la viñeta.
+        const float t = static_cast<float>(i) / static_cast<float>(bands - 1);
+        const float depth = max_depth * t;          // distancia desde el borde
+        // El alpha cae de forma cuadratica hacia el centro: degrade mas natural.
+        const float fade = (1.0f - t) * (1.0f - t);
+        const Uint8 a = static_cast<Uint8>(peak_alpha * fade);
+        if (a == 0) continue;
+
+        SDL_SetRenderDrawColor(renderer, 190, 0, 0, a);
+
+        // Cuatro lineas (bandas finas) sobre cada borde, a profundidad "depth".
+        const float thickness = max_depth / static_cast<float>(bands) + 1.0f;
+        SDL_FRect top    = {0.0f,            depth,                  w, thickness};
+        SDL_FRect bottom = {0.0f,            h - depth - thickness,  w, thickness};
+        SDL_FRect left   = {depth,           0.0f,  thickness, h};
+        SDL_FRect right  = {w - depth - thickness, 0.0f, thickness, h};
+        SDL_RenderFillRect(renderer, &top);
+        SDL_RenderFillRect(renderer, &bottom);
+        SDL_RenderFillRect(renderer, &left);
+        SDL_RenderFillRect(renderer, &right);
+    }
+}
+
 void ClientGUI::drawItems() {
     if (!tilemap) return;
     const int tileSize = tilemap->getTileSize();
@@ -1195,6 +1266,10 @@ void ClientGUI::draw() {
     draw_npc_friends();
     draw_spell_animations();
     draw_damage_numbers();
+
+    // Viñeta roja en los bordes al recibir daño. Va encima de todo el mundo
+    // pero dentro del viewport del juego, asi nunca tiñe el panel/inventario.
+    draw_damage_flash();
 
     // Se restaura el viewport completo para dibujar el frame (HUD) y el chat encima.
     SDL_SetRenderViewport(renderer, nullptr);

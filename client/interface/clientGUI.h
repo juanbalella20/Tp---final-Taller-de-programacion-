@@ -97,6 +97,16 @@ private:
     std::map<std::string, SDL_Texture*> enemies_textures;
     
     std::vector<DamageNumber> damage_numbers;
+
+    // --- Flash rojo en los bordes al recibir daño (feedback inmersivo) ---
+    // Cada vez que el HP local baja, se arranca un "destello": una viñeta roja
+    // difuminada en los bordes del area de juego que se desvanece sola. Para
+    // detectar la baja guardamos el ultimo HP conocido (los MSG_HP traen el
+    // valor absoluto, no el delta).
+    uint32_t last_known_hp = 0;       // HP local del ultimo MSG_HP/REGISTER
+    bool has_known_hp = false;        // ¿ya recibimos un HP inicial?
+    uint64_t damage_flash_until_ms = 0;  // SDL_GetTicks hasta el que dura el flash
+    static constexpr uint64_t DAMAGE_FLASH_MS = 450;  // duracion del destello
     // Efectos de hechizo: catalogo (id de baculo -> spritesheet) y animaciones activas.
     std::map<std::string, SpellEffectDef> spell_effects;
     std::vector<SpellAnimation> spell_animations;
@@ -214,6 +224,13 @@ private:
     void draw_teleport_labels();
     // Dibuja los numeros de daño flotantes en rojo y descarta los expirados.
     void draw_damage_numbers();
+
+    // Registra que el HP local cambio a new_hp: si bajo respecto al ultimo
+    // conocido, arranca el flash rojo de daño. Llamar en cada MSG_HP.
+    void note_local_hp(uint32_t new_hp);
+    // Dibuja la viñeta roja difuminada en los bordes del area de juego mientras
+    // el flash este activo. La intensidad decae con el tiempo restante.
+    void draw_damage_flash();
 
     // Carga los spritesheets de efectos de hechizo (uno por baculo).
     void load_spell_effects();
