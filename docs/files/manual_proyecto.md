@@ -51,6 +51,17 @@
 - estructura del protocolo del cliente al servidor(la vuelta fue realizada entre  por todos)
 -  Editor de mapa => SOLO las toolS
 
+#### Mercedes González Lago
+- Implementación MiniChat
+- Visualización de sprites para jugadores (distintas razas)
+- Visualización de sprites para npc hostiles (distintos tipos)
+- Movimiento (cambio de sprites) de jugadores
+- Colocación de item sobre el jugador
+- Implementación tomar objetos
+- Implementación clanes
+- Movimiento (cambio de sprites) de npc hostiles
+- Ataque de npc hostiles a jugadores
+- Visualización de stats e info (oro, nombre y nivel) del jugador
 
 ---
 
