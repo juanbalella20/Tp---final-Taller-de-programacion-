@@ -421,10 +421,22 @@ NPCbanker* ZoneWorld::banker_adjacent_to(int px, int py) {
     return nullptr;
 }
 
+NPCpriest* ZoneWorld::priest_adjacent_to(int px, int py) {
+    positionCoord player_pos{px, py};
+    for (auto& p : priests) {
+        positionCoord priest_pos{p.get_coord_x(), p.get_coord_y()};
+        std::cout << "[DEBUG priest_adjacent_to] priest=(" << priest_pos.x << "," << priest_pos.y
+                  << ") player=(" << px << "," << py << ")" << std::endl;
+
+        if (is_adyacent(player_pos, priest_pos)) return &p;
+    }
+    return nullptr;
+}
+
 std::string ZoneWorld::get_adjacent_friendly_type(int px, int py) {
     if (seller_at(px, py) != nullptr) return "seller";
     if (banker_adjacent_to(px, py) != nullptr) return "banker";
-    //if (priest_adjacent_to(px, py) != nullptr) return "priest";
+    if (priest_adjacent_to(px, py) != nullptr) return "priest";
     return "";
 }
 
