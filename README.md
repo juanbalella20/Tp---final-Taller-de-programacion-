@@ -1,5 +1,12 @@
 # Tp---final-Taller-de-programacion-
 
+Integrantes:
+
+Juan Ballela
+Agustín Trombetta
+Mercedes González Lago
+Ignacio Mahmoud Abalos
+
 Workflow para testear juego:
 
 Para compilar Cmake:
@@ -35,3 +42,11 @@ cmake --build build --target map_editor
 # 3. Ejecutar
 ./build/Debug/map_editor
 ```
+# Documentacion 
+
+[Documento tecnico](docs/files/doc_tecnica.md)
+[Manual proyecto](docs/files/manual_proyecto.md)
+[Manual de usuario](docs/files/manual_usuario.md)
+
+# Video promocional
+https://drive.google.com/file/d/1kqbRD-1v4atTtIH8835QUMWhTmjKflAc/view?usp=sharing
