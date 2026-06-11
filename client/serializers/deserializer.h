@@ -24,6 +24,8 @@ class ClientDeserializer {
     void deserialize_level(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_item(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_inventory(const std::vector<uint8_t>& payload, GameMsg& msg);
+    // Catalogo de la tienda (MSG_LIST): items con precio para la ventana de comercio.
+    void deserialize_seller_list(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_private(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_npcs_snapshot(const std::vector<uint8_t>& payload, GameMsg& msg);
     void deserialize_items_snapshot(const std::vector<uint8_t>& payload, GameMsg& msg);

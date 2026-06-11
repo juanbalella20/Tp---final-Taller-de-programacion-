@@ -483,6 +483,51 @@ int GameMap::get_banker_gold(const std::string& player_name) {
     return banker->get_bank_gold(player_name);
 }
 
+void GameMap::player_resurrect(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    NPCpriest* priest = zone_of(player_name).priest_adjacent_to(player->get_coord_x(), player->get_coord_y());
+    if (priest == nullptr) throw std::runtime_error("No hay un sacerdote adyacente.");
+    Command cmd;
+    cmd.action = ACTION_RESURRECT;
+    priest->interact(*player, cmd);
+}
+ 
+void GameMap::player_heal(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    NPCpriest* priest = zone_of(player_name).priest_adjacent_to(player->get_coord_x(), player->get_coord_y());
+    if (priest == nullptr) throw std::runtime_error("No hay un sacerdote adyacente.");
+    Command cmd;
+    cmd.action = ACTION_HEAL;
+    priest->interact(*player, cmd);
+}
+ 
+bool GameMap::player_buy_from_priest(const std::string& player_name, const std::string& item_id) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    NPCpriest* priest = zone_of(player_name).priest_adjacent_to(player->get_coord_x(), player->get_coord_y());
+    if (priest == nullptr) throw std::runtime_error("No hay un sacerdote adyacente.");
+    Command cmd;
+    cmd.action = ACTION_BUY;
+    cmd.item_id = item_id;
+    priest->interact(*player, cmd);
+    return true;
+}
+ 
+std::vector<ItemInfo> GameMap::list_priest_items(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    int px = player->get_coord_x();
+    int py = player->get_coord_y();
+    NPCpriest* priest = zone_of(player_name).priest_adjacent_to(px, py);
+    std::cout << "[DEBUG list_priest_items] player=(" << px << "," << py
+              << ") priest=" << (priest ? "found" : "null") << std::endl;
+    if (priest == nullptr) throw std::runtime_error("No hay un sacerdote adyacente.");
+    return priest->list_items();
+}
+
+
 std::unique_ptr<Item> GameMap::pick_up_item(const std::string& player_name) {
     Player* player = find_player_by_name(player_name);
     if (!player) throw std::runtime_error("Player not found: " + player_name);
@@ -505,8 +550,14 @@ bool GameMap::pick_up_gold(const std::string& player_name) {
 std::string GameMap::get_adjacent_npc_type(const std::string& player_name) {
     Player* player = find_player_by_name(player_name);
     if (player == nullptr) throw std::runtime_error("Player not found.");
-    return zone_of(player_name).get_adjacent_friendly_type(player->get_coord_x(), player->get_coord_y());
+    int px = player->get_coord_x();
+    int py = player->get_coord_y();
+    std::string type = zone_of(player_name).get_adjacent_friendly_type(px, py);
+    std::cout << "[DEBUG get_adjacent_npc_type] player=" << player_name
+              << " pos=(" << px << "," << py << ") npc_type=" << type << std::endl;
+    return type;
 }
+
 
 void GameMap::give_item_to_player(const std::string& player_name, std::unique_ptr<Item> item) {
     Player* player = find_player_by_name(player_name);

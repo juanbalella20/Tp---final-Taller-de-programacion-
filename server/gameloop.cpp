@@ -31,6 +31,8 @@ void GameLoop::register_handlers() {
     handlers[MSG_DEP_GOLD]       = [this](const ClientCmd& cmd) { handle_deposit_gold(cmd); };
     handlers[MSG_RETIRE]         = [this](const ClientCmd& cmd) { handle_retire_item(cmd); };
     handlers[MSG_RET_GOLD]       = [this](const ClientCmd& cmd) { handle_retire_gold(cmd); };
+    handlers[MSG_CURE]           = [this](const ClientCmd& cmd) { handle_cure(cmd); };
+    handlers[MSG_RESURRECT]      = [this](const ClientCmd& cmd) { handle_resurrect(cmd); };
     handlers[MSG_EQUIP]          = [this](const ClientCmd& cmd) { handle_equip(cmd); };
     handlers[MSG_SELECT]         = [this](const ClientCmd& cmd) { handle_select(cmd); };
     handlers[MSG_TAKE]           = [this](const ClientCmd& cmd) { handle_take(cmd); };
@@ -338,16 +340,22 @@ void GameLoop::handle_logout(const ClientCmd& cmd) {
 }
 
 void GameLoop::handle_list(const ClientCmd& cmd) {
+    std::cout << "[DEBUG handle_list] recibido" << std::endl;
     try {
         std::string name = client_registry_monitor.get_name(cmd.get_client_id());
         std::string type = game_map.get_adjacent_npc_type(name);
         std::string lista = "";
-        if (type == "seller") {
-            std::vector<ItemInfo> items = game_map.list_seller_items(name, 0, 0);
-            lista = "Items disponibles: ";
-            for (const auto& item : items) {
-                lista += item.get_name() + " ($" + std::to_string(item.get_price()) + ") ";
-            }
+        if (type == "seller" || type == "priest") {
+            // Seller y sacerdote mandan su catalogo como datos (MSG_LIST con
+            // items+precio): el cliente abre la MISMA ventana de comercio. No es
+            // un mensaje de chat. El stock de cada uno sale de config.toml.
+            std::vector<ItemInfo> items = (type == "seller")
+                ? game_map.list_seller_items(name, 0, 0)
+                : game_map.list_priest_items(name);
+            GameMsg list_msg(MSG_LIST);
+            list_msg.set_items(items);
+            client_registry_monitor.notify_client(cmd.get_client_id(), list_msg);
+            return;
         } else if (type == "banker") {
             std::vector<ItemInfo> items = game_map.list_banker_items(name);
             int gold = game_map.get_banker_gold(name);
@@ -396,11 +404,18 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     std::string item_id = cmd.get_item_id();
     try {
-        game_map.player_buy_item(name, 0, 0, item_id);
+        // Intenta comprar al comerciante; si no hay uno adyacente, intenta al sacerdote
+        std::string npc_type = game_map.get_adjacent_npc_type(name);
+        if (npc_type == "priest") {
+            game_map.player_buy_from_priest(name, item_id);
+        } else {
+            game_map.player_buy_item(name, 0, 0, item_id);
+        }
         const Player& p = game_map.get_player(name);
         std::vector<ItemInfo> item_infos;
         for (Item* item : p.get_all_items()) {
-            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(), static_cast<uint8_t>(item->get_type()), item->get_uid());
+            item_infos.emplace_back(item->get_id(), item->getName(), item->getPrice(),
+                                    static_cast<uint8_t>(item->get_type()), item->get_uid());
         }
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
@@ -415,6 +430,7 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
     }
 }
+
 
 void GameLoop::handle_deposit(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
@@ -491,6 +507,60 @@ void GameLoop::handle_retire_gold(const ClientCmd& cmd) {
         GameMsg chat_msg(MSG_CHAT);
         chat_msg.set_chat_content("Oro retirado del banco.");
         client_registry_monitor.notify_client(cmd.get_client_id(), chat_msg);
+    } catch (const std::runtime_error& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    }
+}
+
+void GameLoop::handle_resurrect(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    try {
+        game_map.player_resurrect(name);
+ 
+        GameMsg hp_msg(MSG_HP);
+        hp_msg.set_hp(game_map.get_player_hp(name));
+        client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
+ 
+        GameMsg mana_msg(MSG_MANA);
+        mana_msg.set_player_name(name);
+        mana_msg.set_mana(game_map.get_player_mana(name));
+        client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
+ 
+        // MSG_RESURRECT con player_name para que el cliente cambie la skin
+        GameMsg res_msg(MSG_RESURRECT);
+        res_msg.set_player_name(name);
+        res_msg.set_chat_content("El sacerdote te ha resucitado.");
+        client_registry_monitor.notify_client(cmd.get_client_id(), res_msg);
+ 
+        std::cout << "[INFO: MSG_RESURRECT] " << name << " fue resucitado por el sacerdote." << std::endl;
+    } catch (const std::runtime_error& e) {
+        GameMsg msg(MSG_CHAT);
+        msg.set_chat_content(e.what());
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+    }
+}
+
+void GameLoop::handle_cure(const ClientCmd& cmd) {
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    try {
+        game_map.player_heal(name);
+ 
+        GameMsg hp_msg(MSG_HP);
+        hp_msg.set_hp(game_map.get_player_hp(name));
+        client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
+ 
+        GameMsg mana_msg(MSG_MANA);
+        mana_msg.set_player_name(name);
+        mana_msg.set_mana(game_map.get_player_mana(name));
+        client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
+ 
+        GameMsg chat_msg(MSG_CHAT);
+        chat_msg.set_chat_content("El sacerdote te ha curado.");
+        client_registry_monitor.notify_client(cmd.get_client_id(), chat_msg);
+ 
+        std::cout << "[INFO: MSG_CURE] " << name << " fue curado por el sacerdote." << std::endl;
     } catch (const std::runtime_error& e) {
         GameMsg msg(MSG_CHAT);
         msg.set_chat_content(e.what());

@@ -1,0 +1,48 @@
+@startuml pvp_kill_3a_broadcast_muerte
+' =====================================================================
+'  PvP kill - Diagrama 3a: broadcast de muerte: BROADCAST DE MUERTE A TODOS
+'
+'  Primera parte de la notificacion: handle_attack, con el AttackResult
+'  (entity_died = true, target_is_player = true), refresca los snapshots
+'  de NPCs/items y hace broadcast de MSG_DEATH a TODOS los clientes
+'  (incluido J2). Los mensajes dirigidos solo a J2 van en el Diagrama 3b.
+'
+'  Situacion en docs/pvp_kill_escenario.md.
+' =====================================================================
+title PvP kill (3a) - handle_attack: broadcast de MSG_DEATH
+
+participant "loop:GameLoop" as loop
+participant "reg:ClientRegistryMonitor" as reg
+participant "net:Socket" as net
+
+note over loop
+  Sigue dentro de handle_attack(cmd: ClientCmd&): void,
+  con AttackResult.entity_died = true y target_is_player = true.
+end note
+activate loop
+
+loop -> loop : broadcast_npcs_snapshot(): void
+loop -> loop : broadcast_items_snapshot(): void
+note right of loop
+  Refresca los snapshots porque el oro y los items de J2
+  ya estan en el piso (Diagrama 2c).
+end note
+
+loop -> reg : notify_clients(msg=GameMsg(MSG_DEATH){player_name="J2"}): void
+activate reg
+reg -> net : send(...)   // MSG_DEATH a CADA cliente conectado
+deactivate reg
+
+note over loop, net
+  El server entrega MSG_DEATH a todos los clientes conectados
+  (incluido J2). La aplicacion del mensaje en cada cliente queda
+  fuera de estos diagramas (solo modelamos la parte del juego).
+end note
+deactivate loop
+
+note over loop
+  Continua en el Diagrama 3b: mensajes dirigidos solo a J2
+  (MSG_HP, MSG_CHAT, MSG_GOLD, MSG_INVENTORY) y su equipo.
+end note
+
+@enduml

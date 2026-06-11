@@ -77,6 +77,7 @@ public:
     double gold_excess_factor;
     int newbie_max_level;
     int level_diff_max;
+    double revive_life_factor;
 
     // Combat
     double crit_chance;
@@ -136,6 +137,13 @@ public:
     // items (ItemCatalog). Viene de [player].initial_inventory en config.toml,
     // asi se cambia el equipamiento de arranque sin recompilar.
     std::vector<std::string> initial_inventory;
+    // Stock del comerciante: lista de ids del catalogo de items que vende la
+    // tienda ([seller].items en config.toml). Cantidad infinita (no se agota).
+    // Todos los sellers del juego venden esta misma lista.
+    std::vector<std::string> seller_items;
+    // Stock del sacerdote ([priest].items): solo pociones y hechizos (varas/
+    // baculos). Misma mecanica de stock infinito que seller_items.
+    std::vector<std::string> priest_items;
     // Cantidad maxima de items que puede tener el inventario de un jugador
     // ([player].max_inventory_slots en config.toml).
     int max_inventory_slots;

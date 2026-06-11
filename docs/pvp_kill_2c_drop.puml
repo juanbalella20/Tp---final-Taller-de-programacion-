@@ -1,0 +1,68 @@
+@startuml pvp_kill_2c_drop
+' =====================================================================
+'  PvP kill - Diagrama 2c: parte 3 de GameMap::attack: DROP DE ORO E ITEMS, ARMADO DEL RESULT
+'
+'  Tercera parte de GameMap::attack: como J2 murio (target->is_dead()),
+'  se spawnea el oro dropeado y caen TODOS sus items (incluidos casco y
+'  armadura). Se construye el AttackResult que vuelve al GameLoop.
+'
+'  Situacion en docs/pvp_kill_escenario.md.
+' =====================================================================
+title PvP kill (2c) - Muerte de J2: drop de oro e items y AttackResult
+
+participant "map:GameMap" as map
+participant "j2:Player" as j2
+participant "def:DefenseSet" as def
+participant "inv:Inventory" as inv
+participant "world:ZoneWorld" as world
+participant "j1:Player" as j1
+participant "loop:GameLoop" as loop
+
+note over map
+  Viene del Diagrama 2b con outcome: DamageOutcome
+  (damage=160, gold_drop=drop, level_up).
+end note
+activate map
+
+map -> j2 : is_dead(): bool
+j2 --> map : true
+
+== Drop de oro ==
+map -> world : spawn_gold(x: int, y: int, amount=outcome.gold_drop: int): void
+activate world
+world --> map
+deactivate world
+
+== Drop de TODO el inventario (incluye casco y armadura) ==
+map -> j2 : drop_inventory(): vector<unique_ptr<Item>>
+activate j2
+j2 -> def : clear(): void
+note right of def
+  El DefenseSet solo referenciaba casco/armadura;
+  el dueno real es el Inventory.
+end note
+j2 -> inv : drop_all(): vector<unique_ptr<Item>>
+activate inv
+inv --> j2 : items   (Casco de hierro, Armadura de cuero, Arco compuesto, ...)
+deactivate inv
+j2 --> map : dropped: vector<unique_ptr<Item>>
+deactivate j2
+
+map -> world : scatter_items(center_x=x: int, center_y=y: int,\n  items: vector<unique_ptr<Item>>, players_here: vector<Player*>&): void
+activate world
+world --> map
+deactivate world
+
+== Armado del resultado ==
+map -> j1 : get_level(): int
+j1 --> map : level   (nuevo nivel si outcome.level_up == true)
+
+map --> loop : AttackResult{ hit=true, entity_died=true,\n  target_is_player=true, entity_name="J2",\n  damage=160, target_x, target_y, dodged=false, level }
+deactivate map
+
+note over loop
+  Con el AttackResult, handle_attack arma los GameMsg para el
+  atacante J1 y para la victima J2 => Diagramas 3a / 3b.
+end note
+
+@enduml

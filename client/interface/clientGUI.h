@@ -23,6 +23,7 @@
 #include "tileMap.h"
 #include "camera.h"
 #include "hud.h"
+#include "shopWindow.h"
 #include "zone_music_player.h"
 #include "sound_player.h"
 #include "../../common/utility/thread.h"
@@ -73,6 +74,9 @@ private:
     Queue<GameMsg>& receiving;
     Queue<std::string> chat_inbox;
     std::unique_ptr<HUD> hud;
+    // Ventana modal de comercio (la tienda del vendedor). Se abre al recibir
+    // MSG_LIST de un seller (comando /listar adyacente). Solo lectura.
+    std::unique_ptr<ShopWindow> shop_window;
     std::string own_name;  // nombre del jugador local
     std::string race;      // raza del jugador local
     std::string own_clan;  // clan del jugador local ("" si no tiene): decide el
