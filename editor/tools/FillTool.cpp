@@ -4,16 +4,8 @@
 
 #include "../model/Map.h"
 
-// ============================================================================
-// Flood fill 4-conexo
-//
-// Desde (x,y) reemplaza la region contigua de celdas que comparten el gid
-// original (target) por active_gid, moviendose por vecinos arriba/abajo/
-// izquierda/derecha. Si target == active_gid no hay nada que hacer (evita un
-// bucle infinito y un Command vacio).
-//
-// Solo actua en el press; on_drag devuelve {} (paints_on_drag() == false).
-// ============================================================================
+// Flood fill 4-conexo desde (x,y): cambia la region contigua con el mismo gid
+// original por active_gid. Solo actua en el press (on_drag devuelve {}).
 
 std::vector<CellChange> FillTool::on_press(const Map &map, int layer, int x,
                                            int y, int active_gid) {

@@ -10,7 +10,7 @@
 /*
  * Estrategia de edicion. Una Tool NO muta el Map directamente: dado el estado
  * del mapa y una celda, devuelve los CellChange a aplicar sobre la capa activa.
- * El EditorDocument los envuelve en un Command (para undo) y recien ahi muta.
+ * El EditorDocument es quien los aplica al Map.
  *
  * Implementaciones: PencilTool, EraserTool, FillTool (editor/tools/*.cpp).
  *

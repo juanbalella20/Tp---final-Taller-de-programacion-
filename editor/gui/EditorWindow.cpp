@@ -41,11 +41,9 @@ EditorWindow::EditorWindow(QWidget *parent) : QMainWindow(parent) {
   resize(1024, 768);
 
   build_menus();
-  build_edit_menu();
   build_workspace();
   build_tileset_toolbar();
   build_tools_toolbar();
-  update_undo_actions();
 }
 
 void EditorWindow::build_workspace() {
@@ -256,29 +254,6 @@ void EditorWindow::build_tools_toolbar() {
   };
   add_layer("Suelo", Map::Ground, true); // default
   add_layer("Construcciones", Map::Buildings, false);
-}
-
-void EditorWindow::build_edit_menu() {
-  QMenu *editar = menuBar()->addMenu("&Editar");
-
-  undo_action_ = editar->addAction("&Deshacer");
-  undo_action_->setShortcut(QKeySequence::Undo); // Ctrl+Z
-  connect(undo_action_, &QAction::triggered, this, [this] { doc_.undo(); });
-
-  redo_action_ = editar->addAction("&Rehacer");
-  redo_action_->setShortcut(QKeySequence::Redo); // Ctrl+Shift+Z / Ctrl+Y
-  connect(redo_action_, &QAction::triggered, this, [this] { doc_.redo(); });
-
-  // El document avisa cuando cambian las pilas -> refrescamos el enable.
-  connect(&doc_, &EditorDocument::undoStackChanged, this,
-          &EditorWindow::update_undo_actions);
-}
-
-void EditorWindow::update_undo_actions() {
-  if (undo_action_)
-    undo_action_->setEnabled(doc_.can_undo());
-  if (redo_action_)
-    redo_action_->setEnabled(doc_.can_redo());
 }
 
 void EditorWindow::build_menus() {

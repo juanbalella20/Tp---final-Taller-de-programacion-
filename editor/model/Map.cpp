@@ -5,17 +5,6 @@
 #include <utility>
 #include <vector>
 
-// ============================================================================
-// Implementacion del modelo puro del mapa  SIN Qt.
-//
-// V1: tamaño FIJO WIDTH x HEIGHT (30x16), tile TILE_SIZE (64), DOS capas fijas
-// ("ground" indice 0, "buildings" indice 1). Sin spawns ni teleports.
-//
-// Reutiliza la semantica de MapLoader para tilesets/colision: build_tile_index,
-// find_tile e is_collidable son identicos para que el mundo que ve el editor
-// coincida con el que ve el server.
-// ============================================================================
-
 Map::Map() {
   // Dos capas fijas, ambas WIDTH x HEIGHT llenas de 0 (celda vacia).
   layers_.resize(LAYER_COUNT);

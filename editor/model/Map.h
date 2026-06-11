@@ -11,6 +11,15 @@
 
 // Reutiliza los structs de common/mapLoader.h (Tileset, TileDef, MapLayerData)
 class Map {
+private:
+  std::vector<Tileset> tilesets_;
+  std::vector<MapLayerData> layers_;            // siempre LAYER_COUNT capas
+  std::unordered_map<int, TileDef> tile_index_; // gid -> TileDef
+  std::vector<TeleportDef> teleports_;          // celdas teleport + dest_zone
+  std::vector<std::vector<uint8_t>> collision_; // [HEIGHT][WIDTH] (0/1)
+
+  // Rearma tile_index_ a partir de tilesets_. = MapLoader::build_tile_index.
+  void rebuild_tile_index();
 public:
   // Indices de las capas fijas.
   enum LayerId { Ground = 0, Buildings = 1 };
@@ -63,15 +72,7 @@ public:
   void add_teleport(int x, int y, const std::string &dest_zone);
   void remove_teleport(int x, int y);
 
-private:
-  std::vector<Tileset> tilesets_;
-  std::vector<MapLayerData> layers_;            // siempre LAYER_COUNT capas
-  std::unordered_map<int, TileDef> tile_index_; // gid -> TileDef
-  std::vector<TeleportDef> teleports_;          // celdas teleport + dest_zone
-  std::vector<std::vector<uint8_t>> collision_; // [HEIGHT][WIDTH] (0/1)
 
-  // Rearma tile_index_ a partir de tilesets_. = MapLoader::build_tile_index.
-  void rebuild_tile_index();
 };
 
 #endif // EDITOR_MODEL_MAP_H_

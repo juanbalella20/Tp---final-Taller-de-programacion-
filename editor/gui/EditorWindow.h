@@ -33,10 +33,6 @@ private:
   void build_tileset_toolbar();
   // Crea la toolbar: herramientas (lapiz/goma/relleno) y capa activa.
   void build_tools_toolbar();
-  // Crea menu Editar (deshacer/rehacer) y guarda las acciones.
-  void build_edit_menu();
-  // Habilita/deshabilita deshacer/rehacer segun el estado del document.
-  void update_undo_actions();
   bool load_tileset_path(const QString &path);
   void refresh_tileset_combo();
   void select_tileset(int index);
@@ -45,14 +41,12 @@ private:
   // resultado en la status bar; devuelve true si se guardo bien.
   bool save_to(const QString &path);
 
-  // Controlador: dueno del Map, del estado de edicion y del undo/redo.
+  // Controlador: dueno del Map y del estado de edicion.
   EditorDocument doc_;
   TilesetSelectorView *selector_ = nullptr;
   MapEditorScene *map_scene_ = nullptr;
   QGraphicsView *map_view_ = nullptr;
   QComboBox *tileset_combo_ = nullptr;
-  QAction *undo_action_ = nullptr;
-  QAction *redo_action_ = nullptr;
   // Accion que envuelve el combo de zona destino (label + combo). Visible solo
   // cuando la herramienta activa es Teleport.
   QAction *dest_combo_action_ = nullptr;
