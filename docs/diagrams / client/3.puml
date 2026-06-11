@@ -1,0 +1,91 @@
+@startuml
+title Flujo de las pantallas iniciales
+
+autonumber
+hide footbox
+
+actor Usuario
+participant "Cliente" as Client
+participant "ScreenManager" as Manager
+participant "WelcomeScreen" as Welcome
+participant "LoginSignupScreen" as LoginSignup
+participant "CharacterCreationScreen" as CharacterCreation
+participant "AuthSession" as Session
+participant "Servidor" as Server
+
+Usuario -> Client: Ejecuta el binario client
+activate Client
+Client -> Manager: Crea ScreenManager
+activate Manager
+Manager -> Manager: Crea la ventana y los\nrecursos gráficos compartidos
+Client -> Session: Crea AuthSession vacía
+Client -> Manager: run(session)
+
+Manager -> Welcome: make_screen(WELCOME)
+activate Welcome
+Welcome --> Usuario: Muestra la pantalla inicial
+
+opt El usuario modifica la configuración
+    Usuario -> Welcome: Selecciona resolución/modo de ventana
+    Welcome -> Welcome: Guarda la configuración elegida
+end
+
+Usuario -> Welcome: Presiona Jugar
+Welcome --> Manager: nextState() = LOGIN_SIGNUP
+Manager -> Manager: Aplica la configuración de ventana
+deactivate Welcome
+
+Manager -> LoginSignup: make_screen(LOGIN_SIGNUP)
+activate LoginSignup
+LoginSignup --> Usuario: Muestra LOG IN / CREATE ACCOUNT
+
+alt Cuenta existente: LOG IN
+    Usuario -> LoginSignup: Ingresa nombre y contraseña
+    LoginSignup -> LoginSignup: Valida los campos
+    LoginSignup -> Server: Solicita iniciar sesión
+
+    alt Credenciales inválidas
+        Server --> LoginSignup: Informa error de autenticación
+        LoginSignup --> Usuario: Muestra el error y permite reintentar
+    else Autenticación exitosa
+        Server --> LoginSignup: Confirma la sesión y devuelve\ndatos del personaje
+        LoginSignup -> Session: Guarda nombre, raza, clase y clan\nMarca authenticated = true
+        LoginSignup --> Manager: nextState() = GAME
+    end
+
+else Cuenta nueva: CREATE ACCOUNT
+    Usuario -> LoginSignup: Ingresa nombre y contraseña
+    LoginSignup -> LoginSignup: Valida los campos
+    LoginSignup -> Session: Guarda nombre y contraseña
+    LoginSignup --> Manager: nextState() = CHARACTER_CREATION
+    deactivate LoginSignup
+
+    Manager -> CharacterCreation: make_screen(CHARACTER_CREATION)
+    activate CharacterCreation
+    CharacterCreation --> Usuario: Muestra selección de raza y clase
+    Usuario -> CharacterCreation: Elige raza y clase\nPresiona Crear personaje
+    CharacterCreation -> Session: Lee nombre y contraseña
+    CharacterCreation -> Server: Solicita registrar el personaje
+
+    alt El nombre ya existe
+        Server --> CharacterCreation: Informa error de registro
+        CharacterCreation --> Manager: nextState() = LOGIN_SIGNUP
+        Manager -> LoginSignup: Vuelve a crear la pantalla
+        LoginSignup --> Usuario: Permite comenzar nuevamente
+    else Registro exitoso
+        Server --> CharacterCreation: Confirma el registro y devuelve\ndatos del personaje
+        CharacterCreation -> Session: Guarda los datos del personaje\nMarca authenticated = true
+        CharacterCreation --> Manager: nextState() = GAME
+    end
+    deactivate CharacterCreation
+end
+
+opt Autenticación exitosa
+Manager --> Client: run(session) retorna GAME
+deactivate Manager
+Client -> Session: Verifica authenticated
+Client --> Usuario: Ingresa a la partida
+end
+
+deactivate Client
+@enduml

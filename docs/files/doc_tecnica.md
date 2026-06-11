@@ -211,8 +211,6 @@ C --> Jugador: muestra el juego
 @enduml
 ```
 
-<!-- TODO: ajustar con el flujo real de conexión -->
-
 ### Diagrama de secuencia — Movimiento de un jugador
 
 ```plantuml
@@ -249,6 +247,20 @@ OH -> OC: actualiza posición del jugador
 - Capturar los inputs del usuario y enviarlos al servidor.
 - Recibir el estado del juego del servidor y renderizarlo.
 - Mostrar el mapa, los personajes y la interfaz de usuario.
+
+### Diagrama de secuencia — Desde la ejecución del cliente hasta la partida
+
+El siguiente diagrama muestra únicamente la colaboración entre el administrador
+de pantallas, las pantallas iniciales y la sesión de autenticación.
+
+![Flujo de las pantallas iniciales](../diagrams%20/%20client/3.svg)
+
+### Diagrama de secuencia - Desconexión de un jugador
+
+En este diagrama se muestra la desconexión de un jugador y la notificación al resto de players.
+
+![Desconexión de un jugador](../diagrams%20/%20client/6.svg)
+
 
 ### Modelo de threading del cliente
 
@@ -407,4 +419,3 @@ Las rutas de PNG se guardan relativas a la carpeta de recursos compartida.
 `paths::resolve_resource()` la convierte nuevamente en una ruta cargable
 
 ---
-
