@@ -11,11 +11,18 @@ bool TileLibrary::loadTileset(const QString &path, int tileSize) {
   if (master.isNull())
     return false;
 
+  // Calcula cuántos tiles completos entran horizontal y
+  // verticalmente
+  // Si imagen es de 128x128 y tiles de 64x64
+  // cols = 128 / 64 = 2
+  // rows = 128 / 64 = 2
+  // tiles 2*2 = 4
   const int cols = master.width() / tileSize;
   const int r = master.height() / tileSize;
   if (cols <= 0 || r <= 0)
     return false;
 
+  
   m_tiles.reserve(static_cast<std::size_t>(cols * r));
   for (int row = 0; row < r; ++row) {
     for (int column = 0; column < cols; ++column) {

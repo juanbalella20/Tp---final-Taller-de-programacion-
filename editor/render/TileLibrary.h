@@ -23,7 +23,9 @@ public:
   const QString &sourcePath() const;
 
 private:
+  // mapa entero de tiles
   QPixmap m_masterPixmap;
+  // cada tile por separado
   std::vector<QPixmap> m_tiles;
   QString m_sourcePath;
   int m_tileSize = 0;

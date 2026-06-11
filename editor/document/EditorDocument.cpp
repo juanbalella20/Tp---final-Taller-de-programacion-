@@ -186,17 +186,6 @@ bool EditorDocument::open(const QString &path, QString *err) {
   return true;
 }
 
-bool EditorDocument::save(const QString & /*path*/, QString *err) {
-  // Stub sin usar: el guardado real vive en EditorWindow::save_to.
-  if (err)
-    *err = "Guardar mapa: no implementado todavia";
-  return false;
-}
-
-bool EditorDocument::save_as(const QString &path, QString *err) {
-  return save(path, err);
-}
-
 bool EditorDocument::is_dirty() const { return dirty_; }
 QString EditorDocument::file_path() const { return path_; }
 

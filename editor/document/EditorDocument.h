@@ -63,8 +63,6 @@ public:
   // Persistencia
   void new_map();
   bool open(const QString &path, QString *err); // via BinaryMapLoader
-  bool save(const QString &path, QString *err);  // stub: ver EditorWindow::save_to
-  bool save_as(const QString &path, QString *err); // stub
 
   bool is_dirty() const;
   QString file_path() const;

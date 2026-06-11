@@ -117,20 +117,9 @@ bool EditorWindow::load_tileset_path(const QString &path) {
 
   const QFileInfo info(path);
   // El .bin guarda la ruta del tileset RELATIVA a la carpeta de recursos
-  // compartida (ARGENTUM_RESOURCES_DIR), no la ruta absoluta de esta maquina,
-  // para que el cliente la resuelva contra SU carpeta de recursos en cualquier
-  // maquina. Ver paths::resource_relative.
+  // compartida (ARGENTUM_RESOURCES_DIR)
   const std::string rel_path =
       paths::resource_relative(info.absoluteFilePath().toStdString());
-  if (QFileInfo(QString::fromStdString(rel_path)).isAbsolute() ||
-      rel_path == info.fileName().toStdString()) {
-    // No quedo debajo de la carpeta de recursos: el cliente quizas no lo
-    // encuentre. Avisamos pero dejamos cargar (util para previsualizar).
-    statusBar()->showMessage(
-        QString("Aviso: el PNG no esta bajo ARGENTUM_RESOURCES_DIR; se "
-                "guardara como '%1' y el cliente lo buscara ahi.")
-            .arg(QString::fromStdString(rel_path)));
-  }
   const int index =
       doc_.register_tileset(info.baseName(), QString::fromStdString(rel_path),
                             library.columns(), library.tileCount(), false);
