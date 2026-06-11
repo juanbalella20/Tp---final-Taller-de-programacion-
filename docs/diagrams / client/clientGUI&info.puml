@@ -1,0 +1,66 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+abstract class Thread {}
+
+class ClientGUI {
+    - window: SDL_Window*
+    - renderer: SDL_Renderer*
+    - is_running: bool
+    - own_name: string
+    - own_clan: string
+    - spell_effects: map<string, SpellEffectDef>
+    - spell_animations: vector<SpellAnimation>
+    - damage_numbers: vector<DamageNumber>
+
+    + ClientGUI(...)
+    + run(): void
+    - initSDL(): void
+    - handleEvents(): void
+    - update(): void
+    - draw(): void
+    - sendMoveCmd(dir: Direction): void
+    - sendAttackCmd(tile_x: int, tile_y: int): void
+    - sendChatCmd(msg: std::string): void
+    - load_spell_effects(): void
+}
+
+struct NpcInfo {
+    + type: string
+    + name: string   
+    + x: int
+    + y: int
+    + direction: Direction
+}
+
+struct ItemFloorInfo {
+    + type: string
+    + x: int
+    + y: int
+}
+
+struct PlayerInfo {
+    + name: string
+    + race: string
+    + klass: uint8_t
+    + x: int
+    + y: int
+    + direction: Direction
+    + has_equipped_weapon: bool
+    + ghost: bool
+    + equipped_ids: vector<string>
+    + clan_name: string
+    + moving: bool
+    + update_frame: bool
+}
+
+ClientGUI -up-|> Thread
+
+ClientGUI o-- Queue : outgoing / receiving
+ClientGUI o-- NpcInfo
+ClientGUI o-- ItemFloorInfo
+ClientGUI o-- PlayerInfo
+
+@enduml

@@ -1,0 +1,60 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+class ClientCmd {
+    + ClientCmd()
+}
+
+class GameMsg {
+    + GameMsg(type: uint8_t, direction: Direction)
+}
+
+class Serializer {
+    - handlers: map<uint8_t, Handler>
+    
+    + Serializer()
+    + serialize_cmd(cmd: ClientCmd): vector<uint8_t>
+    - write_header(buf: vector<uint8_t>, type: uint8_t, payload_len: uint16_t): void
+    - serialize_register(cmd: ClientCmd): vector<uint8_t>
+    - serialize_login(cmd: ClientCmd): vector<uint8_t>
+    - serialize_move(cmd: ClientCmd): vector<uint8_t>
+    - serialize_name(type: uint8_t, cmd: ClientCmd): vector<uint8_t>
+}
+
+class ClientDeserializer {
+    - handlers: map<uint8_t, Handler>
+    
+    + ClientDeserializer()
+    + deserialize_cmd(type: uint8_t, payload: vector<uint8_t>, msg: GameMsg&): void
+    - deserialize_move(payload: vector<uint8_t>, msg: GameMsg&): void
+    - deserialize_map(payload: vector<uint8_t>, msg: GameMsg&): void
+    - deserialize_npcs_snapshot(payload: vector<uint8_t>, msg: GameMsg&): void
+    - deserialize_items_snapshot(payload: vector<uint8_t>, msg: GameMsg&): void
+    - deserialize_players_snapshot(payload: vector<uint8_t>, msg: GameMsg&): void
+    - deserialize_register(payload: vector<uint8_t>, msg: GameMsg&): void
+    - deserialize_confirm_session(payload: vector<uint8_t>, msg: GameMsg&): void
+}
+
+class ClientProtocol {
+    - socket: Socket
+    - serializer: Serializer
+    - deserializer: ClientDeserializer
+    
+    + ClientProtocol(socket: Socket&&)
+    + initialize_connection(): void
+    + send_command(cmd: ClientCmd): void
+    + receive_event(msg: GameMsg): bool
+    + shutdown(): void
+}
+
+ClientProtocol *-- Serializer
+ClientProtocol *-- ClientDeserializer
+
+ClientProtocol ..> ClientCmd : <<uses>>
+ClientProtocol ..> GameMsg : <<uses>>
+Serializer ..> ClientCmd : <<uses>>
+ClientDeserializer ..> GameMsg : <<uses>>
+
+@enduml

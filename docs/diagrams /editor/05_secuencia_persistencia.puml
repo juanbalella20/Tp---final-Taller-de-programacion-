@@ -1,0 +1,31 @@
+@startuml
+title Secuencia - guardar y abrir un mapa
+
+
+actor Usuario as U
+participant EditorWindow as W
+participant EditorDocument as D
+participant Map as M
+participant BinaryMapSaver as S
+participant BinaryMapLoader as L
+database "Archivo .bin" as F
+
+alt Guardar
+  U -> W : Guardar / Guardar como
+  W -> M : consulta tilesets, capas,\nteleports y colision
+  W -> W : resource_relative(rutas)
+  W -> S : save(path,metadata,estructuras)
+  S -> F : escribe AOMAPBIN big-endian
+  S --> W : exito o excepcion
+else Abrir
+  U -> W : Abrir
+  W -> D : open(path)
+  D -> L : load(path)
+  L -> F : lee header y secciones
+  F --> L : bytes
+  L --> D : tilesets, capas,\ncolision y teleports
+  D -> M : load_from(...)
+  D --> W : tilesetsChanged()\nmapReset()
+end
+
+@enduml

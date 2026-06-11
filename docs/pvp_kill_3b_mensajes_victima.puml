@@ -1,0 +1,74 @@
+@startuml pvp_kill_3b_mensajes_victima
+' =====================================================================
+'  PvP kill - Diagrama 3b: mensajes dirigidos a J2: MENSAJES DIRIGIDOS A LA VICTIMA J2
+'
+'  Segunda parte de la notificacion: handle_attack consulta el estado
+'  final de J2 y le envia, SOLO a J2 (notify_client_by_name), los
+'  mensajes que reflejan su muerte: MSG_HP(0), MSG_CHAT, MSG_GOLD,
+'  MSG_INVENTORY (vacio) y su equipo. Cada uno OCURRE (no son ramas).
+'
+'  Situacion en docs/pvp_kill_escenario.md.
+' =====================================================================
+title PvP kill (3b) - Mensajes que el server manda solo a J2
+
+participant "loop:GameLoop" as loop
+participant "map:GameMap" as map
+participant "reg:ClientRegistryMonitor" as reg
+participant "net:Socket" as net
+
+note over loop
+  handle_attack, rama target_is_player && entity_died.
+  Estado final de J2 (en el server): fantasma, vida 0, oro reducido,
+  inventario vacio (todo cayo al piso en el Diagrama 2c).
+end note
+activate loop
+
+== MSG_HP : vida de J2 a 0 ==
+loop -> map : get_player_hp("J2"): uint32_t
+map --> loop : 0
+loop -> reg : notify_client_by_name(name="J2", msg=GameMsg(MSG_HP){hp=0}): void
+activate reg
+reg -> net : send(...)   // MSG_HP -> J2
+deactivate reg
+
+== MSG_CHAT : feed de combate de J2 ==
+loop -> reg : notify_client_by_name("J2",\n  GameMsg(MSG_CHAT){"J1 te ha provocado 160 de dano"}): void
+activate reg
+reg -> net : send(...)   // MSG_CHAT -> J2
+deactivate reg
+
+== MSG_GOLD : oro restante de J2 ==
+loop -> map : get_player_gold("J2"): uint32_t
+map --> loop : gold   (lo que le quedo tras soltar el excedente)
+loop -> reg : notify_client_by_name("J2", GameMsg(MSG_GOLD){gold}): void
+activate reg
+reg -> net : send(...)   // MSG_GOLD -> J2
+deactivate reg
+
+== MSG_INVENTORY : inventario de J2 (vacio) ==
+loop -> map : get_player("J2"): const Player&
+loop -> map : get_all_items(): vector<Item*>
+note right of loop
+  Inventario vacio tras el drop: arma MSG_INVENTORY
+  con los ItemInfo restantes (ninguno).
+end note
+loop -> reg : notify_client_by_name("J2", GameMsg(MSG_INVENTORY){items}): void
+activate reg
+reg -> net : send(...)   // MSG_INVENTORY -> J2
+deactivate reg
+
+== Equipo de J2 (ya sin casco / armadura / arma) ==
+loop -> loop : broadcast_player_equipment(player_name="J2"): void
+note right of loop
+  Avisa que J2 perdio su equipo
+  (cayeron Casco de hierro, Armadura de cuero y Arco compuesto).
+end note
+deactivate loop
+
+note over loop, net
+  El server ya entrego a J2 (via Socket) los mensajes que reflejan su
+  muerte: vida 0, oro reducido, inventario vacio y equipo perdido.
+  Fin de la secuencia del lado del juego (server).
+end note
+
+@enduml

@@ -1,0 +1,45 @@
+@startuml pvp_kill_1b_spawn_j1
+' =====================================================================
+'  PvP kill - Diagrama 1b: SPAWN Y EQUIPAMIENTO DE J1 (ATACANTE)
+'
+'  J1 (Gnome Warrior, nivel 13) se crea en el GameMap y se equipa su
+'  arma (Arco compuesto). Fuerza = 17 (raza 8 + clase 9).
+'
+'  Alcance: solo parte del juego (server-side).
+'  Situacion completa en docs/pvp_kill_escenario.md.
+' =====================================================================
+title PvP kill (1b) - Spawn y equipamiento de J1 (Gnome Warrior, nivel 13)
+
+participant "loop:GameLoop" as loop
+participant "map:GameMap" as map
+participant "j1:Player" as j1
+
+== Spawn de J1 ==
+loop -> map : spawn_player(name="J1", race="gnome", pclass="warrior"): void
+activate map
+map -> j1 : new Player(name="J1", race: PlayerRace&, class: PlayerClass&)
+activate j1
+j1 -> j1 : lives = max_life(): uint32_t
+note right of j1
+  Fuerza = race_strength(8) + class_strength(9) = 17
+end note
+j1 --> map : j1
+deactivate j1
+map -> map : players.push_back(j1: Player)\nplayer_zone["J1"] = z: Zone
+
+== Equipamiento de J1 ==
+map -> map : player_equip_item("J1", item_uid: uint64_t): bool
+activate map
+map -> j1 : equip_item(item_uid: uint64_t): void
+note right of j1
+  J1 equipa el ARCO COMPUESTO (dano 4..16).
+end note
+deactivate map
+deactivate map
+
+note over loop, j1
+  J1 queda en la zona, vivo y armado.
+  Spawn de J2 en el Diagrama 1c.
+end note
+
+@enduml

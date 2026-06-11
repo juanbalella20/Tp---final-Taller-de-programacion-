@@ -1,0 +1,115 @@
+@startuml jugador_npc_hostil
+title Diagrama de clases: Jugador y NPC hostil
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' ===================== Base comun =====================
+
+struct DamageOutcome {
+    + damage : int
+    + gold_drop : int
+    + dodged : bool
+    + level_up : bool
+    + dropped_item : unique_ptr<Item>
+}
+
+abstract class Entity {
+    + {abstract} get_name() : string
+    + {abstract} receive_damage(damage : int, atacante : Player&, is_critical : bool) : DamageOutcome
+    + {abstract} is_dead() : bool
+}
+
+class NPC {
+    # npc_id : int
+    # name : string
+    + {static} set_npc_id(npc_id : int) : void
+    + {static} set_npc_name(npc_name : string) : void
+}
+
+
+
+class Player {
+    - name : string
+    - gold : uint32_t
+    - lives : uint32_t
+    - experience : uint32_t
+    - mana : uint32_t
+    - coord_x : int
+    - coord_y : int
+    - state : unique_ptr<PlayerState>
+    - equipped_item : shared_ptr<Item>
+    - player_race : PlayerRace
+    - player_class : PlayerClass
+    - player_inventory : Inventory
+    - defense_set : DefenseSet
+    - level : Level
+    - inmortal : bool
+    - inf_mana : bool
+    + add_item(item : unique_ptr<Item>) : void
+    + drop_item(item : Item*) : void
+    + drop_inventory() : vector<unique_ptr<Item>>
+    + equip_item(item_uid : uint64_t) : void
+    + calculate_defense() : int
+    + attack(target : Entity&, target_x : int, target_y : int) : DamageOutcome
+    + cast_on_self() : void
+    + use_consumable(item_uid : uint64_t) : bool
+    + ganar_xp(dano : int, nivel_target : int, murio : bool, vida_max_target : int) : bool
+    + revive() : void
+    + update_position(x : int, y : int) : void
+    + receive_damage(damage : int, atacante : Player&, is_critical : bool) : DamageOutcome <<override>>
+    + receive_npc_damage(damage : int, is_critical : bool) : DamageOutcome
+}
+
+
+class NPChostile {
+    - type_id : string
+    - lifepoints : int
+    - attack_dmg : int
+    - state : State
+    - coord_x : int
+    - coord_y : int
+    - remaining_ticks_to_spawn : int
+    - ticks_to_spawn : int
+    - max_lifepoints : int
+    - level : LevelHostile
+    - current_direction : Direction
+    - target_player : string
+    - attack_speed_ticks : int
+    - current_attack_cooldown : int
+    --
+    - death() : void
+    - set_state(state : State) : void
+    - drop() : int
+    - roll_extra_gold() : int
+    + NPChostile(type_id, name, lifepoints, attack_dmg, ticks_to_spawn, level)
+    + receive_damage(damage : int, atacante : Player&, is_critical : bool) : DamageOutcome <<override>>
+    + is_dead() : bool <<override>>
+    + can_spawn() : bool
+    + reduce_ticks_to_spawn() : void
+    + revive(x : int, y : int) : void
+    + move_towards(target_x, target_y, world : ZoneWorld&, players : vector<Player*>&) : void
+    + can_attack() : bool
+    + reset_attack_cooldown() : void
+    + tick_cooldowns() : void
+    + clear_target() : void
+}
+
+
+' ===================== Relaciones =====================
+
+Entity ..> DamageOutcome : produce
+
+Player --|> Entity
+NPChostile --|> NPC
+NPChostile --|> Entity
+
+
+
+
+
+' Interacciones de combate
+Player ..> NPChostile : ataca / recibe daño
+NPChostile ..> Player : persigue / ataca
+
+@enduml

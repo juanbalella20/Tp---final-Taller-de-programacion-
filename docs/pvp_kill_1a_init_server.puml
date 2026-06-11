@@ -1,0 +1,74 @@
+@startuml pvp_kill_1a_init_server
+' =====================================================================
+'  PvP kill - Diagrama 1a: INICIALIZACION DEL SERVER
+'
+'  Arranque del lado del juego: el Server crea el GameLoop, este carga
+'  el mundo (init_world -> ZoneWorld) y entra en su bucle de ticks.
+'  El spawn de J1 y J2 va en los Diagramas 1b y 1c.
+'
+'  Alcance: solo parte del juego (server-side). Detalle de la situacion
+'  y numeros en docs/pvp_kill_escenario.md.
+' =====================================================================
+title PvP kill (1a) - Inicializacion del server
+
+actor "Admin" as admin
+participant "server:Server" as server
+participant "loop:GameLoop" as loop
+participant "map:GameMap" as map
+participant "cfg:GameConfig" as cfg
+participant "world:ZoneWorld" as world
+
+note across
+  Situacion (resumen): J1 (Gnome Warrior, nivel 13, Fuerza 17, Arco compuesto)
+  matara de un golpe a J2 (Human Wizard, nivel 13, vida 65, casco + armadura).
+  Numeros y formulas completos en docs/pvp_kill_escenario.md.
+end note
+
+admin -> server : run(): void
+activate server
+
+server -> loop : new GameLoop(receiving_queue: Queue<ClientCmd>&,\n  client_registry_monitor: ClientRegistryMonitor&)
+activate loop
+loop -> loop : register_handlers(): void
+note right of loop
+  handlers[MSG_ATTACK] = handle_attack(cmd: ClientCmd)
+  (un handler por cada MessageType)
+end note
+loop -> loop : load_persisted_clans(): void
+deactivate loop
+
+server -> loop : run(): void
+activate loop
+loop -> loop : load_world(): void
+
+loop -> cfg : instance(): GameConfig&
+activate cfg
+cfg --> loop : cfg
+deactivate cfg
+
+loop -> map : init_world(zone_configs: map<Zone, ZoneSpawnConfig>&): void
+activate map
+map -> world : new ZoneWorld()
+activate world
+world --> map : world
+deactivate world
+map --> loop
+deactivate map
+
+loop -> loop : while (should_keep_running(): bool) { tick }
+note over loop
+  El game loop corre a tick_rate (20 ticks/s). En cada tick drena
+  la cola de comandos con process_cmd(cmd: ClientCmd): void y
+  despacha cada uno a su handler.
+  Cuando llega el comando de ataque de J1 (MSG_ATTACK) se ejecuta
+  handle_attack -> map.attack("J1", x, y)  => continua en el Diagrama 2a.
+end note
+deactivate loop
+deactivate server
+
+note over server, world
+  Antes del ataque, J1 y J2 se conectan y se equipan:
+  spawn de J1 en el Diagrama 1b, spawn de J2 en el Diagrama 1c.
+end note
+
+@enduml

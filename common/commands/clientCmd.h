@@ -1,0 +1,78 @@
+#ifndef COMMON_CLIENT_CMD_H_
+#define COMMON_CLIENT_CMD_H_
+
+#include <cstdint>
+#include <string>
+
+
+#include "protocol_constants.h"
+
+class ClientCmd {
+ private:
+    MessageType message_type;
+    uint32_t client_id;
+    std::string player_name;
+    EntityType target_type;
+    std::string target_name;
+    std::string race;
+    std::string klass;
+    std::string password;  // REGISTER/LOGIN
+    std::string item_id;
+    Direction direction;
+    uint32_t gold;
+    int coord_x;
+    int coord_y;
+    std::string chat_content;
+    uint8_t zone_uint;
+
+ public:
+    ClientCmd();
+
+    //set id
+    //get id
+    void set_message_type(MessageType type);
+    MessageType get_message_type() const;
+
+    void set_client_id(uint32_t id);
+    uint32_t get_client_id() const;
+
+    void set_player_name(const std::string& name);
+    const std::string& get_player_name() const;
+
+    void set_target_type(EntityType type);
+    EntityType get_target_type() const;
+
+    void set_target_name(const std::string& name);
+    const std::string& get_target_name() const;
+
+    void set_race(const std::string& race_value);
+    const std::string& get_race() const;
+
+    void set_class(const std::string& class_value);
+    const std::string& get_class() const;
+
+    void set_password(const std::string& password_value);
+    const std::string& get_password() const;
+
+    void set_direction(Direction dir);
+    Direction get_direction() const;
+
+    void set_item_id(const std::string& item_id);
+    const std::string& get_item_id() const;
+
+    void set_gold(uint32_t amount);
+    uint32_t get_gold() const;
+
+    void set_coord_x(int x);
+    int get_coord_x() const;
+
+    void set_coord_y(int y);
+    int get_coord_y() const;
+
+    void set_chat_content(const std::string& content);
+    const std::string& get_chat_content() const;
+    void set_zone(const uint8_t zone_uint8);
+    uint8_t get_zone() const;
+};
+
+#endif  // COMMON_CLIENT_CMD_H_

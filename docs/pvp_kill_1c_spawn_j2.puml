@@ -1,0 +1,58 @@
+@startuml pvp_kill_1c_spawn_j2
+' =====================================================================
+'  PvP kill - Diagrama 1c: SPAWN Y EQUIPAMIENTO DE J2 (VICTIMA)
+'
+'  J2 (Human Wizard, nivel 13) se crea en el GameMap con vida maxima 65
+'  y se equipa su DEFENSA: Casco de hierro (4..8) + Armadura de cuero
+'  (2..6). En el golpe esa defensa se resuelve a 10 (Diagrama 2b).
+'
+'  Alcance: solo parte del juego (server-side).
+'  Situacion completa en docs/pvp_kill_escenario.md.
+' =====================================================================
+title PvP kill (1c) - Spawn y equipamiento de J2 (Human Wizard, nivel 13)
+
+participant "loop:GameLoop" as loop
+participant "map:GameMap" as map
+participant "j2:Player" as j2
+
+== Spawn de J2 ==
+loop -> map : spawn_player(name="J2", race="human", pclass="wizard"): void
+activate map
+map -> j2 : new Player(name="J2", race: PlayerRace&, class: PlayerClass&)
+activate j2
+j2 -> j2 : lives = max_life(): uint32_t
+note right of j2
+  max_life = endurance(0.5) * FClaseVida(2)
+             * FRazaVida(5) * nivel(13) = 65
+end note
+j2 --> map : j2
+deactivate j2
+map -> map : players.push_back(j2: Player)\nplayer_zone["J2"] = z: Zone
+
+== Equipamiento de J2 (defensa) ==
+map -> map : player_equip_item("J2", uid_casco: uint64_t): bool
+activate map
+map -> j2 : equip_item(uid_casco: uint64_t): void
+note right of j2
+  DefenseSet.equip_casco -> Casco de hierro (4..8)
+end note
+deactivate map
+map -> map : player_equip_item("J2", uid_armadura: uint64_t): bool
+activate map
+map -> j2 : equip_item(uid_armadura: uint64_t): void
+note right of j2
+  DefenseSet.equip_armadura -> Armadura de cuero (2..6)
+end note
+deactivate map
+deactivate map
+
+note right of j2
+  => j2.calculate_defense(): int  > 0   (en el golpe se resuelve a 10)
+end note
+
+note over loop, j2
+  J2 queda en la zona, vivo, con casco y armadura equipados.
+  El ataque de J1 se resuelve en el bloque del Diagrama 2 (GameMap::attack).
+end note
+
+@enduml

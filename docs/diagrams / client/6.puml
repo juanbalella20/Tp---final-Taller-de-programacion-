@@ -1,0 +1,49 @@
+@startuml
+title Desconexión de un jugador y notificación a los demás
+
+autonumber
+hide footbox
+
+actor "Jugador que se desconecta" as PlayerA
+participant "Cliente A" as ClientA
+participant "Servidor" as Server
+participant "Cliente B\n(misma zona)" as ClientB
+actor "Otro jugador" as PlayerB
+
+PlayerA -> ClientA: Cierra la ventana o presiona Escape
+activate ClientA
+ClientA -> ClientA: ClientGUI::run()\nfinaliza el ciclo de la partida
+ClientA -> Server: ClientProtocol::shutdown()\ncierra la conexión
+deactivate ClientA
+
+activate Server
+Server -> Server: ReceiverThread::run()\ndetecta el cierre del socket
+Server -> Server: ClientHandler::run()\nobtiene el nombre del jugador
+Server -> Server: ClientHandler::run()\nencola MSG_LOGOUT
+Server -> Server: GameLoop::process_cmd()\ndespacha MSG_LOGOUT
+Server -> Server: GameLoop::handle_logout()
+Server -> Server: PlayerPersistence::load()\nrecupera la contraseña persistida
+Server -> Server: PlayerSerializer::to_record()\nconvierte el estado del jugador
+Server -> Server: PlayerPersistence::save()\nguarda el estado actualizado
+Server -> Server: GameMap::get_player_zone()\nconserva la zona antes de eliminarlo
+Server -> Server: GameMap::remove_player()\nlo elimina del mundo
+Server -> Server: GameLoop::notify_zone()\nfiltra los clientes de la misma zona
+
+alt El otro jugador está en la misma zona
+    Server -> ClientB: ClientRegistryMonitor::notify_client()\nMSG_PLAYER_LEFT(nombre)
+    activate ClientB
+    ClientB -> ClientB: ClientGUI::update()\nelimina al jugador de other_players
+    ClientB --> PlayerB: Redibuja la partida sin el jugador
+    deactivate ClientB
+else El otro jugador está en otra zona
+    Server -> Server: GameLoop::notify_zone()\ndescarta al cliente por pertenecer a otra zona
+end
+
+deactivate Server
+
+note over ClientA,Server
+El mismo flujo se ejecuta si la conexión
+se pierde de forma inesperada.
+end note
+
+@enduml

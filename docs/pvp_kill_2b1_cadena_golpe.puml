@@ -1,0 +1,49 @@
+@startuml pvp_kill_2b1_cadena_golpe
+' =====================================================================
+'  PvP kill - Diagrama 2b-1: cadena de delegacion del golpe
+'
+'  GameMap delega el golpe en j1.attack -> AliveState -> Inventory ->
+'  Item::use_item, que invoca receive_damage sobre J2.
+'  El calculo interno de dano ocurre en el Diagrama 2b-2.
+' =====================================================================
+title PvP kill (2b-1) - Cadena de delegacion del golpe
+
+participant "map:GameMap" as map
+participant "j1:Player" as j1
+participant "s1:AliveState" as s1
+participant "inv:Inventory" as inv
+participant "arma:Item" as arma
+participant "j2:Player" as j2
+
+map -> j1 : attack(target=j2: Entity&, x: int, y: int): DamageOutcome
+activate j1
+j1 -> s1 : attack(self=j1: Player&, target=j2: Entity&, x: int, y: int): DamageOutcome
+activate s1
+s1 -> inv : use_equipped(target=j2: Entity&, atacante=j1: Player&,\n  attacker_x, attacker_y, target_x, target_y,\n  is_critical=false): DamageOutcome
+activate inv
+inv -> arma : use_item(target=j2: Entity&, atacante=j1: Player&,\n  attacker_x, attacker_y, target_x, target_y,\n  is_critical=false): DamageOutcome
+activate arma
+arma -> j1 : damage_attack(): int
+j1 --> arma : Z = 170   (Fuerza 17 * rand(4,16)=10)
+arma -> j2 : receive_damage(damage=170: int, atacante=j1: Player&, is_critical=false): DamageOutcome
+note right of j2
+  El calculo interno de defensa, dano neto,
+  XP y muerte ocurre en el Diagrama 2b-2.
+end note
+arma <-- j2 : DamageOutcome{ damage=160, gold_drop, dodged=false, level_up }
+deactivate arma
+inv <-- arma : DamageOutcome
+deactivate inv
+s1 <-- inv : DamageOutcome
+deactivate s1
+j1 <-- s1 : DamageOutcome
+deactivate j1
+map <-- j1 : outcome: DamageOutcome
+deactivate j1
+
+note over map
+  Continua en el Diagrama 2c: con outcome y target->is_dead()==true,
+  GameMap spawnea el oro, dropea el inventario y arma el AttackResult.
+end note
+
+@enduml

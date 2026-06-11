@@ -1,0 +1,512 @@
+# ============================================================
+#  Argentum Online - Archivo de Configuracion del Juego
+#  Todos los valores numericos del juego viven aqui.
+#  Modificar sin necesidad de recompilar.
+# ============================================================
+
+# ------------------------------------------------------------
+# Red (cliente): host/puerto al que se conecta ./client
+# ------------------------------------------------------------
+[network]
+host = "localhost"
+port = "8080"
+
+
+# ------------------------------------------------------------
+# Formulas de nivel y experiencia
+# ------------------------------------------------------------
+
+[level]
+# Limite de XP para subir de nivel: 1000 * nivel^exp_exponent
+xp_base = 1000
+xp_exponent = 1.8
+
+# XP por ataque: dano * max(nivelOtro - nivel + xp_level_offset, 0)
+xp_level_offset = 10
+ 
+# XP bonus al matar: rand(0, xp_kill_factor) * VidaMaxOtro * factor
+xp_kill_factor = 0.1
+ 
+# Oro maximo seguro: gold_base * nivel^gold_exponent
+gold_base = 100
+gold_exponent  = 1.1
+# Un jugador puede tener hasta gold_max * gold_excess_factor antes de perder oro
+gold_excess_factor = 1.5
+
+revive_life_factor = 0.1 # Fraccion de vida/mana con la que resucita (10%)
+ 
+# Fair play
+newbie_max_level = 12   # Nivel 12 o menor es considerado newbie
+level_diff_max = 10   # Diferencia maxima de nivel para poder atacar
+
+# ------------------------------------------------------------
+# Combate
+# ------------------------------------------------------------
+[combat]
+# Probabilidad de critico (no esquivable)
+crit_chance = 0.1
+# Multiplicador de daño cuando el golpe es critico (2 = daño doble).
+crit_multiplier = 2
+
+# Esquive: rand(0,1)^Agilidad < dodge_threshold
+dodge_threshold = 0.001
+
+# ------------------------------------------------------------
+# Razas
+# ------------------------------------------------------------
+[races.human]
+inteligence = 5
+strength = 5
+agility = 5
+endurance = 0.5   
+life_factor = 5     
+mana_factor = 5     
+ 
+[races.elf]
+inteligence = 7
+strength = 5
+agility = 7
+endurance = 0.2
+life_factor = 4
+mana_factor = 6
+ 
+[races.dwarf]
+inteligence = 6
+strength = 7
+agility = 4
+endurance = 0.7
+life_factor = 6
+mana_factor = 4
+ 
+[races.gnome]
+inteligence = 7
+strength = 8
+agility = 8
+endurance = 0.6
+life_factor = 2
+mana_factor = 4
+
+# ------------------------------------------------------------
+# Clases
+# ------------------------------------------------------------
+[classes.wizard]
+inteligence = 8
+strength = 3
+agility = 8
+endurance = 4
+life_factor = 2    
+mana_factor = 8    
+meditation_factor = 0.10 
+ 
+[classes.cleric]
+inteligence = 6
+strength = 8
+agility = 6
+endurance = 8
+life_factor = 7
+mana_factor = 6
+meditation_factor = 0.07
+ 
+[classes.paladin]
+inteligence = 5
+strength = 8
+agility = 7
+endurance = 8
+life_factor = 8
+mana_factor = 8
+meditation_factor = 0.04
+ 
+[classes.warrior]
+inteligence = 4
+strength = 9
+agility = 7
+endurance = 8
+life_factor = 8
+mana_factor = 0    # El guerrero no usa magia
+meditation_factor = 0.0  # El guerrero no puede meditar
+ 
+ # ------------------------------------------------------------
+# Items: armas
+# (distance: 1 = cuerpo a cuerpo, >1 = rango)
+# ------------------------------------------------------------
+[items.weapons.espada]
+name = "Espada"
+price = 100
+distance = 1
+damage_min = 2
+damage_max = 5
+ 
+[items.weapons.hacha]
+name = "Hacha"
+price = 150
+distance = 1
+damage_min = 4
+damage_max = 5
+ 
+[items.weapons.martillo]
+name = "Martillo"
+price = 120
+distance = 1
+damage_min = 1
+damage_max = 9
+ 
+[items.weapons.arco_simple]
+name = "Arco simple"
+price = 80
+distance = 5
+damage_min = 1
+damage_max = 4
+ 
+[items.weapons.arco_compuesto]
+name = "Arco compuesto"
+price = 200
+distance = 7
+damage_min = 4
+damage_max = 16
+
+# ------------------------------------------------------------
+# Items: varas/baculos (armas magicas)
+# ------------------------------------------------------------
+[items.magic.vara_fresno]
+name = "Vara de fresno"
+price = 90
+distance = 5
+damage_min = 2
+damage_max = 4
+mana_cost = 5
+spell = "flecha_magica"
+ 
+[items.magic.flauta_elfica]
+name = "Flauta elfica"
+price = 300
+distance = 5
+# Para el hechizo de curacion, damage_min/max es el rango de vida restaurada.
+damage_min = 30
+damage_max = 50
+mana_cost = 100
+spell = "curar"
+ 
+[items.magic.baculo_nudoso]
+name = "Baculo nudoso"
+price = 180
+distance = 5
+damage_min = 4
+damage_max = 8
+mana_cost = 15
+spell = "misil"
+ 
+[items.magic.baculo_engarzado]
+name = "Baculo engarzado"
+price = 350
+distance = 6
+damage_min = 8
+damage_max = 20
+mana_cost = 30
+spell = "explosion"
+ 
+# ------------------------------------------------------------
+# Items: armaduras
+# ------------------------------------------------------------
+[items.armors.armadura_cuero]
+name  = "Armadura de cuero"
+price  = 60
+defense_min = 2
+defense_max = 6
+ 
+[items.armors.armadura_placas]
+name = "Armadura de placas"
+price = 500
+defense_min = 15
+defense_max = 30
+ 
+[items.armors.tunica_azul]
+name = "Tunica azul"
+price = 130
+defense_min = 6
+defense_max = 10
+
+# ------------------------------------------------------------
+# Items: cascos
+# ------------------------------------------------------------
+[items.helmets.capucha]
+name = "Capucha"
+price = 30
+defense_min = 1
+defense_max = 4
+ 
+[items.helmets.casco_hierro]
+name = "Casco de hierro"
+price = 100
+defense_min = 4
+defense_max = 8
+ 
+[items.helmets.sombrero_magico]
+name = "Sombrero magico"
+price = 220
+defense_min = 4
+defense_max = 12
+
+# ------------------------------------------------------------
+# Items: escudos
+# ------------------------------------------------------------
+[items.shields.escudo_tortuga]
+name = "Escudo de tortuga"
+price = 80
+defense_min = 1
+defense_max = 2
+ 
+[items.shields.escudo_hierro]
+name = "Escudo de hierro"
+price = 140
+defense_min = 1
+defense_max = 4
+
+# ------------------------------------------------------------
+# Items: pociones
+# ------------------------------------------------------------
+[items.potions.pocion_vida]
+name = "Pocion de vida"
+price = 50
+heal_life = 100
+heal_mana = 0
+ 
+[items.potions.pocion_mana]
+name = "Pocion de mana"
+price = 50
+heal_life = 0
+heal_mana = 100
+
+# ------------------------------------------------------------
+# Comerciante (seller)
+# ------------------------------------------------------------
+# Stock que vende el comerciante: lista de ids de items (deben coincidir con las
+# claves de [items.*] de arriba; "escudo" es alias de "escudo_tortuga"). Todos
+# los comerciantes del juego venden esta misma lista. La cantidad de cada item
+# es infinita: nunca se agota. El nombre y el precio que se muestran en la
+# tienda salen de la definicion del item en [items.*]. Editar esta lista cambia
+# lo que vende la tienda sin recompilar.
+[seller]
+items = ["espada", "hacha", "martillo", "arco_simple", "arco_compuesto",
+         "armadura_cuero", "armadura_placas", "tunica_azul",
+         "capucha", "casco_hierro", "sombrero_magico",
+         "escudo_tortuga", "escudo_hierro",
+         "vara_fresno", "baculo_nudoso", "baculo_engarzado", "flauta_elfica",
+         "pocion_vida", "pocion_mana"]
+
+# ------------------------------------------------------------
+# Sacerdote (priest)
+# ------------------------------------------------------------
+# Stock que vende el sacerdote: SOLO pociones y hechizos (varas/baculos magicos
+# de [items.magic.*]). Mismo formato y misma ventana de comercio que el seller;
+# cantidad infinita. Editar esta lista cambia lo que ofrece el sacerdote sin
+# recompilar.
+[priest]
+items = ["vara_fresno", "baculo_nudoso", "baculo_engarzado", "flauta_elfica",
+         "pocion_vida", "pocion_mana"]
+
+# ------------------------------------------------------------
+# Jugador
+# ------------------------------------------------------------
+[player]
+# Estado con el que arranca un jugador recien creado.
+initial_level = 1
+initial_gold = 0
+# Regeneracion automatica de vida/mana por segundo real, como fraccion de la
+# vida/mana maxima (0.01 = 1% por segundo). La aplica el game loop.
+life_regen_per_second = 0.01
+mana_regen_per_second = 0.01
+
+# Inventario inicial de cada nuevo jugador: lista de ids de items (deben
+# coincidir con las claves de [items.*] de arriba; "escudo" es alias de
+# "escudo_tortuga"). Cambiar esta lista cambia el equipamiento de arranque
+# sin recompilar. Si se deja vacia se usa el equipamiento por defecto.
+initial_inventory = ["espada", "escudo", "vara_fresno", "baculo_nudoso",
+                     "baculo_engarzado", "flauta_elfica", "arco_simple",
+                     "arco_compuesto","martillo"]
+
+# Cantidad maxima (N) de items que puede tener el inventario de cualquier
+# jugador. Al llegar al tope, add_item lo rechaza (los items quedan en el piso).
+max_inventory_slots = 16
+
+# ------------------------------------------------------------
+# NPCs hostiles
+# ------------------------------------------------------------
+# Parametros comunes a todos los NPC hostiles (en ticks del game loop, 50ms c/u):
+# attack_speed_ticks = 20 -> 1 ataque por segundo.
+# move_every_ticks  = 10 -> avanza una celda cada 10 ticks (2 celdas/segundo).
+[npcs]
+attack_speed_ticks = 20
+move_every_ticks = 10
+
+# level: nivel del NPC, usado en el calculo de XP al matarlo.
+[npcs.goblin]
+name = "Goblin"
+lifepoints = 30
+attack_dmg = 5
+ticks_to_spawn = 100  
+ 
+[npcs.spider1]
+name = "Spider1"
+lifepoints = 20
+attack_dmg = 4
+ticks_to_spawn = 40
+level = 1
+
+[npcs.spider2]
+name = "Spider2"
+lifepoints = 30
+attack_dmg = 6
+ticks_to_spawn = 40
+level = 2
+
+[npcs.spider3]
+name = "Spider3"
+lifepoints = 40
+attack_dmg = 8
+ticks_to_spawn = 40
+level = 2
+
+[npcs.skeleton1]
+name = "Skeleton1"
+lifepoints = 25
+attack_dmg = 7
+ticks_to_spawn = 60
+level = 2
+
+[npcs.skeleton2]
+name = "Skeleton2"
+lifepoints = 35
+attack_dmg = 9
+ticks_to_spawn = 60
+level = 3
+
+[npcs.skeleton3]
+name = "Skeleton3"
+lifepoints = 45
+attack_dmg = 11
+ticks_to_spawn = 60
+level = 3
+ 
+[npcs.zombie]
+name = "Zombie"
+lifepoints = 35
+attack_dmg = 6
+ticks_to_spawn = 800
+level = 2
+
+[npcs.orc]
+name = "Orc"
+lifepoints = 60
+attack_dmg = 12
+ticks_to_spawn = 150
+ 
+[npcs.golem1]
+name = "Golem1"
+lifepoints = 80
+attack_dmg = 15
+ticks_to_spawn = 200
+level = 4
+
+[npcs.golem2]
+name = "Golem2"
+lifepoints = 90
+attack_dmg = 25
+ticks_to_spawn = 200
+level = 5
+
+[npcs.golem3]
+name = "Golem3"
+lifepoints = 100
+attack_dmg = 35
+ticks_to_spawn = 200
+level = 6
+ 
+# Al morir un NPC SIEMPRE deja caer oro base (seccion "Oro" del enunciado):
+#   OroBase = rand(0, npc_gold_drop_max) * VidaMaxNPC
+# y ADEMAS se sortea un drop extra segun esta tabla (seccion "Criaturas").
+# Se sortea r en [0,1) y, segun en que franja acumulada caiga, deja caer:
+#   [0, prob_nothing)                 -> nada extra
+#   [prob_nothing, +prob_gold)        -> oro extra: rand(npc_gold_drop_min, npc_gold_drop_max) * VidaMaxNPC
+#   [..., +prob_potion)               -> una pocion (vida/mana) al azar
+#   [..., +prob_item)                 -> cualquier otro objeto al azar
+#   el resto (1 - la suma de las 4)   -> nada extra
+# La suma de las 4 puede ser < 1; el sobrante cuenta como "nada extra".
+[npcs.drop]
+prob_nothing = 0.80
+prob_gold = 0.08
+prob_potion = 0.01
+prob_item = 0.01
+
+# Rango del factor de oro (base y extra): rand(min, max) * VidaMaxNPC.
+# El oro base usa rand(0, npc_gold_drop_max); el extra usa rand(min, max).
+npc_gold_drop_min = 0.01
+npc_gold_drop_max = 0.2
+
+# ------------------------------------------------------------
+# Zonas: tipos de NPC permitidos por zona
+# (coinciden con las claves de npcs)
+# ------------------------------------------------------------
+# map: ruta al .bin de la zona. La cargan TANTO el servidor (colision/teleports/
+# estado) como el cliente (render). Deben ser la misma para que ambos lados vean
+# el mismo mapa. La ruta es relativa al cwd (raiz del repo).
+# num_items: cuantos items caen al piso en la zona al iniciar.
+# allowed_items: de que items se sortean esos num_items (ids de [items.*]).
+#   Si se omite o queda vacio, se usa el pool global (todos los dropeables).
+# safe_zone: true = zona segura, sin PvP (ningun player puede dañar a otro,
+#   sean o no del mismo clan). Si se omite, false.
+[zones.desert]
+map = "data/maps/desert/map-2.bin"
+allowed_npcs = ["goblin", "spider"]
+num_npc = 7
+# Pool ampliado para probar la impresión de los items que no aparecían en otras
+# zonas (arcos y escudo de tortuga). num_items alto para que caigan varios.
+num_items = 10
+allowed_items = ["espada", "hacha", "armadura_cuero", "capucha", "pocion_vida",
+                 "arco_simple", "arco_compuesto", "escudo_tortuga"]
+
+[zones.city]
+map = "data/maps/city/city-2.bin"
+safe_zone = true
+num_items = 5
+allowed_items = ["pocion_vida", "pocion_mana"]
+# Cantidad de NPCs amigos en celdas random (ademas de los nombrados en el .bin).
+num_priests = 1
+num_npc = 0
+num_sellers = 1
+num_bankers = 1
+
+[zones.forest]
+map = "data/maps/forest/forest3.bin"
+allowed_npcs = ["orc"]
+num_npc = 3
+num_items = 5
+allowed_items = ["vara_fresno", "baculo_nudoso", "tunica_azul", "sombrero_magico", "pocion_mana"]
+
+[zones.dungeon]
+map = "data/maps/dungeon/dungeon-v1.bin"
+allowed_npcs = ["skeleton3", "zombie", "orc", "golem2", "spider3"]
+num_npc = 12
+num_items = 8
+allowed_items = ["baculo_engarzado", "martillo", "armadura_placas", "casco_hierro", "escudo_hierro", "pocion_vida", "pocion_mana"]
+
+ 
+# ------------------------------------------------------------
+# Clanes
+# ------------------------------------------------------------
+[clans]
+min_level_to_found = 6    # Nivel minimo para fundar un clan
+max_members = 16   # Incluye al fundador
+ 
+# Bonificacion de clan cuando hay jugadores cerca
+clan_defense_bonus_per_member = 0.05  # +5% defensa por miembro adicional
+clan_attack_bonus_per_member  = 0.05  # +5% ataque por miembro adicional
+
+# ------------------------------------------------------------
+# Gameloop
+# ------------------------------------------------------------
+[gameloop]
+tick_rate_ms = 50
+ticks_per_second = 20
+
+
+ 

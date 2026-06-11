@@ -1,0 +1,111 @@
+#include "screen_manager.h"
+
+#include <stdexcept>
+#include <utility>
+
+#include "paths.h"
+#include "welcome_screen.h"
+#include "login_signup_screen.h"
+#include "character_creation_screen.h"
+
+ScreenManager::ScreenManager(std::string host, std::string port)
+    : host(std::move(host)), port(std::move(port)) {
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        throw std::runtime_error(std::string("SDL_Init: ") + SDL_GetError());
+    }
+    window = SDL_CreateWindow(WINDOW_NAME, INITIAL_WIDTH, INITIAL_HEIGHT, 0);
+    if (!window) {
+        throw std::runtime_error(std::string("SDL_CreateWindow: ") + SDL_GetError());
+    }
+    renderer = SDL_CreateRenderer(window, nullptr);
+    if (!renderer) {
+        throw std::runtime_error(std::string("SDL_CreateRenderer: ") + SDL_GetError());
+    }
+    if (!TTF_Init()) {
+        throw std::runtime_error(std::string("TTF_Init: ") + SDL_GetError());
+    }
+    const std::string font_path = paths::asset(FONT_PATH);
+    font = TTF_OpenFont(font_path.c_str(), FONT_SIZE);
+    if (!font) {
+        throw std::runtime_error("No se pudo cargar " + font_path + ": " + SDL_GetError());
+    }
+}
+
+ScreenManager::~ScreenManager() {
+    if (font) {
+        TTF_CloseFont(font);
+        font = nullptr;
+    }
+    TTF_Quit();
+    if (renderer) {
+        SDL_DestroyRenderer(renderer);
+        renderer = nullptr;
+    }
+    if (window) {
+        SDL_DestroyWindow(window);
+        window = nullptr;
+    }
+    SDL_Quit();
+}
+
+std::unique_ptr<Screen> ScreenManager::make_screen(ScreenState state, AuthSession& session) {
+    switch (state) {
+        case ScreenState::WELCOME:
+            return std::make_unique<WelcomeScreen>(renderer, window, font);
+        case ScreenState::LOGIN_SIGNUP:
+            return std::make_unique<LoginSignupScreen>(renderer, window, font, session, host, port);
+        case ScreenState::CHARACTER_CREATION:
+            return std::make_unique<CharacterCreationScreen>(renderer, window, font, session, host, port);
+        default:
+            // GAME / EXIT / CHARACTER_SELECTION (fuera de alcance) no tienen
+            // Screen aca: el GAME lo arranca ClientApp.
+            return nullptr;
+    }
+}
+
+void ScreenManager::apply_window_settings(const WindowSettings& settings) {
+    // El tamano se fija siempre (queda como tamano de la ventana al volver de
+    // pantalla completa); luego se conmuta el modo fullscreen.
+    SDL_SetWindowSize(window, settings.width, settings.height);
+    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    SDL_SetWindowFullscreen(window, settings.fullscreen);
+    // El cambio de modo es asincrono (p. ej. Wayland): esperamos a que se
+    // aplique antes de que la siguiente pantalla renderice.
+    SDL_SyncWindow(window);
+}
+
+ScreenState ScreenManager::run(AuthSession& session) {
+    ScreenState current = ScreenState::WELCOME;
+    std::unique_ptr<Screen> screen = make_screen(current, session);
+
+    SDL_Event event;
+    while (screen) {
+        while (SDL_PollEvent(&event)) {
+            screen->handleEvent(event);
+        }
+        screen->update();
+
+        ScreenState requested = screen->nextState();
+        if (requested != current) {
+            // Al salir del launcher (y no por cerrar), aplicamos a la ventana
+            // compartida los WindowSettings elegidos. Solo WELCOME produce un
+            // WelcomeScreen, por lo que el static_cast es seguro.
+            if (current == ScreenState::WELCOME && requested != ScreenState::EXIT) {
+                auto* welcome = static_cast<WelcomeScreen*>(screen.get());
+                apply_window_settings(welcome->get_result().settings);
+            }
+            // Transicion: GAME/EXIT terminan el ciclo; el resto cambia de screen.
+            if (requested == ScreenState::GAME || requested == ScreenState::EXIT) {
+                return requested;
+            }
+            current = requested;
+            screen = make_screen(current, session);
+            continue;  // la nueva screen ya fijo su presentacion logica.
+        }
+
+        screen->render();
+        SDL_RenderPresent(renderer);
+        SDL_Delay(16);
+    }
+    return ScreenState::EXIT;
+}

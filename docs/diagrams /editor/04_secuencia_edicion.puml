@@ -1,0 +1,46 @@
+@startuml
+title Secuencia - edicion de tiles
+
+
+actor Usuario as U
+participant MapEditorScene as S
+participant EditorDocument as D
+participant "Tool" as T
+participant Map as M
+
+U -> S : mousePressEvent(posicion)
+activate S
+S -> S : cellAt(posicion) -> (x,y)
+S -> D : apply_tool_press(x,y)
+activate D
+D -> D : make_tool(tool activa)
+D -> T : on_press(M,capa,x,y,active_gid)
+activate T
+T -> M : get_cell(capa,x,y)
+M --> T : gid actual
+T --> D : vector<CellChange>
+deactivate T
+
+loop por cada CellChange
+  D -> M : set_cell(capa,x,y,new_gid)
+  D --> S : signal cellChanged(capa,x,y)
+  S -> M : get_cell(capa,x,y)
+  S -> S : updateVisualItem()
+end
+
+loop mientras se arrastra
+  U -> S : mouseMoveEvent(posicion)
+  S -> D : apply_tool_drag(x,y)
+  D -> T : on_drag(...)
+  T --> D : nuevos CellChange
+  D -> M : set_cell(...)
+  D --> S : signal cellChanged(...)
+end
+
+U -> S : mouseReleaseEvent()
+S -> D : apply_tool_release()
+D -> D : gesture_tool_.reset()
+deactivate D
+deactivate S
+
+@enduml
