@@ -1,10 +1,5 @@
-# Documentación Técnica — [Nombre del Proyecto]
+# Documentación Técnica — Argentum Online
 
-> **Cómo usar este template:** Reemplazá todo lo que está entre corchetes `[así]`.
-> Los bloques PlantUML son puntos de partida — ajustá los nombres de clases a los reales.
-> Podés renderizar los diagramas en https://www.plantuml.com/plantuml/uml/
-
----
 
 ## Tabla de contenidos
 
@@ -15,21 +10,6 @@
 5. [Protocolo de comunicación](#protocolo-de-comunicación)
 6. [Formato del archivo de mapa](#formato-del-archivo-de-mapa)
 7. [Decisiones de diseño](#decisiones-de-diseño)
-
----
-
-## Resumen del proyecto
-
-[Nombre del Proyecto] es un proyecto compuesto por [cliente / servidor / editor / otro componente] cuyo objetivo es [describir brevemente qué hace el sistema].
-
-El sistema se divide en componentes separados para mantener responsabilidades claras:
-
-- **Servidor:** mantiene el estado autoritativo del juego y procesa los mensajes de los clientes.
-- **Cliente:** captura inputs, se comunica con el servidor y renderiza el estado recibido.
-- **Editor de mapas:** permite crear mapas y exportarlos en el formato que luego consume el servidor.
-- **Common / Shared:** contiene estructuras compartidas, constantes del protocolo y lógica común.
-
-> Borrar o adaptar los componentes que no existan en el proyecto real.
 
 ---
 
@@ -57,7 +37,56 @@ El proyecto está organizado con una arquitectura cliente-servidor. El servidor 
 | Editor     | C++, Qt 6 Widgets   | `build/editor`  |
 ```
 
-<!-- TODO: ajustar tecnologías reales -->
+### Diagrama de paquetes
+
+```
+@startuml diagrama_paquetes_alto_nivel
+title Diagrama de Paquetes - Argentum (vista de alto nivel)
+
+skinparam packageStyle folder
+skinparam shadowing false
+skinparam package {
+    BackgroundColor #F8F8F8
+    BorderColor #555555
+}
+
+package "client" as client {
+    [interface (GUI)]
+    [comunication]
+    [serializers]
+    [audio]
+    [clientApp]
+}
+
+package "server" as server {
+    [Game]
+    [communication]
+    [serializer]
+    [persistence]
+    [gameloop]
+}
+
+package "common" as common {
+    [socket]
+    [commands]
+    [constants]
+    [info]
+    [binaryMap]
+    [utility]
+}
+
+client ..> common : <<import>>
+server ..> common : <<import>>
+
+note bottom of common
+  common no depende de client ni de server.
+  client y server NO se dependen entre si:
+  se comunican por red usando los tipos
+  compartidos definidos en common.
+end note
+
+@enduml
+```
 
 ### Estructura del repositorio
 
@@ -80,8 +109,6 @@ El proyecto está organizado con una arquitectura cliente-servidor. El servidor 
 └── CMakeLists.txt      ← build raíz
 ```
 
-<!-- TODO: ajustar la estructura real del repo con `tree -L 2` -->
-
 ---
 
 ## Componente: Servidor
@@ -95,44 +122,6 @@ El servidor es el componente autoritativo del juego. Es responsable de:
 - Procesar los eventos enviados por los clientes y validarlos.
 - Propagar los cambios de estado a todos los clientes conectados.
 - Cargar y servir el mapa al inicio.
-
-### Modelo de threading
-
-<!-- TODO: describir el modelo real. Ejemplos comunes:
-- Un hilo por cliente (thread-per-connection)
-- Event loop con un solo hilo
-- Thread pool con cola de tareas
--->
-
-[Descripción del modelo de threading utilizado.]
-
-```plantuml
-@startuml
-title Modelo de threading — Servidor
-
-participant "Main Thread" as Main
-participant "Acceptor Thread" as Acc
-participant "Client Thread N" as CT
-participant "GameWorld" as GW
-
-Main -> Acc: inicia acceptor
-Main -> GW: crea mundo del juego
-
-loop por cada nueva conexión
-  Acc -> CT: crea nuevo hilo para el cliente
-  CT -> GW: registra jugador
-  loop mientras el cliente esté conectado
-    CT -> CT: lee mensaje del socket
-    CT -> GW: aplica evento (mutex)
-    GW -> CT: estado actualizado
-    CT -> CT: envía respuesta / broadcast
-  end
-  CT -> GW: elimina jugador al desconectarse
-end
-@enduml
-```
-
-<!-- TODO: ajustar el diagrama al modelo real de threading del servidor -->
 
 ### Diagrama de clases — Servidor
 
@@ -193,8 +182,6 @@ GameWorld *-- GameMap
 GameWorld *-- Player
 @enduml
 ```
-
-<!-- TODO: reemplazar con los nombres de clases reales del servidor -->
 
 ### Diagrama de secuencia — Conexión de un cliente
 
@@ -265,8 +252,6 @@ OH -> OC: actualiza posición del jugador
 
 ### Modelo de threading del cliente
 
-<!-- TODO: describir si hay un hilo de red separado del hilo de rendering, o si usan un event loop -->
-
 [Descripción del modelo de threading del cliente.]
 
 ### Diagrama de clases — Cliente
@@ -277,124 +262,7 @@ OH -> OC: actualiza posición del jugador
 ![ClientProtocol](../diagrams_png/clientProtocol.png)
 
 
-### Flujo del game loop del cliente
-
-```plantuml
-@startuml
-title Game loop del cliente
-
-start
-:conectar al servidor;
-:recibir estado inicial del mapa;
-
-repeat
-  :capturar inputs del usuario;
-  if (hay acción?) then (sí)
-    :enviar mensaje al servidor;
-  endif
-  :procesar mensajes entrantes del servidor;
-  :actualizar ClientWorldState;
-  :renderizar frame;
-repeat while (corriendo)
-
-:desconectar;
-stop
-@enduml
-```
-
-<!-- TODO: ajustar al game loop real del cliente -->
-
 ---
-
-## Componente: Editor de mapas
-
-### Responsabilidades
-
-- Proveer una interfaz gráfica para crear y editar mapas.
-- Serializar y deserializar mapas al formato binario del proyecto.
-- Exportar mapas que el servidor pueda cargar directamente.
-
-### Diagrama de clases — Editor
-
-```plantuml
-@startuml
-title Clases principales — Editor de mapas
-
-class MapEditor {
-  - mapData: MapData*
-  - scene: QGraphicsScene*
-  - tileSelector: TileSelector*
-  - currentLayer: int
-  - currentTileId: int
-  + newMap(width, height): void
-  + loadMap(path: QString): bool
-  + saveMap(path: QString): bool
-  + placeTile(x, y, tileId): void
-  + eraseTile(x, y): void
-}
-
-class MapData {
-  - width: int
-  - height: int
-  - layers: QVector<TileLayer>
-  + getTile(x, y, layer): int
-  + setTile(x, y, layer, tileId): void
-  + serialize(stream: QDataStream): void
-  + deserialize(stream: QDataStream): void
-}
-
-class TileLayer {
-  - tiles: QVector<int>
-  - width: int
-  - height: int
-  + at(x, y): int
-  + set(x, y, tileId): void
-}
-
-class TileSelector {
-  - tileset: QPixmap
-  - selectedTile: int
-  + getSelectedTile(): int
-  + renderTileset(): void
-}
-
-MapEditor *-- MapData
-MapEditor *-- TileSelector
-MapData *-- TileLayer
-@enduml
-```
-
-<!-- TODO: reemplazar con los nombres de clases reales del editor -->
-
-### Diagrama de secuencia — Guardar un mapa
-
-```plantuml
-@startuml
-title Guardar un mapa en disco
-
-actor Usuario
-participant "MapEditor" as E
-participant "MapData" as D
-participant "QDataStream\n(archivo)" as F
-
-Usuario -> E: File > Save (Ctrl+S)
-E -> E: abre diálogo de guardado
-Usuario -> E: elige nombre y ruta
-E -> F: abre archivo en modo escritura
-E -> D: serialize(stream)
-D -> F: writeHeader() (magic, versión, ancho, alto, capas)
-loop por cada capa
-  D -> F: writeLayer() (ids de tiles)
-end
-F --> E: cierra archivo
-E --> Usuario: "Mapa guardado exitosamente"
-@enduml
-```
-
-<!-- TODO: ajustar al mecanismo real de serialización -->
-
----
-
 ## Protocolo de comunicación
 
 La comunicación entre servidor y clientes se realiza sobre **[TCP / UDP]** con un protocolo binario propio.
@@ -415,8 +283,6 @@ Cada mensaje tiene el siguiente formato:
 | `length` | `uint16` | 2 bytes | Longitud del payload en bytes |
 | `payload` | `bytes` | variable | Datos del mensaje (ver tabla) |
 
-<!-- TODO: ajustar al formato real del header de los paquetes -->
-
 ### Tabla de mensajes
 
 | ID | Nombre | Dirección | Payload |
@@ -431,118 +297,10 @@ Cada mensaje tiene el siguiente formato:
 | `0x11` | `MSG_MAP_DATA` | Servidor → Cliente | `uint16 width, uint16 height, uint16[] tile_ids` |
 | `[0xNN]` | `[NOMBRE]` | [dirección] | [campos] |
 
-<!-- TODO: completar con TODOS los mensajes reales del protocolo -->
-
-### Flujo de conexión completo
-
-```plantuml
-@startuml
-title Handshake completo cliente-servidor
-
-participant "Cliente" as C
-participant "Servidor" as S
-
-C -> S: TCP SYN (conectar al puerto [XXXX])
-S --> C: TCP SYN-ACK
-note over C,S: conexión establecida
-
-S -> C: MSG_WELCOME (player_id asignado)
-S -> C: MSG_MAP_DATA (mapa completo)
-loop por cada jugador ya conectado
-  S -> C: MSG_PLAYER_JOINED (id, x, y)
-end
-note over C: el cliente ya puede jugar
-
-loop durante la sesión
-  C -> S: MSG_PLAYER_MOVE / MSG_CHAT_MESSAGE / ...
-  S -> C: MSG_ENTITY_UPDATE / MSG_CHAT_BROADCAST / ...
-end
-
-note over C,S: desconexión
-C -> S: cierra socket TCP
-S -> S: elimina jugador del mundo
-S -> C: MSG_PLAYER_LEFT (broadcast a otros)
-@enduml
-```
-
-<!-- TODO: ajustar al flujo real de handshake -->
-
 ### Manejo de desconexión
 
-<!-- TODO: describir qué pasa cuando un cliente se desconecta abruptamente (timeout, cierre de ventana, etc.) -->
 
-- El servidor detecta la desconexión mediante [mecanismo: excepción en recv(), timeout, heartbeat].
-- Se elimina al jugador del `GameWorld`.
-- Se envía `MSG_PLAYER_LEFT` a todos los clientes conectados.
-- [¿Se guarda el estado del jugador? ¿Hay persistencia?]
-
----
-
-## Formato del archivo de mapa
-
-Los mapas se almacenan en archivos binarios con extensión `.[ext]`.
-
-### Estructura del archivo
-
-#### Header (fijo, [N] bytes)
-
-| Offset | Tamaño | Tipo | Descripción |
-|--------|--------|------|-------------|
-| `0x00` | 4 bytes | `uint32` | Magic number: `[0xXXXXXXXX]` |
-| `0x04` | 2 bytes | `uint16` | Versión del formato |
-| `0x06` | 2 bytes | `uint16` | Ancho del mapa (en tiles) |
-| `0x08` | 2 bytes | `uint16` | Alto del mapa (en tiles) |
-| `0x0A` | 2 bytes | `uint16` | Número de capas |
-| `0x0C` | 4 bytes | `uint32` | [campo reservado / nombre del mapa / otro] |
-
-<!-- TODO: completar con el header real. Revisar el código de serialize() en MapData -->
-
-#### Datos de cada capa (repetido por cada capa)
-
-| Offset | Tamaño | Tipo | Descripción |
-|--------|--------|------|-------------|
-| `+0` | 1 byte | `uint8` | ID de la capa |
-| `+1` | `ancho × alto × 2` bytes | `uint16[]` | IDs de tiles en orden row-major (fila por fila) |
-
-<!-- TODO: ajustar al formato real de las capas -->
-
-### Ejemplo de archivo mínimo
-
-Un mapa de 2×2 tiles con una sola capa de relleno con el tile `0` se vería así en hexadecimal:
-
-```
-Offset  Bytes          Descripción
-0x00    XX XX XX XX   Magic number
-0x04    01 00          Versión 1
-0x06    02 00          Ancho: 2
-0x08    02 00          Alto: 2
-0x0A    01 00          1 capa
-0x0C    00 00 00 00   Reservado
-
--- Capa 0 --
-0x10    00             ID de capa: 0
-0x11    00 00          tile (0,0) = 0
-0x13    00 00          tile (1,0) = 0
-0x15    00 00          tile (0,1) = 0
-0x17    00 00          tile (1,1) = 0
-```
-
-### Código de referencia (serialización)
-
-<!-- TODO: pegar aquí el fragmento de código de serialize() / deserialize() de MapData -->
-
-```cpp
-// Fragmento de MapData::serialize()
-void MapData::serialize(QDataStream& stream) const {
-    // TODO: pegar el código real aquí
-}
-
-// Fragmento de MapData::deserialize()
-void MapData::deserialize(QDataStream& stream) {
-    // TODO: pegar el código real aquí
-}
-```
-## Documentación técnica: editor de mapas
+## Editor de mapas
 
 ### Objetivo y alcance
 
@@ -570,14 +328,14 @@ El mapa tiene dimensiones fijas definidas en `game_constants.h`:
 Este diagrama se centra en `EditorDocument`, porque conecta los eventos de la
 interfaz, las estrategias de edición y el modelo.
 
-![Clases centrales del editor](../diagrams/editor/1.svg)
+![Clases centrales del editor](../diagrams%20/editor/1.svg)
 
 ### Secuencia de edición de tiles
 
 La siguiente secuencia representa lápiz y goma. El relleno termina después del
 `press` porque `paints_on_drag()` devuelve `false`.
 
-![Secuencia de edición de tiles](../diagrams/editor/4.svg)
+![Secuencia de edición de tiles](../diagrams%20/editor/4.svg)
 
 #### Herramientas especiales
 
@@ -594,7 +352,7 @@ una superposición visual y no una capa de gids.
 
 ### Tilesets, selección y render
 
-![Tilesets, selección y render](../diagrams/editor/2.svg)
+![Tilesets, selección y render](../diagrams%20/editor/2.svg)
 
 #### `TileLibrary`
 
@@ -642,19 +400,11 @@ sin volver a recortar el spritesheet.
 - abrir: `EditorDocument::open()` usa `BinaryMapLoader`;
 - guardar: `EditorWindow::save_to()` usa `BinaryMapSaver`.
 
-![Secuencia de persistencia](../diagrams/editor/5.svg)
+![Secuencia de persistencia](../diagrams%20/editor/5.svg)
 
 Las rutas de PNG se guardan relativas a la carpeta de recursos compartida.
 `paths::resource_relative()` prepara la ruta al guardar y
 `paths::resolve_resource()` la convierte nuevamente en una ruta cargable
 
 ---
-
-## Decisiones de diseño
-
-### ¿Cómo se sincroniza el estado entre múltiples clientes?
-
-<!-- TODO: completar con el enfoque real -->
-
-[Descripción. Ejemplo: "El servidor es la única fuente de verdad (server-authoritative). Los clientes envían intenciones (mover arriba) y el servidor valida y aplica el cambio, luego broadcastea el nuevo estado a todos."]
 

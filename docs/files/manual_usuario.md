@@ -62,24 +62,12 @@ Al terminar, todo queda instalado así:
 | Configuración (`config.toml`) | `~/.config/argentum/` |
 
 Si `~/.local/bin` está en tu `PATH` (en Ubuntu suele estarlo), podés correr
-`server 8080`, `client` y `map_editor` desde cualquier directorio. El resto de este
+`server`, `client` y `map_editor` desde cualquier directorio. El resto de este
 manual asume que el juego se instaló de esta forma.
 
 ---
 
 ## Configuración inicial
-
-### Recursos gráficos y de audio
-
-Los archivos de recursos (tiles, sprites, sonidos) deben estar en la siguiente ubicación antes de ejecutar cualquier componente:
-
-```
-[repositorio]/
-├── assets/
-│   ├── tiles/          ← tilesets del mapa
-│   ├── sprites/        ← sprites de personajes y objetos
-│   └── sounds/         ← efectos de sonido
-```
 
 ### Archivos de configuración
 
@@ -91,13 +79,6 @@ Los archivos de recursos (tiles, sprites, sonidos) deben estar en la siguiente u
 host = "localhost"
 port = "8080"
 ```
-
-| Parámetro | Descripción | Valor por defecto |
-|-----------|-------------|-------------------|
-| `port` | Puerto TCP que escucha el servidor | `7171` |
-| `max_players` | Máximo de jugadores simultáneos | `[N]` |
-| `map_file` | Ruta al mapa que carga al iniciar | `[valor]` |
-
 
 ---
 
@@ -143,28 +124,7 @@ Tras instalar con `install.sh`, los archivos que podés editar están acá:
 ### Iniciar el servidor
 
 ```bash
-server 8080
-```
-
-<!-- TODO: documentar las opciones disponibles, por ejemplo:
-server --port 7171 --map maps/default.map
--->
-
-Opciones disponibles:
-
-| Opción | Descripción | Ejemplo |
-|--------|-------------|---------|
-| `[opción 1]` | [descripción] | `[ejemplo]` |
-| `[opción 2]` | [descripción] | `[ejemplo]` |
-
-<!-- TODO: si no hay opciones por línea de comandos, borrar la tabla -->
-
-### Output esperado al iniciar
-
-Cuando el servidor arranca correctamente, deberías ver algo como:
-
-```
-[TODO: pegar aquí el output real de la consola cuando el servidor inicia bien]
+/server
 ```
 
 ### Cargar un mapa específico
@@ -190,7 +150,7 @@ Para cerrar el servidor limpiamente:
 Con el servidor ya corriendo, ejecutar:
 
 ```bash
-client
+/client
 ```
 
 ### Pantalla de inicio
@@ -236,7 +196,7 @@ Ingresar con cuenta existente
 ### Iniciar el editor
 
 ```bash
-map_editor
+/map_editor
 ```
 
 ### Interfaz del editor
@@ -272,43 +232,3 @@ La interfaz está dividida en las siguientes secciones:
    - **Con otro nombre** (por ejemplo, `city-v2.bin`): además tenés que indicarle al
      juego que use el archivo nuevo, editando el `config.toml`
      (ver [Cambiar el mapa de una zona](#cambiar-el-mapa-de-una-zona)).
-
----
-
-## Solución de problemas frecuentes
-
-### Error al compilar: "Qt6 not found"
-
-```
-CMake Error: Could not find Qt6
-```
-
-**Solución:**
-```bash
-sudo apt install qt6-base-dev qt6-tools-dev
-```
-
-### El cliente no puede conectarse al servidor
-
-**Verificar:**
-1. Que el servidor esté corriendo antes de lanzar el cliente.
-2. Que la IP y el puerto en la configuración del cliente coincidan con los del servidor.
-3. Que no haya un firewall bloqueando el puerto `[puerto]`.
-
-### [Error frecuente 3]
-
-<!-- TODO: completar con errores reales que encontraron durante el desarrollo -->
-
-```
-[mensaje de error]
-```
-
-**Solución:** [descripción]
-
-### [Error frecuente 4]
-
-```
-[mensaje de error]
-```
-
-**Solución:** [descripción]

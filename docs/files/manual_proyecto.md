@@ -16,8 +16,8 @@
 
 | Nombre | Padrón | Contacto |
 |--------|--------|----------|
-| [Juan Balella] | [110271] | [juanbalella20] |
-| [Nombre 2] | [XXXXX] | [email / github] |
+| Juan Balella | 110271 | juanbalella20 |
+| Agustín Trombetta | 111754 |  |
 
 ---
 
@@ -80,14 +80,13 @@
  |
 | 08/06 al 11/06 | Completar la música y los sonidos, y terminar la presentación y el movimiento de todos los NPC. | Incorporamos la música y los sonidos. También completamos los sprites correspondientes y el movimiento de todos los NPC. |
 
-### Lo que no se llegó a realizar ??? 
+### Lo que no se llegó a realizar 
 
 
 - Movimiento con predicción
-- movimiento de sprites de las armas
-- que no tire la animacion de ataque, si no tiene mana suficiente
-
-<!-- TODO: reemplazar con el estado real de cada funcionalidad -->
+- Que no tire la animacion de ataque, si no tiene mana suficiente
+- Movimiento de sprites de las armas
+- Algunos movimientos de sprites de NPCs
 
 ---
 
@@ -127,36 +126,4 @@
 - [Packaging a C/C++ Application into a .deb package for Debian/Ubuntu: An Easy Guide for Beginners](https://medium.com/codecurrent/packaging-a-c-c-application-into-a-deb-package-for-debian-ubuntu-an-easy-guide-for-beginners-651665000660)
 [Global Tile IDs](https://doc.mapeditor.org/en/stable/reference/global-tile-ids/)
 
----
-
-## Retrospectiva
-
-### Errores conocidos
-
-<!-- TODO: documentar los bugs que saben que existen pero no llegaron a corregir. Ser honestos. -->
-
-| Bug | Descripción | Condición de reproducción |
-|-----|-------------|--------------------------|
-| [Bug 1] | [descripción] | [cómo reproducirlo] |
-| [Bug 2] | [descripción] | [cómo reproducirlo] |
-
-<!-- Si no hay bugs conocidos, escribir: "No se registraron errores conocidos al momento de la entrega." -->
-
-### ¿Qué cambiarían a nivel código?
-
-<!-- TODO: reflexión genuina sobre decisiones técnicas que en retrospectiva cambiarían -->
-
-- **[Decisión 1 — ej: El formato del protocolo]:** [descripción del cambio. Ej: "Hubiera usado un formato autodescriptivo como Protocol Buffers en vez de binario manual para facilitar el debugging."]
-
-- **[Decisión 2 — ej: Modelo de threading]:** [descripción.]
-
-- **[Decisión 3]:** [descripción.]
-
-### ¿Qué cambiarían a nivel organizacional?
-
-<!-- TODO: reflexión sobre el proceso de trabajo en equipo -->
-
-- Creemos que nos hubiese sido mas rentable el haber dividiod el tabajo por features en vez de dividirlos paor partes de proyecto,
-- Mejoramos cuando nso dividimos por features o por acciones que podia realizar el personaje
-- Por lo cual si tuviesemos que empezar de nuevo, dividiriamos el trabajo por features. 
 
