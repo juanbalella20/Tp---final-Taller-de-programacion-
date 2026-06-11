@@ -11,6 +11,9 @@ enum NpcAction {
     ACTION_DEPOSIT_GOLD = 4,
     ACTION_RETIRE = 5,
     ACTION_RETIRE_GOLD = 6,
+    ACTION_HEAL = 7,
+    ACTION_RESURRECT = 8,
+
 };
 
 
