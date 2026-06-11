@@ -134,6 +134,7 @@ add_executable(client
     client/interface/npcSprite.cpp
     client/interface/itemSprite.cpp
     client/interface/hud.cpp
+    client/interface/shopWindow.cpp
     client/interface/ui_helpers.cpp
     client/interface/text_field.cpp
 )

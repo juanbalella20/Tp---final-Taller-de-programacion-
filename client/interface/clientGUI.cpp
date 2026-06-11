@@ -83,6 +83,7 @@ void ClientGUI::freeSDL() {
     player.reset();
     tilemap.reset();
     hud.reset();
+    shop_window.reset();
 
     if (enemy_texture) {
         SDL_DestroyTexture(enemy_texture);
@@ -303,6 +304,13 @@ void ClientGUI::handleEvents() {
     while (SDL_PollEvent(&event)) {
 
         
+        // La tienda es modal: mientras esta abierta atrapa sus clicks/ESC ANTES
+        // que el chat y el juego (el chat puede estar activo tras escribir
+        // /listar y, si no, se tragaria los clicks del mouse).
+        if (shop_window && shop_window->handle_event(event)) {
+            continue;
+        }
+
         if (mini_chat->handle_event(event)) {
             continue;
         }
@@ -649,8 +657,12 @@ void ClientGUI::update() {
                     chat_inbox.push(msg.get_chat_content());
                     break;
                 }
-                case MSG_CURE:
                 case MSG_LIST:
+                    // Catalogo de la tienda: abre la ventana de comercio con los
+                    // items recibidos (id/nombre/precio). Solo lectura.
+                    if (shop_window) shop_window->open(msg.get_items());
+                    break;
+                case MSG_CURE:
                 case MSG_BUY:
                 case MSG_SELL:
                 case MSG_TAKE:
@@ -1297,6 +1309,10 @@ void ClientGUI::draw() {
     draw_potion_hold_arc();
 
     mini_chat->render(GAME_WIDTH, CANVAS_HEIGHT);
+
+    // La tienda es modal: se dibuja por encima de todo (HUD y chat incluidos).
+    if (shop_window) shop_window->render();
+
     SDL_RenderPresent(renderer);
 }
 
@@ -1451,6 +1467,9 @@ void ClientGUI::init_draw() {
     }
 
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
+    // Ventana de comercio: ocupa toda el area logica de presentacion.
+    shop_window = std::make_unique<ShopWindow>(renderer, chat_font,
+                                               LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
     // Spritesheets de efectos de hechizo (animaciones sobre el target).
     load_spell_effects();

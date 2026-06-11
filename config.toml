@@ -277,6 +277,34 @@ heal_life = 0
 heal_mana = 100
 
 # ------------------------------------------------------------
+# Comerciante (seller)
+# ------------------------------------------------------------
+# Stock que vende el comerciante: lista de ids de items (deben coincidir con las
+# claves de [items.*] de arriba; "escudo" es alias de "escudo_tortuga"). Todos
+# los comerciantes del juego venden esta misma lista. La cantidad de cada item
+# es infinita: nunca se agota. El nombre y el precio que se muestran en la
+# tienda salen de la definicion del item en [items.*]. Editar esta lista cambia
+# lo que vende la tienda sin recompilar.
+[seller]
+items = ["espada", "hacha", "martillo", "arco_simple", "arco_compuesto",
+         "armadura_cuero", "armadura_placas", "tunica_azul",
+         "capucha", "casco_hierro", "sombrero_magico",
+         "escudo_tortuga", "escudo_hierro",
+         "vara_fresno", "baculo_nudoso", "baculo_engarzado", "flauta_elfica",
+         "pocion_vida", "pocion_mana"]
+
+# ------------------------------------------------------------
+# Sacerdote (priest)
+# ------------------------------------------------------------
+# Stock que vende el sacerdote: SOLO pociones y hechizos (varas/baculos magicos
+# de [items.magic.*]). Mismo formato y misma ventana de comercio que el seller;
+# cantidad infinita. Editar esta lista cambia lo que ofrece el sacerdote sin
+# recompilar.
+[priest]
+items = ["vara_fresno", "baculo_nudoso", "baculo_engarzado", "flauta_elfica",
+         "pocion_vida", "pocion_mana"]
+
+# ------------------------------------------------------------
 # Jugador
 # ------------------------------------------------------------
 [player]

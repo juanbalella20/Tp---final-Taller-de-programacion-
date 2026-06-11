@@ -15,6 +15,8 @@ private:
     std::vector<uint8_t> serialize_move(const GameMsg& msg);
     std::vector<uint8_t> serialize_map(const GameMsg& msg);
     std::vector<uint8_t> serialize_inventory(const GameMsg& msg);
+    // Catalogo de la tienda (MSG_LIST): items con precio para la ventana de comercio.
+    std::vector<uint8_t> serialize_seller_list(const GameMsg& msg);
     std::vector<uint8_t> serialize_text(const GameMsg& msg);
     std::vector<uint8_t> serialize_name(const GameMsg& msg);
     std::vector<uint8_t> serialize_private(const GameMsg& msg);

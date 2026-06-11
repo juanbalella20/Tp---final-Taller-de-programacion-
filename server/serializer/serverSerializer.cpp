@@ -12,8 +12,12 @@ ServerSerializer::ServerSerializer() {
     handlers[MSG_MOVE] = [this](const GameMsg& msg) { return serialize_move(msg); };
     handlers[MSG_SEND_MAP] = [this](const GameMsg& msg) { return serialize_map(msg); };
     handlers[MSG_INVENTORY] = [this](const GameMsg& msg) { return serialize_inventory(msg); };
+    // MSG_LIST (seller -> cliente): catalogo de la tienda con precio incluido.
+    // Lo abre la ventana de comercio del cliente. Distinto del texto que mandan
+    // banquero/sacerdote (esos siguen como MSG_CHAT).
+    handlers[MSG_LIST] = [this](const GameMsg& msg) { return serialize_seller_list(msg); };
     for (uint8_t type : {
-    (uint8_t)MSG_MEDITATE, (uint8_t)MSG_RESURRECT, (uint8_t)MSG_CURE, (uint8_t)MSG_LIST,
+    (uint8_t)MSG_MEDITATE, (uint8_t)MSG_RESURRECT, (uint8_t)MSG_CURE,
     (uint8_t)MSG_FOUND_CLAN, (uint8_t)MSG_JOIN_CLAN, (uint8_t)MSG_LEFT_CLAN, (uint8_t)MSG_CLAN_ACEP,
     (uint8_t)MSG_CLAN_BAN, (uint8_t)MSG_CLAN_KICK, (uint8_t)MSG_CLAN_RECH, (uint8_t)MSG_REV_CLAN,
     (uint8_t)MSG_CHAT, (uint8_t)MSG_TAKE
@@ -88,6 +92,41 @@ std::vector<uint8_t> ServerSerializer::serialize_inventory(const GameMsg& msg) {
         for (int shift = 56; shift >= 0; shift -= 8) {
             buf.push_back(static_cast<uint8_t>((uid >> shift) & 0xFF));
         }
+    }
+
+    return buf;
+}
+
+// Formato MSG_LIST (seller -> cliente): catalogo de la tienda. Por cada item:
+//   [id_size:1B][id][name_size:1B][name][type:1B][price:4B BE]
+// Es como serialize_inventory pero con precio (la tienda lo muestra) en vez de
+// uid (la tienda no equipa, no necesita instancia).
+std::vector<uint8_t> ServerSerializer::serialize_seller_list(const GameMsg& msg) {
+    const std::vector<ItemInfo>& items = msg.get_items();
+    uint16_t payload_len = 0;
+    for (const auto& item : items) {
+        payload_len += static_cast<uint16_t>(item.get_id().size()) + 1
+                     + static_cast<uint16_t>(item.get_name().size()) + 1
+                     + 1   // type
+                     + 4;  // price (uint32 big-endian)
+    }
+
+    std::vector<uint8_t> buf;
+    buf.reserve(LEN_HEADER + payload_len);
+    write_header(buf, MSG_LIST, payload_len);
+
+    for (const auto& item : items) {
+        const std::string& id = item.get_id();
+        buf.push_back(static_cast<uint8_t>(id.size()));
+        buf.insert(buf.end(), id.begin(), id.end());
+        const std::string& name = item.get_name();
+        buf.push_back(static_cast<uint8_t>(name.size()));
+        buf.insert(buf.end(), name.begin(), name.end());
+        buf.push_back(item.get_type());
+        uint32_t price_be = htonl(static_cast<uint32_t>(item.get_price()));
+        uint8_t price_bytes[sizeof(uint32_t)];
+        std::memcpy(price_bytes, &price_be, sizeof(uint32_t));
+        buf.insert(buf.end(), price_bytes, price_bytes + sizeof(uint32_t));
     }
 
     return buf;

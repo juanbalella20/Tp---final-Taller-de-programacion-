@@ -25,7 +25,7 @@ ClientDeserializer::ClientDeserializer() {
         deserialize_confirm_session(payload, msg);
     };
     for (uint8_t type : {
-        (uint8_t)MSG_MEDITATE, (uint8_t)MSG_RESURRECT, (uint8_t)MSG_CURE, (uint8_t)MSG_LIST,
+        (uint8_t)MSG_MEDITATE, (uint8_t)MSG_RESURRECT, (uint8_t)MSG_CURE,
         (uint8_t)MSG_FOUND_CLAN, (uint8_t)MSG_JOIN_CLAN, (uint8_t)MSG_LEFT_CLAN, (uint8_t)MSG_CLAN_ACEP,
         (uint8_t)MSG_CLAN_BAN, (uint8_t)MSG_CLAN_KICK, (uint8_t)MSG_CLAN_RECH, (uint8_t)MSG_REV_CLAN,
         (uint8_t)MSG_CHAT, (uint8_t)MSG_TAKE, (uint8_t)MSG_AUTH_ERROR, (uint8_t)MSG_CLAN_UPDATE
@@ -33,6 +33,11 @@ ClientDeserializer::ClientDeserializer() {
         handlers[type] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
             deserialize_text(payload, msg);
         };
+    };
+    // MSG_LIST (seller -> cliente): catalogo de la tienda con precio. Abre la
+    // ventana de comercio. Banquero/sacerdote siguen mandando texto (MSG_CHAT).
+    handlers[MSG_LIST] = [this](const std::vector<uint8_t>& payload, GameMsg& msg) {
+        deserialize_seller_list(payload, msg);
     };
     for (uint8_t type : {
         (uint8_t)MSG_BUY, (uint8_t)MSG_SELL, (uint8_t)MSG_DEPOSIT, (uint8_t)MSG_RETIRE
@@ -358,6 +363,30 @@ void ClientDeserializer::deserialize_inventory(const std::vector<uint8_t>& paylo
 
     msg.set_items(items);
 }
+
+// MSG_LIST (catalogo de la tienda). Por item: id, name, type y precio (4B BE).
+// Espejo de ServerSerializer::serialize_seller_list. El uid queda en 0: la
+// tienda solo muestra, no equipa.
+void ClientDeserializer::deserialize_seller_list(const std::vector<uint8_t>& payload, GameMsg& msg) {
+    size_t offset = 0;
+    std::vector<ItemInfo> items;
+
+    while (offset < payload.size()) {
+        std::string id   = read_string(payload, offset);
+        std::string name = read_string(payload, offset);
+        uint8_t type = payload[offset++];
+        if (offset + sizeof(uint32_t) > payload.size()) {
+            throw std::invalid_argument("Payload de MSG_LIST demasiado corto para el precio");
+        }
+        uint32_t price_be = 0;
+        std::memcpy(&price_be, payload.data() + offset, sizeof(uint32_t));
+        offset += sizeof(uint32_t);
+        items.emplace_back(id, name, static_cast<int>(ntohl(price_be)), type, 0);
+    }
+
+    msg.set_items(items);
+}
+
 void ClientDeserializer::deserialize_private(const std::vector<uint8_t>& payload, GameMsg& msg) {
     size_t offset = 0;
     msg.set_player_name(read_string(payload, offset));

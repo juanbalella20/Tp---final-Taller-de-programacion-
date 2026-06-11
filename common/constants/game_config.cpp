@@ -222,6 +222,23 @@ void GameConfig::load(const std::string& toml_path) {
         }
     }
 
+    // Stock del comerciante (ids del catalogo de items). Cantidad infinita.
+    // Si no esta en el config, la tienda queda vacia.
+    seller_items.clear();
+    if (auto arr = root.at_path("seller.items").as_array()) {
+        for (auto& elem : *arr) {
+            if (auto s = elem.value<std::string>()) seller_items.push_back(*s);
+        }
+    }
+
+    // Stock del sacerdote (solo pociones y hechizos). Mismo formato que el seller.
+    priest_items.clear();
+    if (auto arr = root.at_path("priest.items").as_array()) {
+        for (auto& elem : *arr) {
+            if (auto s = elem.value<std::string>()) priest_items.push_back(*s);
+        }
+    }
+
     // Cantidad maxima de items del inventario de un jugador.
     max_inventory_slots = root.at_path("player.max_inventory_slots").value_or(16);
 
