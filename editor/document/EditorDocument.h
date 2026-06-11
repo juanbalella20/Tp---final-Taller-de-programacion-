@@ -36,12 +36,12 @@ public:
   Map &map();
   const Map &map() const;
 
-  // Estado de edicion
-  void set_active_tool(ToolType t);
+  // Estado de edicion (la herramienta, el brush y la capa que usan los gestos)
+  void set_active_tool(ToolType t);   // herramienta activa de la toolbar
   ToolType active_tool() const;
-  void set_active_gid(int gid); // brush seleccionado en la paleta
+  void set_active_gid(int gid);       // brush seleccionado en la paleta
   int active_gid() const;
-  void set_active_layer(int idx);
+  void set_active_layer(int idx);     // capa activa; emite activeLayerChanged
   int active_layer() const;
   // Zona destino activa para la herramienta Teleport (nombre: "city", etc.).
   void set_active_dest_zone(const std::string &zone);
@@ -64,8 +64,8 @@ public:
   void new_map();
   bool open(const QString &path, QString *err); // via BinaryMapLoader
 
-  bool is_dirty() const;
-  QString file_path() const;
+  bool is_dirty() const;     // hay cambios sin guardar
+  QString file_path() const; // ruta del .bin abierto (vacia si es mapa nuevo)
 
 signals:
   // Tras new/open: el canvas reconstruye todo (sceneRect, repintado completo).

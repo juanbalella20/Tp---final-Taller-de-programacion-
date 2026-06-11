@@ -28,9 +28,10 @@ public:
   // Mapa nuevo: WIDTH x HEIGHT, dos capas ("ground", "buildings") llenas de 0.
   Map();
 
-  int width() const;     // WIDTH
-  int height() const;    // HEIGHT
-  int tile_size() const; // TILE_SIZE
+  int width() const;     // ancho del mapa en tiles (constante WIDTH)
+  int height() const;    // alto del mapa en tiles (constante HEIGHT)
+  int tile_size() const; // lado del tile en px (constante TILE_SIZE)
+  // true si (x,y) cae dentro del mapa.
   bool in_bounds(int x, int y) const;
 
   //  Tilesets
@@ -45,11 +46,14 @@ public:
   const TileDef *find_tile(int gid) const;
 
   // Capas (Ground=0, Buildings=1)
-  const std::vector<MapLayerData> &layers() const;
-  int layer_count() const; // LAYER_COUNT
+  const std::vector<MapLayerData> &layers() const; // las LAYER_COUNT capas
+  int layer_count() const;                         // LAYER_COUNT
+  // gid de la celda (x,y) en 'layer'. Lanza out_of_range si esta fuera.
   int get_cell(int layer, int x, int y) const;
+  // Escribe 'gid' en (x,y) de 'layer'. Lanza out_of_range si esta fuera.
   void set_cell(int layer, int x, int y, int gid);
 
+  // true si la celda bloquea el paso (o cae fuera del mapa).
   bool is_collidable(int x, int y) const;
 
   // Reemplaza todo el estado del mapa (lo usa EditorDocument::open al cargar un
@@ -69,7 +73,9 @@ public:
   // Teleports
   const std::vector<TeleportDef> &teleports() const;
   const TeleportDef *teleport_at(int x, int y) const; // nullptr si no hay
+  // Marca (x,y) como teleport a 'dest_zone' (actualiza el destino si ya existe).
   void add_teleport(int x, int y, const std::string &dest_zone);
+  // Quita el teleport en (x,y) si lo hay.
   void remove_teleport(int x, int y);
 
 

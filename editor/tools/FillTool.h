@@ -8,8 +8,6 @@
  * Relleno (flood fill 4-conexo): desde (x,y), reemplaza la region contigua de
  * celdas que comparten el gid original por el active_gid, en la capa activa.
  * Solo actua en el press; on_drag devuelve {} y paints_on_drag() es false.
- *
- *
  */
 class FillTool : public Tool {
 public:

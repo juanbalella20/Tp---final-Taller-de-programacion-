@@ -48,7 +48,6 @@ int Map::add_tileset(const std::string &name, const std::string &file_path,
 }
 
 int Map::next_firstgid() const {
-  // Mayor (firstgid + tile_count) entre los tilesets, o 1 si no hay ninguno.
   // Arranca en 1 porque el gid 0 esta reservado para "celda vacia".
   int next = 1;
   for (const Tileset &ts : tilesets_) {

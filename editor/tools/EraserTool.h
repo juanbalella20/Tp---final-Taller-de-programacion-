@@ -7,8 +7,6 @@
 /*
  * Goma: escribe gid 0 (celda vacia) en (x,y) de la capa activa. Es un lapiz que
  * siempre pinta 0, ignorando el active_gid. Pinta en press y en drag.
- *
- *
  */
 class EraserTool : public Tool {
 public:
