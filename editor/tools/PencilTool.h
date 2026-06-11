@@ -7,7 +7,7 @@
 /*
  * Lapiz: pinta el active_gid en la celda (x,y) de la capa activa. Pinta tanto
  * en el press como en el drag (trazo continuo). Devuelve un CellChange solo si
- * la celda cambia de valor (no genera deltas redundantes).
+ * la celda cambia de valor.
  */
 class PencilTool : public Tool {
 public:

@@ -3,8 +3,8 @@
 
 #include "../model/Map.h"
 
-// Helper local: arma el delta de pintar 'gid' en (x,y) de 'layer'. Devuelve {}
-// si la celda esta fuera del mapa o ya tiene ese gid (no genera delta nulo).
+// Helper local: arma el CellChange de pintar 'gid' en (x,y) de 'layer'. 
+// Devuelve {} si la celda esta fuera del mapa o ya tiene ese gid.
 static std::vector<CellChange> paint_cell(const Map &map, int layer, int x,
                                           int y, int gid) {
   if (!map.in_bounds(x, y))

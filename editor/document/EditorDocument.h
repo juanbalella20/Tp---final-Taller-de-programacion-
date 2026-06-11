@@ -106,7 +106,7 @@ private:
   // Fabrica la Tool concreta segun tool_.
   std::unique_ptr<Tool> make_tool(ToolType t) const;
   void begin_tool_gesture(ToolType tool, int x, int y);
-  // Aplica los deltas al Map en vivo y emite cellChanged por cada celda.
+  // Aplica los cambios al Map en vivo y emite cellChanged por cada celda.
   void apply_changes_live(std::vector<CellChange> changes);
   void set_dirty(bool d);
 };

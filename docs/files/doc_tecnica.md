@@ -527,8 +527,6 @@ Offset  Bytes          Descripción
 0x17    00 00          tile (1,1) = 0
 ```
 
-<!-- TODO: completar con el ejemplo real del formato -->
-
 ### Código de referencia (serialización)
 
 <!-- TODO: pegar aquí el fragmento de código de serialize() / deserialize() de MapData -->
@@ -544,6 +542,111 @@ void MapData::deserialize(QDataStream& stream) {
     // TODO: pegar el código real aquí
 }
 ```
+## Documentación técnica: editor de mapas
+
+### Objetivo y alcance
+
+El editor es una aplicación de escritorio desarrollada con C++20 y Qt6 Widgets.
+Permite:
+
+- cargar spritesheets PNG como tilesets;
+- seleccionar tiles mediante su identificador global (`gid`);
+- editar dos capas: `ground` y `buildings`;
+- usar lápiz, goma y relleno;
+- marcar colisiones y teleports;
+- abrir y guardar mapas en formato binario `.bin`.
+
+El mapa tiene dimensiones fijas definidas en `game_constants.h`:
+
+| Propiedad | Valor |
+|---|---:|
+| Ancho | 30 celdas |
+| Alto | 16 celdas |
+| Tamaño de tile | 64 px |
+| Capas de tiles | 2 |
+
+### Diagrama de clases central
+
+Este diagrama se centra en `EditorDocument`, porque conecta los eventos de la
+interfaz, las estrategias de edición y el modelo.
+
+![Clases centrales del editor](../diagrams/editor/1.svg)
+
+### Secuencia de edición de tiles
+
+La siguiente secuencia representa lápiz y goma. El relleno termina después del
+`press` porque `paints_on_drag()` devuelve `false`.
+
+![Secuencia de edición de tiles](../diagrams/editor/4.svg)
+
+#### Herramientas especiales
+
+`Collision` y `Teleport` aparecen en la misma toolbar, pero no implementan
+`Tool`:
+
+- **Collision:** `EditorDocument` fija en el `press` el valor booleano que
+  pintará durante todo el arrastre. Modifica `Map::collision_`.
+- **Teleport:** funciona como toggle de una celda. Agrega o elimina un
+  `TeleportDef{x, y, dest_zone}`.
+
+En ambos casos se emite `cellChanged(-1,x,y)`. El valor `-1` indica que cambió
+una superposición visual y no una capa de gids.
+
+### Tilesets, selección y render
+
+![Tilesets, selección y render](../diagrams/editor/2.svg)
+
+#### `TileLibrary`
+
+`TileLibrary::loadTileset(path,tileSize)`:
+
+1. carga el PNG en `m_masterPixmap`;
+2. calcula cuántas filas y columnas completas contiene;
+3. recorta cada tile y lo guarda en `m_tiles`;
+4. conserva dimensiones y ruta de origen.
+
+`m_masterPixmap` sirve para mostrar la plancha completa en
+`TilesetSelectorView`. `m_tiles` permite obtener directamente un tile mediante
+su índice local.
+
+La llamada a `m_tiles.reserve(columns * rows)` reserva capacidad para evitar
+realocaciones durante los `push_back`; no crea elementos.
+
+Si el ancho o alto del PNG no es múltiplo de `tileSize`, los píxeles sobrantes
+se ignoran.
+
+#### Identificadores locales y globales
+
+Cada tileset ocupa un rango global: gid = firstgid + localId
+
+El gid `0` está reservado para una celda vacía. `Map::next_firstgid()` asigna el
+primer gid libre al registrar un tileset.
+
+`TilesetSelectorView` transforma el click sobre el PNG en un `localId`, suma
+`firstgid` y emite `tileSelected(gid, pixmap)`.
+
+#### Caché de render
+
+`MapEditorScene::rebuildTileCache()` recorre los tilesets registrados, carga
+cada PNG mediante una `TileLibrary` temporal y construye:
+
+```cpp
+QHash<int, QPixmap> m_tileCache; // gid -> imagen lista para dibujar
+```
+
+Así, al cambiar una celda, `updateVisualItem()` puede resolver el pixmap por gid
+sin volver a recortar el spritesheet.
+
+### Persistencia: guardar y abrir
+
+- abrir: `EditorDocument::open()` usa `BinaryMapLoader`;
+- guardar: `EditorWindow::save_to()` usa `BinaryMapSaver`.
+
+![Secuencia de persistencia](../diagrams/editor/5.svg)
+
+Las rutas de PNG se guardan relativas a la carpeta de recursos compartida.
+`paths::resource_relative()` prepara la ruta al guardar y
+`paths::resolve_resource()` la convierte nuevamente en una ruta cargable
 
 ---
 
@@ -555,23 +658,3 @@ void MapData::deserialize(QDataStream& stream) {
 
 [Descripción. Ejemplo: "El servidor es la única fuente de verdad (server-authoritative). Los clientes envían intenciones (mover arriba) y el servidor valida y aplica el cambio, luego broadcastea el nuevo estado a todos."]
 
-### [Otra decisión importante]
-
-<!-- TODO: agregar otras decisiones de diseño relevantes del proyecto -->
-
-[Descripción.]
-
-## Checklist antes de entregar
-
-- [ ] La documentación explica el objetivo del proyecto.
-- [ ] La arquitectura general no es genérica: menciona componentes reales del proyecto.
-- [ ] Los diagramas muestran clases importantes, no todas las clases.
-- [ ] Los diagramas no incluyen getters, setters ni detalles triviales.
-- [ ] Hay al menos un diagrama de clase útil.
-- [ ] Hay al menos un diagrama de secuencia de una comunicación importante.
-- [ ] El modelo de threading está explicado.
-- [ ] El protocolo de comunicación tiene formato, tabla de mensajes y errores.
-- [ ] El formato de archivos tiene estructura, ejemplo y validaciones.
-- [ ] Las decisiones de diseño explican por qué se resolvió así.
-- [ ] Hay una guía mínima para extender el proyecto.
-- [ ] Se eliminaron secciones que no aplican al proyecto real.

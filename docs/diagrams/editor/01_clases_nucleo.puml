@@ -1,0 +1,113 @@
+@startuml
+title Editor de mapas - clases centrales
+
+package "GUI / Render (Qt)" {
+  class EditorWindow {
+    - doc_: EditorDocument
+    - selector_: TilesetSelectorView*
+    - map_scene_: MapEditorScene*
+    --
+    - build_workspace()
+    - build_tools_toolbar()
+    - load_tileset_path()
+    - save_to()
+  }
+
+  class MapEditorScene {
+    - m_document: EditorDocument*
+    - m_visualItems
+    - m_tileCache: QHash<int,QPixmap>
+    --
+    + rebuildTileCache()
+    + refreshAll()
+    - handleCellChanged(layer,x,y)
+    - mousePressEvent()
+    - mouseMoveEvent()
+    - mouseReleaseEvent()
+  }
+}
+
+package "Controlador" {
+  class EditorDocument {
+    - map_: Map
+    - tool_: ToolType
+    - active_gid_: int
+    - active_layer_: int
+    - gesture_tool_: unique_ptr<Tool>
+    --
+    + apply_tool_press(x,y)
+    + apply_tool_drag(x,y)
+    + apply_tool_release(x,y)
+    + register_tileset(...)
+    + open(path,err)
+    - apply_changes_live(changes)
+    --
+    signal cellChanged(layer,x,y)
+    signal mapReset()
+    signal tilesetsChanged()
+  }
+}
+
+package "Edición" {
+  interface Tool {
+    + on_press(Map,...): vector<CellChange>
+    + on_drag(Map,...): vector<CellChange>
+    + paints_on_drag(): bool
+  }
+
+  class PencilTool {
+    + on_press(...)
+    + on_drag(...)
+    + paints_on_drag(): true
+  }
+
+  class EraserTool {
+    + on_press(...)
+    + on_drag(...)
+    + paints_on_drag(): true
+  }
+
+  class FillTool {
+    + on_press(...)
+    + on_drag(...)
+    + paints_on_drag(): false
+  }
+
+  class CellChange {
+    + x: int
+    + y: int
+    + old_gid: int
+    + new_gid: int
+  }
+}
+
+class Map {
+    - tilesets_
+    - layers_: 2 matrices de gid
+    - collision_: matriz 0/1
+    - teleports_
+    - tile_index_: gid -> TileDef
+    --
+    + get_cell(layer,x,y): int
+    + set_cell(layer,x,y,gid)
+    + add_tileset(...)
+    + set_blocked(x,y,blocked)
+    + add_teleport(...)
+    + remove_teleport(x,y)
+    + load_from(...)
+  }
+
+EditorWindow *-- EditorDocument : compone
+EditorWindow *-- MapEditorScene : crea
+MapEditorScene --> EditorDocument : apply_tool_()
+EditorDocument ..> MapEditorScene
+EditorDocument --> Tool : make_tool()
+PencilTool ..|> Tool
+EraserTool ..|> Tool
+FillTool ..|> Tool
+
+Tool ..> Map 
+Tool ..> CellChange : produce 0..*
+EditorDocument ..> CellChange : aplica new_gid
+
+@enduml

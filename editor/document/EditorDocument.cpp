@@ -93,7 +93,7 @@ void EditorDocument::begin_tool_gesture(ToolType tool, int x, int y) {
     paint_collision(x, y);
     return;
   }
-  // Resto: abre un gesto nuevo, fabrica la Tool y aplica sus primeros deltas.
+  // Resto: abre un gesto nuevo, fabrica la Tool y aplica cambios
   gesture_layer_ = active_layer_;
   gesture_tool_ = make_tool(tool);
   apply_changes_live(
@@ -145,7 +145,7 @@ void EditorDocument::toggle_teleport(int x, int y) {
 }
 
 void EditorDocument::apply_changes_live(std::vector<CellChange> changes) {
-  // Aplica cada delta al Map en vivo y avisa al canvas para que repinte.
+  // Aplica cada cambio al Map en vivo y avisa al canvas para que repinte.
   for (const CellChange &c : changes) {
     map_.set_cell(gesture_layer_, c.x, c.y, c.new_gid);
     emit cellChanged(gesture_layer_, c.x, c.y);

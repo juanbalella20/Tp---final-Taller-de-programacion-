@@ -1,0 +1,98 @@
+@startuml
+title Editor de mapas - tilesets, seleccion y render
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam defaultFontName DejaVu Sans
+
+package "Registro y seleccion" #EFF6FF {
+  class EditorWindow #DBEAFE {
+    - load_tileset_path(path)
+    - select_tileset(index)
+    --
+    valida PNG
+    registra metadata
+    conecta la seleccion con active_gid
+  }
+
+  class TilesetSelectorView #DBEAFE {
+    - m_library: TileLibrary
+    - m_firstGid: int
+    - m_selectedLocalId: int
+    --
+    + setTileset(path,tileSize,firstGid)
+    + tileIdAt(position): int
+    + selectedGid(): int
+    --
+    signal tileSelected(gid,pixmap)
+  }
+
+  class EditorDocument #EDE9FE {
+    + register_tileset(...)
+    + set_active_gid(gid)
+  }
+}
+
+package "Imagen y metadata" #FFFBEB {
+  class TileLibrary #E0F2FE {
+    - m_masterPixmap: QPixmap
+    - m_tiles: vector<QPixmap>
+    - m_tileSize: int
+    - m_columns: int
+    - m_rows: int
+    --
+    + loadTileset(path,tileSize): bool
+    + getTile(localId): QPixmap
+    + masterPixmap(): QPixmap
+  }
+
+  class Map #FEF3C7 {
+    - tilesets_: vector<Tileset>
+    - layers_: matrices de gid
+    --
+    + add_tileset(...)
+    + next_firstgid(): int
+  }
+
+  class Tileset #FEF3C7 {
+    + name: string
+    + file_path: string
+    + columns: int
+    + tile_count: int
+    + firstgid: int
+    + collidable: bool
+  }
+}
+
+package "Render" #F0FDF4 {
+  class MapEditorScene #DCFCE7 {
+    - m_tileCache: QHash<int,QPixmap>
+    --
+    + rebuildTileCache()
+    - updateVisualItem(layer,x,y)
+  }
+}
+
+EditorWindow ..> TileLibrary : 1. valida y cuenta tiles
+EditorWindow --> EditorDocument : 2. register_tileset()
+EditorDocument --> Map : 3. add_tileset()
+Map *-- "0..*" Tileset
+
+EditorWindow --> TilesetSelectorView : 4. setTileset(...)
+TilesetSelectorView *-- TileLibrary
+TilesetSelectorView ..> EditorWindow : 5. tileSelected(gid)
+EditorWindow --> EditorDocument : 6. set_active_gid(gid)
+
+MapEditorScene --> Map : lee tilesets y gids
+MapEditorScene ..> TileLibrary : carga cada PNG
+TileLibrary ..> MapEditorScene : getTile(localId)
+
+note bottom of TileLibrary
+  localId = row * columns + column
+  gid = firstgid + localId
+end note
+
+@enduml
