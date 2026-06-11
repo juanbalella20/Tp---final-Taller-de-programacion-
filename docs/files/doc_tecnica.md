@@ -426,6 +426,90 @@ Cada mensaje tiene el siguiente formato:
 ### Manejo de desconexión
 
 
+---
+
+## Persistencia
+
+El servidor persiste el estado del juego en archivos binarios ubicados en `data/persistence/`. Existen tres archivos:
+
+| Archivo | Contenido |
+|---|---|
+| `players.dat` | Array de registros `PlayerRecord` de tamaño fijo |
+| `index.dat` | Índice nombre → offset en `players.dat` |
+| `clans.dat` | Array de registros `ClanRecord` de tamaño fijo |
+
+### Clases involucradas
+
+```
+AuthService
+  └── PlayerPersistence   (I/O de players.dat + index.dat)
+        └── PlayerSerializer  (Player ↔ PlayerRecord)
+
+GameLoop
+  ├── PlayerPersistence   (registro, login, logout, periódico)
+  └── ClanPersistence     (clans.dat)
+        └── ClanSerializer    (Clan ↔ ClanRecord)
+```
+
+- **`PlayerPersistence`** — abre, crea y mantiene los dos archivos de jugadores. El índice se carga completo en memoria (`std::map<string, uint64_t>`) al iniciar; las búsquedas son O(1).
+- **`ClanPersistence`** — lee y escribe el archivo de clanes completo de una sola vez (los clanes son pocos).
+- **`PlayerSerializer` / `ClanSerializer`** — convierten entre los objetos de dominio (`Player`, `Clan`) y los structs POD (`PlayerRecord`, `ClanRecord`) con buffers de tamaño fijo. Los stats del inventario no se persisten: solo se guarda el ID del ítem y se reconstruye el objeto mediante `ItemCatalog::make_item(id)` al cargar.
+- **`AuthService`** — envuelve la lógica de registro (`try_register`) y login (`try_login`) sobre `PlayerPersistence`.
+
+### Formato binario
+
+Los structs usan `#pragma pack(push, 1)` (sin padding). Todos los strings son buffers de tamaño fijo rellenados con `\0`.
+
+**`PlayerRecord`** — campos relevantes:
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `name` | `char[32]` | Clave primaria |
+| `password` | `char[32]` | Texto plano |
+| `race` / `klass` | `uint8_t` | Inmutables tras la creación |
+| `zone` | `uint8_t` | Zona actual del jugador |
+| `is_ghost` | `uint8_t` | 0/1 |
+| `level` / `experience` | `int32_t` / `uint32_t` | Progresión |
+| `lives` / `mana` | `uint32_t` | Estado actual de HP y MP |
+| `gold` | `uint32_t` | Oro acumulado |
+| `coord_x` / `coord_y` | `int32_t` | Posición en el mapa |
+| `inv_count` | `uint8_t` | Slots ocupados (máx. 25) |
+| `items[25]` | `ItemRecord[]` | ID + `equipped` por slot |
+
+> El estado `meditating` **no se persiste**: se reinicia a `false` en cada carga.
+
+**`ClanRecord`** — almacena nombre, fundador, review (hasta 1024 chars), y arrays de hasta 64 miembros y 64 baneados. La pertenencia al clan vive en `Clan::members`; el `PlayerRecord` no guarda a qué clan pertenece el jugador.
+
+### Ciclo de vida del guardado
+
+```
+Registro   → save() inmediato (append a players.dat + actualiza index.dat)
+Login      → load() desde disco (o reutiliza copia en memoria si ya está activo)
+Logout     → save() antes de retirar al jugador de la memoria
+Cada 30 s  → persist_online_players() guarda todos los jugadores activos
+             persist_clans() reescribe clans.dat completo (truncate + write)
+Inicio     → load_persisted_clans() carga todo clans.dat en memoria
+```
+
+El intervalo periódico está definido en `game_constants.h`:
+
+```cpp
+#define PERSIST_INTERVAL_TICKS 600  // 600 ticks × 50 ms = 30 segundos
+```
+
+### Flujo de login / registro
+
+**Registro** (`handle_register`):
+1. `AuthService::try_register` verifica que el nombre no exista en el índice.
+2. Se crea el `Player` con raza y clase elegidas.
+3. `PlayerSerializer::to_record` convierte el objeto a `PlayerRecord`.
+4. `PlayerPersistence::save` hace append en `players.dat` y actualiza `index.dat`.
+
+**Login** (`handle_login`):
+1. `AuthService::try_login` busca el nombre en el índice, lee el `PlayerRecord` y compara la contraseña.
+2. Si el jugador ya está en memoria (re-login), se reutiliza directamente.
+3. Si no, `PlayerSerializer::from_record` reconstruye el `Player`: llama a `ItemCatalog::make_item(id)` por cada slot ocupado para restaurar el inventario.
+
 ## Editor de mapas
 
 ### Objetivo y alcance
