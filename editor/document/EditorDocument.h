@@ -11,13 +11,11 @@
 #include "../model/Map.h"
 #include "../tools/ToolType.h"
 #include "CellChange.h"
-#include "Command.h"
-#include "SetCollisionCommand.h"
 #include "Tool.h"
 
 /*
  * Controlador del editor. Ata el modelo (Map) con el estado de edicion
- * (herramienta/brush/capa activos), el undo/redo y la persistencia.
+ * (herramienta/brush/capa activos) y la persistencia.
  *
  * Es el UNICO que muta el Map: los widgets (canvas, paleta, panel de capas)
  * solo le mandan intenciones y leen su estado. No hay logica de negocio en los
@@ -55,19 +53,12 @@ public:
                        int columns, int tile_count, bool collidable);
 
   // Punto de entrada de las herramientas
-  // Aplican la herramienta activa en (x,y). Internamente acumulan CellChange
-  // y, al soltar, arman un unico SetTilesCommand y lo apilan en el undo stack.
+  // Aplican la herramienta activa en (x,y), mutando el Map en vivo.
   void apply_tool_press(int x, int y);
   // Gesto temporal sin cambiar la herramienta seleccionada en la toolbar.
   void apply_tool_press(int x, int y, ToolType tool_override);
   void apply_tool_drag(int x, int y);
   void apply_tool_release(int x, int y);
-
-  // Undo / Redo
-  void undo();
-  void redo();
-  bool can_undo() const;
-  bool can_redo() const;
 
   // Persistencia
   void new_map();
@@ -86,9 +77,6 @@ signals:
   void dirtyChanged(bool dirty);
   void activeLayerChanged(int idx);
   void tilesetsChanged();
-  // Las pilas de undo/redo cambiaron: la GUI actualiza el enable de sus
-  // acciones.
-  void undoStackChanged();
 
 private:
   Map map_;
@@ -98,14 +86,10 @@ private:
   std::string active_dest_zone_ = "city"; // zona destino default de Teleport
   bool dirty_ = false;
   QString path_;
-  std::vector<std::unique_ptr<Command>> undo_stack_;
-  std::vector<std::unique_ptr<Command>> redo_stack_;
 
   // Estado del gesto en curso (entre press y release). gesture_tool_ es la
-  // Tool fabricada en el press; gesture_changes_ acumula todos los CellChange
-  // del gesto para armar UN solo SetTilesCommand al soltar.
+  // Tool fabricada en el press; gesture_layer_ es la capa sobre la que pinta.
   std::unique_ptr<Tool> gesture_tool_;
-  std::vector<CellChange> gesture_changes_;
   int gesture_layer_ = 0;
 
   // Estado del gesto de la herramienta Colision. Es un trazo de pintura sobre
@@ -113,23 +97,19 @@ private:
   // inverso del estado de la celda inicial) y se aplica en press+drag.
   bool collision_gesture_active_ = false;
   bool collision_paint_value_ = true; // valor que pinta el trazo en curso
-  std::vector<SetCollisionCommand::BlockedChange> collision_changes_;
 
-  // Toggle de teleport en (x,y) con la zona destino activa, como un
-  // ToggleTeleportCommand apilado para undo/redo. Lo llama apply_tool_press
-  // cuando la herramienta activa es Teleport (no pasa por el flujo de gids).
+  // Marca/desmarca (x,y) como teleport con la zona destino activa. Lo llama
+  // apply_tool_press cuando la herramienta activa es Teleport (no pasa por el
+  // flujo de gids).
   void toggle_teleport(int x, int y);
   // Pinta una celda de la grilla de colision dentro del gesto en curso, con el
-  // valor fijado en el press. Acumula el delta para el SetCollisionCommand.
+  // valor fijado en el press.
   void paint_collision(int x, int y);
   // Fabrica la Tool concreta segun tool_.
   std::unique_ptr<Tool> make_tool(ToolType t) const;
   void begin_tool_gesture(ToolType tool, int x, int y);
-  // Aplica los deltas al Map en vivo, emite cellChanged y los acumula en
-  // gesture_changes_ (para el Command que se arma al soltar).
+  // Aplica los deltas al Map en vivo y emite cellChanged por cada celda.
   void apply_changes_live(std::vector<CellChange> changes);
-  // Apila los cambios (ya aplicados) como un SetTilesCommand para undo/redo.
-  void push_committed_changes(int layer, std::vector<CellChange> changes);
   void set_dirty(bool d);
 };
 

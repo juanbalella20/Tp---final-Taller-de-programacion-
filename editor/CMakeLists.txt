@@ -12,9 +12,6 @@ set(MAP_EDITOR_CORE_SOURCES
     render/MapEditorScene.cpp
     render/TileLibrary.cpp
     document/EditorDocument.cpp
-    document/SetTilesCommand.cpp
-    document/SetCollisionCommand.cpp
-    document/ToggleTeleportCommand.cpp
     tools/PencilTool.cpp
     tools/EraserTool.cpp
     tools/FillTool.cpp
@@ -43,3 +40,7 @@ target_compile_features(map_editor_core PUBLIC cxx_std_20)
 add_executable(map_editor main.cpp)
 target_link_libraries(map_editor PRIVATE map_editor_core)
 target_compile_features(map_editor PRIVATE cxx_std_20)
+
+# Instalacion: el editor va junto a client/server en <prefix>/bin (~/.local/bin).
+# Qt6 es del sistema (apt), asi que no hay libs propias que copiar.
+install(TARGETS map_editor RUNTIME DESTINATION bin)
