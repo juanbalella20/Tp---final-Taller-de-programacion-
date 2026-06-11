@@ -1,9 +1,4 @@
-# Manual de Usuario — [Nombre del Proyecto]
-
-> **Cómo usar este template:** Reemplazá todo lo que está entre corchetes `[así]` con la información real.
-> Las líneas marcadas con `<!-- TODO -->` son las que tenés que completar o borrar si no aplica.
-
----
+# Manual de Usuario — Argentum Online
 
 ## Tabla de contenidos
 
@@ -12,16 +7,17 @@
 3. [Instalación de dependencias](#instalación-de-dependencias)
 4. [Compilación del proyecto](#compilación-del-proyecto)
 5. [Configuración inicial](#configuración-inicial)
-6. [Levantar el servidor](#levantar-el-servidor)
-7. [Lanzar el cliente y jugar](#lanzar-el-cliente-y-jugar)
-8. [Editor de mapas](#editor-de-mapas)
-9. [Solución de problemas frecuentes](#solución-de-problemas-frecuentes)
+6. [Modificar mapas y configuración sin recompilar](#modificar-mapas-y-configuración-sin-recompilar)
+7. [Levantar el servidor](#levantar-el-servidor)
+8. [Lanzar el cliente y jugar](#lanzar-el-cliente-y-jugar)
+9. [Editor de mapas](#editor-de-mapas)
+10. [Solución de problemas frecuentes](#solución-de-problemas-frecuentes)
 
 ---
 
 ## Introducción
 
-[Nombre del Proyecto] es una recreación del juego Argentum Online que incluye tres componentes:
+Este proyecto es una recreación del juego Argentum Online que incluye tres componentes:
 
 - **Servidor**: gestiona el estado del mundo del juego y las conexiones de los clientes.
 - **Cliente**: permite a los jugadores conectarse, ver el mapa y jugar.
@@ -35,61 +31,24 @@ Este manual explica paso a paso cómo compilar, configurar y usar cada component
 
 ### Sistema operativo
 
-- **Ubuntu/Debian** (recomendado y probado)
-
----
-
-## Instalación de dependencias
-
-Antes de compilar, instalá todas las dependencias ejecutando el siguiente comando:
-
-```bash
-sudo apt update
-sudo apt install -y \
-    build-essential cmake pkg-config \
-    qt6-base-dev \
-    libasound2-dev libpulse-dev \
-    libx11-dev libxext-dev libxrandr-dev libxcursor-dev \
-    libxfixes-dev libxi-dev libxss-dev libxtst-dev \
-    libxkbcommon-dev libdrm-dev libgbm-dev \
-    libgl1-mesa-dev libegl1-mesa-dev \
-    libwayland-dev wayland-protocols libdecor-0-dev \
-    libpipewire-0.3-dev libudev-dev
-```
-
-Las bibliotecas SDL3, SDL3_image, SDL3_ttf y SDL3_mixer están incluidas en el
-repositorio como submódulos de Git y se compilan junto con el proyecto. No es
-necesario instalar paquetes `libsdl` del sistema.
-
-### Tabla de dependencias
-
-| Dependencia | Versión mínima | Comando de instalación |
-|-------------|----------------|------------------------|
-| GNU G++ | 11, con soporte para C++17 | `sudo apt install build-essential` |
-| CMake | 3.16 | `sudo apt install cmake` |
-| pkg-config | Versión provista por el sistema | `sudo apt install pkg-config` |
-| Qt6 Widgets | 6.x | `sudo apt install qt6-base-dev` |
-| Soporte de audio | Versión provista por el sistema | `sudo apt install libasound2-dev libpulse-dev libpipewire-0.3-dev` |
-| Soporte gráfico X11 | Versión provista por el sistema | `sudo apt install libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev` |
-| Soporte gráfico Wayland | Versión provista por el sistema | `sudo apt install libwayland-dev wayland-protocols libdecor-0-dev libxkbcommon-dev` |
-| Mesa, DRM y dispositivos | Versión provista por el sistema | `sudo apt install libdrm-dev libgbm-dev libgl1-mesa-dev libegl1-mesa-dev libudev-dev` |
+- **Ubuntu/Debian**
 
 ---
 
 ## Compilación del proyecto
 
-### Opción A — Instalador automático (recomendado)
+### Instalador automático
 
-El proyecto incluye `install.sh`, que hace todo de punta a punta: instala las
+El proyecto incluye `install.sh`, que instala las
 dependencias de sistema (apt), inicializa los submódulos de SDL, compila,
 corre los tests unitarios e instala el juego en tu home:
 
 ```bash
 # Clonar el repositorio (con submódulos)
-git clone --recurse-submodules https://github.com/[usuario]/[repositorio].git
+git clone --recurse-submodules https://github.com/juanbalella20/Tp---final-Taller-de-programacion-.git
 cd [repositorio]
 
-# Ejecutar el instalador (pide sudo para apt; no hace falta chmod)
+# Ejecutar el instalador
 bash install.sh
 ```
 
@@ -103,21 +62,8 @@ Al terminar, todo queda instalado así:
 | Configuración (`config.toml`) | `~/.config/argentum/` |
 
 Si `~/.local/bin` está en tu `PATH` (en Ubuntu suele estarlo), podés correr
-`server 8080`, `client` y `map_editor` desde cualquier directorio.
-
-### Binarios generados (compilación manual)
-
-Tras compilar, los ejecutables quedan en:
-
-| Binario | Ruta | Descripción |
-|---------|------|-------------|
-| Servidor | `build/Debug/server` | Servidor del juego |
-| Cliente  | `build/Debug/client` | Cliente del juego |
-| Editor   | `build/Debug/map_editor` | Editor de mapas |
-
-> Con la compilación manual, ejecutá los binarios **desde la raíz del repo**
-> (los assets y `config.toml` se buscan primero en `~/.local/share/argentum/` y
-> `~/.config/argentum/`, y si no existen, en el directorio actual).
+`server 8080`, `client` y `map_editor` desde cualquier directorio. El resto de este
+manual asume que el juego se instaló de esta forma.
 
 ---
 
@@ -133,19 +79,17 @@ Los archivos de recursos (tiles, sprites, sonidos) deben estar en la siguiente u
 │   ├── tiles/          ← tilesets del mapa
 │   ├── sprites/        ← sprites de personajes y objetos
 │   └── sounds/         ← efectos de sonido
-<!-- TODO: ajustar la estructura real de carpetas -->
 ```
 
 ### Archivos de configuración
 
-#### Servidor — `[ruta/config_servidor]`
+#### Config.toml
 
-```ini
+```toml
 # Ejemplo de configuración del servidor
-port = 7171
-max_players = [N]
-map_file = maps/[nombre_mapa_default].map
-<!-- TODO: completar con todos los parámetros reales -->
+[network]
+host = "localhost"
+port = "8080"
 ```
 
 | Parámetro | Descripción | Valor por defecto |
@@ -153,17 +97,42 @@ map_file = maps/[nombre_mapa_default].map
 | `port` | Puerto TCP que escucha el servidor | `7171` |
 | `max_players` | Máximo de jugadores simultáneos | `[N]` |
 | `map_file` | Ruta al mapa que carga al iniciar | `[valor]` |
-<!-- TODO: completar con todos los parámetros reales -->
 
-#### Cliente — `[ruta/config_cliente]`
 
-<!-- TODO: completar con el archivo de configuración real del cliente, si existe -->
+---
 
-```ini
-server_ip = 127.0.0.1
-server_port = 7171
-<!-- TODO: completar con todos los parámetros reales -->
-```
+## Modificar mapas y configuración sin recompilar
+
+Los mapas y la configuración **no forman parte del programa**: se leen cada vez que
+arranca el juego. Por eso, para cambiar un mapa o ajustar la configuración **nunca hace
+falta volver a compilar ni reinstalar**. Alcanza con editar el archivo correspondiente
+y volver a iniciar el servidor y el cliente.
+
+Tras instalar con `install.sh`, los archivos que podés editar están acá:
+
+| Qué querés cambiar                  | Archivo a editar                                    |
+|-------------------------------------|-----------------------------------------------------|
+| Qué mapa usa cada zona, NPCs, etc.  | `~/.config/argentum/config.toml`                    |
+| El contenido de un mapa             | `~/.local/share/argentum/data/maps/.../<mapa>.bin`  |
+
+### Cambiar el mapa de una zona
+
+1. Abrí `~/.config/argentum/config.toml` con cualquier editor de texto.
+2. Buscá la zona que querés cambiar (sección `[zones.<nombre>]`).
+3. Reemplazá el nombre del archivo en la línea `map = "..."` por el del mapa nuevo:
+
+   ```toml
+   [zones.desert]
+   map = "data/maps/desert/map-2.bin"   # ← cambiá el nombre por el del mapa nuevo
+   allowed_npcs = ["goblin", "spider"]
+   # ...
+   ```
+
+4. Guardá el archivo y volvé a iniciar el servidor y el cliente. El nuevo mapa se carga
+   automáticamente.
+
+> 💡 El servidor y el cliente leen **el mismo** `config.toml`, así que con cambiarlo en
+> un solo lugar alcanza: nunca quedan cargando mapas distintos.
 
 ---
 
@@ -174,11 +143,11 @@ server_port = 7171
 ### Iniciar el servidor
 
 ```bash
-./build/server [opciones]
+server 8080
 ```
 
 <!-- TODO: documentar las opciones disponibles, por ejemplo:
-./build/server --port 7171 --map maps/default.map
+server --port 7171 --map maps/default.map
 -->
 
 Opciones disponibles:
@@ -200,11 +169,9 @@ Cuando el servidor arranca correctamente, deberías ver algo como:
 
 ### Cargar un mapa específico
 
-<!-- TODO: explicar cómo se especifica el mapa a cargar. ¿Argumento? ¿Config? -->
-
-```bash
-./build/server [--map ruta/al/mapa.map]
-```
+Para que el servidor arranque con otro mapa, se cambia el nombre del `.bin` en el
+`config.toml`. Los pasos están en
+[Cambiar el mapa de una zona](#cambiar-el-mapa-de-una-zona).
 
 ### Detener el servidor
 
@@ -213,8 +180,6 @@ Para cerrar el servidor limpiamente:
 ```bash
 # Presionar Ctrl+C en la terminal donde corre el servidor
 ```
-
-<!-- TODO: si hay un comando especial o señal, documentarlo -->
 
 ---
 
@@ -225,26 +190,38 @@ Para cerrar el servidor limpiamente:
 Con el servidor ya corriendo, ejecutar:
 
 ```bash
-./build/client [opciones]
+client
 ```
-
-<!-- TODO: documentar opciones, por ejemplo --host y --port -->
 
 ### Pantalla de inicio
 
-<!-- TODO: insertar screenshot de la primera pantalla que ve el usuario -->
+![Pantalla de inicio](../../assets/screenshots/pantalla-inicio.png)
 
-![Pantalla de inicio](assets/screenshots/pantalla_inicio.png)
+Seleccionar Jugar o Settings (resolución y pantalla)
 
-<!-- TODO: describir qué hace el usuario en esta pantalla (ingresar nombre, IP del servidor, etc.) -->
+### Pantalla settings
 
-### Pantalla principal del juego
+![Settings](../../assets/screenshots/config.png)
 
-<!-- TODO: insertar screenshot del juego en funcionamiento con el mapa visible -->
+- Para jugar en ventana:
+    - Modificar la resolución a gusto
+    - Dejar tildado "Ventana"
+- Para jugar en pantalla completa
+    - Tildar "Pantalla completa"
 
-![Juego en funcionamiento](assets/screenshots/juego_principal.png)
+![Sign-up](../../assets/screenshots/create-account.png)
 
-### Controles
+Crear nuevo usuario
+
+![Login](../../assets/screenshots/login.png)
+
+Ingresar con cuenta existente
+
+### Juego
+
+![Juego en funcionamiento](../../assets/screenshots/in-game.png)
+
+### Controles básicos
 
 | Tecla / Acción | Resultado |
 |----------------|-----------|
@@ -252,30 +229,26 @@ Con el servidor ya corriendo, ejecutar:
 | `S` / `↓` | Mover hacia abajo |
 | `A` / `←` | Mover hacia la izquierda |
 | `D` / `→` | Mover hacia la derecha |
-| `[tecla]` | [acción] |
-| `[tecla]` | [acción] |
-| `Esc` | [acción — salir, menú, etc.] |
-
-<!-- TODO: completar con todos los controles reales del juego -->
+| `Esc` | Salir |
 
 ## Editor de mapas
 
 ### Iniciar el editor
 
 ```bash
-./build/editor [opciones]
+map_editor
 ```
 
 ### Interfaz del editor
 
-![Editor de mapas](assets/screenshots/editor1.png)
+![Editor de mapas](../../assets/screenshots/editor.png)
 
 La interfaz está dividida en las siguientes secciones:
 
 | Sección | Descripción |
 |---------|-------------|
 | [Panel izquierdo / Tileset] | Visualización de los tilesets |
-| [Canvas central] | Canvas para crear el mapa utilizando los tiles |
+| [Canvas central] | Canvas para crear el mapa utilizando los tilesets |
 | [Barra de herramientas 1] | Lápiz, goma, relleno |
 | [Barra de herramientas 2] | Teleport, colisión: permiten pintar un tile indicando si es colisionable o teleport |
 | [Barra de herramientas 3] | Suelo, Construcciones: intercalar entre tile para el suelo o tile para una construcción (se pinta arriba del tile de suelo) |
@@ -283,18 +256,22 @@ La interfaz está dividida en las siguientes secciones:
 
 ### Crear un mapa nuevo
 
-1. Paso 1: Cargar PNG
-2. Paso 2: Buscar tileset dentro de la carpeta del juego: `/../data/maps`
-3. Paso 3: Seleccionar un tile, una herramienta y empezar a pintar
-4. Paso 4: Archivo > Guardar: dentro de la carpeta del juego: `../data/maps/<mapa>`
+1. Hacé clic en **Cargar PNG**.
+2. Elegí un tileset desde la carpeta del juego: `~/.local/share/argentum/data/maps/`.
+3. Seleccioná un tile, una herramienta y empezá a pintar.
+4. Guardá con **Archivo > Guardar** dentro de `~/.local/share/argentum/data/maps/<nombre-mapa>.bin`.
 
-### Cargar un nuevo mapa
+### Editar mapa existente
 
-Una vez guardado el mapa:
-1. Ir a `/config.toml`
-2. Buscar la sección zonas
-3. Modifiar el nombre de map por el nuevo nombre del archivo
-4. Guardar cambio en el config.toml
+1. En el editor, andá a **Archivo > Abrir**.
+2. Buscá el mapa en `~/.local/share/argentum/data/maps/` (por ejemplo, `city.bin`).
+3. Editá el mapa con las herramientas del editor.
+4. Guardá con **Archivo > Guardar**. Según cómo guardes:
+   - **Con el mismo nombre** (pisás el archivo anterior): listo, solo volvé a iniciar
+     el servidor y el cliente para ver los cambios.
+   - **Con otro nombre** (por ejemplo, `city-v2.bin`): además tenés que indicarle al
+     juego que use el archivo nuevo, editando el `config.toml`
+     (ver [Cambiar el mapa de una zona](#cambiar-el-mapa-de-una-zona)).
 
 ---
 
