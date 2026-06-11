@@ -976,11 +976,13 @@ void ClientGUI::drawOtherPlayers() {
         }
         //pd.draw(camera, pov); MECHI DICE QUE NO VA
 
-        // Nombre sobre el jugador: verde si es de nuestro clan, bordó si es de
-        // otro (o no tiene). Sin clan propio, todos van en bordó.
+        // Nombre sobre el jugador: verde si es de nuestro clan, rojo si es de
+        // otro (o no tiene). Sin clan propio, todos van en rojo. Colores claros
+        // a proposito: el contorno negro de draw_player_name aporta el contraste,
+        // asi que el relleno puede ser brillante y legible.
         bool mismo_clan = !own_clan.empty() && p.clan_name == own_clan;
-        SDL_Color color = mismo_clan ? SDL_Color{0, 200, 0, 255}
-                                     : SDL_Color{128, 0, 32, 255};  // bordó
+        SDL_Color color = mismo_clan ? SDL_Color{80, 255, 120, 255}
+                                     : SDL_Color{255, 80, 80, 255};
         draw_player_name(p.name, p.x, p.y, color);
         pd.draw(camera, other_players_povs[p.name]);
     }
@@ -990,19 +992,27 @@ void ClientGUI::draw_player_name(const std::string& name, int tile_x, int tile_y
                                  SDL_Color color) {
     if (!chat_font || name.empty() || !tilemap) return;
 
-    SDL_Surface* surface = TTF_RenderText_Blended(chat_font, name.c_str(), 0, color);
-    if (!surface) return;
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_DestroySurface(surface);
-    if (!texture) return;
+    // Texto del color de clan (relleno) + un contorno negro renderizado aparte.
+    // El contorno es lo que hace el nombre legible sobre cualquier fondo (pasto,
+    // agua, piedra): es el nametag tipico de MMO. Se dibuja a tamaño nativo (sin
+    // downscale) para que los glyphs queden nitidos.
+    SDL_Color outline_color = {0, 0, 0, 255};
+    SDL_Surface* fill_surf = TTF_RenderText_Blended(chat_font, name.c_str(), 0, color);
+    if (!fill_surf) return;
+    SDL_Surface* outline_surf = TTF_RenderText_Blended(chat_font, name.c_str(), 0, outline_color);
+
+    SDL_Texture* fill_tex = SDL_CreateTextureFromSurface(renderer, fill_surf);
+    SDL_Texture* outline_tex = outline_surf ? SDL_CreateTextureFromSurface(renderer, outline_surf)
+                                            : nullptr;
+    SDL_DestroySurface(fill_surf);
+    if (outline_surf) SDL_DestroySurface(outline_surf);
+    if (!fill_tex) {
+        if (outline_tex) SDL_DestroyTexture(outline_tex);
+        return;
+    }
 
     float text_w = 0.0f, text_h = 0.0f;
-    SDL_GetTextureSize(texture, &text_w, &text_h);
-    // El nombre se dibuja chico (la fuente del chat es grande para el sprite):
-    // escalamos la textura para que quede legible sin tapar al personaje.
-    const float NAME_SCALE = 0.6f;
-    text_w *= NAME_SCALE;
-    text_h *= NAME_SCALE;
+    SDL_GetTextureSize(fill_tex, &text_w, &text_h);
 
     const int tileSize = tilemap->getTileSize();
     // Posicion del sprite en pixeles del mundo (igual que PlayerDisplay::rect).
@@ -1013,9 +1023,24 @@ void ClientGUI::draw_player_name(const std::string& name, int tile_x, int tile_y
     float screen_x = camera.world_to_screen_x(world_x) + (tileSize - text_w) / 2.0f;
     float screen_y = camera.world_to_screen_y(world_y) - text_h - tileSize * 0.5f;
 
+    // Contorno: el texto negro dibujado en las 8 direcciones, desplazado 1px.
+    if (outline_tex) {
+        const float OUTLINE = 1.0f;
+        const float offsets[8][2] = {
+            {-OUTLINE, -OUTLINE}, {0.0f, -OUTLINE}, {OUTLINE, -OUTLINE},
+            {-OUTLINE,  0.0f},                      {OUTLINE,  0.0f},
+            {-OUTLINE,  OUTLINE}, {0.0f,  OUTLINE}, {OUTLINE,  OUTLINE},
+        };
+        for (const auto& off : offsets) {
+            SDL_FRect odst = {screen_x + off[0], screen_y + off[1], text_w, text_h};
+            SDL_RenderTexture(renderer, outline_tex, nullptr, &odst);
+        }
+        SDL_DestroyTexture(outline_tex);
+    }
+
     SDL_FRect dst = {screen_x, screen_y, text_w, text_h};
-    SDL_RenderTexture(renderer, texture, nullptr, &dst);
-    SDL_DestroyTexture(texture);
+    SDL_RenderTexture(renderer, fill_tex, nullptr, &dst);
+    SDL_DestroyTexture(fill_tex);
 }
 
 

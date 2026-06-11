@@ -43,6 +43,8 @@
 #### Juan Balella
 - logica de ataque
 - logica de muerte
+- logica meditacion
+  - Estados del jugador
   - logica de dropeo => algoritmo de Cheryshev
 - logica de defensa
 - logica de autospawn de npc
