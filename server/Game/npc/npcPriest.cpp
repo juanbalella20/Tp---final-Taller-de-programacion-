@@ -4,6 +4,10 @@
 #include "game_config.h"
 #include <stdexcept>
  
+NPCpriest::NPCpriest(int x, int y) : pos_x(x), pos_y(y) {
+    init_store();  
+}
+
 void NPCpriest::init_store() {
     // El sacerdote vende baculos, varas y pociones (nunca armas ni armaduras)
     for (const char* id : {"vara_fresno", "flauta_elfica", "baculo_nudoso",
@@ -36,7 +40,7 @@ void NPCpriest::heal(Player& player) {
     player.heal_max_mana();
 }
  
-void NPCpriest::sell_item(Player& player, const std::string& item_id) {
+void NPCpriest::buy_item(Player& player, const std::string& item_id) {
     Item* store_item = nullptr;
     for (const auto& item : store_items) {
         if (item->get_id() == item_id) {
@@ -61,7 +65,7 @@ void NPCpriest::interact(Player& player, Command cmd) {
         resurrect(player);
     } else if (cmd.action == ACTION_HEAL) {
         heal(player);
-    } else if (cmd.action == ACTION_SELL) {
-        sell_item(player, cmd.item_id);
+    } else if (cmd.action == ACTION_BUY) {
+        buy_item(player, cmd.item_id);
     }
 }

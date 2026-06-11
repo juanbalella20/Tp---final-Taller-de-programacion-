@@ -20,7 +20,7 @@ class NPCpriest : public NPCfriendly {
         ItemCatalog catalog;
 
         void init_store();
-        void sell_item(Player& player, const std::string& item_id);
+        void buy_item(Player& player, const std::string& item_id);
         void resurrect(Player& player);
         void heal(Player& player);
 
@@ -30,7 +30,7 @@ class NPCpriest : public NPCfriendly {
          * - heals player
          * - sells item to player
          */
-        NPCpriest(int x, int y) : pos_x(x), pos_y(y) {}
+        NPCpriest(int x, int y);
         NPCpriest(NPCpriest&&) = default;
         NPCpriest& operator=(NPCpriest&&) = default;
         NPCpriest(const NPCpriest&) = delete;
