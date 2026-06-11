@@ -4,6 +4,7 @@
 #include "npcFriendly.h"
 #include "../../../common/info/item_info.h"
 #include "../item/item.h"
+#include "../item/item_catalog.h"
 
 #include <vector>
 #include <memory>
@@ -16,19 +17,20 @@ class NPCpriest : public NPCfriendly {
         int pos_y;
         
         std::vector<std::unique_ptr<Item>> store_items;
+        ItemCatalog catalog;
 
         void init_store();
-        void sell_item(Player& player, const std::string& item_id);
+        void buy_item(Player& player, const std::string& item_id);
+        void resurrect(Player& player);
+        void heal(Player& player);
 
     public:
-        // an npc_id is generated and a name
-        NPCpriest();
         /* interacts with player:
          * - reseructs player
          * - heals player
          * - sells item to player
          */
-        NPCpriest(int x, int y) : pos_x(x), pos_y(y) {}
+        NPCpriest(int x, int y);
         NPCpriest(NPCpriest&&) = default;
         NPCpriest& operator=(NPCpriest&&) = default;
         NPCpriest(const NPCpriest&) = delete;
@@ -38,7 +40,7 @@ class NPCpriest : public NPCfriendly {
         int get_coord_y() const { return pos_y; }
 
         std::vector<ItemInfo> list_items() const;
-        void interact(Player& player, Command cmd) override {}
+        void interact(Player& player, Command cmd) override;
 
 };
 

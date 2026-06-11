@@ -32,6 +32,8 @@ gold_base = 100
 gold_exponent  = 1.1
 # Un jugador puede tener hasta gold_max * gold_excess_factor antes de perder oro
 gold_excess_factor = 1.5
+
+revive_life_factor = 0.1 # Fraccion de vida/mana con la que resucita (10%)
  
 # Fair play
 newbie_max_level = 12   # Nivel 12 o menor es considerado newbie
@@ -443,6 +445,7 @@ allowed_items = ["pocion_vida", "pocion_mana"]
 num_priests = 1
 num_npc = 0
 num_sellers = 1
+num_bankers = 1
 
 [zones.forest]
 map = "data/maps/forest/forest3.bin"

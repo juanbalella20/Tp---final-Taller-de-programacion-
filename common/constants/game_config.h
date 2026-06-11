@@ -77,6 +77,7 @@ public:
     double gold_excess_factor;
     int newbie_max_level;
     int level_diff_max;
+    double revive_life_factor;
 
     // Combat
     double crit_chance;
