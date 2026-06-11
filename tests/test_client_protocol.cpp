@@ -1,26 +1,18 @@
-// Tests del protocolo de comunicacion (cliente -> servidor).
-//
-// Enfoque: round-trip puro, sin sockets (permitido por el enunciado: "los tests
-// pueden mockear los sockets o no"). Se serializa un ClientCmd a bytes con el
-// Serializer del cliente y se vuelve a parsear con el ServerDeserializer del
-// servidor, verificando que los campos sobreviven el viaje. Ademas se chequean
-// los bytes exactos del formato binario (restriccion 2 del enunciado).
+
 
 #include <gtest/gtest.h>
 
 #include <cstdint>
 #include <vector>
 
-#include "serializer.h"         // client/serializers/serializer.h
-#include "serverDeserializer.h" // server/serializer/serverDeserializer.h
+#include "serializer.h"         
+#include "serverDeserializer.h" 
 #include "clientCmd.h"
 #include "protocol_constants.h"
 
 namespace {
 
-// Replica lo que hace ClientProtocol::receive_event pero sobre un buffer en
-// memoria: separa el header [type:1B][payload_len:2B BE] del payload y delega
-// al ServerDeserializer (que espera el payload SIN header).
+
 ClientCmd round_trip(const std::vector<uint8_t>& bytes) {
     EXPECT_GE(bytes.size(), static_cast<size_t>(LEN_HEADER));
     uint8_t type = bytes[0];

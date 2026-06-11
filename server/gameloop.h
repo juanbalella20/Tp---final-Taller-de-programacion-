@@ -18,6 +18,19 @@
 class GameLoop : public Thread {
  public:
     GameLoop(Queue<ClientCmd>& receiving_queue, ClientRegistryMonitor& client_registry_monitor);
+    // Relacion ticks/tiempo:
+//   tick_rate = 50ms  =>  20 ticks por segundo
+//   Para un respawn de 5s: 5000ms / 50ms = 100 ticks
+//   Para un respawn de 2s: 2000ms / 50ms = 40 ticks
+//
+// Como funciona sleep_until(next_tick):
+//   next_tick es un punto fijo en el tiempo (no una duracion).
+//   Al inicio de cada iteracion se adelanta 50ms: next_tick += 50ms.
+//   Al final, sleep_until duerme lo que resta hasta ese punto.
+//   Si procesar comandos tardo 3ms  -> duerme 47ms  (total: 50ms)
+//   Si procesar comandos tardo 49ms -> duerme  1ms  (total: 50ms)
+//   Si tardo mas de 50ms            -> no duerme, arranca el siguiente tick de inmediato
+//   A diferencia de sleep_for(50ms), no acumula drift entre ticks.
     void run() override;
 
  private:
