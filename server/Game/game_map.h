@@ -11,6 +11,7 @@
 #include "../../common/info/item_floor_info.h"
 #include "../../common/mapLoader.h"
 #include "npc/npcSeller.h"
+#include "npc/npcPriest.h"
 #include "item/item.h"
 #include "zoneWorld.h"
 #include "player/clan.h"
@@ -142,6 +143,11 @@ public:
     void player_retire_gold(const std::string& player_name, int amount);
     std::vector<ItemInfo> list_banker_items(const std::string& player_name);
     int get_banker_gold(const std::string& player_name);
+    void player_resurrect(const std::string& player_name);
+    void player_heal(const std::string& player_name);
+    bool player_buy_from_priest(const std::string& player_name, const std::string& item_id);
+    std::vector<ItemInfo> list_priest_items(const std::string& player_name);
+
     
     // Zona actual del player (para MSG_ZONE_CHANGE)
     Zone get_player_zone(const std::string& player_name) const;
