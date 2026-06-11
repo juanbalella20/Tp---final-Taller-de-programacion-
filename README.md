@@ -49,4 +49,4 @@ cmake --build build --target map_editor
 [Manual de usuario](docs/files/manual_usuario.md)
 
 # Video promocional
-https://drive.google.com/file/d/1kqbRD-1v4atTtIH8835QUMWhTmjKflAc/view?usp=sharing
+[Video-Promocional](https://drive.google.com/file/d/1ppK2Td0TR7qKt8-2p0I22Fcnkzx5_xcS/view?usp=sharing)
