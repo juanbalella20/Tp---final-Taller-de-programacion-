@@ -43,7 +43,6 @@ class ClientProtocol {
     - deserializer: ClientDeserializer
     
     + ClientProtocol(socket: Socket&&)
-    + ~ClientProtocol()
     + initialize_connection(): void
     + send_command(cmd: ClientCmd): void
     + receive_event(msg: GameMsg): bool
