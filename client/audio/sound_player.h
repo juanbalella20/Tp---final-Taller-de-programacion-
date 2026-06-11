@@ -24,7 +24,7 @@ private:
     MIX_Track* hold_track = nullptr;
     std::unordered_map<std::string, MIX_Audio*> audio_cache;
     std::size_t next_track = 0;
-    float volume = 0.6f;
+    float volume = 0.2f;
     bool sdl_audio_initialized = false;
     bool mixer_initialized = false;
 

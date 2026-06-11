@@ -438,8 +438,8 @@ num_sellers = 1
 
 [zones.forest]
 map = "data/maps/forest/forest3.bin"
-allowed_npcs = ["goblin", "skeleton1", "golem1", "skeleton2"]
-num_npc = 0
+allowed_npcs = ["orc"]
+num_npc = 3
 num_items = 5
 allowed_items = ["vara_fresno", "baculo_nudoso", "tunica_azul", "sombrero_magico", "pocion_mana"]
 
