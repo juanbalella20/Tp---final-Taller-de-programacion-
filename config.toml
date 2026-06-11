@@ -375,6 +375,7 @@ allowed_items = ["pocion_vida", "pocion_mana"]
 num_priests = 1
 num_npc = 0
 num_sellers = 1
+num_bankers = 1
 
 [zones.forest]
 map = "data/maps/forest/forest3.bin"
