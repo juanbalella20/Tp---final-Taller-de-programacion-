@@ -486,7 +486,7 @@ bool GameMap::player_buy_from_priest(const std::string& player_name, const std::
     NPCpriest* priest = zone_of(player_name).priest_adjacent_to(player->get_coord_x(), player->get_coord_y());
     if (priest == nullptr) throw std::runtime_error("No hay un sacerdote adyacente.");
     Command cmd;
-    cmd.action = ACTION_SELL;
+    cmd.action = ACTION_BUY;
     cmd.item_id = item_id;
     priest->interact(*player, cmd);
     return true;
