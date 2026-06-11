@@ -271,57 +271,11 @@ OH -> OC: actualiza posición del jugador
 
 ### Diagrama de clases — Cliente
 
-```plantuml
-@startuml
-title Clases principales — Cliente
+![ClientGUI](../diagrams_png/clientGUI.png)
+![ClientGUI e Info](../diagrams_png/clientGUI&info.png)
+![ClientApp](../diagrams_png/clientApp.png)
+![ClientProtocol](../diagrams_png/clientProtocol.png)
 
-class GameClient {
-  - connection: NetworkClient*
-  - renderer: Renderer*
-  - inputHandler: InputHandler*
-  - worldState: ClientWorldState*
-  + run(): void
-  + stop(): void
-  - gameLoop(): void
-}
-
-class NetworkClient {
-  - socket: [TipoSocket]
-  - running: bool
-  + connect(ip, port): bool
-  + send(msg: Message): void
-  + receiveLoop(): void
-  + onMessageReceived: callback
-}
-
-class Renderer {
-  - window: [TipoVentana]
-  - tilesheet: [TipoTextura]
-  + render(state: ClientWorldState): void
-  + renderMap(map: ClientMap): void
-  + renderPlayers(players: vector<PlayerView>): void
-}
-
-class InputHandler {
-  + pollEvents(): vector<InputEvent>
-  + mapKeyToAction(key): Action
-}
-
-class ClientWorldState {
-  - localPlayerId: uint32_t
-  - players: map<uint32_t, PlayerView>
-  - map: ClientMap*
-  + applyUpdate(msg: Message): void
-}
-
-GameClient *-- NetworkClient
-GameClient *-- Renderer
-GameClient *-- InputHandler
-GameClient *-- ClientWorldState
-@enduml
-```
-
-<!-- TODO: reemplazar con los nombres de clases reales del cliente -->
 
 ### Flujo del game loop del cliente
 
