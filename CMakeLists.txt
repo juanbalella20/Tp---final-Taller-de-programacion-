@@ -231,8 +231,36 @@ else()
                     "Instalar con: sudo apt install qt6-base-dev")
 endif()
 
-# ── Tests unitarios del protocolo (GoogleTest) ───────────────────────────────
-# El enunciado exige que el protocolo de comunicacion este testeado con GTest.
-# GoogleTest se baja con FetchContent para no depender de paquetes del sistema.
+# ── Tests unitarios (GoogleTest + ctest) ─────────────────────────────────────
+# Requiere libgtest-dev. Correr con: ctest --test-dir build --output-on-failure
 enable_testing()
-add_subdirectory(tests)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/CMakeLists.txt")
+    add_subdirectory(tests)
+endif()
+
+# ── Instalación (cmake --install build) ──────────────────────────────────────
+# Layout alineado con common/utility/paths.cpp (APP_NAME = "argentum"):
+#   binarios -> ~/.local/bin           assets -> ~/.local/share/argentum/
+#   libs SDL -> ~/.local/lib           config -> ~/.config/argentum/
+# Las rutas relativas DENTRO de share/argentum/ deben ser exactamente las que el
+# codigo pasa a paths::asset() ("imagenes/...", "fonts/...", "data/...",
+# "client/audio/..."); por eso se instalan los directorios sin aplanar.
+set(APP_NAME argentum)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/.local" CACHE PATH
+        "Prefijo de instalacion (default: ~/.local)" FORCE)
+endif()
+
+# El cliente carga las SDL3 compartidas en runtime: se instalan en <prefix>/lib
+# y el binario las encuentra via RPATH relativo a su propia ubicacion.
+set_target_properties(client PROPERTIES INSTALL_RPATH "$ORIGIN/../lib")
+install(TARGETS client server RUNTIME DESTINATION bin)
+install(TARGETS SDL3-shared SDL3_image-shared SDL3_ttf-shared SDL3_mixer-shared
+        LIBRARY DESTINATION lib)
+
+install(DIRECTORY imagenes fonts data DESTINATION share/${APP_NAME})
+install(DIRECTORY client/audio/sounds client/audio/music
+        DESTINATION share/${APP_NAME}/client/audio)
+
+# ~/.config queda fuera del prefijo ~/.local -> destino absoluto.
+install(FILES config.toml DESTINATION "$ENV{HOME}/.config/${APP_NAME}")
