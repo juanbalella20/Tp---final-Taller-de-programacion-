@@ -1,0 +1,67 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+class Queue {
+    + close(): void
+}
+
+class AuthSession {
+    + authenticated: bool
+    + protocol: ptr<ClientProtocol>
+    + name: string
+    + race: string
+    + klass: string
+    + clan: string
+    + password: string
+}
+
+class ScreenManager {
+    + ScreenManager(host: string, port: string)
+    + run(session: AuthSession): ScreenState
+    + get_window(): SDL_Window*
+    + get_renderer(): SDL_Renderer*
+    + get_font(): TTF_Font*
+}
+
+class ClientProtocol {
+    + shutdown(): void
+}
+
+class NetworkSenderThread {
+    + NetworkSenderThread(protocol: ClientProtocol, queue: Queue)
+    + start(): void
+    + join(): void
+}
+
+class NetworkReceiverThread {
+    + NetworkReceiverThread(protocol: ClientProtocol, queue: Queue)
+    + start(): void
+    + join(): void
+}
+
+class ClientGUI {
+    + run(): void
+}
+
+class ClientApp {
+    - host_: string
+    - port_: string
+    - sendingQueue: Queue
+    - receivingQueue: Queue
+    
+    + ClientApp(host: string, port: string)
+    + run(): void
+}
+
+ClientApp *-- Queue : sendingQueue / receivingQueue
+
+ClientApp ..> ScreenManager : <<uses>>
+ClientApp ..> AuthSession : <<uses>>
+ClientApp ..> ClientProtocol : <<uses>>
+ClientApp ..> NetworkSenderThread : <<uses>>
+ClientApp ..> NetworkReceiverThread : <<uses>>
+ClientApp ..> ClientGUI : <<uses>>
+
+@enduml

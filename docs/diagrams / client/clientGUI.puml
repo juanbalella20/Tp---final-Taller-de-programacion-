@@ -1,0 +1,93 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+abstract class Thread {}
+
+class ClientGUI {
+    - window: SDL_Window*
+    - renderer: SDL_Renderer*
+    - is_running: bool
+    - own_name: string
+    - own_clan: string
+    - spell_effects: map<string, SpellEffectDef>
+    - spell_animations: vector<SpellAnimation>
+    - damage_numbers: vector<DamageNumber>
+
+    + ClientGUI(...)
+    + run(): void
+    - initSDL(): void
+    - handleEvents(): void
+    - update(): void
+    - draw(): void
+    - sendMoveCmd(dir: Direction): void
+    - sendAttackCmd(tile_x: int, tile_y: int): void
+    - sendChatCmd(msg: std::string): void
+    - load_spell_effects(): void
+}
+
+class PlayerDisplay {
+    - renderer: SDL_Renderer*
+    - image: SDL_Texture*
+    - current_direction: ViewDirection
+    
+    + PlayerDisplay(...)
+    + void draw(camera: Camera, crop: SDL_FRect)
+    + right_pov(direction: ViewDirection): SDL_FRect
+    + left_pov(direction: ViewDirection): SDL_FRect
+    + front_pov(direction: ViewDirection): SDL_FRect
+    + back_pov(direction: ViewDirection): SDL_FRect
+    + ghost_frame(): SDL_FRect
+}
+
+class MiniChat {
+    - active: bool
+    - player_input: string
+    - outbound_msg: string
+    - msg_history: deque<chatMessage>
+    - renderer: SDL_Renderer*
+    - font: TTF_Font*
+    
+    + MiniChat(...)
+    + handle_event(event: SDL_Event): bool
+    + update(inbox: Queue<string>): void
+    + render(game_width: int, game_height: int): void
+}
+
+class HUD {
+    - gui_renderer: SDL_Renderer*
+    - font: TTF_Font*
+    - inventory: InventoryView
+    
+    + HUD(..)
+    + render(): void
+}
+
+class NpcSprite {
+    - renderer: SDL_Renderer*
+    - texture: SDL_Texture*
+    
+    + draw(camera: Camera, src: SDL_FRect): void
+    + back_pov(npc_name: string): SDL_FRect
+    + front_pov(npc_name: string): SDL_FRect
+    + right_pov(npc_name: string): SDL_FRect
+    + left_pov(npc_name: string): SDL_FRect
+}
+
+class ItemSprite {
+    - renderer: SDL_Renderer*
+    - texture: SDL_Texture
+    + draw(camera: Camera, src: SDL_FRect): void
+}
+
+ClientGUI -up-|> Thread
+
+ClientGUI *-- MiniChat
+ClientGUI *-- HUD
+ClientGUI *-- PlayerDisplay
+
+ClientGUI ..> NpcSprite : <<uses>>
+ClientGUI ..> ItemSprite : <<uses>>
+
+@enduml
