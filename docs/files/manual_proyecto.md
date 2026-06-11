@@ -19,6 +19,8 @@
 | Juan Balella | 110271 | juanbalella20 |
 | Agustín Trombetta | 111754 |  |
 | Mercedes González Lago | 110796 | mercedesgonzalezlago |
+| Ignacio Mahmoud Abalos | 112322 | Ignaci0MA |
+
 
 ---
 
@@ -65,6 +67,15 @@
 - Movimiento (cambio de sprites) de npc hostiles
 - Ataque de npc hostiles a jugadores
 - Visualización de stats e info (oro, nombre y nivel) del jugador
+
+#### Ignacio Mahmoud Abalos
+- Modelacion items
+- Logica inicial de gameloop
+- Implementacion npc priest
+- Implementacion npc seller
+- Implementacion npc banker
+- Visualizacion de tienda junto a Juan Balella
+- Configuracion toml
 
 ---
 
