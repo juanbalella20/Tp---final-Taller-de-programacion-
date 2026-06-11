@@ -9,13 +9,14 @@
 
 class ServerApp {
     private:
+    std::string port_;
     Queue<ClientCmd> receiving_queue;
     ClientRegistryMonitor client_registry_monitor;
     Acceptor acceptor;
     GameLoop game_loop;
 
     public:
-    explicit ServerApp(const char* service);
+    explicit ServerApp(std::string port);
     ~ServerApp();
     void run();
 };

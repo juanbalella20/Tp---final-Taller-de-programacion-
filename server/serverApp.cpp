@@ -3,10 +3,11 @@
 #include <sys/socket.h>
 #include <iostream>
 
-ServerApp::ServerApp(const char* service):
+ServerApp::ServerApp(std::string port):
+    port_(std::move(port)),
     receiving_queue(),
     client_registry_monitor(),
-    acceptor(Socket(service), receiving_queue, client_registry_monitor),
+    acceptor(Socket(port_.c_str()), receiving_queue, client_registry_monitor),
     game_loop(receiving_queue, client_registry_monitor) {}
 
 ServerApp::~ServerApp() {
