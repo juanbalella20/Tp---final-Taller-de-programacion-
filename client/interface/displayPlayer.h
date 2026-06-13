@@ -74,6 +74,11 @@ private:
     void weapon_right_offset(int current_frame);
     void weapon_left_offset(int current_frame);
 
+    SDL_FRect front_ghost_pov();
+    SDL_FRect back_ghost_pov();
+    SDL_FRect left_ghost_pov();
+    SDL_FRect right_ghost_pov();
+
 public:
     // Carga la imagen. La posicion inicial es (0, 0). Tile size en pixels.
     PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize, const std::string& race);
@@ -102,7 +107,7 @@ public:
     SDL_FRect left_pov(ViewDirection direction);
     SDL_FRect front_pov(ViewDirection direction);
     SDL_FRect back_pov(ViewDirection direction);
-    SDL_FRect ghost_frame();
+
     void move_up();
     void move_down();
     void move_left();
