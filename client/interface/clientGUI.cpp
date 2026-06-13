@@ -587,32 +587,16 @@ void ClientGUI::update() {
                         player->setTilePosition(x, y);
                         switch (msg.get_direction()) {
                             case DIR_NORTH: 
-                                if (player->is_ghost()) {
-                                    player_pov = player->ghost_frame();
-                                } else {
-                                    player_pov = player->back_pov(ViewDirection::BACK);
-                                }
+                                player_pov = player->back_pov(ViewDirection::BACK);
                                 break;
                             case DIR_SOUTH:
-                                if (player->is_ghost()) {
-                                    player_pov = player->ghost_frame();
-                                } else {
-                                    player_pov = player->front_pov(ViewDirection::FRONT);
-                                } 
+                                player_pov = player->front_pov(ViewDirection::FRONT);
                                 break;
                             case DIR_EAST:
-                                if (player->is_ghost()) {
-                                    player_pov = player->ghost_frame();
-                                } else {
-                                    player_pov = player->right_pov(ViewDirection::RIGHT);
-                                }  
+                                player_pov = player->right_pov(ViewDirection::RIGHT);
                                 break;
                             case DIR_WEST:
-                                if (player->is_ghost()) {
-                                    player_pov = player->ghost_frame();
-                                } else {
-                                    player_pov = player->left_pov(ViewDirection::LEFT);
-                                }   
+                                player_pov = player->left_pov(ViewDirection::LEFT);
                                 break;
                             default: break;
                         }
@@ -686,7 +670,7 @@ void ClientGUI::update() {
                 case MSG_CHEAT_KILL: {
                     if (msg.get_player_name() == own_name) {
                         player->set_ghost(true);
-                        player_pov = player->ghost_frame();
+                        player_pov = player->front_pov(ViewDirection::FRONT);
                     } else {
                         for (auto& p : other_players) {
                             if (p.name == msg.get_player_name()) {
@@ -837,7 +821,7 @@ void ClientGUI::update() {
                 case MSG_DEATH: {
                     if (msg.get_player_name() == own_name) {
                         player->set_ghost(true);
-                        player_pov = player->ghost_frame();
+                        player_pov = player->front_pov(ViewDirection::FRONT);
                     } else {
                         for (auto& p : other_players) {
                             if (p.name == msg.get_player_name()) {
@@ -973,32 +957,16 @@ void ClientGUI::drawOtherPlayers() {
             SDL_FRect pov;
             switch (p.direction) {
                 case DIR_NORTH:
-                    if (pd.is_ghost()) {
-                        pov = pd.ghost_frame();
-                    } else {
-                        pov = pd.back_pov(ViewDirection::BACK);
-                    }
+                    pov = pd.back_pov(ViewDirection::BACK);
                     break;
                 case DIR_SOUTH:
-                    if (pd.is_ghost()) {
-                        pov = pd.ghost_frame();
-                    } else {
-                        pov = pd.front_pov(ViewDirection::FRONT);
-                    }
+                    pov = pd.front_pov(ViewDirection::FRONT);
                     break;
                 case DIR_EAST:
-                    if (pd.is_ghost()) {
-                        pov = pd.ghost_frame();
-                    } else {
-                        pov = pd.right_pov(ViewDirection::RIGHT);
-                    }
+                    pov = pd.right_pov(ViewDirection::RIGHT);
                     break;
                 case DIR_WEST:
-                    if (pd.is_ghost()) {
-                        pov = pd.ghost_frame();
-                    } else {
-                        pov = pd.left_pov(ViewDirection::LEFT);
-                    }
+                    pov = pd.left_pov(ViewDirection::LEFT);
                     break;
                 default: break;
             }
@@ -1480,6 +1448,8 @@ void ClientGUI::init_draw() {
     try {
         player = std::make_unique<PlayerDisplay>(renderer, "imagenes/1005.png", tileSize, race);
         player_pov = player->back_pov(ViewDirection::BACK);
+        int g = player->is_ghost() ? 1 : 0;
+        std::cout << "fantasma?: " << g << std::endl;
     } catch (const std::runtime_error& e) {
         std::cout << "[DEBUG] imagenes/1005.png failed: " << e.what() << std::endl;
     }
