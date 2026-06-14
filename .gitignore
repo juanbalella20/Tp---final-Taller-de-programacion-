@@ -2,3 +2,8 @@ build
 images
 imagenes/Recursos
 Recursos
+build/
+vendored/
+.cache/
+.githooks
+.ignore/
