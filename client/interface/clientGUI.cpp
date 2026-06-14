@@ -1253,12 +1253,12 @@ void ClientGUI::draw() {
     }
 
     drawItems();
+    draw_npc_friends();
     if (player) {
         player->draw(camera, player_pov);
     }
     drawEnemies();
     drawOtherPlayers();
-    draw_npc_friends();
     draw_spell_animations();
     draw_damage_numbers();
 
