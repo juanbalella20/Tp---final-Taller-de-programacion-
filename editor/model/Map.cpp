@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -29,6 +30,31 @@ bool Map::in_bounds(int x, int y) const {
 // --- Tilesets ----------------------------------------------------------------
 const std::vector<Tileset> &Map::tilesets() const { return tilesets_; }
 
+std::vector<Tileset> Map::used_tilesets() const {
+  // gids efectivamente pintados en alguna capa (0 = celda vacia, se ignora).
+  std::unordered_set<int> used_gids;
+  for (const MapLayerData &layer : layers_) {
+    for (const std::vector<int> &row : layer.data) {
+      for (int gid : row) {
+        if (gid != 0)
+          used_gids.insert(gid);
+      }
+    }
+  }
+
+  std::vector<Tileset> result;
+  for (const Tileset &ts : tilesets_) {
+    const int end = ts.firstgid + ts.tile_count;
+    for (int gid : used_gids) {
+      if (gid >= ts.firstgid && gid < end) {
+        result.push_back(ts);
+        break;
+      }
+    }
+  }
+  return result;
+}
+
 int Map::add_tileset(const std::string &name, const std::string &file_path,
                      int columns, int tile_count, bool collidable) {
   if (columns <= 0 || tile_count <= 0) {
@@ -45,6 +71,11 @@ int Map::add_tileset(const std::string &name, const std::string &file_path,
 
   rebuild_tile_index();
   return static_cast<int>(tilesets_.size()) - 1;
+}
+
+void Map::clear_tilesets() {
+  tilesets_.clear();
+  rebuild_tile_index();
 }
 
 int Map::next_firstgid() const {

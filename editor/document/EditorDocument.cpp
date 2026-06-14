@@ -49,6 +49,8 @@ int EditorDocument::register_tileset(const QString &name,
   return index;
 }
 
+void EditorDocument::notify_tilesets_changed() { emit tilesetsChanged(); }
+
 std::unique_ptr<Tool> EditorDocument::make_tool(ToolType t) const {
   switch (t) {
   case ToolType::Pencil:

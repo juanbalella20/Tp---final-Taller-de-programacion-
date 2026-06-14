@@ -24,23 +24,28 @@ public:
   explicit EditorWindow(QWidget *parent = nullptr);
 
 private slots:
-  void on_new();      // Archivo > Nuevo: descarta el mapa y arranca uno vacio.
-  void on_open();     // Archivo > Abrir: carga un .bin elegido por el usuario.
-  void on_save();     // Archivo > Guardar: reusa la ruta actual (o "Guardar como").
-  void on_save_as();  // Archivo > Guardar como: pide ruta y serializa el .bin.
-  void load_tileset(); // Pide un PNG por dialogo y lo agrega como tileset.
+  void on_new();  // Archivo > Nuevo: descarta el mapa y arranca uno vacio.
+  void on_open(); // Archivo > Abrir: carga un .bin elegido por el usuario.
+  void on_save(); // Archivo > Guardar: reusa la ruta actual (o "Guardar como").
+  void on_save_as(); // Archivo > Guardar como: pide ruta y serializa el .bin.
+  // Pre-carga todos los tilesets de la carpeta compartida (assets/tilesets).
+  // La llaman el arranque, "Nuevo" y "Abrir": reemplaza la lista de tilesets
+  // del documento por el catalogo canonico completo de la carpeta.
+  void load_all_tilesets();
 
 private:
   // Crea el menu Archivo (nuevo, abrir, guardar, guardar como, salir).
   void build_menus();
   // Crea el splitter central con la paleta y el canvas scrolleable.
   void build_workspace();
-  // Crea la toolbar de tilesets (combo + boton "Cargar PNG").
+  // Crea la toolbar de tilesets (combo de seleccion del tileset activo).
   void build_tileset_toolbar();
   // Crea la toolbar de herramientas (pintura/teleport/colision) y de capas.
   void build_tools_toolbar();
-  // Carga el PNG de 'path' como tileset y lo deja seleccionado. false si falla.
-  bool load_tileset_path(const QString &path);
+  // Carga y registra el PNG de 'path' en el documento SIN tocar la UI (combo /
+  // paleta). Devuelve el indice del tileset agregado, o -1 si el PNG es
+  // invalido.
+  int register_tileset_file(const QString &path);
   // Repuebla el combo de tilesets desde el modelo.
   void refresh_tileset_combo();
   // Muestra en la paleta el tileset de indice 'index'.

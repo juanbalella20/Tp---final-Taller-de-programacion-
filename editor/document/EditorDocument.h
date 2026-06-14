@@ -37,11 +37,11 @@ public:
   const Map &map() const;
 
   // Estado de edicion (la herramienta, el brush y la capa que usan los gestos)
-  void set_active_tool(ToolType t);   // herramienta activa de la toolbar
+  void set_active_tool(ToolType t); // herramienta activa de la toolbar
   ToolType active_tool() const;
-  void set_active_gid(int gid);       // brush seleccionado en la paleta
+  void set_active_gid(int gid); // brush seleccionado en la paleta
   int active_gid() const;
-  void set_active_layer(int idx);     // capa activa; emite activeLayerChanged
+  void set_active_layer(int idx); // capa activa; emite activeLayerChanged
   int active_layer() const;
   // Zona destino activa para la herramienta Teleport (nombre: "city", etc.).
   void set_active_dest_zone(const std::string &zone);
@@ -51,6 +51,9 @@ public:
   // reconstruyan sus caches de pixmaps.
   int register_tileset(const QString &name, const QString &file_path,
                        int columns, int tile_count, bool collidable);
+  // Emite tilesetsChanged() una sola vez. Lo usa la carga masiva inicial, que
+  // registra varios tilesets y avisa a las vistas una unica vez.
+  void notify_tilesets_changed();
 
   // Punto de entrada de las herramientas
   // Aplican la herramienta activa en (x,y), mutando el Map en vivo.

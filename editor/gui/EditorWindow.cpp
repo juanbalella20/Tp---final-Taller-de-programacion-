@@ -2,7 +2,9 @@
 
 #include <QAction>
 #include <QActionGroup>
+#include <QCollator>
 #include <QComboBox>
+#include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QGraphicsView>
@@ -32,10 +34,6 @@
 #include "protocol_constants.h" // Zone, ZONE_NAME_MAP_INV
 #include "utility/paths.h"      // resource_relative / resolve_resource
 
-#ifndef EDITOR_DEFAULT_TILESET_PATH
-#define EDITOR_DEFAULT_TILESET_PATH ""
-#endif
-
 EditorWindow::EditorWindow(QWidget *parent) : QMainWindow(parent) {
   setWindowTitle("Editor de Mapas - Argentum Online");
   resize(1024, 768);
@@ -52,7 +50,7 @@ void EditorWindow::build_workspace() {
 
   selector_ = new TilesetSelectorView(splitter);
   selector_->setMinimumWidth(250);
-  selector_->setMaximumWidth(250);
+  selector_->setMaximumWidth(750);
 
   map_scene_ = new MapEditorScene(&doc_, this);
   map_view_ = new QGraphicsView(map_scene_, splitter);
@@ -91,7 +89,9 @@ void EditorWindow::build_tileset_toolbar() {
   tileset_combo_ = new QComboBox(toolbar);
   tileset_combo_->setMinimumContentsLength(16);
   toolbar->addWidget(tileset_combo_);
-  toolbar->addAction("Cargar PNG...", this, &EditorWindow::load_tileset);
+  // Todos los tilesets se pre-cargan desde assets/tilesets; para agregar uno
+  // nuevo se deja el PNG en esa carpeta.
+  load_all_tilesets();
 
   connect(tileset_combo_, &QComboBox::currentIndexChanged, this,
           &EditorWindow::select_tileset);
@@ -100,36 +100,59 @@ void EditorWindow::build_tileset_toolbar() {
   refresh_tileset_combo();
 }
 
-void EditorWindow::load_tileset() {
-  const QString path = QFileDialog::getOpenFileName(
-      this, "Elegir tileset", QString(), "Imagenes PNG (*.png *.PNG)");
-  if (!path.isEmpty())
-    load_tileset_path(path);
+void EditorWindow::load_all_tilesets() {
+  const QString dir_path = QString::fromStdString(paths::tilesets_dir());
+  QDir dir(dir_path);
+  if (!dir.exists()) {
+    statusBar()->showMessage(
+        QString("No existe la carpeta de tilesets: %1").arg(dir_path));
+    return;
+  }
+
+  const QStringList filters{"*.png", "*.PNG"};
+  QFileInfoList entries = dir.entryInfoList(filters, QDir::Files, QDir::NoSort);
+  QCollator collator;
+  collator.setNumericMode(true);
+  collator.setCaseSensitivity(Qt::CaseInsensitive);
+  std::sort(entries.begin(), entries.end(),
+            [&collator](const QFileInfo &a, const QFileInfo &b) {
+              return collator.compare(a.fileName(), b.fileName()) < 0;
+            });
+
+  int loaded = 0;
+  doc_.map().clear_tilesets();
+  for (const QFileInfo &info : entries) {
+    if (register_tileset_file(info.absoluteFilePath()) >= 0)
+      ++loaded;
+  }
+
+  refresh_tileset_combo();
+  if (loaded > 0) {
+    tileset_combo_->setCurrentIndex(0);
+    select_tileset(0);
+  }
+
+  statusBar()->showMessage(QString("Tilesets pre-cargados: %1 de %2")
+                               .arg(loaded)
+                               .arg(entries.size()));
 }
 
-bool EditorWindow::load_tileset_path(const QString &path) {
+int EditorWindow::register_tileset_file(const QString &path) {
   TileLibrary library;
   if (!library.loadTileset(path, doc_.map().tile_size())) {
     statusBar()->showMessage(
         QString("Tileset invalido o sin tiles completos: %1").arg(path));
-    return false;
+    return -1;
   }
 
   const QFileInfo info(path);
   // El .bin guarda la ruta del tileset RELATIVA a la carpeta de recursos
-  // compartida (ARGENTUM_RESOURCES_DIR)
+  // compartida (ARGENTUM_RESOURCES_DIR).
   const std::string rel_path =
       paths::resource_relative(info.absoluteFilePath().toStdString());
-  const int index =
-      doc_.register_tileset(info.baseName(), QString::fromStdString(rel_path),
-                            library.columns(), library.tileCount(), false);
-  refresh_tileset_combo();
-  tileset_combo_->setCurrentIndex(index);
-  select_tileset(index);
-  statusBar()->showMessage(QString("Tileset cargado: %1 (%2 tiles)")
-                               .arg(info.fileName())
-                               .arg(library.tileCount()));
-  return true;
+  return doc_.register_tileset(info.baseName(),
+                               QString::fromStdString(rel_path),
+                               library.columns(), library.tileCount(), false);
 }
 
 void EditorWindow::refresh_tileset_combo() {
@@ -276,6 +299,7 @@ void EditorWindow::build_menus() {
 void EditorWindow::on_new() {
   doc_.new_map();
   current_path_.clear();
+  load_all_tilesets();
   statusBar()->showMessage("Nuevo mapa");
 }
 
@@ -293,7 +317,7 @@ void EditorWindow::on_open() {
     return;
   }
   current_path_ = path;
-  refresh_tileset_combo();
+  load_all_tilesets();
   statusBar()->showMessage(QString("Mapa abierto: %1").arg(path));
 }
 void EditorWindow::on_save() {
@@ -328,7 +352,10 @@ bool EditorWindow::save_to(const QString &path) {
   // dejando una ruta que solo existe aca. Esto pasa sobre todo al re-guardar
   // un .bin abierto: el loader ya entrego file_path como absoluto.
   // resource_relative normaliza a relativo (y deja igual lo que ya lo este).
-  std::vector<Tileset> tilesets = map.tilesets();
+  // Solo se guardan los tilesets realmente usados por alguna capa: la pre-carga
+  // registra todos los de assets/tilesets, pero serializar los no usados infla
+  // el .bin y obliga al cliente a resolver PNGs que el mapa nunca referencia.
+  std::vector<Tileset> tilesets = map.used_tilesets();
   for (Tileset &ts : tilesets) {
     ts.file_path = paths::resource_relative(ts.file_path);
   }
