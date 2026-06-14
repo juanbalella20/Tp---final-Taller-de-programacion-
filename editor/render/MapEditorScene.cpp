@@ -13,8 +13,7 @@
 #include "../model/Map.h"
 #include "../tools/ToolType.h"
 #include "TileLibrary.h"
-#include "utility/paths.h" // resolve_resource
-
+#include "utility/paths.h"
 namespace {
 
 QPixmap fallbackPixmap(int gid, int tileSize) {
@@ -22,7 +21,6 @@ QPixmap fallbackPixmap(int gid, int tileSize) {
   pixmap.fill(QColor::fromHsv((gid * 47) % 360, 160, 200));
   return pixmap;
 }
-
 } // namespace
 
 MapEditorScene::MapEditorScene(EditorDocument *document, QObject *parent)
@@ -153,22 +151,7 @@ void MapEditorScene::handleCellChanged(int layer, int column, int row) {
 void MapEditorScene::drawBackground(QPainter *painter, const QRectF &rect) {
   if (!m_document)
     return;
-  const Map &map = m_document->map();
-  const QRectF mapRect = sceneRect();
-
   painter->fillRect(rect, QColor(0, 0, 0));
-  QPen gridPen(QColor(70, 70, 70));
-  gridPen.setWidth(0);
-  painter->setPen(gridPen);
-
-  for (int column = 0; column <= map.width(); ++column) {
-    const qreal x = column * map.tile_size();
-    painter->drawLine(QPointF(x, mapRect.top()), QPointF(x, mapRect.bottom()));
-  }
-  for (int row = 0; row <= map.height(); ++row) {
-    const qreal y = row * map.tile_size();
-    painter->drawLine(QPointF(mapRect.left(), y), QPointF(mapRect.right(), y));
-  }
 }
 
 void MapEditorScene::drawForeground(QPainter *painter, const QRectF &rect) {
@@ -187,7 +170,23 @@ void MapEditorScene::drawForeground(QPainter *painter, const QRectF &rect) {
       map.height() - 1, static_cast<int>(std::floor(rect.bottom() / tileSize)));
 
   painter->save();
-  painter->setPen(Qt::NoPen);
+  QPen gridPen(QColor(255, 255, 255, 155));
+  gridPen.setWidth(0);
+  painter->setPen(gridPen);
+  painter->setBrush(Qt::NoBrush);
+
+  const QRectF mapRect = sceneRect();
+
+  for (int column = 0; column <= map.width(); ++column) {
+    const qreal x = column * tileSize;
+    painter->drawLine(QPointF(x, mapRect.top()), QPointF(x, mapRect.bottom()));
+  }
+
+  for (int row = 0; row <= map.height(); ++row) {
+    const qreal y = row * tileSize;
+    painter->drawLine(QPointF(mapRect.left(), y), QPointF(mapRect.right(), y));
+  }
+
   painter->setBrush(QColor(220, 40, 40, 110));
   for (int row = firstRow; row <= lastRow; ++row) {
     for (int column = firstColumn; column <= lastColumn; ++column) {
