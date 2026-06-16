@@ -2,6 +2,7 @@
 
 #include <QColor>
 #include <QGraphicsPixmapItem>
+#include <QGraphicsSceneDragDropEvent>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 #include <QPen>
@@ -10,6 +11,7 @@
 #include <cmath>
 
 #include "../document/EditorDocument.h"
+#include "../gui/TileBrushMime.h"
 #include "../model/Map.h"
 #include "../tools/ToolType.h"
 #include "TileLibrary.h"
@@ -206,6 +208,12 @@ void MapEditorScene::drawForeground(QPainter *painter, const QRectF &rect) {
     if (rect.intersects(teleportRect))
       painter->drawRect(teleportRect);
   }
+
+  if (!m_dropPreviewRect.isEmpty()) {
+    painter->setPen(QPen(QColor(80, 190, 255, 230), kPreviewPenWidth));
+    painter->setBrush(QColor(40, 160, 255, 80));
+    painter->drawRect(m_dropPreviewRect);
+  }
   painter->restore();
 }
 
@@ -231,6 +239,25 @@ bool MapEditorScene::cellAt(const QPointF &scenePosition, int *column,
 QRectF MapEditorScene::cellRect(int column, int row) const {
   const int tileSize = m_document->map().tile_size();
   return QRectF(column * tileSize, row * tileSize, tileSize, tileSize);
+}
+
+void MapEditorScene::setDropPreviewRect(const QRectF &rect) {
+  if (m_dropPreviewRect == rect)
+    return;
+
+  // Guarda el rectángulo anterior y reemplaza por el nuevo.
+  const QRectF oldRect = m_dropPreviewRect;
+  m_dropPreviewRect = rect;
+
+  // Llama a repintar la zona vieja
+  if (!oldRect.isEmpty())
+    update(oldRect.adjusted(-kPreviewPenWidth, -kPreviewPenWidth,
+                            kPreviewPenWidth, kPreviewPenWidth));
+
+  // Llama a repintar la zona nueva
+  if (!m_dropPreviewRect.isEmpty())
+    update(m_dropPreviewRect.adjusted(-kPreviewPenWidth, -kPreviewPenWidth,
+                                      kPreviewPenWidth, kPreviewPenWidth));
 }
 
 void MapEditorScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
@@ -276,4 +303,55 @@ void MapEditorScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
   m_document->apply_tool_release(-1, -1);
   m_gestureButton = Qt::NoButton;
   event->accept();
+}
+
+void MapEditorScene::dragEnterEvent(QGraphicsSceneDragDropEvent *event) {
+  if (decode_tile_brush(event->mimeData(), &m_pendingDropBrush)) {
+    event->acceptProposedAction();
+    return;
+  }
+  event->ignore();
+}
+
+void MapEditorScene::dragMoveEvent(QGraphicsSceneDragDropEvent *event) {
+  int column = 0;
+  int row = 0;
+  if (!m_pendingDropBrush.gids.empty() &&
+      cellAt(event->scenePos(), &column, &row)) {
+    // arma el rectangulo de preview
+    const int tileSize = m_document->map().tile_size();
+    const QRectF preview(column * tileSize, row * tileSize,
+                         m_pendingDropBrush.width * tileSize,
+                         m_pendingDropBrush.height * tileSize);
+    // guarda el rectangulo
+    setDropPreviewRect(preview.intersected(sceneRect()));
+    event->acceptProposedAction();
+    return;
+  }
+  setDropPreviewRect(QRectF());
+  event->ignore();
+}
+
+void MapEditorScene::dragLeaveEvent(QGraphicsSceneDragDropEvent *event) {
+  m_pendingDropBrush = TileBrush{};
+  setDropPreviewRect(QRectF());
+  event->accept();
+}
+
+void MapEditorScene::dropEvent(QGraphicsSceneDragDropEvent *event) {
+  int column = 0;
+  int row = 0;
+  // Limpieza si no hay brush pendiente o el drop cayo en una celda vacia.
+  if (m_pendingDropBrush.gids.empty() ||
+      !cellAt(event->scenePos(), &column, &row)) {
+    m_pendingDropBrush = TileBrush{};
+    setDropPreviewRect(QRectF());
+    event->ignore();
+    return;
+  }
+
+  m_document->stamp_tiles(column, row, m_pendingDropBrush);
+  m_pendingDropBrush = TileBrush{};
+  setDropPreviewRect(QRectF());
+  event->acceptProposedAction();
 }

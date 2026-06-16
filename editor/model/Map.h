@@ -37,9 +37,8 @@ public:
 
   //  Tilesets
   const std::vector<Tileset> &tilesets() const;
-  // Copia de los tilesets efectivamente referenciados por alguna capa (algun
-  // gid dentro de su rango [firstgid, firstgid + tile_count)). Lo usa el
-  // guardado para no serializar tilesets pre-cargados que el mapa no usa.
+  // Copia de los tilesets efectivamente usados por las capas, resueltos desde
+  // los gids pintados mediante el indice gid -> TileDef.
   std::vector<Tileset> used_tilesets() const;
   // Agrega un PNG como tileset. Asigna firstgid = next_firstgid().
   // Devuelve el indice del tileset agregado. Reconstruye el indice de tiles.

@@ -6,18 +6,15 @@
 
 #include <vector>
 
+#include "../document/TileBrush.h"
+
 class EditorDocument;
 class QGraphicsPixmapItem;
+class QGraphicsSceneDragDropEvent;
 class QGraphicsSceneMouseEvent;
 class QPainter;
 
-/*
- * Canvas del editor. Dibuja el Map como una grilla de QGraphicsPixmapItem (uno
- * por celda y por capa) sobre un fondo cuadriculado, mas las superposiciones de
- * colision (rojo) y teleports (borde amarillo). Traduce los gestos del mouse en
- * llamadas a las herramientas del EditorDocument y se repinta escuchando sus
- * senales (cellChanged / mapReset / tilesetsChanged).
- */
+// Canvas del editor.
 class MapEditorScene : public QGraphicsScene {
   Q_OBJECT
 
@@ -46,16 +43,30 @@ protected:
   void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
   void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+  // Recibe bloques arrastrados desde la paleta de tilesets.
+  void dragEnterEvent(QGraphicsSceneDragDropEvent *event) override;
+  void dragMoveEvent(QGraphicsSceneDragDropEvent *event) override;
+  // Se llama si el drag sale del canvas sin soltar
+  void dragLeaveEvent(QGraphicsSceneDragDropEvent *event) override;
+  // Se llama cuando se suelta el mouse sobre el canvas
+  void dropEvent(QGraphicsSceneDragDropEvent *event) override;
 
 private slots:
   // Repinta una sola celda cuando el documento avisa que cambio.
   void handleCellChanged(int layer, int column, int row);
 
 private:
+  static constexpr int kPreviewPenWidth = 1;
+
   EditorDocument *m_document = nullptr;
-  std::vector<std::vector<QGraphicsPixmapItem *>> m_visualItems; // [capa][celda]
+  // Items visuales indexados como [capa][celda].
+  std::vector<std::vector<QGraphicsPixmapItem *>> m_visualItems;
   QHash<int, QPixmap> m_tileCache;                // gid -> pixmap del tile
   Qt::MouseButton m_gestureButton = Qt::NoButton; // boton del gesto en curso
+  // guarda el rectangulo azul que se dibuja sobre el mapa antes de soltar
+  QRectF m_dropPreviewRect;
+  // guarda temporalmente el bloque que viene desde la paleta
+  TileBrush m_pendingDropBrush;
 
   // Crea un QGraphicsPixmapItem vacio por cada celda de cada capa.
   void initializeVisualItems();
@@ -65,6 +76,9 @@ private:
   bool cellAt(const QPointF &scenePosition, int *column, int *row) const;
   // Rectangulo en coordenadas de escena que ocupa la celda (column,row).
   QRectF cellRect(int column, int row) const;
+  // Llama a pintar y despintar el rectangulo de preview
+  // al arrastrar uno o varios tiles sobre el canvas.
+  void setDropPreviewRect(const QRectF &rect);
 };
 
 #endif // EDITOR_RENDER_MAPEDITORSCENE_H_

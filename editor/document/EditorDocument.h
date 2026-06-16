@@ -11,21 +11,11 @@
 #include "../model/Map.h"
 #include "../tools/ToolType.h"
 #include "CellChange.h"
+#include "TileBrush.h"
 #include "Tool.h"
 
-/*
- * Controlador del editor. Ata el modelo (Map) con el estado de edicion
- * (herramienta/brush/capa activos) y la persistencia.
- *
- * Es el UNICO que muta el Map: los widgets (canvas, paleta, panel de capas)
- * solo le mandan intenciones y leen su estado. No hay logica de negocio en los
- * widgets. Hereda de QObject solo para emitir senales que la GUI escucha.
- *
- * Lado de carga de la persistencia (common/): open() reconstruye el Map desde
- * un .bin con BinaryMapLoader. El guardado, en cambio, lo hace
- * EditorWindow::save_to con BinaryMapSaver (save()/save_as() de aca son stubs).
- *
- */
+// Controlador del editor.
+// Modifica el mapa y notifica cambios mediante señales Qt (QObject)
 class EditorDocument : public QObject {
   Q_OBJECT
 
@@ -62,6 +52,8 @@ public:
   void apply_tool_press(int x, int y, ToolType tool_override);
   void apply_tool_drag(int x, int y);
   void apply_tool_release(int x, int y);
+  // Marca un bloque rectangular en la capa activa desde (start_x, start_y).
+  void stamp_tiles(int start_x, int start_y, const TileBrush &brush);
 
   // Persistencia
   void new_map();

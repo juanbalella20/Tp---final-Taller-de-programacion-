@@ -57,6 +57,7 @@ void EditorWindow::build_workspace() {
   map_view_->setAlignment(Qt::AlignLeft | Qt::AlignTop);
   map_view_->setDragMode(QGraphicsView::NoDrag);
   map_view_->setInteractive(true);
+  map_view_->setAcceptDrops(true);
   map_view_->setBackgroundBrush(QColor(30, 30, 30));
   map_view_->setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing,
                                  true);
@@ -78,6 +79,14 @@ void EditorWindow::build_workspace() {
             doc_.set_active_gid(gid);
             statusBar()->showMessage(
                 QString("Tile seleccionado: gid %1").arg(gid));
+          });
+  connect(selector_, &TilesetSelectorView::brushSelected, this,
+          [this](const TileBrush &brush) {
+            statusBar()->showMessage(
+                QString("Bloque seleccionado: %1 x %2 (%3 tiles)")
+                    .arg(brush.width)
+                    .arg(brush.height)
+                    .arg(brush.gids.size()));
           });
 }
 
@@ -121,10 +130,17 @@ void EditorWindow::load_all_tilesets() {
 
   int loaded = 0;
   doc_.map().clear_tilesets();
-  for (const QFileInfo &info : entries) {
-    if (register_tileset_file(info.absoluteFilePath()) >= 0)
-      ++loaded;
+  {
+    // register_tileset_file() registra cada PNG en doc_; se bloquean sus
+    // señales para no refrescar la UI por cada tileset, sino una sola vez al
+    // final.
+    QSignalBlocker blocker(&doc_);
+    for (const QFileInfo &info : entries) {
+      if (register_tileset_file(info.absoluteFilePath()) >= 0)
+        ++loaded;
+    }
   }
+  doc_.notify_tilesets_changed();
 
   refresh_tileset_combo();
   if (loaded > 0) {
@@ -294,6 +310,9 @@ void EditorWindow::build_menus() {
   QAction *salir = archivo->addAction("&Salir");
   salir->setShortcut(QKeySequence::Quit);
   connect(salir, &QAction::triggered, this, &QWidget::close);
+
+  QAction *limpiar = archivo->addAction("&Limpiar");
+  connect(limpiar, &QAction::triggered, this, &EditorWindow::on_clear);
 }
 
 void EditorWindow::on_new() {
@@ -341,6 +360,13 @@ void EditorWindow::on_save_as() {
 
   if (save_to(path))
     current_path_ = path;
+}
+
+void EditorWindow::on_clear() {
+  // TODO:
+  // doc_.new_map();
+  // load_all_tilesets();
+  // current_path_.clear();
 }
 
 bool EditorWindow::save_to(const QString &path) {

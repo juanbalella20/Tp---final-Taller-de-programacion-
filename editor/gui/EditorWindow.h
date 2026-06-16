@@ -14,7 +14,7 @@ class TilesetSelectorView;
 
 /*
  * Ventana principal del editor. Arma los menus, las toolbars, la paleta y el
- * canvas, y cablea sus acciones al EditorDocument (dueno del Map). No tiene
+ * canvas, y cablea sus acciones al EditorDocument (dueño del Map). No tiene
  * logica de edicion: solo traduce la UI en llamadas al documento.
  */
 class EditorWindow : public QMainWindow {
@@ -28,6 +28,7 @@ private slots:
   void on_open(); // Archivo > Abrir: carga un .bin elegido por el usuario.
   void on_save(); // Archivo > Guardar: reusa la ruta actual (o "Guardar como").
   void on_save_as(); // Archivo > Guardar como: pide ruta y serializa el .bin.
+  void on_clear();   // Archivo > Limpiar: limpia todo el canvas.
   // Pre-carga todos los tilesets de la carpeta compartida (assets/tilesets).
   // La llaman el arranque, "Nuevo" y "Abrir": reemplaza la lista de tilesets
   // del documento por el catalogo canonico completo de la carpeta.

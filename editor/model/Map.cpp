@@ -31,26 +31,19 @@ bool Map::in_bounds(int x, int y) const {
 const std::vector<Tileset> &Map::tilesets() const { return tilesets_; }
 
 std::vector<Tileset> Map::used_tilesets() const {
-  // gids efectivamente pintados en alguna capa (0 = celda vacia, se ignora).
-  std::unordered_set<int> used_gids;
+  std::unordered_set<int> used_indices;
   for (const MapLayerData &layer : layers_) {
     for (const std::vector<int> &row : layer.data) {
       for (int gid : row) {
-        if (gid != 0)
-          used_gids.insert(gid);
+        if (const TileDef *td = find_tile(gid))
+          used_indices.insert(td->tileset_index);
       }
     }
   }
-
   std::vector<Tileset> result;
-  for (const Tileset &ts : tilesets_) {
-    const int end = ts.firstgid + ts.tile_count;
-    for (int gid : used_gids) {
-      if (gid >= ts.firstgid && gid < end) {
-        result.push_back(ts);
-        break;
-      }
-    }
+  for (int i = 0; i < static_cast<int>(tilesets_.size()); ++i) {
+    if (used_indices.count(i))
+      result.push_back(tilesets_[static_cast<std::size_t>(i)]);
   }
   return result;
 }
