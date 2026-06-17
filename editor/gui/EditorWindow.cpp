@@ -1,5 +1,4 @@
 #include "EditorWindow.h"
-
 #include <QAction>
 #include <QActionGroup>
 #include <QCollator>
@@ -129,13 +128,23 @@ void EditorWindow::load_all_tilesets() {
             });
 
   int loaded = 0;
-  doc_.map().clear_tilesets();
   {
     // register_tileset_file() registra cada PNG en doc_; se bloquean sus
     // señales para no refrescar la UI por cada tileset, sino una sola vez al
     // final.
     QSignalBlocker blocker(&doc_);
+    const auto &tilesets = doc_.map().tilesets();
     for (const QFileInfo &info : entries) {
+      const std::string rel_path =
+          paths::resource_relative(info.absoluteFilePath().toStdString());
+      // devuelve true si ya hay un tileset cargado cuyo path
+      // coincide con el archivo binario
+      const bool already_loaded = std::any_of(
+          tilesets.begin(), tilesets.end(),
+          [&rel_path](const Tileset &ts) { return ts.file_path == rel_path; });
+      if (already_loaded)
+        continue;
+      // Registra el nuevo tileset
       if (register_tileset_file(info.absoluteFilePath()) >= 0)
         ++loaded;
     }
@@ -371,16 +380,6 @@ void EditorWindow::on_clear() {
 
 bool EditorWindow::save_to(const QString &path) {
   const Map &map = doc_.map();
-
-  // El .bin DEBE guardar el file_path del tileset RELATIVO a la carpeta de
-  // recursos: si guardamos la ruta absoluta de esta maquina, el cliente la
-  // resuelve como (base_dir / absoluta) y std::filesystem descarta base_dir,
-  // dejando una ruta que solo existe aca. Esto pasa sobre todo al re-guardar
-  // un .bin abierto: el loader ya entrego file_path como absoluto.
-  // resource_relative normaliza a relativo (y deja igual lo que ya lo este).
-  // Solo se guardan los tilesets realmente usados por alguna capa: la pre-carga
-  // registra todos los de assets/tilesets, pero serializar los no usados infla
-  // el .bin y obliga al cliente a resolver PNGs que el mapa nunca referencia.
   std::vector<Tileset> tilesets = map.used_tilesets();
   for (Tileset &ts : tilesets) {
     ts.file_path = paths::resource_relative(ts.file_path);
