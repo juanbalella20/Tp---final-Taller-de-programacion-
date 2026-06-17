@@ -29,6 +29,9 @@ public:
   // Mapa nuevo: WIDTH x HEIGHT, dos capas ("ground", "buildings") llenas de 0.
   Map();
 
+  // Vacia capas, colision y teleports (estado inicial) 
+  void clear_canvas();
+
   int width() const;     // ancho del mapa en tiles (constante WIDTH)
   int height() const;    // alto del mapa en tiles (constante HEIGHT)
   int tile_size() const; // lado del tile en px (constante TILE_SIZE)

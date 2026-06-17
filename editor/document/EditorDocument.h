@@ -58,6 +58,8 @@ public:
   // Persistencia
   void new_map();
   bool open(const QString &path, QString *err); // via BinaryMapLoader
+  // Vacia capas/colision/teleports sin tocar los tilesets cargados
+  void clear_canvas();
 
   bool is_dirty() const;     // hay cambios sin guardar
   QString file_path() const; // ruta del .bin abierto (vacia si es mapa nuevo)

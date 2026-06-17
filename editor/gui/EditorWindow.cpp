@@ -372,10 +372,7 @@ void EditorWindow::on_save_as() {
 }
 
 void EditorWindow::on_clear() {
-  // TODO:
-  // doc_.new_map();
-  // load_all_tilesets();
-  // current_path_.clear();
+  doc_.clear_canvas();
 }
 
 bool EditorWindow::save_to(const QString &path) {

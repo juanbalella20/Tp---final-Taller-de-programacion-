@@ -203,6 +203,12 @@ void EditorDocument::new_map() {
   emit mapReset();
 }
 
+void EditorDocument::clear_canvas() {
+  map_.clear_canvas();
+  set_dirty(true);
+  emit mapReset();
+}
+
 bool EditorDocument::open(const QString &path, QString *err) {
   try {
     BinaryMapLoader loader;

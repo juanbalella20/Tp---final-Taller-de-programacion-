@@ -18,6 +18,14 @@ Map::Map() {
   collision_.assign(HEIGHT, std::vector<uint8_t>(WIDTH, 0));
 }
 
+void Map::clear_canvas() {
+  for (MapLayerData &layer : layers_) {
+    layer.data.assign(HEIGHT, std::vector<int>(WIDTH, 0));
+  }
+  collision_.assign(HEIGHT, std::vector<uint8_t>(WIDTH, 0));
+  teleports_.clear();
+}
+
 // --- Metadata (constantes) ---------------------------------------------------
 int Map::width() const { return WIDTH; }
 int Map::height() const { return HEIGHT; }
