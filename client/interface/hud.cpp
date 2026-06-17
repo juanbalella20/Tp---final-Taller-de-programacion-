@@ -5,7 +5,6 @@
 HUD::HUD(SDL_Renderer* gui_renderer,
          float game_width, float panel_width, float canvas_height)
     : gui_renderer(gui_renderer),
-      font(TTF_OpenFont("fonts/StackSansText-Medium.ttf", 16)),
       inventory{},
       player_gold(0),
       player_hp(0),
@@ -25,6 +24,9 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       panel_width(panel_width),
       canvas_height(canvas_height) {
     
+    
+    std::string path = paths::asset("fonts/StackSansText-Medium.ttf");
+    font = TTF_OpenFont(path.c_str(), 16);
     image_w = 1021.0f;
     image_h = 767.0f;
 
