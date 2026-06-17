@@ -28,14 +28,14 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
     }
     SDL_SetTextureBlendMode(image, SDL_BLENDMODE_BLEND);
 
-    SDL_Surface* ghost_surf = IMG_Load("imagenes/ghost.png");
+    SDL_Surface* ghost_surf = IMG_Load("imagenes/fantasma.png");
     if (!ghost_surf) {
-        throw std::runtime_error(std::string("Loading weapon surface: ") + SDL_GetError());
+        throw std::runtime_error(std::string("Loading ghost surface: ") + SDL_GetError());
     }
     ghost_image = SDL_CreateTextureFromSurface(renderer, ghost_surf);
     SDL_DestroySurface(ghost_surf);
     if (!ghost_image) {
-        throw std::runtime_error(std::string("Creating weapon texture: ") + SDL_GetError());
+        throw std::runtime_error(std::string("Creating ghost texture: ") + SDL_GetError());
     }
 
     load_heads();
@@ -286,31 +286,36 @@ void PlayerDisplay::head_back_pov() {
 
 SDL_FRect PlayerDisplay::back_pov(ViewDirection direction) {
     current_direction = direction;
+    SDL_FRect frame;
 
-    static const SDL_FRect frames[] = {
-        {255.0f, 51.0f, 30.0f, 40.0f},
-        {285.0f, 51.0f, 30.0f, 40.0f},
-        {310.0f, 51.0f, 30.0f, 40.0f},
-        {335.0f, 51.0f, 30.0f, 40.0f},
-        {365.0f, 51.0f, 30.0f, 40.0f},
-        {394.0f, 51.0f, 30.0f, 40.0f}
-    };
+    if (!ghost) {
+        static const SDL_FRect frames[] = {
+            {255.0f, 51.0f, 30.0f, 40.0f},
+            {285.0f, 51.0f, 30.0f, 40.0f},
+            {310.0f, 51.0f, 30.0f, 40.0f},
+            {335.0f, 51.0f, 30.0f, 40.0f},
+            {365.0f, 51.0f, 30.0f, 40.0f},
+            {394.0f, 51.0f, 30.0f, 40.0f}
+        };
 
-    int current_frame = walk_frame % 6;
+        int current_frame = walk_frame % 6;
 
-    static const float h_dx[] = { -0.05f, -0.15f, -0.05f, 0.0f, -0.1f, -0.15f };
-    static const float h_dy[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-    head_dx = h_dx[current_frame];
-    head_dy = h_dy[current_frame];
+        static const float h_dx[] = { -0.05f, -0.15f, -0.05f, 0.0f, -0.1f, -0.15f };
+        static const float h_dy[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+        head_dx = h_dx[current_frame];
+        head_dy = h_dy[current_frame];
 
-    head_back_pov();
+        head_back_pov();
 
-    if(has_equipped_weapon) {
-        weapon_back_offset(current_frame);
+        if(has_equipped_weapon) {
+            weapon_back_offset(current_frame);
+        }
+
+        frame = frames[current_frame];
+        walk_frame = (walk_frame + 1) % 6;
+    } else {
+        frame = back_ghost_pov();
     }
-
-    SDL_FRect frame = frames[current_frame];
-    walk_frame = (walk_frame + 1) % 6;
     return frame;
 }
 
@@ -337,31 +342,37 @@ void PlayerDisplay::head_front_pov() {
 
 SDL_FRect PlayerDisplay::front_pov(ViewDirection direction) {
     current_direction = direction;
+    SDL_FRect frame;
 
-    static const SDL_FRect frames[] = {
-        {255.0f, 5.0f, 30.0f, 40.0f},
-        {285.0f, 5.0f, 30.0f, 40.0f},
-        {310.0f, 5.0f, 30.0f, 40.0f},
-        {335.0f, 5.0f, 30.0f, 40.0f},
-        {365.0f, 5.0f, 30.0f, 40.0f},
-        {394.0f, 5.0f, 30.0f, 40.0f}
-    };
+    if (!ghost) {
+        static const SDL_FRect frames[] = {
+            {255.0f, 5.0f, 30.0f, 40.0f},
+            {285.0f, 5.0f, 30.0f, 40.0f},
+            {310.0f, 5.0f, 30.0f, 40.0f},
+            {335.0f, 5.0f, 30.0f, 40.0f},
+            {365.0f, 5.0f, 30.0f, 40.0f},
+            {394.0f, 5.0f, 30.0f, 40.0f}
+        };
 
-    int current_frame = walk_frame % 6;
+        int current_frame = walk_frame % 6;
 
-    static const float h_dx[] = { -0.05f, -0.15f, -0.05f, 0.0f, -0.1f, -0.2f };
-    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
-    head_dx = h_dx[current_frame];
-    head_dy = h_dy[current_frame];
+        static const float h_dx[] = { -0.05f, -0.15f, -0.05f, 0.0f, -0.1f, -0.2f };
+        static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
+        head_dx = h_dx[current_frame];
+        head_dy = h_dy[current_frame];
 
-    head_front_pov();
+        head_front_pov();
 
-    if(has_equipped_weapon) {
-        weapon_front_offset(current_frame);
+        if(has_equipped_weapon) {
+            weapon_front_offset(current_frame);
+        }
+
+        frame = frames[current_frame];
+        walk_frame = (walk_frame + 1) % 6;
+    } else {
+        frame = front_ghost_pov();
     }
-
-    SDL_FRect frame = frames[current_frame];
-    walk_frame = (walk_frame + 1) % 6;
+    
     return frame;
 }
 
@@ -387,30 +398,35 @@ void PlayerDisplay::head_right_pov() {
 
 SDL_FRect PlayerDisplay::right_pov(ViewDirection direction) {
     current_direction = direction;
+    SDL_FRect frame;
 
-    static const SDL_FRect frames[] = {
-        {259.0f, 147.0f, 30.0f, 40.0f},
-        {278.0f, 147.0f, 30.0f, 40.0},
-        {312.0f, 147.0f, 30.0f, 40.0},
-        {340.0f, 147.0f, 30.0f, 40.0},
-        {370.0f, 147.0f, 30.0f, 40.0}
-    };
+    if (!ghost) {
+        static const SDL_FRect frames[] = {
+            {259.0f, 147.0f, 30.0f, 40.0f},
+            {278.0f, 147.0f, 30.0f, 40.0},
+            {312.0f, 147.0f, 30.0f, 40.0},
+            {340.0f, 147.0f, 30.0f, 40.0},
+            {370.0f, 147.0f, 30.0f, 40.0}
+        };
 
-    int current_frame = walk_frame % 5;
+        int current_frame = walk_frame % 5;
 
-    static const float h_dx[] = { -0.2f, 0.1f, -0.15f, -0.2f, -0.25f };
-    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
-    head_dx = h_dx[current_frame];
-    head_dy = h_dy[current_frame];
+        static const float h_dx[] = { -0.2f, 0.1f, -0.15f, -0.2f, -0.25f };
+        static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
+        head_dx = h_dx[current_frame];
+        head_dy = h_dy[current_frame];
 
-    head_right_pov();
+        head_right_pov();
 
-    if(has_equipped_weapon) {
-        weapon_right_offset(current_frame);
+        if(has_equipped_weapon) {
+            weapon_right_offset(current_frame);
+        }
+
+        frame = frames[current_frame];
+        walk_frame = (walk_frame + 1) % 5;
+    } else {
+        frame = right_ghost_pov();
     }
-
-    SDL_FRect frame = frames[current_frame];
-    walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
 
@@ -438,30 +454,35 @@ void PlayerDisplay::head_left_pov() {
 
 SDL_FRect PlayerDisplay::left_pov(ViewDirection direction) {
     current_direction = direction;
+    SDL_FRect frame;
 
-    static const SDL_FRect frames[] = {
-        {252.0f, 100.0f, 30.0f, 40.0f},
-        {278.0f, 100.0f, 30.0f, 40.0},
-        {309.0f, 100.0f, 30.0f, 40.0},
-        {336.0f, 100.0f, 30.0f, 40.0},
-        {370.0f, 100.0f, 30.0f, 40.0}
-    };
+    if (!ghost) {
+        static const SDL_FRect frames[] = {
+            {252.0f, 100.0f, 30.0f, 40.0f},
+            {278.0f, 100.0f, 30.0f, 40.0},
+            {309.0f, 100.0f, 30.0f, 40.0},
+            {336.0f, 100.0f, 30.0f, 40.0},
+            {370.0f, 100.0f, 30.0f, 40.0}
+        };
 
-    int current_frame = walk_frame % 5;
+        int current_frame = walk_frame % 5;
 
-    static const float h_dx[] = { 0.0f, 0.0f, -0.05f, -0.05f, -0.3f };
-    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
-    head_dx = h_dx[current_frame];
-    head_dy = h_dy[current_frame];
+        static const float h_dx[] = { 0.0f, 0.0f, -0.05f, -0.05f, -0.3f };
+        static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
+        head_dx = h_dx[current_frame];
+        head_dy = h_dy[current_frame];
 
-    head_left_pov();
+        head_left_pov();
 
-    if(has_equipped_weapon) {
-        weapon_left_offset(current_frame);
+        if(has_equipped_weapon) {
+            weapon_left_offset(current_frame);
+        }
+
+        frame = frames[current_frame];
+        walk_frame = (walk_frame + 1) % 5;
+    } else {
+        frame = left_ghost_pov();
     }
-
-    SDL_FRect frame = frames[current_frame];
-    walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
 
@@ -472,13 +493,13 @@ void PlayerDisplay::weapon_left_offset(int current_frame) {
     weapon_dy = dy[current_frame];
 }
 
-SDL_FRect PlayerDisplay::ghost_frame() {
+SDL_FRect PlayerDisplay::front_ghost_pov() {
     static const SDL_FRect frames[] = {
-        { 1.0f, 1.0f, 31.0f, 46.0f},
-        {32.0f, 1.0f, 32.0f, 46.0},
-        {64.0f, 0.0f, 32.0f, 47.0},
-        {96.0f, 0.0f, 32.0f, 47.0},
-        {128.0f, 1.0f, 32.0f, 46.0}
+        { 0.0f, 6.0f, 31.0f, 48.0f},
+        {31.0f, 6.0f, 32.0f, 48.0},
+        {63.0f, 6.0f, 32.0f, 48.0},
+        {95.0f, 6.0f, 32.0f, 48.0},
+        {127.0f, 6.0f, 33.0f, 48.0}
     };
 
     int current_frame = walk_frame % 5;
@@ -487,6 +508,55 @@ SDL_FRect PlayerDisplay::ghost_frame() {
     walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
+
+SDL_FRect PlayerDisplay::back_ghost_pov() {
+    static const SDL_FRect frames[] = {
+        { 0.0f, 71.0f, 31.0f, 45.0f},
+        {31.0f, 71.0f, 32.0f, 45.0},
+        {63.0f, 71.0f, 32.0f, 45.0},
+        {95.0f, 71.0f, 32.0f, 45.0},
+        {127.0f, 71.0f, 33.0f, 45.0}
+    };
+
+    int current_frame = walk_frame % 5;
+
+    SDL_FRect frame = frames[current_frame];
+    walk_frame = (walk_frame + 1) % 5;
+    return frame;
+}
+
+SDL_FRect PlayerDisplay::left_ghost_pov() {
+    static const SDL_FRect frames[] = {
+        { 0.0f, 201.0f, 31.0f, 42.0f},
+        {31.0f, 201.0f, 32.0f, 42.0},
+        {63.0f, 201.0f, 32.0f, 42.0},
+        {95.0f, 201.0f, 32.0f, 42.0},
+        {127.0f, 201.0f, 33.0f, 42.0}
+    };
+
+    int current_frame = walk_frame % 5;
+
+    SDL_FRect frame = frames[current_frame];
+    walk_frame = (walk_frame + 1) % 5;
+    return frame;
+}
+
+SDL_FRect PlayerDisplay::right_ghost_pov() {
+    static const SDL_FRect frames[] = {
+        { 0.0f, 135.0f, 31.0f, 43.0f},
+        {31.0f, 135.0f, 32.0f, 43.0},
+        {63.0f, 135.0f, 32.0f, 43.0},
+        {95.0f, 135.0f, 32.0f, 43.0},
+        {127.0f, 135.0f, 33.0f, 43.0}
+    };
+
+    int current_frame = walk_frame % 5;
+
+    SDL_FRect frame = frames[current_frame];
+    walk_frame = (walk_frame + 1) % 5;
+    return frame;
+}
+
 
 void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect crop) {
     SDL_FRect dst {
