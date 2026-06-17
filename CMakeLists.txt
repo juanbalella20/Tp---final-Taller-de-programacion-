@@ -258,7 +258,7 @@ install(TARGETS client server RUNTIME DESTINATION bin)
 install(TARGETS SDL3-shared SDL3_image-shared SDL3_ttf-shared SDL3_mixer-shared
         LIBRARY DESTINATION lib)
 
-install(DIRECTORY imagenes fonts data DESTINATION share/${APP_NAME})
+install(DIRECTORY imagenes fonts data assets DESTINATION share/${APP_NAME})
 install(DIRECTORY client/audio/sounds client/audio/music
         DESTINATION share/${APP_NAME}/client/audio)
 
