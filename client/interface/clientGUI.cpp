@@ -2,6 +2,7 @@
 #include "npcSprite.h"
 #include "itemSprite.h"
 #include "constants/game_config.h"
+#include "paths.h"
 #include <SDL3_image/SDL_image.h>
 #include <algorithm>
 #include <cmath>
@@ -37,7 +38,8 @@ void ClientGUI::initSDL() {
     // presentacion logica del juego, el icono y el mini chat.
     SDL_SetRenderLogicalPresentation(renderer, LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
-    SDL_Surface* icon = IMG_Load("imagenes/logo.jpeg");
+    std::string path = paths::asset("imagenes/logo.jpeg");
+    SDL_Surface* icon = IMG_Load(path.c_str());
     if (icon) {
         SDL_SetWindowIcon(window, icon);
         SDL_DestroySurface(icon);
@@ -1059,7 +1061,8 @@ void ClientGUI::load_spell_effects() {
         {"baculo_engarzado", "imagenes/864.png",  128, 128, 4, 16},
     };
     for (const auto& d : defs) {
-        SDL_Surface* surf = IMG_Load(d.path);
+        std::string path = paths::asset(d.path);
+        SDL_Surface* surf = IMG_Load(path.c_str());
         if (!surf) continue;
         SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
         SDL_DestroySurface(surf);
@@ -1286,7 +1289,8 @@ void ClientGUI::draw() {
 }
 
 void ClientGUI::load_npc_texture(const std::string& npc_name, const std::string& image_path) {
-    SDL_Surface* surf = IMG_Load(image_path.c_str());
+    std::string path = paths::asset(image_path);
+    SDL_Surface* surf = IMG_Load(path.c_str());
     if (surf) {
         SDL_Texture* text = SDL_CreateTextureFromSurface(renderer, surf);
         enemies_textures[npc_name] = text;
@@ -1320,26 +1324,18 @@ void ClientGUI::init_draw() {
     // arranca en un centinela, asi que siempre recarga la zona real). No tocar
     // current_zone aca: dejarlo en el centinela.
     loadMedia(ZONE_CITY);
-    // TODO: eliminar esto
-    SDL_Surface* enemy_surf = IMG_Load("imagenes/enemigo.png");
-    if (!enemy_surf) enemy_surf = IMG_Load("enemigo.png");
-    if (enemy_surf) {
-        enemy_texture = SDL_CreateTextureFromSurface(renderer, enemy_surf);
-        SDL_DestroySurface(enemy_surf);
-    }
 
     load_enemies_textures();
-
-    SDL_Surface* frame_surf = IMG_Load("imagenes/frame..png");
+    
+    std::string path = paths::asset("imagenes/frame..png");
+    SDL_Surface* frame_surf = IMG_Load(path.c_str());
     if (frame_surf) {
         frame_texture = SDL_CreateTextureFromSurface(renderer, frame_surf);
         SDL_DestroySurface(frame_surf);
     }
 
-    SDL_Surface* item_surf = IMG_Load("imagenes/101.png");
-    if (!item_surf) {
-        item_surf = IMG_Load("101.png");
-    }
+    path = paths::asset("imagenes/101.png");
+    SDL_Surface* item_surf = IMG_Load(path.c_str());
     if (item_surf) {
         item_texture = SDL_CreateTextureFromSurface(renderer, item_surf);
         SDL_SetTextureBlendMode(item_texture, SDL_BLENDMODE_BLEND);
@@ -1351,8 +1347,8 @@ void ClientGUI::init_draw() {
 
     // El sprite 2141.png en el piso es el "escudo de hierro" (la imagen que antes
     // se mostraba bajo el alias "escudo"). El escudo de tortuga usa su propio PNG.
-    SDL_Surface* shield_surf = IMG_Load("imagenes/2141.png");
-    if (!shield_surf) { shield_surf = IMG_Load("2141.png"); }
+    path = paths::asset("imagenes/2141.png");
+    SDL_Surface* shield_surf = IMG_Load(path.c_str());
     if (shield_surf) {
         SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, shield_surf);
         SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
@@ -1390,7 +1386,8 @@ void ClientGUI::init_draw() {
         {"escudo",           "imagenes/escudo-tortuga.png"},
     };
     for (const auto& fi : floor_icons) {
-        SDL_Surface* surf = IMG_Load(fi.path);
+        std::string p = paths::asset(fi.path);
+        SDL_Surface* surf = IMG_Load(p.c_str());
         if (!surf) continue;
         float w = static_cast<float>(surf->w);
         float h = static_cast<float>(surf->h);
@@ -1402,8 +1399,9 @@ void ClientGUI::init_draw() {
         floor_item_crops[fi.id] = {0.0f, 0.0f, w, h};
     }
 
-    SDL_Surface* elem_surf = IMG_Load("imagenes/100.png");
-    if (!elem_surf) { elem_surf = IMG_Load("100.png"); }
+    path = paths::asset("imagenes/100.png");
+    SDL_Surface* elem_surf = IMG_Load(path.c_str());
+    
     if (elem_surf) {
         gold_texture = SDL_CreateTextureFromSurface(renderer, elem_surf);
         SDL_DestroySurface(elem_surf);
@@ -1419,17 +1417,23 @@ void ClientGUI::init_draw() {
         floor_item_textures["pocion_mana"] = gold_texture;
         floor_item_crops["pocion_mana"] = {424.0f, 159.0f, 17.0f, 26.0f};
     }
-    SDL_Surface* seller_surf = IMG_Load("imagenes/4055.png");
+
+    path = paths::asset("imagenes/4055.png");
+    SDL_Surface* seller_surf = IMG_Load(path.c_str());
     if (seller_surf) {
         seller_texture = SDL_CreateTextureFromSurface(renderer, seller_surf);
         SDL_DestroySurface(seller_surf);
     }
-    SDL_Surface* banker_surf = IMG_Load("imagenes/4051.png");
+
+    path = paths::asset("imagenes/4051.png");
+    SDL_Surface* banker_surf = IMG_Load(path.c_str());
     if (banker_surf) {
         banker_texture = SDL_CreateTextureFromSurface(renderer, banker_surf);
         SDL_DestroySurface(banker_surf);
     }
-    SDL_Surface* priest_surf = IMG_Load("imagenes/4057.png");
+
+    path = paths::asset("imagenes/4057.png");
+    SDL_Surface* priest_surf = IMG_Load(path.c_str());
     if (priest_surf) {
         priest_texture = SDL_CreateTextureFromSurface(renderer, priest_surf);
         SDL_DestroySurface(priest_surf);

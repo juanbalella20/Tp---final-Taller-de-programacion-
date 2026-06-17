@@ -1,5 +1,6 @@
 #include "hud.h"
 #include <stdexcept>
+#include "paths.h"
 
 HUD::HUD(SDL_Renderer* gui_renderer,
          float game_width, float panel_width, float canvas_height)
@@ -558,7 +559,8 @@ void HUD::render() {
 }
 
 void HUD::load_stat_texture(const std::string& path, SDL_Texture** texture) {
-    SDL_Surface* bar_surf = IMG_Load(path.c_str());
+    std::string p = paths::asset(path);
+    SDL_Surface* bar_surf = IMG_Load(p.c_str());
     if (!bar_surf) {
         throw std::runtime_error(std::string("Failed to load texture: ") + path + " - " + SDL_GetError());
     }
@@ -570,7 +572,8 @@ void HUD::load_stat_texture(const std::string& path, SDL_Texture** texture) {
 }
 
 void HUD::load_textures() {
-    SDL_Surface* sword_surf = IMG_Load("imagenes/101.png");
+    std::string path = paths::asset("imagenes/101.png");
+    SDL_Surface* sword_surf = IMG_Load(path.c_str());
     if (sword_surf) {
         SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, sword_surf);
         SDL_SetTextureBlendMode(tex, SDL_SCALEMODE_LINEAR);
@@ -581,7 +584,8 @@ void HUD::load_textures() {
 
     // El sprite 2141.png es el "escudo de hierro" (la imagen que se mostraba
     // antes bajo el alias "escudo"). El escudo de tortuga usa su propio PNG.
-    SDL_Surface* shield_surf = IMG_Load("imagenes/2141.png");
+    path = paths::asset("imagenes/2141.png");
+    SDL_Surface* shield_surf = IMG_Load(path.c_str());
     if (shield_surf) {
         SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, shield_surf);
         SDL_SetTextureBlendMode(tex, SDL_SCALEMODE_LINEAR);
@@ -620,7 +624,8 @@ void HUD::load_textures() {
         {"escudo_tortuga",   "imagenes/escudo-tortuga.png"},
     };
     for (const auto& ii : item_icons) {
-        SDL_Surface* surf = IMG_Load(ii.path);
+        std::string p = paths::asset(ii.path);
+        SDL_Surface* surf = IMG_Load(p.c_str());
         if (!surf) continue;
         float w = static_cast<float>(surf->w);
         float h = static_cast<float>(surf->h);
@@ -642,7 +647,8 @@ void HUD::load_textures() {
     // Pociones en el inventario: ambas se recortan del MISMO spritesheet 100.png.
     // Se carga una sola textura y los dos ids la comparten (el destructor libera
     // cada textura una sola vez). pocion_vida = botella gris; pocion_mana = azul.
-    SDL_Surface* potion_surf = IMG_Load("imagenes/100.png");
+    path = paths::asset("imagenes/100.png");
+    SDL_Surface* potion_surf = IMG_Load(path.c_str());
     if (potion_surf) {
         SDL_Texture* potion_tex = SDL_CreateTextureFromSurface(gui_renderer, potion_surf);
         SDL_DestroySurface(potion_surf);

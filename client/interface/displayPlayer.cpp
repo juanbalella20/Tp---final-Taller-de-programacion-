@@ -1,6 +1,7 @@
 #include "displayPlayer.h"
 #include <SDL3_image/SDL_image.h>
 #include "../common/constants/game_constants.h"
+#include "paths.h"
 #include <stdexcept>
 #include <string>
 #include <iostream>
@@ -17,7 +18,8 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
     rect.w *= size_scale;
     rect.h *= size_scale;
 
-    SDL_Surface* surf = IMG_Load(imagePath.c_str());
+    std::string path = paths::asset(imagePath);
+    SDL_Surface* surf = IMG_Load(path.c_str());
     if (!surf) {
         throw std::runtime_error(std::string("Loading player surface: ") + SDL_GetError());
     }
@@ -28,7 +30,8 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
     }
     SDL_SetTextureBlendMode(image, SDL_BLENDMODE_BLEND);
 
-    SDL_Surface* ghost_surf = IMG_Load("imagenes/fantasma.png");
+    path = paths::asset("imagenes/fantasma.png");
+    SDL_Surface* ghost_surf = IMG_Load(path.c_str());
     if (!ghost_surf) {
         throw std::runtime_error(std::string("Loading ghost surface: ") + SDL_GetError());
     }
@@ -77,7 +80,8 @@ void PlayerDisplay::load_equip_sprites() {
         {"sombrero_magico",   "imagenes/sombrero-magico.png",       {}, false, EquipKind::HELMET},
     };
     for (const auto& d : defs) {
-        SDL_Surface* surf = IMG_Load(d.path);
+        std::string path = paths::asset(d.path);
+        SDL_Surface* surf = IMG_Load(path.c_str());
         if (!surf) continue;
         SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
         SDL_DestroySurface(surf);
@@ -151,15 +155,21 @@ void PlayerDisplay::load_heads() {
     SDL_Surface* head_surf = nullptr;
     SDL_Surface* hat_surf = nullptr;
 
+    std::string path;
     if (race == "human") {
-        head_surf = IMG_Load("imagenes/420.png");
+        path = paths::asset("imagenes/420.png");
+        head_surf = IMG_Load(path.c_str());
     } else if (race == "elf") {
-        head_surf = IMG_Load("imagenes/422.png");
+        path = paths::asset("imagenes/422.png");
+        head_surf = IMG_Load(path.c_str());
     } else if (race == "dwarf") {
-        head_surf = IMG_Load("imagenes/426.png");
+        path = paths::asset("imagenes/426.png");
+        head_surf = IMG_Load(path.c_str());
     } else if (race == "gnome") {
-        head_surf = IMG_Load("imagenes/426.png");
-        hat_surf = IMG_Load("imagenes/437.png");
+        path = paths::asset("imagenes/426.png");
+        head_surf = IMG_Load(path.c_str());
+        path = paths::asset("imagenes/437.png");
+        hat_surf = IMG_Load(path.c_str());
         if (!hat_surf) {
             throw std::runtime_error(std::string("Loading hat surface: ") + SDL_GetError());
         }
@@ -173,7 +183,8 @@ void PlayerDisplay::load_heads() {
         // al sprite de cabeza humana para no quedar con head_surf sin cargar.
         std::cerr << "[WARN] raza desconocida '" << race
                   << "', usando cabeza humana por defecto" << std::endl;
-        head_surf = IMG_Load("imagenes/420.png");
+        path = paths::asset("imagenes/420.png");
+        head_surf = IMG_Load(path.c_str());
     }
 
     if (!head_surf) {

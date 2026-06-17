@@ -5,6 +5,7 @@
 #include <string>
 
 #include "ui_helpers.h"
+#include "paths.h"
 
 // --- Layout (coordenadas del comercio.png de 1672x941) ----------------------
 // Las regiones se convierten desde pixeles del arte al rect escalado del marco.
@@ -40,7 +41,9 @@ ShopWindow::ShopWindow(SDL_Renderer* renderer, TTF_Font* font,
                        int logical_w, int logical_h)
     : renderer(renderer), font(font),
       logical_w(logical_w), logical_h(logical_h) {
-    SDL_Surface* surf = IMG_Load("imagenes/comercio.png");
+    
+    std::string path = paths::asset("imagenes/comercio.png");
+    SDL_Surface* surf = IMG_Load(path.c_str());
     if (surf) {
         background = SDL_CreateTextureFromSurface(renderer, surf);
         if (background) SDL_SetTextureBlendMode(background, SDL_BLENDMODE_BLEND);
@@ -67,8 +70,9 @@ ShopWindow::~ShopWindow() {
 // Misma tabla de iconos que el HUD: la tienda muestra el sprite real de cada
 // item por id. Se carga una vez al crear la ventana (no por frame).
 void ShopWindow::load_item_textures() {
+    std::string path = paths::asset("imagenes/101.png");
     // Espada: recorte de su spritesheet (101.png).
-    if (SDL_Surface* s = IMG_Load("imagenes/101.png")) {
+    if (SDL_Surface* s = IMG_Load(path.c_str())) {
         if (SDL_Texture* t = SDL_CreateTextureFromSurface(renderer, s)) {
             SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
             item_textures["espada"] = t;
@@ -76,8 +80,9 @@ void ShopWindow::load_item_textures() {
         }
         SDL_DestroySurface(s);
     }
+    path = paths::asset("imagenes/2141.png");
     // Escudo de hierro: primer sprite de su spritesheet (2141.png).
-    if (SDL_Surface* s = IMG_Load("imagenes/2141.png")) {
+    if (SDL_Surface* s = IMG_Load(path.c_str())) {
         if (SDL_Texture* t = SDL_CreateTextureFromSurface(renderer, s)) {
             SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
             item_textures["escudo_hierro"] = t;
@@ -105,7 +110,8 @@ void ShopWindow::load_item_textures() {
         {"escudo_tortuga",   "imagenes/escudo-tortuga.png"},
     };
     for (const auto& ic : icons) {
-        SDL_Surface* s = IMG_Load(ic.path);
+        std::string p = paths::asset(ic.path);
+        SDL_Surface* s = IMG_Load(p.c_str());
         if (!s) continue;
         float w = static_cast<float>(s->w);
         float h = static_cast<float>(s->h);
@@ -122,8 +128,9 @@ void ShopWindow::load_item_textures() {
         item_textures["escudo"] = it->second;
         item_crops["escudo"] = item_crops["escudo_tortuga"];
     }
+    path = paths::asset("imagenes/100.png");
     // Pociones: ambas se recortan del mismo spritesheet 100.png (textura comun).
-    if (SDL_Surface* s = IMG_Load("imagenes/100.png")) {
+    if (SDL_Surface* s = IMG_Load(path.c_str())) {
         if (SDL_Texture* t = SDL_CreateTextureFromSurface(renderer, s)) {
             SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
             item_textures["pocion_vida"] = t;
