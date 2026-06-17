@@ -75,6 +75,11 @@ std::string resources_dir() {
     if (!p.empty() && p.is_absolute())
       return p.string();
   }
+  fs::path installed =
+      xdg_base("XDG_DATA_HOME", fs::path(".local") / "share") / APP_NAME;
+  if (fs::exists(installed))
+    return installed.string();
+  
   // Sin la env var: layout del repo (cwd), igual que el fallback de asset().
   return fs::current_path().string();
 }
