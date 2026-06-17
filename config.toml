@@ -455,7 +455,8 @@ npc_gold_drop_max = 0.2
 # safe_zone: true = zona segura, sin PvP (ningun player puede dañar a otro,
 #   sean o no del mismo clan). Si se omite, false.
 [zones.desert]
-map = "data/maps/desert/map-2.bin"
+# map = "data/maps/desert/map-2.bin"
+map = "data/maps/desert/desert-v4.bin"
 allowed_npcs = ["goblin", "spider"]
 num_npc = 7
 # Pool ampliado para probar la impresión de los items que no aparecían en otras
@@ -465,7 +466,8 @@ allowed_items = ["espada", "hacha", "armadura_cuero", "capucha", "pocion_vida",
                  "arco_simple", "arco_compuesto", "escudo_tortuga"]
 
 [zones.city]
-map = "data/maps/city/city-2.bin"
+# map = "data/maps/city/city-2.bin"
+map = "data/maps/city/city-v2.bin" 
 safe_zone = true
 num_items = 5
 allowed_items = ["pocion_vida", "pocion_mana"]
@@ -476,14 +478,16 @@ num_sellers = 1
 num_bankers = 1
 
 [zones.forest]
-map = "data/maps/forest/forest3.bin"
+#map = "data/maps/forest/forest3.bin"
+map = "data/maps/forest/forest-v5.bin"
 allowed_npcs = ["orc"]
 num_npc = 3
 num_items = 5
 allowed_items = ["vara_fresno", "baculo_nudoso", "tunica_azul", "sombrero_magico", "pocion_mana"]
 
 [zones.dungeon]
-map = "data/maps/dungeon/dungeon-v1.bin"
+#map = "data/maps/dungeon/dungeon-v1.bin"
+map = "data/maps/dungeon/dungeo-v2.bin"
 allowed_npcs = ["skeleton3", "zombie", "orc", "golem2", "spider3"]
 num_npc = 12
 num_items = 8
