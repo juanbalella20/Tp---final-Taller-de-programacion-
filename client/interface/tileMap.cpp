@@ -18,20 +18,22 @@ TileMap::~TileMap() {
 int TileMap::getTileSize() const {
     return mapData.get_tile_size();
 }
+
 int TileMap::getWidth() const {
     return mapData.get_width();
 }
+
 int TileMap::getHeight() const {
     return mapData.get_height();
 }
+
 int TileMap::getPixelWidth() const {
     return mapData.get_width() * mapData.get_tile_size();
 }
+
 int TileMap::getPixelHeight() const {
     return mapData.get_height() * mapData.get_tile_size();
 }
-
-
 
 void TileMap::load_tileset_textures() {
     // Al recargar (cambio de zona) hay que descartar las texturas anteriores:
@@ -64,10 +66,12 @@ void TileMap::load_map_toml(const std::string& tomlPath) {
     mapData.load(tomlPath);
     load_tileset_textures();
 }
+
 void TileMap::load_map_bin(const std::string& path) {
     mapData.load_bin(path);
     load_tileset_textures();
 }
+
 void TileMap::render(int mapViewport_x, int mapViewport_y) const {
     const int ts = mapData.get_tile_size();
     if (ts <= 0) return;

@@ -1,8 +1,10 @@
 #include "network_config.h"
 
 #include "toml.hpp"
+#include "paths.h"
 
-void NetworkConfig::load(const std::string& toml_path) {
+void NetworkConfig::load(const std::string& path) {
+    std::string toml_path = paths::config(path);
     toml::table root;
     try {
         root = toml::parse_file(toml_path);

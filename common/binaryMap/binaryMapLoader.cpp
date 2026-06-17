@@ -9,6 +9,7 @@
 
 #include "binaryMapFormat.h"
 #include "byteReader.h"
+#include "paths.h"
 
 void BinaryMapLoader::load(const std::string& path) {
     // read_file: carga el .bin completo y valida que tenga al menos el header.
@@ -32,7 +33,8 @@ void BinaryMapLoader::load(const std::string& path) {
 }
 
 std::vector<uint8_t> BinaryMapLoader::read_file(const std::string& path) const {
-    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    std::string p = paths::asset(path);
+    std::ifstream file(p, std::ios::binary | std::ios::ate);
     if (!file) {
         throw std::runtime_error("BinaryMapLoader: no se pudo abrir: " + path);
     }

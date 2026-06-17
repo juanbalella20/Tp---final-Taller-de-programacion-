@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include "../vendored/tomlplusplus/toml.hpp"
 #include "binaryMap/binaryMapLoader.h"
+#include "paths.h"
 #include <iostream>
 
 int MapLoader::get_tile_size() const {
@@ -215,7 +216,8 @@ void MapLoader::parse_teleports(const toml::table& tbl) {
 }
 
 
-void MapLoader::load(const std::string& tomlPath) {
+void MapLoader::load(const std::string& path) {
+    std::string tomlPath = paths::asset(path);
     std::filesystem::path baseDir = std::filesystem::path(tomlPath).parent_path();
 
     toml::table tbl;

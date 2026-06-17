@@ -1,6 +1,7 @@
 #define TOML_IMPLEMENTATION
 #include "toml.hpp"
 #include "game_config.h"
+#include "paths.h"
 #include <stdexcept>
 
 GameConfig& GameConfig::instance() {
@@ -8,7 +9,8 @@ GameConfig& GameConfig::instance() {
     return cfg;
 }
 
-void GameConfig::load(const std::string& toml_path) {
+void GameConfig::load(const std::string& path) {
+    std::string toml_path = paths::config(path);
     toml::table root;
     try {
         root = toml::parse_file(toml_path);

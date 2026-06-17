@@ -7,6 +7,7 @@
 #include <stdexcept>
 
 #include "binaryMapFormat.h"
+#include "paths.h"
 
 // Serializar a 'path' en BIG-ENDIAN usando network byte order:
 //   1. Header: MAGIC, FORMAT_VERSION, ENDIANNESS_MARKER, section_count=4.
@@ -175,7 +176,8 @@ void BinaryMapSaver::save(const std::string& path,
     }
 
     // --- Volcado a disco -----------------------------------------------------
-    std::ofstream file(path, std::ios::binary | std::ios::trunc);
+    std::string p = paths::asset(path);
+    std::ofstream file(p, std::ios::binary | std::ios::trunc);
     if (!file) {
         throw std::runtime_error("BinaryMapSaver: no se pudo abrir para escribir: " + path);
     }
