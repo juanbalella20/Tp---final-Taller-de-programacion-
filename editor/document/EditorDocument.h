@@ -11,21 +11,11 @@
 #include "../model/Map.h"
 #include "../tools/ToolType.h"
 #include "CellChange.h"
+#include "TileBrush.h"
 #include "Tool.h"
 
-/*
- * Controlador del editor. Ata el modelo (Map) con el estado de edicion
- * (herramienta/brush/capa activos) y la persistencia.
- *
- * Es el UNICO que muta el Map: los widgets (canvas, paleta, panel de capas)
- * solo le mandan intenciones y leen su estado. No hay logica de negocio en los
- * widgets. Hereda de QObject solo para emitir senales que la GUI escucha.
- *
- * Lado de carga de la persistencia (common/): open() reconstruye el Map desde
- * un .bin con BinaryMapLoader. El guardado, en cambio, lo hace
- * EditorWindow::save_to con BinaryMapSaver (save()/save_as() de aca son stubs).
- *
- */
+// Controlador del editor.
+// Modifica el mapa y notifica cambios mediante señales Qt (QObject)
 class EditorDocument : public QObject {
   Q_OBJECT
 
@@ -37,11 +27,11 @@ public:
   const Map &map() const;
 
   // Estado de edicion (la herramienta, el brush y la capa que usan los gestos)
-  void set_active_tool(ToolType t);   // herramienta activa de la toolbar
+  void set_active_tool(ToolType t); // herramienta activa de la toolbar
   ToolType active_tool() const;
-  void set_active_gid(int gid);       // brush seleccionado en la paleta
+  void set_active_gid(int gid); // brush seleccionado en la paleta
   int active_gid() const;
-  void set_active_layer(int idx);     // capa activa; emite activeLayerChanged
+  void set_active_layer(int idx); // capa activa; emite activeLayerChanged
   int active_layer() const;
   // Zona destino activa para la herramienta Teleport (nombre: "city", etc.).
   void set_active_dest_zone(const std::string &zone);
@@ -51,6 +41,9 @@ public:
   // reconstruyan sus caches de pixmaps.
   int register_tileset(const QString &name, const QString &file_path,
                        int columns, int tile_count, bool collidable);
+  // Emite tilesetsChanged() una sola vez. Lo usa la carga masiva inicial, que
+  // registra varios tilesets y avisa a las vistas una unica vez.
+  void notify_tilesets_changed();
 
   // Punto de entrada de las herramientas
   // Aplican la herramienta activa en (x,y), mutando el Map en vivo.
@@ -59,10 +52,14 @@ public:
   void apply_tool_press(int x, int y, ToolType tool_override);
   void apply_tool_drag(int x, int y);
   void apply_tool_release(int x, int y);
+  // Marca un bloque rectangular en la capa activa desde (start_x, start_y).
+  void stamp_tiles(int start_x, int start_y, const TileBrush &brush);
 
   // Persistencia
   void new_map();
   bool open(const QString &path, QString *err); // via BinaryMapLoader
+  // Vacia capas/colision/teleports sin tocar los tilesets cargados
+  void clear_canvas();
 
   bool is_dirty() const;     // hay cambios sin guardar
   QString file_path() const; // ruta del .bin abierto (vacia si es mapa nuevo)

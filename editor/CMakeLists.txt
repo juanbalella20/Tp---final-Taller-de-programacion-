@@ -8,6 +8,7 @@ set(CMAKE_AUTOUIC ON)
 set(MAP_EDITOR_CORE_SOURCES
     model/Map.cpp
     gui/EditorWindow.cpp
+    gui/TileBrushMime.cpp
     gui/TilesetSelectorView.cpp
     render/MapEditorScene.cpp
     render/TileLibrary.cpp
@@ -33,9 +34,6 @@ target_link_libraries(map_editor_core PUBLIC
     Qt6::Widgets
 )
 target_compile_features(map_editor_core PUBLIC cxx_std_20)
-#target_compile_definitions(map_editor_core PRIVATE
-#    EDITOR_DEFAULT_TILESET_PATH="${CMAKE_SOURCE_DIR}/data/tiles/spritesheet.png"
-#)
 
 add_executable(map_editor main.cpp)
 target_link_libraries(map_editor PRIVATE map_editor_core)

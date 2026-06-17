@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -17,6 +18,14 @@ Map::Map() {
   collision_.assign(HEIGHT, std::vector<uint8_t>(WIDTH, 0));
 }
 
+void Map::clear_canvas() {
+  for (MapLayerData &layer : layers_) {
+    layer.data.assign(HEIGHT, std::vector<int>(WIDTH, 0));
+  }
+  collision_.assign(HEIGHT, std::vector<uint8_t>(WIDTH, 0));
+  teleports_.clear();
+}
+
 // --- Metadata (constantes) ---------------------------------------------------
 int Map::width() const { return WIDTH; }
 int Map::height() const { return HEIGHT; }
@@ -28,6 +37,24 @@ bool Map::in_bounds(int x, int y) const {
 
 // --- Tilesets ----------------------------------------------------------------
 const std::vector<Tileset> &Map::tilesets() const { return tilesets_; }
+
+std::vector<Tileset> Map::used_tilesets() const {
+  std::unordered_set<int> used_indices;
+  for (const MapLayerData &layer : layers_) {
+    for (const std::vector<int> &row : layer.data) {
+      for (int gid : row) {
+        if (const TileDef *td = find_tile(gid))
+          used_indices.insert(td->tileset_index);
+      }
+    }
+  }
+  std::vector<Tileset> result;
+  for (int i = 0; i < static_cast<int>(tilesets_.size()); ++i) {
+    if (used_indices.count(i))
+      result.push_back(tilesets_[static_cast<std::size_t>(i)]);
+  }
+  return result;
+}
 
 int Map::add_tileset(const std::string &name, const std::string &file_path,
                      int columns, int tile_count, bool collidable) {
@@ -45,6 +72,11 @@ int Map::add_tileset(const std::string &name, const std::string &file_path,
 
   rebuild_tile_index();
   return static_cast<int>(tilesets_.size()) - 1;
+}
+
+void Map::clear_tilesets() {
+  tilesets_.clear();
+  rebuild_tile_index();
 }
 
 int Map::next_firstgid() const {

@@ -1,3 +1,7 @@
 build
-images
-
+Recursos
+build/
+vendored/
+.cache/
+.githooks
+.ignore/

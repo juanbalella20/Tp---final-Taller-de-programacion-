@@ -17,7 +17,7 @@
 | Nombre | Padrón | Contacto |
 |--------|--------|----------|
 | Juan Balella | 110271 | juanbalella20 |
-| Agustín Trombetta | 111754 |  |
+| Agustín Trombetta | 111754 | agus778 |
 | Mercedes González Lago | 110796 | mercedesgonzalezlago |
 | Ignacio Mahmoud Abalos | 112322 | Ignaci0MA |
 
@@ -131,7 +131,7 @@
 - [How To Make a Tile Editor in C++](https://youtu.be/hBwhiaxLAJM)
 - [Video-Sobre-Tiled](https://youtu.be/f212jaHpXNo?si=h7K9fef16f9dF1eH)
 - [Tiled-Repo](https://github.com/mapeditor/tiled)
-- [QT-Designer-Tutorials](https://youtu.be/gkujFifiO3M?list=PL6CJYn40gN6iFcTyItvnE5nOmJR8qk_7o)
+- [QT-Designer-Tutorials](https://www.youtube.com/playlist?list=PL6CJYn40gN6iFcTyItvnE5nOmJR8qk_7o)
 - [QT-Videos](https://training.kdab.com/)
 - [QT-Widgets](https://youtu.be/RyJqcw0RXxk?si=sVZ-wCfwWrnSPJpz)
 - [Creating debian packages — CMake](https://karthikkalyanaraman.medium.com/creating-debian-packages-cmake-e519a0186e87)

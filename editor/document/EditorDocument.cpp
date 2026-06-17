@@ -49,6 +49,8 @@ int EditorDocument::register_tileset(const QString &name,
   return index;
 }
 
+void EditorDocument::notify_tilesets_changed() { emit tilesetsChanged(); }
+
 std::unique_ptr<Tool> EditorDocument::make_tool(ToolType t) const {
   switch (t) {
   case ToolType::Pencil:
@@ -120,6 +122,39 @@ void EditorDocument::apply_tool_release(int /*x*/, int /*y*/) {
   gesture_tool_.reset();
 }
 
+void EditorDocument::stamp_tiles(int start_x, int start_y,
+                                 const TileBrush &brush) {
+  if (brush.width <= 0 || brush.height <= 0 ||
+      brush.gids.size() != static_cast<std::size_t>(brush.width) *
+                               static_cast<std::size_t>(brush.height)) {
+    return;
+  }
+
+  bool changed = false;
+  for (int row = 0; row < brush.height; ++row) {
+    for (int column = 0; column < brush.width; ++column) {
+      const int map_x = start_x + column;
+      const int map_y = start_y + row;
+      // Si una parte del bloque cae fuera, se saltea.
+      if (!map_.in_bounds(map_x, map_y))
+        continue;
+
+      const int gid =
+          brush.gids[static_cast<std::size_t>(row * brush.width + column)];
+      // Si la celda ya tiene ese tile, se saltea
+      if (map_.get_cell(active_layer_, map_x, map_y) == gid)
+        continue;
+
+      map_.set_cell(active_layer_, map_x, map_y, gid);
+      emit cellChanged(active_layer_, map_x, map_y);
+      changed = true;
+    }
+  }
+
+  if (changed)
+    set_dirty(true);
+}
+
 void EditorDocument::paint_collision(int x, int y) {
   if (!map_.in_bounds(x, y))
     return;
@@ -165,6 +200,12 @@ void EditorDocument::new_map() {
   path_.clear();
   set_dirty(false);
   emit tilesetsChanged();
+  emit mapReset();
+}
+
+void EditorDocument::clear_canvas() {
+  map_.clear_canvas();
+  set_dirty(true);
   emit mapReset();
 }
 
