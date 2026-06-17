@@ -27,6 +27,7 @@
 #include "zone_music_player.h"
 #include "sound_player.h"
 #include "../../common/utility/thread.h"
+#include "texture_loader.h"
 
 #define WIN_NAME "Argentum"
 #define WINDOW_WIDTH 1280
@@ -46,7 +47,6 @@ struct DamageNumber {
 
 // Catalogo de un efecto visual de hechizo: spritesheet animado por frames.
 struct SpellEffectDef {
-    SDL_Texture* texture = nullptr;
     int frame_w = 0;       // ancho de cada frame en el spritesheet
     int frame_h = 0;       // alto de cada frame
     int cols = 0;          // columnas de la grilla
@@ -67,6 +67,7 @@ private:
     SDL_Renderer* renderer;
     SDL_Event event;
     TTF_Font* chat_font;
+    TextureLoader texture_loader;
     bool is_running;
     std::unique_ptr<MiniChat> mini_chat;
     Parser parser;
@@ -97,7 +98,6 @@ private:
     // UNA vez por jugador y reusarse entre frames (hacerlo por frame quemaba
     // el CPU apenas habia otro jugador en la zona).
     std::map<std::string, PlayerDisplay> other_player_displays;
-    std::map<std::string, SDL_Texture*> enemies_textures;
     
     std::vector<DamageNumber> damage_numbers;
 

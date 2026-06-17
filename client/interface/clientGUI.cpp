@@ -16,7 +16,7 @@
 ClientGUI::ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
     Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name,
     const std::string& player_race, const std::string& player_clan)
-    : window(window), renderer(renderer), event{}, chat_font(font),
+    : window(window), renderer(renderer), event{}, chat_font(font), texture_loader(window, renderer),
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
       hud(nullptr), own_name(player_name), race(player_race), own_clan(player_clan),
       player(nullptr), tilemap(nullptr),
@@ -37,13 +37,8 @@ void ClientGUI::initSDL() {
     // window/renderer/font ya existen (del ScreenManager). Solo configuramos la
     // presentacion logica del juego, el icono y el mini chat.
     SDL_SetRenderLogicalPresentation(renderer, LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-
-    std::string path = paths::asset("imagenes/logo.jpeg");
-    SDL_Surface* icon = IMG_Load(path.c_str());
-    if (icon) {
-        SDL_SetWindowIcon(window, icon);
-        SDL_DestroySurface(icon);
-    }
+    
+    texture_loader.load_game_logo();
 
     mini_chat = std::make_unique<MiniChat>(renderer, chat_font, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
     zone_music = std::make_unique<ZoneMusicPlayer>();
@@ -87,41 +82,7 @@ void ClientGUI::freeSDL() {
     hud.reset();
     shop_window.reset();
 
-    if (seller_texture) { 
-        SDL_DestroyTexture(seller_texture); 
-        seller_texture = nullptr; 
-    }
-    if (banker_texture) { 
-        SDL_DestroyTexture(banker_texture); 
-        banker_texture = nullptr; 
-    }
-    if (priest_texture) { 
-        SDL_DestroyTexture(priest_texture); 
-        priest_texture = nullptr;
-    }
-    if (frame_texture) {
-        SDL_DestroyTexture(frame_texture);
-        frame_texture = nullptr;
-    }
-
-    // Texturas extra de items del piso (las que no son item_texture, p. ej. escudo).
-    // Se saltea gold_texture: lo comparten las pociones del piso y se libera aparte.
-    for (auto& kv : floor_item_textures) {
-        if (kv.second && kv.second != item_texture && kv.second != gold_texture) {
-            SDL_DestroyTexture(kv.second);
-        }
-    }
-    floor_item_textures.clear();
-
-    if (item_texture) {
-        SDL_DestroyTexture(item_texture);
-        item_texture = nullptr;
-    }
-
-    if (gold_texture) {
-        SDL_DestroyTexture(gold_texture);
-        gold_texture = nullptr;
-    }
+    texture_loader.freeSDL();
 
     // window/renderer NO se destruyen: son del ScreenManager. Tampoco SDL_Quit.
 }
@@ -297,11 +258,8 @@ void ClientGUI::sendSelfCastCmd() {
     }
 }
 
-
 void ClientGUI::handleEvents() {
     while (SDL_PollEvent(&event)) {
-
-        
         // La tienda es modal: mientras esta abierta atrapa sus clicks/ESC ANTES
         // que el chat y el juego (el chat puede estar activo tras escribir
         // /listar y, si no, se tragaria los clicks del mouse).
@@ -864,9 +822,9 @@ void ClientGUI::drawEnemies() {
         // aca: los dibuja draw_npc_friends() por tipo. Sin este guard, el pov
         // (back/front/...) hace .at(npc.name) sobre un nombre inexistente y lanza
         // std::out_of_range ("map::at"), que mata la entrada al juego.
-        auto tex_it = enemies_textures.find(npc.name);
-        if (tex_it == enemies_textures.end()) continue;
-        NpcSprite ns(renderer, tex_it->second, npc.x, npc.y, tileSize);
+        SDL_Texture* npc_tex = texture_loader.texture_of_npc_enemy(npc.name);
+        if (npc_tex == nullptr) continue;
+        NpcSprite ns(renderer, npc_tex, npc.x, npc.y, tileSize);
         SDL_FRect pov;
         switch (npc.direction) {
             case DIR_NORTH: 
@@ -1025,29 +983,23 @@ void ClientGUI::draw_player_name(const std::string& name, int tile_x, int tile_y
     SDL_DestroyTexture(fill_tex);
 }
 
-
+// reemplazar con: texture_loader.load_spell_efects()
 void ClientGUI::load_spell_effects() {
     // Cada báculo tiene un spritesheet de efecto. La clave es el id del item
     // (igual que en el server) para deducir el efecto desde el item equipado.
-    struct Def { const char* id; const char* path; int fw; int fh; int cols; int count; };
+    struct Def { const char* id; int fw; int fh; int cols; int count; };
     const Def defs[] = {
         // Curación (flauta élfica): 1024x1024, grilla 5x2 -> 10 frames de 204x204.
-        {"flauta_elfica",    "imagenes/3444.png", 204, 204, 5, 10},
+        {"flauta_elfica", 204, 204, 5, 10},
         // Flecha mágica (vara de fresno): 512x512, grilla 4x4 -> 15 frames de 128x128.
-        {"vara_fresno",      "imagenes/2511.png", 128, 128, 4, 15},
+        {"vara_fresno", 128, 128, 4, 15},
         // Misil (báculo nudoso): 512x512, grilla 4x4 -> 16 frames de 128x128.
-        {"baculo_nudoso",    "imagenes/3451.png", 128, 128, 4, 16},
+        {"baculo_nudoso", 128, 128, 4, 16},
         // Explosión (báculo engarzado): 512x512, grilla 4x4 -> 16 frames de 128x128.
-        {"baculo_engarzado", "imagenes/864.png",  128, 128, 4, 16},
+        {"baculo_engarzado", 128, 128, 4, 16},
     };
     for (const auto& d : defs) {
-        std::string path = paths::asset(d.path);
-        SDL_Surface* surf = IMG_Load(path.c_str());
-        if (!surf) continue;
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
-        SDL_DestroySurface(surf);
-        if (!tex) continue;
-        spell_effects[d.id] = {tex, d.fw, d.fh, d.cols, d.count};
+        spell_effects[d.id] = {d.fw, d.fh, d.cols, d.count};
     }
 }
 
@@ -1091,7 +1043,8 @@ void ClientGUI::draw_spell_animations() {
         const float sx = camera.world_to_screen_x(wx) + (tileSize - size) / 2.0f;
         const float sy = camera.world_to_screen_y(wy) + (tileSize - size) / 2.0f;
         SDL_FRect dst{sx, sy, size, size};
-        SDL_RenderTexture(renderer, def.texture, &src, &dst);
+        SDL_Texture* spell_tex = texture_loader.texture_of_spell(a.effect_id);
+        SDL_RenderTexture(renderer, spell_tex, &src, &dst);
     }
 }
 
@@ -1237,10 +1190,10 @@ void ClientGUI::draw() {
 
     drawItems();
     draw_npc_friends();
+    drawEnemies();
     if (player) {
         player->draw(camera, player_pov);
     }
-    drawEnemies();
     drawOtherPlayers();
     draw_spell_animations();
     draw_damage_numbers();
@@ -1268,34 +1221,6 @@ void ClientGUI::draw() {
     SDL_RenderPresent(renderer);
 }
 
-void ClientGUI::load_npc_texture(const std::string& npc_name, const std::string& image_path) {
-    std::string path = paths::asset(image_path.c_str());
-    SDL_Surface* surf = IMG_Load(path.c_str());
-    if (!surf) {
-        throw std::runtime_error(std::string("Loading npc surface: ") + SDL_GetError());
-    }
-    if (surf) {
-        SDL_Texture* text = SDL_CreateTextureFromSurface(renderer, surf);
-        enemies_textures[npc_name] = text;
-        SDL_DestroySurface(surf);
-    }
-}
-
-void ClientGUI::load_enemies_textures() {
-    load_npc_texture("Goblin", "imagenes/goblin1.png");
-    load_npc_texture("Spider1", "imagenes/araña1.png");
-    load_npc_texture("Spider2", "imagenes/araña2.png");
-    load_npc_texture("Spider3", "imagenes/araña3.png");
-    load_npc_texture("Skeleton1", "imagenes/esqueleto1.png");
-    load_npc_texture("Skeleton2", "imagenes/esqueleto2.png");
-    load_npc_texture("Skeleton3", "imagenes/esqueleto3.png");
-    load_npc_texture("Golem1", "imagenes/golem1.png");
-    load_npc_texture("Golem2", "imagenes/golem2.png");
-    load_npc_texture("Golem3", "imagenes/golem3.png");
-    load_npc_texture("Zombie", "imagenes/zombie.png");
-    load_npc_texture("Orc", "imagenes/orco.png");
-}
-
 void ClientGUI::init_draw() {
     initSDL();
     SDL_SetRenderLogicalPresentation(
@@ -1308,14 +1233,7 @@ void ClientGUI::init_draw() {
     // current_zone aca: dejarlo en el centinela.
     loadMedia(ZONE_CITY);
 
-    load_enemies_textures();
-    
-    std::string path = paths::asset("imagenes/frame..png");
-    SDL_Surface* frame_surf = IMG_Load(path.c_str());
-    if (frame_surf) {
-        frame_texture = SDL_CreateTextureFromSurface(renderer, frame_surf);
-        SDL_DestroySurface(frame_surf);
-    }
+    texture_loader.load_npcs_enemies();
 
     path = paths::asset("imagenes/101.png");
     SDL_Surface* item_surf = IMG_Load(path.c_str());
@@ -1382,13 +1300,7 @@ void ClientGUI::init_draw() {
         floor_item_crops[fi.id] = {0.0f, 0.0f, w, h};
     }
 
-    path = paths::asset("imagenes/100.png");
-    SDL_Surface* elem_surf = IMG_Load(path.c_str());
-    
-    if (elem_surf) {
-        gold_texture = SDL_CreateTextureFromSurface(renderer, elem_surf);
-        SDL_DestroySurface(elem_surf);
-    }
+    texture_loader.load_gold(path)
 
     // Pociones en el piso: se recortan del mismo spritesheet 100.png que el oro.
     // pocion_vida = botella gris; pocion_mana = botella azul (coords medidas en
@@ -1401,26 +1313,7 @@ void ClientGUI::init_draw() {
         floor_item_crops["pocion_mana"] = {424.0f, 159.0f, 17.0f, 26.0f};
     }
 
-    path = paths::asset("imagenes/4055.png");
-    SDL_Surface* seller_surf = IMG_Load(path.c_str());
-    if (seller_surf) {
-        seller_texture = SDL_CreateTextureFromSurface(renderer, seller_surf);
-        SDL_DestroySurface(seller_surf);
-    }
-
-    path = paths::asset("imagenes/4051.png");
-    SDL_Surface* banker_surf = IMG_Load(path.c_str());
-    if (banker_surf) {
-        banker_texture = SDL_CreateTextureFromSurface(renderer, banker_surf);
-        SDL_DestroySurface(banker_surf);
-    }
-
-    path = paths::asset("imagenes/4057.png");
-    SDL_Surface* priest_surf = IMG_Load(path.c_str());
-    if (priest_surf) {
-        priest_texture = SDL_CreateTextureFromSurface(renderer, priest_surf);
-        SDL_DestroySurface(priest_surf);
-    }
+    texture_loader.load_npcs_friendlies();
 
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
     // Ventana de comercio: ocupa toda el area logica de presentacion.
@@ -1428,6 +1321,7 @@ void ClientGUI::init_draw() {
                                                LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
     // Spritesheets de efectos de hechizo (animaciones sobre el target).
+    texture_loader.load_spell_effects();
     load_spell_effects();
 
     // tile_size viene del TOML
