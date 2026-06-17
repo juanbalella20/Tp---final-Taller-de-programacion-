@@ -97,7 +97,6 @@ private:
     // UNA vez por jugador y reusarse entre frames (hacerlo por frame quemaba
     // el CPU apenas habia otro jugador en la zona).
     std::map<std::string, PlayerDisplay> other_player_displays;
-    SDL_Texture* enemy_texture;
     std::map<std::string, SDL_Texture*> enemies_textures;
     
     std::vector<DamageNumber> damage_numbers;

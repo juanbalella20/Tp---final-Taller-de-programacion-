@@ -21,7 +21,7 @@ ClientGUI::ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
       hud(nullptr), own_name(player_name), race(player_race), own_clan(player_clan),
       player(nullptr), tilemap(nullptr),
       zone_music(nullptr),
-      enemy_texture(nullptr), frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
+      frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
       camera((float)GAME_VIEW_W, (float)GAME_VIEW_H),
       current_zone(static_cast<Zone>(0xFF)),
       seller_texture(nullptr), banker_texture(nullptr), priest_texture(nullptr),
@@ -87,10 +87,6 @@ void ClientGUI::freeSDL() {
     hud.reset();
     shop_window.reset();
 
-    if (enemy_texture) {
-        SDL_DestroyTexture(enemy_texture);
-        enemy_texture = nullptr;
-    }
     if (seller_texture) { 
         SDL_DestroyTexture(seller_texture); 
         seller_texture = nullptr; 
@@ -860,7 +856,7 @@ void ClientGUI::update() {
 }
 
 void ClientGUI::drawEnemies() {
-    if (!enemy_texture || !tilemap) return;
+    if (!tilemap) return;
     const int tileSize = tilemap->getTileSize();
     for (const auto& npc : npcs) {
         // Solo los NPC hostiles tienen textura/pov registrados (por nombre). Los
@@ -890,22 +886,6 @@ void ClientGUI::drawEnemies() {
         ns.draw(camera, pov);
     }
 }
-
-/*
-void ClientGUI::draw_npc_friends() {
-    if (!enemy_texture || !tilemap) return;
-    const int tileSize = tilemap->getTileSize();
-
-    for (size_t y = 0; y < world_map.size(); ++y) {
-        const auto& row = world_map[y];
-        for (size_t x = 0; x < row.size(); ++x) {
-            if (row[x] != elements::npcs) continue;
-            NpcSprite(renderer, enemy_texture,
-                      static_cast<int>(x), static_cast<int>(y), tileSize)
-                .draw(camera, {});
-        }
-    }
-}*/
 
 void ClientGUI::draw_npc_friends() {
     if (!tilemap) return;
@@ -1289,8 +1269,11 @@ void ClientGUI::draw() {
 }
 
 void ClientGUI::load_npc_texture(const std::string& npc_name, const std::string& image_path) {
-    std::string path = paths::asset(image_path);
+    std::string path = paths::asset(image_path.c_str());
     SDL_Surface* surf = IMG_Load(path.c_str());
+    if (!surf) {
+        throw std::runtime_error(std::string("Loading npc surface: ") + SDL_GetError());
+    }
     if (surf) {
         SDL_Texture* text = SDL_CreateTextureFromSurface(renderer, surf);
         enemies_textures[npc_name] = text;
