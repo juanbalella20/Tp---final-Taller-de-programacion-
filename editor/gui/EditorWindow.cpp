@@ -371,9 +371,7 @@ void EditorWindow::on_save_as() {
     current_path_ = path;
 }
 
-void EditorWindow::on_clear() {
-  doc_.clear_canvas();
-}
+void EditorWindow::on_clear() { doc_.clear_canvas(); }
 
 bool EditorWindow::save_to(const QString &path) {
   const Map &map = doc_.map();
