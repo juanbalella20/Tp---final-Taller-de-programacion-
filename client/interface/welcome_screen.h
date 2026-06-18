@@ -17,11 +17,6 @@ struct LauncherResult {
     WindowSettings settings;
 };
 
-// Pantalla de configuracion/launcher. Implementa Screen: NO crea ni destruye el
-// window/renderer (los recibe del ScreenManager); solo carga sus propias
-// texturas y su fuente de tamano fijo. Al confirmar transiciona a LOGIN_SIGNUP;
-// al cerrar, a EXIT. Los WindowSettings elegidos quedan accesibles via
-// get_result() para que el ScreenManager los aplique a la ventana compartida.
 class WelcomeScreen : public Screen {
  private:
     static constexpr char WINDOW_NAME[] = "Argentum Online";
@@ -96,8 +91,6 @@ class WelcomeScreen : public Screen {
     void drawText(const char* text, float x, float y, SDL_Color color);
 
  public:
-    // win/rend NO-owning. La fuente compartida del manager se ignora aca: esta
-    // pantalla usa una fuente propia de tamano fijo por su layout.
     WelcomeScreen(SDL_Renderer* renderer, SDL_Window* window, TTF_Font* font);
     ~WelcomeScreen() override;
 
