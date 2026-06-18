@@ -59,9 +59,9 @@ void PlayerDisplay::load_equip_sprites() {
         {"arco_simple",       "imagenes/arco-simple.png",           {}, false, EquipKind::WEAPON},
         {"arco_compuesto",    "imagenes/arco-compuesto.png",        {}, false, EquipKind::WEAPON},
         // Varas/báculos (también en la mano).
-        {"vara_fresno",       "imagenes/icon_vara_fresno.png",      {0.0f, 0.0f, 27.0f, 29.0f}, true, EquipKind::WEAPON},
-        {"baculo_nudoso",     "imagenes/icon_baculo_nudoso.png",    {0.0f, 0.0f, 30.0f, 29.0f}, true, EquipKind::WEAPON},
-        {"baculo_engarzado",  "imagenes/icon_baculo_engarzado.png", {0.0f, 0.0f, 34.0f, 40.0f}, true, EquipKind::WEAPON},
+        {"vara_fresno",       "imagenes/icon_vara_fresno.png",      {}, false, EquipKind::WEAPON},
+        {"baculo_nudoso",     "imagenes/icon_baculo_nudoso.png",    {}, false, EquipKind::WEAPON},
+        {"baculo_engarzado",  "imagenes/icon_baculo_engarzado.png", {}, false, EquipKind::WEAPON},
         {"flauta_elfica",     "imagenes/icon_flauta_elfica.png",    {0.0f, 0.0f, 40.0f, 40.0f}, true, EquipKind::WEAPON},
         // Escudos (fijos sobre el torso).
         {"escudo",            "imagenes/escudo-tortuga.png",        {}, false, EquipKind::SHIELD},
