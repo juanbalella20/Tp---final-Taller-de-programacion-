@@ -854,6 +854,7 @@ void ClientGUI::drawEnemies() {
     const int tileSize = tilemap->getTileSize();
     for (size_t i = 0; i < npcs.size(); ++i) {
         const auto& npc = npcs[i];
+        if (npc.type == "seller" || npc.type == "banker" || npc.type == "priest") continue;
         SDL_Texture* npc_tex = texture_loader.get_texture_of_npc_enemy(npc.name);
 
         const int frame = i < npc_walk_frames.size() ? npc_walk_frames[i] : 0;
