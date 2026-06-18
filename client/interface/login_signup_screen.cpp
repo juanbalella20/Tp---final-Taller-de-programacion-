@@ -50,9 +50,6 @@ LoginSignupScreen::~LoginSignupScreen() {
 }
 
 SDL_Texture* LoginSignupScreen::load_png(const char* path) {
-    // Tolerante: si la PNG no esta (nombres provisorios), devuelve nullptr y la
-    // vista se dibuja con fondo vacio en vez de crashear. Cambiar a lanzar una
-    // excepcion una vez que esten las imagenes definitivas.
     const std::string full = paths::asset(path);
     SDL_Surface* surface = IMG_Load(full.c_str());
     if (!surface) {
