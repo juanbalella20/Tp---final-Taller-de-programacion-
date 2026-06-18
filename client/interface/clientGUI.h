@@ -24,6 +24,7 @@
 #include "camera.h"
 #include "hud.h"
 #include "shopWindow.h"
+#include "scapeWindow.h"
 #include "zone_music_player.h"
 #include "sound_player.h"
 #include "../../common/utility/thread.h"
@@ -77,6 +78,8 @@ private:
     // Ventana modal de comercio (la tienda del vendedor). Se abre al recibir
     // MSG_LIST de un seller (comando /listar adyacente). Solo lectura.
     std::unique_ptr<ShopWindow> shop_window;
+    // Dialogo modal de confirmacion de salida (ESC dentro del juego).
+    std::unique_ptr<ScapeWindow> scape_window;
     std::string own_name;  // nombre del jugador local
     std::string race;      // raza del jugador local
     std::string own_clan;  // clan del jugador local ("" si no tiene): decide el

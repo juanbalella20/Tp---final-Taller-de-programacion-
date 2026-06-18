@@ -7,6 +7,7 @@
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
+#include "scapeWindow.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -307,6 +308,10 @@ void ClientGUI::handleEvents() {
         // La tienda es modal: mientras esta abierta atrapa sus clicks/ESC ANTES
         // que el chat y el juego (el chat puede estar activo tras escribir
         // /listar y, si no, se tragaria los clicks del mouse).
+        if (scape_window && scape_window->handle_event(event)) {
+            continue;
+        }
+
         if (shop_window && shop_window->handle_event(event)) {
             continue;
         }
@@ -327,9 +332,10 @@ void ClientGUI::handleEvents() {
                     break;
                 }
                 switch (event.key.scancode) {
-                    case SDL_SCANCODE_ESCAPE:
-                        is_running = false;
+                    case SDL_SCANCODE_ESCAPE: {
+                        if (scape_window) scape_window->open();
                         break;
+                    }
                     case SDL_SCANCODE_UP:
                     case SDL_SCANCODE_W:
                         sendMoveCmd(DIR_NORTH);
@@ -1313,6 +1319,9 @@ void ClientGUI::draw() {
     // La tienda es modal: se dibuja por encima de todo (HUD y chat incluidos).
     if (shop_window) shop_window->render();
 
+    // El dialogo de salida va por encima de todo, incluso de la tienda.
+    if (scape_window) scape_window->render();
+
     SDL_RenderPresent(renderer);
 }
 
@@ -1470,6 +1479,9 @@ void ClientGUI::init_draw() {
     // Ventana de comercio: ocupa toda el area logica de presentacion.
     shop_window = std::make_unique<ShopWindow>(renderer, chat_font,
                                                LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    // Dialogo de confirmacion de salida (ESC dentro del juego).
+    scape_window = std::make_unique<ScapeWindow>(renderer,
+                                                 LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
     // Spritesheets de efectos de hechizo (animaciones sobre el target).
     load_spell_effects();
@@ -1506,6 +1518,10 @@ void ClientGUI::run() {
         init_draw();
         while (is_running && should_keep_running()) {
             handleEvents();
+            if (scape_window && scape_window->consume_exit_confirmed()) {
+                is_running = false;
+                break;
+            }
             update();
             update_potion_hold();  // ¿se cumplieron los 3s del hold de poción?
             draw();
