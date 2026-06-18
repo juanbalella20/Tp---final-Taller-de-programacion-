@@ -20,11 +20,13 @@ NpcSprite::NpcSprite(SDL_Renderer* renderer, SDL_Texture* texture,
 void NpcSprite::draw(const Camera& camera, SDL_FRect src_crop) {
     const float wx = static_cast<float>(tile_x * tile_size);
     const float wy = static_cast<float>(tile_y * tile_size);
+    const float rendered_size = static_cast<float>(tile_size) * size_scale;
+    const float foot_offset = static_cast<float>(tile_size) - rendered_size;
     SDL_FRect dst{
         camera.world_to_screen_x(wx),
-        camera.world_to_screen_y(wy),
-        static_cast<float>(tile_size) * size_scale,
-        static_cast<float>(tile_size) * size_scale
+        camera.world_to_screen_y(wy) + foot_offset,
+        rendered_size,
+        rendered_size
     };
     // Si el crop tiene area, recorta ese tile del spritesheet 
     // si viene vacio, dibuja la textura completa.
