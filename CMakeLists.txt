@@ -137,6 +137,7 @@ add_executable(client
     client/interface/shopWindow.cpp
     client/interface/ui_helpers.cpp
     client/interface/text_field.cpp
+    client/interface/texture_loader.cpp
 )
 target_include_directories(client PRIVATE
     client
