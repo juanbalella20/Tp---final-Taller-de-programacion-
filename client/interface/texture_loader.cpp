@@ -125,6 +125,22 @@ SDL_Texture* TextureLoader::get_hat_texture() {
     return hat_texture;
 }
 
+SDL_Texture* TextureLoader::get_game_texture() {
+    return game_texture;
+}
+
+SDL_Texture* TextureLoader::get_hp_texture() {
+    return hp_bar_texture;
+}
+
+SDL_Texture* TextureLoader::get_xp_texture() {
+    return xp_bar_texture;
+}
+
+SDL_Texture* TextureLoader::get_mana_texture() {
+    return mana_bar_texture;
+}
+
 void TextureLoader::load_npcs_friendlies() {
     load_specific("imagenes/4055.png", &seller_texture);
     load_specific("imagenes/4051.png", &banker_texture);
@@ -174,7 +190,6 @@ void TextureLoader::load_items() {
         {"sombrero_magico",  "imagenes/sombrero-magico.png"},
         // Escudo de tortuga (+ alias histórico "escudo": misma imagen).
         {"escudo_tortuga",   "imagenes/escudo-tortuga.png"},
-        {"escudo",           "imagenes/escudo-tortuga.png"},
         {"espada",           "imagenes/espada.png"},
         {"escudo_hierro",    "imagenes/escudo-hierro.png"},
         {"pocion_vida",      "imagenes/pocion-vida.png"},
@@ -220,6 +235,17 @@ void TextureLoader::load_head_for_race(const std::string& race) {
     }
 }
 
+void TextureLoader::load_stats() {
+    load_specific("imagenes/en_barradevida.bmp", &hp_bar_texture);
+    load_specific("imagenes/en_barraexperiencia.bmp", &xp_bar_texture);
+    load_specific("imagenes/en_barrademana.bmp", &mana_bar_texture);
+    load_gold();
+}
+
+void TextureLoader::load_game_window() {
+    load_specific("imagenes/en_ventanaprincipal.png", &game_texture);
+}
+
 void TextureLoader::free_texture(SDL_Texture** texture) {
     if (*texture) { 
         SDL_DestroyTexture(*texture); 
@@ -236,6 +262,10 @@ void TextureLoader::freeSDL() {
     free_texture(&gold_texture);
     free_texture(&hat_texture);
     free_texture(&head_texture);
+    free_texture(&game_texture);
+    free_texture(&xp_bar_texture);
+    free_texture(&hp_bar_texture);
+    free_texture(&mana_bar_texture);
 
     // Texturas extra de items del piso (las que no son item_texture, p. ej. escudo).
     // Se saltea gold_texture: lo comparten las pociones del piso y se libera aparte.

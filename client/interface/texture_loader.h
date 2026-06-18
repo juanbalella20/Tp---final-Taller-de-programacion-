@@ -19,6 +19,10 @@ private:
     SDL_Texture* seller_texture;
     SDL_Texture* banker_texture;
     SDL_Texture* priest_texture;
+    SDL_Texture* hp_bar_texture;
+    SDL_Texture* xp_bar_texture;
+    SDL_Texture* mana_bar_texture;
+    SDL_Texture* game_texture;
 
     std::map<std::string, SDL_Texture*> enemies_textures;
     std::map<std::string, SDL_Texture*> spell_effects_textures;
@@ -60,6 +64,14 @@ public:
 
     SDL_Texture* get_hat_texture();
 
+    SDL_Texture* get_game_texture();
+
+    SDL_Texture* get_hp_texture();
+
+    SDL_Texture* get_xp_texture();
+
+    SDL_Texture* get_mana_texture();
+
     void load_gold();
 
     void load_ghost();
@@ -73,6 +85,10 @@ public:
     void load_items();
     
     void load_head_for_race(const std::string& race);
+
+    void load_stats();
+
+    void load_game_window();
 
     void freeSDL();
 
