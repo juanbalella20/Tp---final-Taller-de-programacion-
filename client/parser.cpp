@@ -1,4 +1,5 @@
 #include "parser.h"
+#include <algorithm>
 #include <sstream>
 #include <stdexcept>
 
@@ -87,9 +88,10 @@ ClientCmd Parser::parse_tp_zone(MessageType type, std::string zone) {
 
 ClientCmd Parser::parse_item_cmd(MessageType type, std::istringstream& ss, const std::string& correct_use) {
     std::string item;
-    if (!(ss >> item)) {
+    if (!std::getline(ss >> std::ws, item) || item.empty()) {
         throw std::invalid_argument(correct_use);
     }
+    std::replace(item.begin(), item.end(), ' ', '_');
     ClientCmd cmd;
     cmd.set_message_type(type);
     cmd.set_item_id(item);
