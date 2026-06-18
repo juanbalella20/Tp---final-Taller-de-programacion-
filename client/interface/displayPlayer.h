@@ -7,10 +7,6 @@
 #include <map>
 #include "worldEntity.h"
 
-// #define PLAYER_VEL 3.0f
-// para testing:
-#define PLAYER_VEL 8.0f
-
 enum class ViewDirection {
     BACK = 0,    // Norte
     FRONT = 1,   // Sur
@@ -84,8 +80,6 @@ public:
     PlayerDisplay(PlayerDisplay&& other) noexcept;
     PlayerDisplay& operator=(PlayerDisplay&& other) noexcept;
 
-    // Lee el teclado y mueve el jugador. (Solo para el jugador local)
-    void update();
     // Setea la posicion segun coords en celdas (las que manda el server).
     void setTilePosition(int col, int row);
     // Posicion actual en celdas (derivada de rect / tileSize).
@@ -103,10 +97,6 @@ public:
     SDL_FRect front_pov(ViewDirection direction);
     SDL_FRect back_pov(ViewDirection direction);
     SDL_FRect ghost_frame();
-    void move_up();
-    void move_down();
-    void move_left();
-    void move_right();
     int get_x();
     int get_y();
 

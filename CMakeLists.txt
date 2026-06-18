@@ -135,6 +135,7 @@ add_executable(client
     client/interface/itemSprite.cpp
     client/interface/hud.cpp
     client/interface/shopWindow.cpp
+    client/interface/scapeWindow.cpp
     client/interface/ui_helpers.cpp
     client/interface/text_field.cpp
 )
@@ -258,7 +259,7 @@ install(TARGETS client server RUNTIME DESTINATION bin)
 install(TARGETS SDL3-shared SDL3_image-shared SDL3_ttf-shared SDL3_mixer-shared
         LIBRARY DESTINATION lib)
 
-install(DIRECTORY imagenes fonts data DESTINATION share/${APP_NAME})
+install(DIRECTORY imagenes fonts data assets DESTINATION share/${APP_NAME})
 install(DIRECTORY client/audio/sounds client/audio/music
         DESTINATION share/${APP_NAME}/client/audio)
 

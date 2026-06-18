@@ -3,9 +3,6 @@
 
 #include <SDL3/SDL.h>
 
-// Camera define una ventana rectangular sobre el mundo en coordenadas de
-// pixeles. Centraliza la traduccion mundo <-> pantalla para tilemap, sprites
-// y clicks del mouse.
 class Camera {
     float x;
     float y;
