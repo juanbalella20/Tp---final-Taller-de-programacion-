@@ -8,9 +8,10 @@
 
 PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize,
     const std::string& race)
-    : renderer(renderer), image(nullptr),
+    : renderer(renderer),
       rect{0.0f, 0.0f, static_cast<float>(tileSize), static_cast<float>(tileSize)},
       head_pov{0.0f, 0.0f, 0.0f, 0.0f},
+      texture_loader(renderer),
       tileSize(tileSize),
       keystate(SDL_GetKeyboardState(nullptr)),
       race(race) {
@@ -18,183 +19,77 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
     rect.w *= size_scale;
     rect.h *= size_scale;
 
-    std::string path = paths::asset(imagePath);
-    SDL_Surface* surf = IMG_Load(path.c_str());
-    if (!surf) {
-        throw std::runtime_error(std::string("Loading player surface: ") + SDL_GetError());
-    }
-    image = SDL_CreateTextureFromSurface(renderer, surf);
-    SDL_DestroySurface(surf);
-    if (!image) {
-        throw std::runtime_error(std::string("Creating player texture: ") + SDL_GetError());
-    }
-    SDL_SetTextureBlendMode(image, SDL_BLENDMODE_BLEND);
+    texture_loader.load_player(imagePath);
+    texture_loader.load_ghost();
 
-    path = paths::asset("imagenes/fantasma.png");
-    SDL_Surface* ghost_surf = IMG_Load(path.c_str());
-    if (!ghost_surf) {
-        throw std::runtime_error(std::string("Loading ghost surface: ") + SDL_GetError());
-    }
-    ghost_image = SDL_CreateTextureFromSurface(renderer, ghost_surf);
-    SDL_DestroySurface(ghost_surf);
-    if (!ghost_image) {
-        throw std::runtime_error(std::string("Creating ghost texture: ") + SDL_GetError());
-    }
-
-    load_heads();
-    load_equip_sprites();
+    texture_loader.load_head_for_race(race);
+    texture_loader.load_items();
+    equip_items_kind();
 }
 
-void PlayerDisplay::load_equip_sprites() {
-    // Sprite que se dibuja sobre el jugador por cada item equipado. La clave es
-    // el id del item (igual que en el server/HUD). Crop = recorte dentro de su
-    // spritesheet (toda la imagen para los íconos ya recortados). kind decide
-    // CÓMO se posiciona el sprite sobre el personaje (ver draw_equipped_item):
+void PlayerDisplay::equip_items_kind() {
+    // kind decide CÓMO se posiciona el sprite sobre el personaje (ver draw_equipped_item):
     // arma en la mano (animada), escudo/armadura sobre el torso, casco en la
-    // cabeza. Los PNG de sprite único (1024x1024) usan use_crop=false (toda la
-    // imagen); los íconos recortados de un spritesheet llevan su crop explícito.
-    struct Def { const char* id; const char* path; SDL_FRect crop; bool use_crop; EquipKind kind; };
+    // cabeza.
+    struct Def { const char* id; EquipKind kind; };
     const Def defs[] = {
         // Armas físicas (van en la mano, animadas con la caminata).
-        {"espada",            "imagenes/espada.png",                {}, false, EquipKind::WEAPON},
-        {"hacha",             "imagenes/hacha.png",                 {}, false, EquipKind::WEAPON},
-        {"martillo",          "imagenes/martillo.png",              {}, false, EquipKind::WEAPON},
-        {"arco_simple",       "imagenes/arco-simple.png",           {}, false, EquipKind::WEAPON},
-        {"arco_compuesto",    "imagenes/arco-compuesto.png",        {}, false, EquipKind::WEAPON},
+        {"espada", EquipKind::WEAPON},
+        {"hacha",  EquipKind::WEAPON},
+        {"martillo", EquipKind::WEAPON},
+        {"arco_simple", EquipKind::WEAPON},
+        {"arco_compuesto", EquipKind::WEAPON},
         // Varas/báculos (también en la mano).
-        {"vara_fresno",       "imagenes/icon_vara_fresno.png",      {0.0f, 0.0f, 27.0f, 29.0f}, true, EquipKind::WEAPON},
-        {"baculo_nudoso",     "imagenes/icon_baculo_nudoso.png",    {0.0f, 0.0f, 30.0f, 29.0f}, true, EquipKind::WEAPON},
-        {"baculo_engarzado",  "imagenes/icon_baculo_engarzado.png", {0.0f, 0.0f, 34.0f, 40.0f}, true, EquipKind::WEAPON},
-        {"flauta_elfica",     "imagenes/icon_flauta_elfica.png",    {0.0f, 0.0f, 40.0f, 40.0f}, true, EquipKind::WEAPON},
+        {"vara_fresno", EquipKind::WEAPON},
+        {"baculo_nudoso", EquipKind::WEAPON},
+        {"baculo_engarzado", EquipKind::WEAPON},
+        {"flauta_elfica", EquipKind::WEAPON},
         // Escudos (fijos sobre el torso).
-        {"escudo",            "imagenes/escudo-tortuga.png",        {}, false, EquipKind::SHIELD},
-        {"escudo_tortuga",    "imagenes/escudo-tortuga.png",        {}, false, EquipKind::SHIELD},
-        {"escudo_hierro",     "imagenes/2141.png",                  {0.0f, 0.0f, 32.0f, 32.0f}, true, EquipKind::SHIELD},
+        {"escudo", EquipKind::SHIELD},
+        {"escudo_tortuga", EquipKind::SHIELD},
+        {"escudo_hierro", EquipKind::SHIELD},
         // Armaduras (cubren el torso/cuerpo).
-        {"armadura_cuero",    "imagenes/Armadura-de-cuero.png",     {}, false, EquipKind::ARMOR},
-        {"armadura_placas",   "imagenes/armadura-de-placas.png",    {}, false, EquipKind::ARMOR},
-        {"tunica_azul",       "imagenes/tunica-azul.png",           {}, false, EquipKind::ARMOR},
+        {"armadura_cuero", EquipKind::ARMOR},
+        {"armadura_placas", EquipKind::ARMOR},
+        {"tunica_azul", EquipKind::ARMOR},
         // Cascos (sobre la cabeza).
-        {"capucha",           "imagenes/capucha.png",               {}, false, EquipKind::HELMET},
-        {"casco_hierro",      "imagenes/casco-de-hierro.png",       {}, false, EquipKind::HELMET},
-        {"sombrero_magico",   "imagenes/sombrero-magico.png",       {}, false, EquipKind::HELMET},
+        {"capucha", EquipKind::HELMET},
+        {"casco_hierro", EquipKind::HELMET},
+        {"sombrero_magico", EquipKind::HELMET},
     };
     for (const auto& d : defs) {
-        std::string path = paths::asset(d.path);
-        SDL_Surface* surf = IMG_Load(path.c_str());
-        if (!surf) continue;
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
-        SDL_DestroySurface(surf);
-        if (!tex) continue;
-        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
-        equip_sprites[d.id] = {tex, d.crop, d.use_crop, d.kind};
+        items_kind[d.id] = d.kind;
     }
 }
 
 PlayerDisplay::~PlayerDisplay() {
-    if (image) {
-        SDL_DestroyTexture(image);
-    }
-    if (head_image) {
-        SDL_DestroyTexture(head_image);
-    }
-    if (hat_image) {
-        SDL_DestroyTexture(hat_image);
-    }
-    if (ghost_image) {
-        SDL_DestroyTexture(ghost_image);
-    }
-    for (auto& kv : equip_sprites) {
-        if (kv.second.texture) SDL_DestroyTexture(kv.second.texture);
-    }
+
 }
 
 PlayerDisplay::PlayerDisplay(PlayerDisplay&& other) noexcept
-    : renderer(other.renderer), image(other.image),
-      head_image(other.head_image), hat_image(other.hat_image), ghost_image(other.ghost_image), rect(other.rect), head_pov(other.head_pov),
+    : renderer(other.renderer), rect(other.rect), head_pov(other.head_pov),
+        texture_loader(other.texture_loader),
       tileSize(other.tileSize), keystate(other.keystate), race(other.race),
-      equip_sprites(std::move(other.equip_sprites)),
+      items_kind(std::move(other.items_kind)),
       equipped_item_ids(std::move(other.equipped_item_ids)) {
-    other.image = nullptr;
-    other.head_image = nullptr;
-    other.hat_image = nullptr;
-    other.ghost_image = nullptr;
-    other.equip_sprites.clear();
+
+    other.items_kind.clear();
 }
 
 PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
     if (this != &other) {
-        if (image) SDL_DestroyTexture(image);
-        if (head_image) SDL_DestroyTexture(head_image);
-        if (hat_image) SDL_DestroyTexture(hat_image);
-        if (ghost_image) SDL_DestroyTexture(ghost_image);
-        for (auto& kv : equip_sprites) {
-            if (kv.second.texture) SDL_DestroyTexture(kv.second.texture);
-        }
         renderer = other.renderer;
-        image = other.image;
-        head_image = other.head_image;
-        hat_image = other.hat_image;
         rect = other.rect;
         head_pov = other.head_pov;
+        texture_loader = other.texture_loader;
         tileSize = other.tileSize;
         keystate = other.keystate;
         race = other.race;
-        equip_sprites = std::move(other.equip_sprites);
+        items_kind = std::move(other.items_kind);
         equipped_item_ids = std::move(other.equipped_item_ids);
-        other.image = nullptr;
-        other.head_image = nullptr;
-        other.hat_image = nullptr;
-        other.ghost_image = nullptr;
-        other.equip_sprites.clear();
+        other.items_kind.clear();
     }
     return *this;
-}
-
-void PlayerDisplay::load_heads() {
-    SDL_Surface* head_surf = nullptr;
-    SDL_Surface* hat_surf = nullptr;
-
-    std::string path;
-    if (race == "human") {
-        path = paths::asset("imagenes/420.png");
-        head_surf = IMG_Load(path.c_str());
-    } else if (race == "elf") {
-        path = paths::asset("imagenes/422.png");
-        head_surf = IMG_Load(path.c_str());
-    } else if (race == "dwarf") {
-        path = paths::asset("imagenes/426.png");
-        head_surf = IMG_Load(path.c_str());
-    } else if (race == "gnome") {
-        path = paths::asset("imagenes/426.png");
-        head_surf = IMG_Load(path.c_str());
-        path = paths::asset("imagenes/437.png");
-        hat_surf = IMG_Load(path.c_str());
-        if (!hat_surf) {
-            throw std::runtime_error(std::string("Loading hat surface: ") + SDL_GetError());
-        }
-        hat_image = SDL_CreateTextureFromSurface(renderer, hat_surf);
-        SDL_DestroySurface(hat_surf);
-        if (!hat_image) {
-            throw std::runtime_error(std::string("Creating hat texture: ") + SDL_GetError());
-        }
-    } else {
-        // Raza desconocida o vacia (p.ej. raza corrupta en persistencia): caemos
-        // al sprite de cabeza humana para no quedar con head_surf sin cargar.
-        std::cerr << "[WARN] raza desconocida '" << race
-                  << "', usando cabeza humana por defecto" << std::endl;
-        path = paths::asset("imagenes/420.png");
-        head_surf = IMG_Load(path.c_str());
-    }
-
-    if (!head_surf) {
-        throw std::runtime_error(std::string("Loading head surface: ") + SDL_GetError());
-    }
-    head_image = SDL_CreateTextureFromSurface(renderer, head_surf);
-    SDL_DestroySurface(head_surf);
-    if (!head_image) {
-        throw std::runtime_error(std::string("Creating head texture: ") + SDL_GetError());
-    }
 }
 
 void PlayerDisplay::move_up() {
@@ -202,7 +97,6 @@ void PlayerDisplay::move_up() {
 }
 void PlayerDisplay::move_down() {
     rect.y += PLAYER_VEL;
-
 }
 void PlayerDisplay::move_left() {
     rect.x -= PLAYER_VEL;
@@ -577,7 +471,12 @@ void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect crop) {
         rect.h
     };
 
-    SDL_Texture* current_image = ghost ? ghost_image : image;
+    SDL_Texture* current_image;
+    if (ghost) {
+        current_image = texture_loader.get_ghost_texture();
+    } else {
+        current_image = texture_loader.get_player_texture();
+    }
     SDL_RenderTexture(renderer, current_image, &crop, &dst);
     if (!ghost) {
         draw_player_head(camera);
@@ -599,7 +498,8 @@ void PlayerDisplay::draw_player_head(const Camera& camera) {
         head_height
     };
 
-    SDL_RenderTexture(renderer, head_image, &head_pov, &head_dst);
+    SDL_Texture* head = texture_loader.get_head_texture();
+    SDL_RenderTexture(renderer, head, &head_pov, &head_dst);
 
     draw_gnome_hat(camera, head_dst);
 }
@@ -616,7 +516,8 @@ void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_d
             hat_width,
             hat_height
         };
-        SDL_RenderTexture(renderer, hat_image, &crop, &hat_dst);
+        SDL_Texture* hat = texture_loader.get_hat_texture();
+        SDL_RenderTexture(renderer, hat, &crop, &hat_dst);
     }
 }
 
@@ -631,14 +532,14 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
     // delante cuando mira al frente (FRONT/RIGHT). La armadura y el casco van
     // SIEMPRE delante del cuerpo (se ven en cualquier dirección).
     for (const auto& id : equipped_item_ids) {
-        auto it = equip_sprites.find(id);
-        if (it == equip_sprites.end()) continue;
-        const EquipSprite& sprite = it->second;
+        auto it = items_kind.find(id);
+        if (it == items_kind.end()) continue;
+        EquipKind kind = it->second;
 
         // La armadura y el casco NO se dibujan sobre el personaje: su estado
         // (equipado o no) se muestra en el panel del HUD (drawEquipStatus). Sobre
         // el jugador solo se ven el arma/báculo (en la mano) y el escudo (torso).
-        if (sprite.kind == EquipKind::ARMOR || sprite.kind == EquipKind::HELMET) {
+        if (kind == EquipKind::ARMOR || kind == EquipKind::HELMET) {
             continue;
         }
 
@@ -652,7 +553,7 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
         double angle = 0.0;
         SDL_FlipMode flip = SDL_FLIP_NONE;
 
-        switch (sprite.kind) {
+        switch (kind) {
             case EquipKind::WEAPON:
                 // Arma/báculo: en la mano, animado con la caminata. Se rota 270°
                 // mirando al frente/izquierda para que apunte hacia adelante.
@@ -705,8 +606,9 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
             size,
             size
         };
-        const SDL_FRect* crop = sprite.use_crop ? &sprite.crop : nullptr;
-        SDL_RenderTextureRotated(renderer, sprite.texture, crop, &dst, angle, nullptr, flip);
+        
+        SDL_Texture* tex = texture_loader.get_texture_of_item(id);
+        SDL_RenderTextureRotated(renderer, tex, nullptr, &dst, angle, nullptr, flip);
     }
 }
 

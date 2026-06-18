@@ -6,7 +6,7 @@
 #include <vector>
 #include <map>
 #include "worldEntity.h"
-
+#include "texture_loader.h"
 // #define PLAYER_VEL 3.0f
 // para testing:
 #define PLAYER_VEL 8.0f
@@ -21,12 +21,9 @@ enum class ViewDirection {
 class PlayerDisplay : public WorldEntity {
 private:
     SDL_Renderer* renderer;
-    SDL_Texture* image;
-    SDL_Texture* head_image;
-    SDL_Texture* hat_image;
-    SDL_Texture* ghost_image;
     SDL_FRect rect;
     SDL_FRect head_pov;
+    TextureLoader texture_loader;
     int tileSize;
     const bool* keystate;
     bool ghost = false;
@@ -45,19 +42,13 @@ private:
     // Categoría de item equipable: decide CÓMO se posiciona el sprite sobre el
     // personaje (mano animada, torso fijo, cabeza). Ver draw_equipped_item.
     enum class EquipKind { WEAPON, SHIELD, ARMOR, HELMET };
-    // Sprite de cada item equipable, por id (textura + recorte en su spritesheet).
-    struct EquipSprite {
-        SDL_Texture* texture;
-        SDL_FRect crop;
-        bool use_crop;
-        EquipKind kind;
-    };
-    std::map<std::string, EquipSprite> equip_sprites;
+
+    std::map<std::string, EquipKind> items_kind;
     // Ids de los items actualmente equipados, para dibujarlos sobre el jugador.
     std::vector<std::string> equipped_item_ids;
 
     void load_heads();
-    void load_equip_sprites();
+    void equip_items_kind();
 
     void head_back_pov();
     void head_front_pov();

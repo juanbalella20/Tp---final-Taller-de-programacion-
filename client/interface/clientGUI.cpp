@@ -1228,8 +1228,8 @@ void ClientGUI::init_draw() {
     loadMedia(ZONE_CITY);
 
     texture_loader.load_npcs_enemies();
-    texture_loader.load_floor_items();
-    texture_loader.load_gold(path)
+    texture_loader.load_items();
+    texture_loader.load_gold();
     texture_loader.load_npcs_friendlies();
 
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
