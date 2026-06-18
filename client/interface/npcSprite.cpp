@@ -6,9 +6,10 @@
 #include <string>
 
 NpcSprite::NpcSprite(SDL_Renderer* renderer, SDL_Texture* texture,
-              int tile_x, int tile_y, int tile_size)
+              int tile_x, int tile_y, int tile_size, const std::string& npc_name)
         : renderer(renderer), texture(texture),
-          tile_x(tile_x), tile_y(tile_y), tile_size(tile_size) {
+          tile_x(tile_x), tile_y(tile_y), tile_size(tile_size),
+          size_scale(size_scale_for(npc_name)) {
 
     npcs_back_povs();
     npcs_front_povs();
@@ -22,8 +23,8 @@ void NpcSprite::draw(const Camera& camera, SDL_FRect src_crop) {
     SDL_FRect dst{
         camera.world_to_screen_x(wx),
         camera.world_to_screen_y(wy),
-        static_cast<float>(tile_size),
-        static_cast<float>(tile_size)
+        static_cast<float>(tile_size) * size_scale,
+        static_cast<float>(tile_size) * size_scale
     };
     // Si el crop tiene area, recorta ese tile del spritesheet 
     // si viene vacio, dibuja la textura completa.
@@ -46,6 +47,15 @@ SDL_FRect NpcSprite::right_pov(const std::string& npc_name) {
 
 SDL_FRect NpcSprite::left_pov(const std::string& npc_name) {
     return npc_left_pov(npc_name);
+}
+
+float NpcSprite::size_scale_for(const std::string& name) {
+    static const std::map<std::string, float> scales = {
+        {"Goblin", 0.7f},
+        {"Spider1", 0.7f}
+    };
+    auto it = scales.find(name);
+    return (it != scales.end()) ? it->second : 1.0f;
 }
 
 SDL_FRect NpcSprite::current_frame(const std::vector<SDL_FRect>& frames) {
