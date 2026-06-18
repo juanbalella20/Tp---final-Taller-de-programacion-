@@ -13,7 +13,7 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
       tileSize(tileSize),
       keystate(SDL_GetKeyboardState(nullptr)),
       race(race) {
-    const float size_scale = (race == "dwarf" || race == "gnome") ? 0.75f : 1.0f;
+    const float size_scale = (race == "dwarf" || race == "gnome") ? 0.60f : 0.80f;
     rect.w *= size_scale;
     rect.h *= size_scale;
 
@@ -469,9 +469,12 @@ SDL_FRect PlayerDisplay::ghost_frame() {
 }
 
 void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect crop) {
+    // Ancla por los pies: todos los personajes tocan el borde inferior del tile
+    // independientemente de su escala (enano 0.60 vs humano 0.80).
+    float foot_offset = static_cast<float>(tileSize) - rect.h;
     SDL_FRect dst {
         camera.world_to_screen_x(rect.x),
-        camera.world_to_screen_y(rect.y),
+        camera.world_to_screen_y(rect.y) + foot_offset,
         rect.w,
         rect.h
     };
@@ -488,8 +491,9 @@ void PlayerDisplay::draw_player_head(const Camera& camera) {
     float aspect_ratio = head_pov.h / head_pov.w;
     float head_height = head_width * aspect_ratio;
 
+    float foot_offset = static_cast<float>(tileSize) - rect.h;
     float base_head_x = camera.world_to_screen_x(rect.x) + (rect.w - head_width) * 0.5f;
-    float base_head_y = camera.world_to_screen_y(rect.y) - (rect.h * 0.25f);
+    float base_head_y = camera.world_to_screen_y(rect.y) + foot_offset - (rect.h * 0.25f);
 
     SDL_FRect head_dst = {
         base_head_x + (rect.w * head_dx),
@@ -598,9 +602,10 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
                 break;
         }
 
+        float foot_offset = static_cast<float>(tileSize) - rect.h;
         SDL_FRect dst = {
             camera.world_to_screen_x(rect.x) + rect.w * off_x,
-            camera.world_to_screen_y(rect.y) + rect.h * off_y,
+            camera.world_to_screen_y(rect.y) + foot_offset + rect.h * off_y,
             size,
             size
         };
