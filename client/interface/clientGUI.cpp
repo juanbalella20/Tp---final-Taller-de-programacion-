@@ -822,7 +822,7 @@ void ClientGUI::drawEnemies() {
         // aca: los dibuja draw_npc_friends() por tipo. Sin este guard, el pov
         // (back/front/...) hace .at(npc.name) sobre un nombre inexistente y lanza
         // std::out_of_range ("map::at"), que mata la entrada al juego.
-        SDL_Texture* npc_tex = texture_loader.texture_of_npc_enemy(npc.name);
+        SDL_Texture* npc_tex = texture_loader.get_texture_of_npc_enemy(npc.name);
         if (npc_tex == nullptr) continue;
         NpcSprite ns(renderer, npc_tex, npc.x, npc.y, tileSize);
         SDL_FRect pov;
@@ -850,9 +850,9 @@ void ClientGUI::draw_npc_friends() {
     const int tileSize = tilemap->getTileSize();
     for (const auto& npc : npcs) {
         SDL_Texture* tex = nullptr;
-        if (npc.type == "seller") tex = seller_texture;
-        else if (npc.type == "banker") tex = banker_texture;
-        else if (npc.type == "priest") tex = priest_texture;
+        if (npc.type == "seller") tex = texture_loader.get_seller_texture();
+        else if (npc.type == "banker") tex = texture_loader.get_banker_texture();
+        else if (npc.type == "priest") tex = texture_loader.get_priest_texture();
         else continue;
         if (!tex) continue;
         SDL_FRect src = {0.0f, 0.0f, 30.0f, 40.0f};
@@ -1043,7 +1043,7 @@ void ClientGUI::draw_spell_animations() {
         const float sx = camera.world_to_screen_x(wx) + (tileSize - size) / 2.0f;
         const float sy = camera.world_to_screen_y(wy) + (tileSize - size) / 2.0f;
         SDL_FRect dst{sx, sy, size, size};
-        SDL_Texture* spell_tex = texture_loader.texture_of_spell(a.effect_id);
+        SDL_Texture* spell_tex = texture_loader.get_texture_of_spell(a.effect_id);
         SDL_RenderTexture(renderer, spell_tex, &src, &dst);
     }
 }
@@ -1148,18 +1148,12 @@ void ClientGUI::drawItems() {
     if (!tilemap) return;
     const int tileSize = tilemap->getTileSize();
     for (const auto& item : items_on_floor) {
+        SDL_FRect crop = {0.0f, 0.0f, 0.0f, 0.0f};
         if (item.type == "gold") {
-            if (!gold_texture) continue;
-            SDL_FRect gold_cutout = { 0.0f, 320.0f, 30.0f, 27.0f };
-            ItemSprite(renderer, gold_texture, item.x, item.y, tileSize).draw(camera, gold_cutout);
+            SDL_Texture* tex = texture_loader.get_gold_texture();
+            ItemSprite(renderer, tex, item.x, item.y, tileSize).draw(camera, crop);
         } else {
-            // Textura y crop específicos del item por id; fallback a la espada.
-            SDL_Texture* tex = item_texture;
-            SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};
-            auto tex_it = floor_item_textures.find(item.type);
-            auto crop_it = floor_item_crops.find(item.type);
-            if (tex_it != floor_item_textures.end()) tex = tex_it->second;
-            if (crop_it != floor_item_crops.end()) crop = crop_it->second;
+            SDL_Texture* tex = texture_loader.get_texture_of_item(item.type);
             if (!tex) continue;
             ItemSprite(renderer, tex, item.x, item.y, tileSize).draw(camera, crop);
         }
@@ -1234,85 +1228,8 @@ void ClientGUI::init_draw() {
     loadMedia(ZONE_CITY);
 
     texture_loader.load_npcs_enemies();
-
-    path = paths::asset("imagenes/101.png");
-    SDL_Surface* item_surf = IMG_Load(path.c_str());
-    if (item_surf) {
-        item_texture = SDL_CreateTextureFromSurface(renderer, item_surf);
-        SDL_SetTextureBlendMode(item_texture, SDL_BLENDMODE_BLEND);
-        SDL_DestroySurface(item_surf);
-        // La espada en el piso usa la textura/crop de 101.png.
-        floor_item_textures["espada"] = item_texture;
-        floor_item_crops["espada"] = {224.0f, 96.0f, 30.0f, 30.0f};
-    }
-
-    // El sprite 2141.png en el piso es el "escudo de hierro" (la imagen que antes
-    // se mostraba bajo el alias "escudo"). El escudo de tortuga usa su propio PNG.
-    path = paths::asset("imagenes/2141.png");
-    SDL_Surface* shield_surf = IMG_Load(path.c_str());
-    if (shield_surf) {
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, shield_surf);
-        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
-        SDL_DestroySurface(shield_surf);
-        floor_item_textures["escudo_hierro"] = tex;
-        floor_item_crops["escudo_hierro"] = {0.0f, 0.0f, 32.0f, 32.0f};
-    }
-
-    // Resto de los items en el piso: misma imagen que el ícono del HUD. La clave
-    // es el id del item (igual que en el server) para que cada uno se vea como su
-    // sprite y no caiga al fallback de la espada. Los PNG de sprite único cubren
-    // toda la imagen (crop = tamaño del surface leído en runtime).
-    struct FloorIcon { const char* id; const char* path; };
-    const FloorIcon floor_icons[] = {
-        // Varas/báculos.
-        {"vara_fresno",      "imagenes/icon_vara_fresno.png"},
-        {"baculo_nudoso",    "imagenes/icon_baculo_nudoso.png"},
-        {"baculo_engarzado", "imagenes/icon_baculo_engarzado.png"},
-        {"flauta_elfica",    "imagenes/icon_flauta_elfica.png"},
-        // Armas físicas.
-        {"hacha",            "imagenes/hacha.png"},
-        {"martillo",         "imagenes/martillo.png"},
-        {"arco_simple",      "imagenes/arco-simple.png"},
-        {"arco_compuesto",   "imagenes/arco-compuesto.png"},
-        // Armaduras.
-        {"armadura_cuero",   "imagenes/Armadura-de-cuero.png"},
-        {"armadura_placas",  "imagenes/armadura-de-placas.png"},
-        {"tunica_azul",      "imagenes/tunica-azul.png"},
-        // Cascos.
-        {"capucha",          "imagenes/capucha.png"},
-        {"casco_hierro",     "imagenes/casco-de-hierro.png"},
-        {"sombrero_magico",  "imagenes/sombrero-magico.png"},
-        // Escudo de tortuga (+ alias histórico "escudo": misma imagen).
-        {"escudo_tortuga",   "imagenes/escudo-tortuga.png"},
-        {"escudo",           "imagenes/escudo-tortuga.png"},
-    };
-    for (const auto& fi : floor_icons) {
-        std::string p = paths::asset(fi.path);
-        SDL_Surface* surf = IMG_Load(p.c_str());
-        if (!surf) continue;
-        float w = static_cast<float>(surf->w);
-        float h = static_cast<float>(surf->h);
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
-        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
-        SDL_DestroySurface(surf);
-        if (!tex) continue;
-        floor_item_textures[fi.id] = tex;
-        floor_item_crops[fi.id] = {0.0f, 0.0f, w, h};
-    }
-
+    texture_loader.load_floor_items();
     texture_loader.load_gold(path)
-
-    // Pociones en el piso: se recortan del mismo spritesheet 100.png que el oro.
-    // pocion_vida = botella gris; pocion_mana = botella azul (coords medidas en
-    // 100.png). Comparten textura (gold_texture); el cleanup de floor_item_textures
-    // ya saltea las que apuntan a otra textura ya liberada.
-    if (gold_texture) {
-        floor_item_textures["pocion_vida"] = gold_texture;
-        floor_item_crops["pocion_vida"] = {392.0f, 159.0f, 16.0f, 26.0f};
-        floor_item_textures["pocion_mana"] = gold_texture;
-        floor_item_crops["pocion_mana"] = {424.0f, 159.0f, 17.0f, 26.0f};
-    }
-
     texture_loader.load_npcs_friendlies();
 
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
