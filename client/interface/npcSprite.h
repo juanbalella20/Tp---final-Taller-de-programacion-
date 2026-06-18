@@ -15,7 +15,7 @@ class NpcSprite : public WorldEntity {
     int tile_y;
     int tile_size;
 
-    int walk_frame = 0;
+    int frame_index;
     float size_scale = 1.0f;
     std::map<std::string, std::vector<SDL_FRect>> back_povs;
     std::map<std::string, std::vector<SDL_FRect>> front_povs;
@@ -65,7 +65,8 @@ class NpcSprite : public WorldEntity {
 
 public:
     NpcSprite(SDL_Renderer* renderer, SDL_Texture* texture,
-              int tile_x, int tile_y, int tile_size, const std::string& npc_name = "");
+              int tile_x, int tile_y, int tile_size, const std::string& npc_name = "",
+              int frame_index = 0);
 
     void draw(const Camera& camera, SDL_FRect src_crop) override;
 

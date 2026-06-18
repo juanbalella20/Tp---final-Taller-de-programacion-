@@ -92,6 +92,8 @@ private:
 
     std::vector<std::vector<elements>> world_map;
     std::vector<NpcInfo> npcs;
+    std::vector<int> npc_walk_frames;
+    std::vector<Direction> npc_draw_directions;
     std::vector<ItemFloorInfo> items_on_floor;
     std::vector<PlayerInfo> other_players;
     std::unordered_map<std::string, SDL_FRect> other_players_povs;
@@ -227,6 +229,7 @@ private:
     void set_logical_width(int logical_width);
     void set_logical_height(int logical_height);
     void draw_npc_friends();
+    void set_npcs_snapshot(const std::vector<NpcInfo>& next_npcs);
     // Dibuja "Transportarse a <zona>" sobre cada tile de teleport del mapa.
     void draw_teleport_labels();
     // Dibuja los numeros de daño flotantes en rojo y descarta los expirados.

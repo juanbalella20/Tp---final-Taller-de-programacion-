@@ -6,9 +6,10 @@
 #include <string>
 
 NpcSprite::NpcSprite(SDL_Renderer* renderer, SDL_Texture* texture,
-              int tile_x, int tile_y, int tile_size, const std::string& npc_name)
+              int tile_x, int tile_y, int tile_size, const std::string& npc_name,
+              int frame_index)
         : renderer(renderer), texture(texture),
-          tile_x(tile_x), tile_y(tile_y), tile_size(tile_size),
+          tile_x(tile_x), tile_y(tile_y), tile_size(tile_size), frame_index(frame_index),
           size_scale(size_scale_for(npc_name)) {
 
     npcs_back_povs();
@@ -59,11 +60,9 @@ float NpcSprite::size_scale_for(const std::string& name) {
 }
 
 SDL_FRect NpcSprite::current_frame(const std::vector<SDL_FRect>& frames) {
-    int current_frame = walk_frame % 3;
+    if (frames.empty()) return {};
 
-    SDL_FRect frame = frames[current_frame];
-    walk_frame = (walk_frame + 1) % 3;
-    return frame;
+    return frames[static_cast<size_t>(frame_index) % frames.size()];
 }
 
 SDL_FRect NpcSprite::npc_back_pov(const std::string& name) {
@@ -155,6 +154,9 @@ void NpcSprite::back_pov_skeletons() {
     frames3.push_back({0.0f, 54.0f, 25.0f, 49.0f});
     frames3.push_back({25.0f, 54.0f, 25.0f, 49.0f});
     frames3.push_back({50.0f, 54.0f, 25.0f, 49.0f});
+    frames3.push_back({75.0f, 54.0f, 25.0f, 49.0f});
+    frames3.push_back({100.0f, 54.0f, 25.0f, 49.0f});
+    frames3.push_back({125.0f, 54.0f, 25.0f, 49.0f});
 
     back_povs["Skeleton1"] = frames1;
     back_povs["Skeleton2"] = frames2;
@@ -248,6 +250,9 @@ void NpcSprite::front_pov_skeletons() {
     frames3.push_back({0.0f, 1.0f, 25.0f, 51.0f});
     frames3.push_back({25.0f, 1.0f, 25.0f, 51.0f});
     frames3.push_back({50.0f, 1.0f, 25.0f, 51.0f});
+    frames3.push_back({75.0f, 1.0f, 25.0f, 51.0f});
+    frames3.push_back({100.0f, 1.0f, 25.0f, 51.0f});
+    frames3.push_back({125.0f, 1.0f, 25.0f, 51.0f});
     
     front_povs["Skeleton1"] = frames1;
     front_povs["Skeleton2"] = frames2;
@@ -341,6 +346,8 @@ void NpcSprite::right_pov_skeletons() {
     frames3.push_back({0.0f, 157.0f, 25.0f, 51.0f});
     frames3.push_back({25.0f, 157.0f, 25.0f, 51.0f});
     frames3.push_back({50.0f, 157.0f, 25.0f, 51.0f});
+    frames3.push_back({75.0f, 157.0f, 25.0f, 51.0f});
+    frames3.push_back({100.0f, 157.0f, 25.0f, 51.0f});
     
     right_povs["Skeleton1"] = frames1;
     right_povs["Skeleton2"] = frames2;
@@ -434,6 +441,8 @@ void NpcSprite::left_pov_skeletons() {
     frames3.push_back({0.0f, 105.0f, 25.0f, 51.0f});
     frames3.push_back({25.0f, 105.0f, 25.0f, 51.0f});
     frames3.push_back({50.0f, 105.0f, 25.0f, 51.0f});
+    frames3.push_back({75.0f, 105.0f, 25.0f, 51.0f});
+    frames3.push_back({100.0f, 105.0f, 25.0f, 51.0f});
     
     left_povs["Skeleton1"] = frames1;
     left_povs["Skeleton2"] = frames2;

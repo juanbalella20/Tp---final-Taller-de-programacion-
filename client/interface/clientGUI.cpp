@@ -559,7 +559,7 @@ void ClientGUI::update() {
                     if (hud) hud->set_inventory(msg.get_items());
                     break;
                 case MSG_NPCS_SNAPSHOT:
-                    npcs = msg.get_npcs();
+                    set_npcs_snapshot(msg.get_npcs());
                     break;
                 case MSG_ITEMS_SNAPSHOT:
                     items_on_floor = msg.get_items_on_floor();
@@ -878,20 +878,51 @@ void ClientGUI::update() {
     }
 }
 
+void ClientGUI::set_npcs_snapshot(const std::vector<NpcInfo>& next_npcs) {
+    auto direction_from_delta = [](int dx, int dy, Direction fallback) {
+        if (dx != 0 && std::abs(dx) >= std::abs(dy)) return dx > 0 ? DIR_EAST : DIR_WEST;
+        if (dy != 0) return dy > 0 ? DIR_SOUTH : DIR_NORTH;
+        return fallback;
+    };
+
+    if (npc_walk_frames.size() != next_npcs.size()) {
+        npc_walk_frames.assign(next_npcs.size(), 0);
+        npc_draw_directions.assign(next_npcs.size(), DIR_SOUTH);
+    }
+
+    for (size_t i = 0; i < next_npcs.size(); ++i) {
+        Direction direction = next_npcs[i].direction;
+        bool moved = false;
+
+        if (i < npcs.size() && npcs[i].name == next_npcs[i].name) {
+            const int dx = next_npcs[i].x - npcs[i].x;
+            const int dy = next_npcs[i].y - npcs[i].y;
+            moved = dx != 0 || dy != 0;
+            if (moved) direction = direction_from_delta(dx, dy, direction);
+        }
+
+        npc_walk_frames[i] = moved ? npc_walk_frames[i] + 1 : 0;
+        npc_draw_directions[i] = direction;
+    }
+
+    npcs = next_npcs;
+}
+
 void ClientGUI::drawEnemies() {
     if (!enemy_texture || !tilemap) return;
     const int tileSize = tilemap->getTileSize();
-    for (const auto& npc : npcs) {
-        // Solo los NPC hostiles tienen textura/pov registrados (por nombre). Los
-        // amigos (seller/priest/banker) y cualquier nombre desconocido se saltean
-        // aca: los dibuja draw_npc_friends() por tipo. Sin este guard, el pov
-        // (back/front/...) hace .at(npc.name) sobre un nombre inexistente y lanza
-        // std::out_of_range ("map::at"), que mata la entrada al juego.
+    for (size_t i = 0; i < npcs.size(); ++i) {
+        const auto& npc = npcs[i];
         auto tex_it = enemies_textures.find(npc.name);
         if (tex_it == enemies_textures.end()) continue;
-        NpcSprite ns(renderer, tex_it->second, npc.x, npc.y, tileSize, npc.name);
-        SDL_FRect pov;
-        switch (npc.direction) {
+
+        const int frame = i < npc_walk_frames.size() ? npc_walk_frames[i] : 0;
+        const Direction direction =
+            i < npc_draw_directions.size() ? npc_draw_directions[i] : npc.direction;
+        NpcSprite ns(renderer, tex_it->second, npc.x, npc.y, tileSize, npc.name,
+                     frame);
+        SDL_FRect pov = ns.front_pov(npc.name);
+        switch (direction) {
             case DIR_NORTH: 
                 pov = ns.back_pov(npc.name);
                 break;
@@ -909,22 +940,6 @@ void ClientGUI::drawEnemies() {
         ns.draw(camera, pov);
     }
 }
-
-/*
-void ClientGUI::draw_npc_friends() {
-    if (!enemy_texture || !tilemap) return;
-    const int tileSize = tilemap->getTileSize();
-
-    for (size_t y = 0; y < world_map.size(); ++y) {
-        const auto& row = world_map[y];
-        for (size_t x = 0; x < row.size(); ++x) {
-            if (row[x] != elements::npcs) continue;
-            NpcSprite(renderer, enemy_texture,
-                      static_cast<int>(x), static_cast<int>(y), tileSize)
-                .draw(camera, {});
-        }
-    }
-}*/
 
 void ClientGUI::draw_npc_friends() {
     if (!tilemap) return;
