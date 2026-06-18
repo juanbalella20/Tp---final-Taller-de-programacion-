@@ -118,14 +118,9 @@ Player* GameMap::find_player_by_name(const std::string& name) {
 
 void GameMap::spawn_player(const std::string& name, const std::string& race, const std::string& pclass) {
     // Zona inicial de spawn
-    // TODO: derivar de config / persistencia
     const Zone start_zone = ZONE_CITY;
     player_zone[name] = start_zone;
     const auto& cfg = GameConfig::instance();
-
-    // Posicion de spawn hardcodeada
-    // int start_x = 29;
-    // int start_y = 15;
 
     std::pair<int, int> spawn_pos = zone_of(name).find_random_empty_cell(players_in(start_zone));
     int start_x = spawn_pos.first;

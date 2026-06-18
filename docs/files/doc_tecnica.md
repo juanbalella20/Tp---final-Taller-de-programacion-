@@ -235,8 +235,6 @@ OH -> OC: actualiza posición del jugador
 @enduml
 ```
 
-<!-- TODO: ajustar con el flujo real de movimiento. Si hay más eventos (ataque, chat), agregar diagramas similares -->
-
 ---
 
 ## Diagrama de clases — Jugador y NPC hostil

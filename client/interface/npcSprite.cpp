@@ -29,7 +29,6 @@ void NpcSprite::draw(const Camera& camera, SDL_FRect src_crop) {
     };
     // Si el crop tiene area, recorta ese tile del spritesheet 
     // si viene vacio, dibuja la textura completa.
-    // TODO: hacer movimientos como en displayPlayer.cpp
     const bool has_crop = src_crop.w > 0.0f && src_crop.h > 0.0f;
     SDL_RenderTexture(renderer, texture, has_crop ? &src_crop : nullptr, &dst);
 }
