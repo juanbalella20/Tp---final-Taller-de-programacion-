@@ -889,7 +889,7 @@ void ClientGUI::drawEnemies() {
         // std::out_of_range ("map::at"), que mata la entrada al juego.
         auto tex_it = enemies_textures.find(npc.name);
         if (tex_it == enemies_textures.end()) continue;
-        NpcSprite ns(renderer, tex_it->second, npc.x, npc.y, tileSize);
+        NpcSprite ns(renderer, tex_it->second, npc.x, npc.y, tileSize, npc.name);
         SDL_FRect pov;
         switch (npc.direction) {
             case DIR_NORTH: 
