@@ -15,7 +15,7 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
       tileSize(tileSize),
       keystate(SDL_GetKeyboardState(nullptr)),
       race(race) {
-    const float size_scale = (race == "dwarf" || race == "gnome") ? 0.75f : 1.0f;
+    const float size_scale = (race == "dwarf" || race == "gnome") ? 0.60f : 0.80f;
     rect.w *= size_scale;
     rect.h *= size_scale;
 
@@ -92,25 +92,25 @@ PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
     return *this;
 }
 
-void PlayerDisplay::move_up() {
-    rect.y -= PLAYER_VEL;
-}
-void PlayerDisplay::move_down() {
-    rect.y += PLAYER_VEL;
-}
-void PlayerDisplay::move_left() {
-    rect.x -= PLAYER_VEL;
-}
-void PlayerDisplay::move_right() {
-    rect.x += PLAYER_VEL;
-}
+// void PlayerDisplay::move_up() {
+//     rect.y -= PLAYER_VEL;
+// }
+// void PlayerDisplay::move_down() {
+//     rect.y += PLAYER_VEL;
+// }
+// void PlayerDisplay::move_left() {
+//     rect.x -= PLAYER_VEL;
+// }
+// void PlayerDisplay::move_right() {
+//     rect.x += PLAYER_VEL;
+// }
 
-void PlayerDisplay::update() {
-    if (keystate[SDL_SCANCODE_LEFT]  || keystate[SDL_SCANCODE_A]) rect.x -= PLAYER_VEL;
-    if (keystate[SDL_SCANCODE_RIGHT] || keystate[SDL_SCANCODE_D]) rect.x += PLAYER_VEL;
-    if (keystate[SDL_SCANCODE_UP]    || keystate[SDL_SCANCODE_W]) rect.y -= PLAYER_VEL;
-    if (keystate[SDL_SCANCODE_DOWN]  || keystate[SDL_SCANCODE_S]) rect.y += PLAYER_VEL;
-}
+// void PlayerDisplay::update() {
+//     if (keystate[SDL_SCANCODE_LEFT]  || keystate[SDL_SCANCODE_A]) rect.x -= PLAYER_VEL;
+//     if (keystate[SDL_SCANCODE_RIGHT] || keystate[SDL_SCANCODE_D]) rect.x += PLAYER_VEL;
+//     if (keystate[SDL_SCANCODE_UP]    || keystate[SDL_SCANCODE_W]) rect.y -= PLAYER_VEL;
+//     if (keystate[SDL_SCANCODE_DOWN]  || keystate[SDL_SCANCODE_S]) rect.y += PLAYER_VEL;
+// }
 
 void PlayerDisplay::setPosition(float x, float y) {
     rect.x = x;
@@ -464,9 +464,12 @@ SDL_FRect PlayerDisplay::right_ghost_pov() {
 
 
 void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect crop) {
+    // Ancla por los pies: todos los personajes tocan el borde inferior del tile
+    // independientemente de su escala (enano 0.60 vs humano 0.80).
+    float foot_offset = static_cast<float>(tileSize) - rect.h;
     SDL_FRect dst {
         camera.world_to_screen_x(rect.x),
-        camera.world_to_screen_y(rect.y),
+        camera.world_to_screen_y(rect.y) + foot_offset,
         rect.w,
         rect.h
     };
@@ -488,8 +491,9 @@ void PlayerDisplay::draw_player_head(const Camera& camera) {
     float aspect_ratio = head_pov.h / head_pov.w;
     float head_height = head_width * aspect_ratio;
 
+    float foot_offset = static_cast<float>(tileSize) - rect.h;
     float base_head_x = camera.world_to_screen_x(rect.x) + (rect.w - head_width) * 0.5f;
-    float base_head_y = camera.world_to_screen_y(rect.y) - (rect.h * 0.25f);
+    float base_head_y = camera.world_to_screen_y(rect.y) + foot_offset - (rect.h * 0.25f);
 
     SDL_FRect head_dst = {
         base_head_x + (rect.w * head_dx),
@@ -523,27 +527,26 @@ void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_d
 
 void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
     // Dibuja cada item equipado con su sprite real. Arma/báculo van en la mano
-    // (siguen la animación de caminata con weapon_dx/dy); el escudo sobre el
-    // torso; la armadura cubre el cuerpo; el casco va en la cabeza. Si no hay
-    // sprite registrado para el id, no se dibuja nada.
+    // (siguen la animación de caminata con weapon_dx/dy). Si no hay sprite
+    // registrado para el id, no se dibuja nada.
     //
-    // behind_body distingue las dos pasadas de draw(): las armas y el escudo se
-    // dibujan DETRÁS del cuerpo cuando el personaje da la espalda (BACK/LEFT) y
-    // delante cuando mira al frente (FRONT/RIGHT). La armadura y el casco van
-    // SIEMPRE delante del cuerpo (se ven en cualquier dirección).
+    // behind_body distingue las dos pasadas de draw(): el arma se dibuja DETRÁS
+    // del cuerpo cuando el personaje da la espalda (BACK/LEFT) y delante cuando
+    // mira al frente (FRONT/RIGHT).
     for (const auto& id : equipped_item_ids) {
         auto it = items_kind.find(id);
         if (it == items_kind.end()) continue;
         EquipKind kind = it->second;
 
-        // La armadura y el casco NO se dibujan sobre el personaje: su estado
+        // Escudo, armadura y casco NO se dibujan sobre el personaje: su estado
         // (equipado o no) se muestra en el panel del HUD (drawEquipStatus). Sobre
-        // el jugador solo se ven el arma/báculo (en la mano) y el escudo (torso).
-        if (kind == EquipKind::ARMOR || kind == EquipKind::HELMET) {
+        // el jugador solo se ve el arma/báculo (en la mano).
+        if (kind == EquipKind::SHIELD || kind == EquipKind::ARMOR ||
+            kind == EquipKind::HELMET) {
             continue;
         }
 
-        // Filtrado por pasada: arma/escudo van detrás del cuerpo cuando el
+        // Filtrado por pasada: el arma va detrás del cuerpo cuando el
         // personaje da la espalda (BACK/LEFT) y delante en FRONT/RIGHT.
         bool item_behind = (current_direction == ViewDirection::BACK ||
                             current_direction == ViewDirection::LEFT);
@@ -563,20 +566,6 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
                 if (current_direction == ViewDirection::FRONT ||
                     current_direction == ViewDirection::LEFT) {
                     angle = 270.0;
-                }
-                break;
-
-            case EquipKind::SHIELD:
-                // El escudo va FIJO sobre el torso, del lado contrario a la mano que
-                // sostiene el arma. El cuerpo se dibuja en rect.y..rect.y+rect.h (la
-                // cabeza va aparte y arriba), así que el torso está cerca del top.
-                // El lado depende de hacia dónde mira el personaje.
-                size = rect.w * 0.4f;
-                off_y = 0.10f;
-                switch (current_direction) {
-                    case ViewDirection::LEFT:  off_x = 0.05f; break;  // brazo izquierdo
-                    case ViewDirection::RIGHT: off_x = 0.55f; break;  // brazo derecho
-                    default:                   off_x = 0.30f; break;  // de frente/espalda: centrado
                 }
                 break;
 
@@ -600,9 +589,10 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
                 break;
         }
 
+        float foot_offset = static_cast<float>(tileSize) - rect.h;
         SDL_FRect dst = {
             camera.world_to_screen_x(rect.x) + rect.w * off_x,
-            camera.world_to_screen_y(rect.y) + rect.h * off_y,
+            camera.world_to_screen_y(rect.y) + foot_offset + rect.h * off_y,
             size,
             size
         };

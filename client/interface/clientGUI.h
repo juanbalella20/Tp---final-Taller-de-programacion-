@@ -24,6 +24,7 @@
 #include "camera.h"
 #include "hud.h"
 #include "shopWindow.h"
+#include "scapeWindow.h"
 #include "zone_music_player.h"
 #include "sound_player.h"
 #include "../../common/utility/thread.h"
@@ -78,6 +79,8 @@ private:
     // Ventana modal de comercio (la tienda del vendedor). Se abre al recibir
     // MSG_LIST de un seller (comando /listar adyacente). Solo lectura.
     std::unique_ptr<ShopWindow> shop_window;
+    // Dialogo modal de confirmacion de salida (ESC dentro del juego).
+    std::unique_ptr<ScapeWindow> scape_window;
     std::string own_name;  // nombre del jugador local
     std::string race;      // raza del jugador local
     std::string own_clan;  // clan del jugador local ("" si no tiene): decide el
@@ -90,6 +93,8 @@ private:
 
     std::vector<std::vector<elements>> world_map;
     std::vector<NpcInfo> npcs;
+    std::vector<int> npc_walk_frames;
+    std::vector<Direction> npc_draw_directions;
     std::vector<ItemFloorInfo> items_on_floor;
     std::vector<PlayerInfo> other_players;
     std::unordered_map<std::string, SDL_FRect> other_players_povs;
@@ -223,6 +228,7 @@ private:
     void set_logical_width(int logical_width);
     void set_logical_height(int logical_height);
     void draw_npc_friends();
+    void set_npcs_snapshot(const std::vector<NpcInfo>& next_npcs);
     // Dibuja "Transportarse a <zona>" sobre cada tile de teleport del mapa.
     void draw_teleport_labels();
     // Dibuja los numeros de daño flotantes en rojo y descarta los expirados.

@@ -62,9 +62,6 @@ void Player::add_item(std::unique_ptr<Item> item) {
     player_inventory.add_item(std::move(item));
 }
 
-/* TODO: implement ITEM */
-
-
 void Player::drop_item(Item* item) {
     player_inventory.drop_item(item);
 }
@@ -201,7 +198,6 @@ uint32_t Player::get_gold() const {
 
 std::unique_ptr<Item> Player::take_item_from_inventory(const std::string& item_id) {
     Item* item_ptr = player_inventory.find_by_id(item_id);
-    // TODO: hacer que busque tambien en defense_item
     if (!item_ptr) throw std::runtime_error("No tenes ese item en el inventario.");
     return player_inventory.drop_item(item_ptr);
 }
@@ -304,7 +300,6 @@ bool Player::can_attack_level(int other_level) const {
  
 int Player::damage_attack() {
     // Daño = Fuerza * rand(DañoArmaMin, DañoArmaMax)
-    // TODO: cuando Item este definido, usar el arma equipada
     return player_race.race_strength() + player_class.class_strength();
 }
  

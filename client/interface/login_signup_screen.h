@@ -10,20 +10,6 @@
 #include "auth_session.h"
 #include "text_field.h"
 
-// Pantalla de login/registro. Maneja internamente (sub-estado, sin tocar el enum
-// ScreenState) tres vistas, cada una con su propia imagen PNG de fondo:
-//   CHOICE      -> elegir entre Login o Signup.
-//   LOGIN_FORM  -> formulario de login   -> MSG_LOGIN sincrono; si OK entra al juego.
-//   SIGNUP_FORM -> formulario de registro -> deja datos en la sesion y pasa a
-//                  CHARACTER_CREATION (el MSG_REGISTER se manda desde alli).
-//
-// La conexion al socket esta DIFERIDA: se crea el ClientProtocol en la sesion
-// recien al primer intento de login. Ante MSG_AUTH_ERROR se muestra el motivo
-// (viene en chat_content) y se mantiene al usuario en la pantalla.
-//
-// No es duena del window/renderer/font: los recibe del ScreenManager. El
-// ScreenManager hace el SDL_RenderPresent; esta pantalla solo dibuja. Libera sus
-// texturas propias en el destructor.
 class LoginSignupScreen : public Screen {
  public:
     LoginSignupScreen(SDL_Renderer* renderer, SDL_Window* window, TTF_Font* font,

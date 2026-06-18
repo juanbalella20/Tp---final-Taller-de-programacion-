@@ -15,9 +15,8 @@
 //   port = "8080"
 class NetworkConfig {
 private:
-    // TODO: despues de varios test, sacar estos valores.
-    std::string host = "localhost";
-    std::string port = "8080";
+    std::string host;
+    std::string port;
 
 public:
     NetworkConfig() = default;

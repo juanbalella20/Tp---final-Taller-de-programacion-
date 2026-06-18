@@ -8,6 +8,7 @@
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
+#include "scapeWindow.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -263,6 +264,10 @@ void ClientGUI::handleEvents() {
         // La tienda es modal: mientras esta abierta atrapa sus clicks/ESC ANTES
         // que el chat y el juego (el chat puede estar activo tras escribir
         // /listar y, si no, se tragaria los clicks del mouse).
+        if (scape_window && scape_window->handle_event(event)) {
+            continue;
+        }
+
         if (shop_window && shop_window->handle_event(event)) {
             continue;
         }
@@ -283,9 +288,10 @@ void ClientGUI::handleEvents() {
                     break;
                 }
                 switch (event.key.scancode) {
-                    case SDL_SCANCODE_ESCAPE:
-                        is_running = false;
+                    case SDL_SCANCODE_ESCAPE: {
+                        if (scape_window) scape_window->open();
                         break;
+                    }
                     case SDL_SCANCODE_UP:
                     case SDL_SCANCODE_W:
                         sendMoveCmd(DIR_NORTH);
@@ -510,7 +516,7 @@ void ClientGUI::update() {
                     if (hud) hud->set_inventory(msg.get_items());
                     break;
                 case MSG_NPCS_SNAPSHOT:
-                    npcs = msg.get_npcs();
+                    set_npcs_snapshot(msg.get_npcs());
                     break;
                 case MSG_ITEMS_SNAPSHOT:
                     items_on_floor = msg.get_items_on_floor();
@@ -813,20 +819,50 @@ void ClientGUI::update() {
     }
 }
 
+void ClientGUI::set_npcs_snapshot(const std::vector<NpcInfo>& next_npcs) {
+    auto direction_from_delta = [](int dx, int dy, Direction fallback) {
+        if (dx != 0 && std::abs(dx) >= std::abs(dy)) return dx > 0 ? DIR_EAST : DIR_WEST;
+        if (dy != 0) return dy > 0 ? DIR_SOUTH : DIR_NORTH;
+        return fallback;
+    };
+
+    if (npc_walk_frames.size() != next_npcs.size()) {
+        npc_walk_frames.assign(next_npcs.size(), 0);
+        npc_draw_directions.assign(next_npcs.size(), DIR_SOUTH);
+    }
+
+    for (size_t i = 0; i < next_npcs.size(); ++i) {
+        Direction direction = next_npcs[i].direction;
+        bool moved = false;
+
+        if (i < npcs.size() && npcs[i].name == next_npcs[i].name) {
+            const int dx = next_npcs[i].x - npcs[i].x;
+            const int dy = next_npcs[i].y - npcs[i].y;
+            moved = dx != 0 || dy != 0;
+            if (moved) direction = direction_from_delta(dx, dy, direction);
+        }
+
+        npc_walk_frames[i] = moved ? npc_walk_frames[i] + 1 : 0;
+        npc_draw_directions[i] = direction;
+    }
+
+    npcs = next_npcs;
+}
+
 void ClientGUI::drawEnemies() {
     if (!tilemap) return;
     const int tileSize = tilemap->getTileSize();
-    for (const auto& npc : npcs) {
-        // Solo los NPC hostiles tienen textura/pov registrados (por nombre). Los
-        // amigos (seller/priest/banker) y cualquier nombre desconocido se saltean
-        // aca: los dibuja draw_npc_friends() por tipo. Sin este guard, el pov
-        // (back/front/...) hace .at(npc.name) sobre un nombre inexistente y lanza
-        // std::out_of_range ("map::at"), que mata la entrada al juego.
+    for (size_t i = 0; i < npcs.size(); ++i) {
+        const auto& npc = npcs[i];
         SDL_Texture* npc_tex = texture_loader.get_texture_of_npc_enemy(npc.name);
-        if (npc_tex == nullptr) continue;
-        NpcSprite ns(renderer, npc_tex, npc.x, npc.y, tileSize);
-        SDL_FRect pov;
-        switch (npc.direction) {
+
+        const int frame = i < npc_walk_frames.size() ? npc_walk_frames[i] : 0;
+        const Direction direction =
+            i < npc_draw_directions.size() ? npc_draw_directions[i] : npc.direction;
+        NpcSprite ns(renderer, npc_tex, npc.x, npc.y, tileSize, npc.name,
+                     frame);
+        SDL_FRect pov = ns.front_pov(npc.name);
+        switch (direction) {
             case DIR_NORTH: 
                 pov = ns.back_pov(npc.name);
                 break;
@@ -1212,6 +1248,9 @@ void ClientGUI::draw() {
     // La tienda es modal: se dibuja por encima de todo (HUD y chat incluidos).
     if (shop_window) shop_window->render();
 
+    // El dialogo de salida va por encima de todo, incluso de la tienda.
+    if (scape_window) scape_window->render();
+
     SDL_RenderPresent(renderer);
 }
 
@@ -1236,6 +1275,9 @@ void ClientGUI::init_draw() {
     // Ventana de comercio: ocupa toda el area logica de presentacion.
     shop_window = std::make_unique<ShopWindow>(renderer, chat_font,
                                                LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    // Dialogo de confirmacion de salida (ESC dentro del juego).
+    scape_window = std::make_unique<ScapeWindow>(renderer,
+                                                 LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
     // Spritesheets de efectos de hechizo (animaciones sobre el target).
     texture_loader.load_spell_effects();
@@ -1273,6 +1315,10 @@ void ClientGUI::run() {
         init_draw();
         while (is_running && should_keep_running()) {
             handleEvents();
+            if (scape_window && scape_window->consume_exit_confirmed()) {
+                is_running = false;
+                break;
+            }
             update();
             update_potion_hold();  // ¿se cumplieron los 3s del hold de poción?
             draw();

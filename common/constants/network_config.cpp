@@ -1,4 +1,5 @@
 #include "network_config.h"
+#include "game_config.h"
 
 #include "toml.hpp"
 #include "paths.h"
@@ -14,8 +15,8 @@ void NetworkConfig::load(const std::string& path) {
     }
 
     // value_or sobre el valor actual: si la clave no esta, conserva el default.
-    host = root.at_path("network.host").value_or(host);
-    port = root.at_path("network.port").value_or(port);
+    host = root.at_path("network.host").value_or("0");
+    port = root.at_path("network.port").value_or("0");
 }
 
 const std::string& NetworkConfig::get_host() const {
