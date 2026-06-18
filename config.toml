@@ -320,7 +320,7 @@ mana_regen_per_second = 0.01
 # coincidir con las claves de [items.*] de arriba; "escudo" es alias de
 # "escudo_tortuga"). Cambiar esta lista cambia el equipamiento de arranque
 # sin recompilar. Si se deja vacia se usa el equipamiento por defecto.
-initial_inventory = ["espada", "escudo", "vara_fresno", "baculo_nudoso",
+initial_inventory = ["espada", "escudo_hierro", "vara_fresno", "baculo_nudoso",
                      "baculo_engarzado", "flauta_elfica", "arco_simple",
                      "arco_compuesto","martillo"]
 
