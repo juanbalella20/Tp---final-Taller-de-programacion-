@@ -521,27 +521,26 @@ void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_d
 
 void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
     // Dibuja cada item equipado con su sprite real. Arma/báculo van en la mano
-    // (siguen la animación de caminata con weapon_dx/dy); el escudo sobre el
-    // torso; la armadura cubre el cuerpo; el casco va en la cabeza. Si no hay
-    // sprite registrado para el id, no se dibuja nada.
+    // (siguen la animación de caminata con weapon_dx/dy). Si no hay sprite
+    // registrado para el id, no se dibuja nada.
     //
-    // behind_body distingue las dos pasadas de draw(): las armas y el escudo se
-    // dibujan DETRÁS del cuerpo cuando el personaje da la espalda (BACK/LEFT) y
-    // delante cuando mira al frente (FRONT/RIGHT). La armadura y el casco van
-    // SIEMPRE delante del cuerpo (se ven en cualquier dirección).
+    // behind_body distingue las dos pasadas de draw(): el arma se dibuja DETRÁS
+    // del cuerpo cuando el personaje da la espalda (BACK/LEFT) y delante cuando
+    // mira al frente (FRONT/RIGHT).
     for (const auto& id : equipped_item_ids) {
         auto it = equip_sprites.find(id);
         if (it == equip_sprites.end()) continue;
         const EquipSprite& sprite = it->second;
 
-        // La armadura y el casco NO se dibujan sobre el personaje: su estado
+        // Escudo, armadura y casco NO se dibujan sobre el personaje: su estado
         // (equipado o no) se muestra en el panel del HUD (drawEquipStatus). Sobre
-        // el jugador solo se ven el arma/báculo (en la mano) y el escudo (torso).
-        if (sprite.kind == EquipKind::ARMOR || sprite.kind == EquipKind::HELMET) {
+        // el jugador solo se ve el arma/báculo (en la mano).
+        if (sprite.kind == EquipKind::SHIELD || sprite.kind == EquipKind::ARMOR ||
+            sprite.kind == EquipKind::HELMET) {
             continue;
         }
 
-        // Filtrado por pasada: arma/escudo van detrás del cuerpo cuando el
+        // Filtrado por pasada: el arma va detrás del cuerpo cuando el
         // personaje da la espalda (BACK/LEFT) y delante en FRONT/RIGHT.
         bool item_behind = (current_direction == ViewDirection::BACK ||
                             current_direction == ViewDirection::LEFT);
@@ -561,20 +560,6 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
                 if (current_direction == ViewDirection::FRONT ||
                     current_direction == ViewDirection::LEFT) {
                     angle = 270.0;
-                }
-                break;
-
-            case EquipKind::SHIELD:
-                // El escudo va FIJO sobre el torso, del lado contrario a la mano que
-                // sostiene el arma. El cuerpo se dibuja en rect.y..rect.y+rect.h (la
-                // cabeza va aparte y arriba), así que el torso está cerca del top.
-                // El lado depende de hacia dónde mira el personaje.
-                size = rect.w * 0.4f;
-                off_y = 0.10f;
-                switch (current_direction) {
-                    case ViewDirection::LEFT:  off_x = 0.05f; break;  // brazo izquierdo
-                    case ViewDirection::RIGHT: off_x = 0.55f; break;  // brazo derecho
-                    default:                   off_x = 0.30f; break;  // de frente/espalda: centrado
                 }
                 break;
 

@@ -428,8 +428,8 @@ void HUD::drawEquipStatus() {
     // Panel inferior: estado de equipo de las defensas. Tapa los íconos de stats
     // que trae la imagen de fondo del HUD con info-area-center y encima dibuja,
     // por cada tipo (escudo, armadura, casco) que el jugador TENGA en el
-    // inventario: el ícono del item + "<Tipo> EQUIPPED" (verde) / "<Tipo> NOT
-    // EQUIPPED" (rojo). Los tipos que no se tienen no aparecen. Coordenadas en el
+    // inventario: el ícono del item + "<Tipo> Equipado" (verde) / "<Tipo> No
+    // equiapado" (rojo). Los tipos que no se tienen no aparecen. Coordenadas en el
     // espacio de la imagen base (1021x767), igual que el resto del HUD.
     if (!font) return;
 
@@ -488,10 +488,10 @@ void HUD::drawEquipStatus() {
         float icon_y = (row_y + (row_h - icon_sz) / 2.0f) * scale_y;
         drawIconItem(*item, icon_x, icon_y, icon_slot);
 
-        // Texto "<Tipo> EQUIPPED / NOT EQUIPPED" a la derecha del ícono. El color
+        // Texto "<Tipo> Equipado / No equipado" a la derecha del ícono. El color
         // marca el estado (verde = equipado, rojo = no).
         std::string text = std::string(row.label) +
-                           (equipped ? " EQUIPPED" : " NOT EQUIPPED");
+                           (equipped ? " Equipado" : " No equipado");
         SDL_Color color = equipped ? SDL_Color{40, 200, 60, 255}
                                    : SDL_Color{210, 50, 50, 255};
         TextCache& cache = equip_status_caches[cache_idx++];
