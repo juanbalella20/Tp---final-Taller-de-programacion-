@@ -17,8 +17,6 @@ class ZoneWorld;
 
 enum class State { DEAD, ALIVE };
 
-
-
 class NPChostile : public NPC, public Entity {
     private:
         std::string type_id;
