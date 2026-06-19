@@ -8,18 +8,14 @@
 #include <vector>
 
 #include "constants/game_constants.h"  // positionCoord
-#include "mapLoader.h"                  // Tileset, TileDef, MapLayerData, TeleportDef
+#include "mapData.h"                    // Tileset, TileDef, MapLayerData, TeleportDef
 
 class ByteReader;
 
 /*
- * Lee un mapa en formato binario .bin (ver binaryMapFormat.h).
- *
- * Expone DELIBERADAMENTE la MISMA superficie publica que MapLoader, de modo que
- * el server (ZoneWorld::load_terrain) pueda consumir un .bin con un cambio
- * minimo (eligo el loader por extension del archivo). No depende del editor.
- *
-
+ * Lee un mapa en formato binario .bin (ver binaryMapFormat.h). Es el unico
+ * loader de mapas: lo consumen el server (ZoneWorld::load_terrain) y el cliente
+ * (TileMap). No depende del editor.
  */
 class BinaryMapLoader {
 public:

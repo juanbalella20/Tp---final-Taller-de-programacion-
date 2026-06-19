@@ -5,12 +5,12 @@
 #include <string>
 #include <vector>
 
-#include "mapLoader.h"
+#include "binaryMap/binaryMapLoader.h"
 
 class TileMap {
 private:
     SDL_Renderer* renderer;
-    MapLoader mapData;
+    BinaryMapLoader mapData;
     std::vector<SDL_Texture*> tileset_textures;
 
     // Carga en tileset_textures una textura por cada tileset ya parseado
@@ -23,11 +23,6 @@ public:
 
     TileMap(const TileMap&) = delete;
     TileMap& operator=(const TileMap&) = delete;
-
-    // Parsea el TOML (via MapLoader) 
-    // y carga las texturas de cada tileset en el vector
-    // tileset_textures
-    void load_map_toml(const std::string& tomlPath);
 
     // Parsea el mapa binario
     // carga las texturas de cada tileset en el vector tileset_textures

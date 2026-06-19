@@ -62,13 +62,8 @@ void TileMap::load_tileset_textures() {
     }
 }
 
-void TileMap::load_map_toml(const std::string& tomlPath) {
-    mapData.load(tomlPath);
-    load_tileset_textures();
-}
-
 void TileMap::load_map_bin(const std::string& path) {
-    mapData.load_bin(path);
+    mapData.load(path);
     load_tileset_textures();
 }
 

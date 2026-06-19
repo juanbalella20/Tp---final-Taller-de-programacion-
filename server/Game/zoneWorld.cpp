@@ -1,22 +1,16 @@
 #include "zoneWorld.h"
 
 #include <algorithm>
+#include <climits>
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 
-#include "../../common/mapLoader.h"
+#include "../../common/binaryMap/binaryMapLoader.h"
 #include "item/item.h"
 #include "item/item_catalog.h"
 #include "player/player.h"
 #include "game_config.h"
-
-
-// Devuelve true si 'path' termina en 'suffix'.
-static bool ends_with(const std::string& path, const std::string& suffix) {
-    if (suffix.size() > path.size()) return false;
-    return std::equal(suffix.rbegin(), suffix.rend(), path.rbegin());
-}
 
 NPChostile make_npc_from_spawn(const NpcSpawn& spawn) {
     // Catalogo de tipos de NPC hostiles. Mas adelante esto puede vivir
@@ -130,14 +124,8 @@ void ZoneWorld::spawn(const ZoneSpawnConfig& cfg) {
 }
 
 void ZoneWorld::load_terrain(const std::string& map_path) {
-    // Elige el loader por extension: .bin via BinaryMapLoader (load_bin), el
-    // resto como TOML. Ambos exponen la misma superficie en MapLoader.
-    MapLoader md;
-    if (ends_with(map_path, ".bin")) {
-        md.load_bin(map_path);
-    } else {
-        md.load(map_path);
-    }
+    BinaryMapLoader md;
+    md.load(map_path);
 
     width = md.get_width();
     height = md.get_height();

@@ -7,9 +7,8 @@
 #include <vector>
 
 #include "constants/game_constants.h" // WIDTH, HEIGHT, TILE_SIZE
-#include "mapLoader.h"                // Tileset, TileDef, MapLayerData
+#include "mapData.h"                  // Tileset, TileDef, MapLayerData, TeleportDef
 
-// Reutiliza los structs de common/mapLoader.h (Tileset, TileDef, MapLayerData)
 class Map {
 private:
   std::vector<Tileset> tilesets_;

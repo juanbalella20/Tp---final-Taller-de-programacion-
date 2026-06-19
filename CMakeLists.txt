@@ -91,7 +91,6 @@ add_library(common STATIC
     common/socket/liberror.cpp
     common/commands/clientCmd.cpp
     common/commands/gameMsg.cpp
-    common/mapLoader.cpp
     common/binaryMap/binaryMapLoader.cpp
     common/binaryMap/binaryMapSaver.cpp
     common/binaryMap/byteReader.cpp

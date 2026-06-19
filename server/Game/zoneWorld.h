@@ -11,7 +11,7 @@
 #include "../../common/info/item_info.h"
 #include "../../common/info/item_floor_info.h"
 #include "../../common/info/npc_info.h"
-#include "../../common/mapLoader.h"
+#include "../../common/binaryMap/mapData.h"  // TeleportDef
 #include "npc/npcHostile.h"
 #include "npc/npcSeller.h"
 #include "npc/npcBanker.h"
