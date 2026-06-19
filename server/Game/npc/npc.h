@@ -28,7 +28,6 @@ class NPC {
     protected:
         int npc_id;
         std::string name;
-        //ItemDataBase itemdatabase;
     public:
     // an npc_id is generated and a name
     NPC();

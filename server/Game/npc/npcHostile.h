@@ -6,7 +6,6 @@
 #include "npc.h"
 #include "levelHostile.h"
 #include "../entity.h"
-// #include "itemDataBase.h"
 #include "../../../common/constants/protocol_constants.h"
 
 #include <vector>

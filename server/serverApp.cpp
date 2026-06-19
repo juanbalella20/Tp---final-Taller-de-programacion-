@@ -20,7 +20,6 @@ ServerApp::~ServerApp() {
 void ServerApp::run() {
     game_loop.start();
     acceptor.start();
-//antes en el tp de threads el server se cortaba con una q, ahora ni idea de como se deberia cortar
     char c = '\0';
     while (std::cin.get(c)) {
         if (c == 'q') {
