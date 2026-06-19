@@ -295,22 +295,18 @@ void ClientGUI::handleEvents() {
                     case SDL_SCANCODE_UP:
                     case SDL_SCANCODE_W:
                         sendMoveCmd(DIR_NORTH);
-   //                     if (player) { player->setTilePosition(player->getTileX(), player->getTileY() - 1); player_pov = player->back_pov(); }
                         break;
                     case SDL_SCANCODE_DOWN:
                     case SDL_SCANCODE_S:
                         sendMoveCmd(DIR_SOUTH);
-     //                   if (player) { player->setTilePosition(player->getTileX(), player->getTileY() + 1); player_pov = player->front_pov(); }
                         break;
                     case SDL_SCANCODE_RIGHT:
                     case SDL_SCANCODE_D:
                         sendMoveCmd(DIR_EAST);
-       //                 if (player) { player->setTilePosition(player->getTileX() + 1, player->getTileY()); player_pov = player->right_pov(); }
                         break;
                     case SDL_SCANCODE_LEFT:
                     case SDL_SCANCODE_A:
                         sendMoveCmd(DIR_WEST);
-         //               if (player) { player->setTilePosition(player->getTileX() - 1, player->getTileY()); player_pov = player->left_pov(); }
                         break;
                     default:
                         break;
