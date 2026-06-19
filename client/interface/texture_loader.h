@@ -23,6 +23,7 @@ private:
     SDL_Texture* xp_bar_texture;
     SDL_Texture* mana_bar_texture;
     SDL_Texture* game_texture;
+    SDL_Texture* shop_texture;
 
     std::map<std::string, SDL_Texture*> enemies_textures;
     std::map<std::string, SDL_Texture*> spell_effects_textures;
@@ -72,6 +73,8 @@ public:
 
     SDL_Texture* get_mana_texture();
 
+    SDL_Texture* get_shop_texture();
+
     void load_gold();
 
     void load_ghost();
@@ -89,6 +92,8 @@ public:
     void load_stats();
 
     void load_game_window();
+
+    void load_shop();
 
     void freeSDL();
 

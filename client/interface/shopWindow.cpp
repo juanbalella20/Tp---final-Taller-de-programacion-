@@ -39,108 +39,14 @@ constexpr float CLOSE_H = 46.0f;
 
 ShopWindow::ShopWindow(SDL_Renderer* renderer, TTF_Font* font,
                        int logical_w, int logical_h)
-    : renderer(renderer), font(font),
+    : renderer(renderer), font(font), texture_loader(renderer),
       logical_w(logical_w), logical_h(logical_h) {
     
-    std::string path = paths::asset("imagenes/comercio.png");
-    SDL_Surface* surf = IMG_Load(path.c_str());
-    if (surf) {
-        background = SDL_CreateTextureFromSurface(renderer, surf);
-        if (background) SDL_SetTextureBlendMode(background, SDL_BLENDMODE_BLEND);
-        SDL_DestroySurface(surf);
-    }
-    load_item_textures();
+    texture_loader.load_shop();
+    texture_loader.load_items();
 }
 
-ShopWindow::~ShopWindow() {
-    if (background) SDL_DestroyTexture(background);
-    // Las texturas de items pueden compartirse entre ids (alias / spritesheet
-    // comun): liberar cada puntero una sola vez.
-    std::vector<SDL_Texture*> freed;
-    for (auto& kv : item_textures) {
-        SDL_Texture* t = kv.second;
-        if (!t) continue;
-        bool already = false;
-        for (SDL_Texture* f : freed) if (f == t) { already = true; break; }
-        if (!already) { SDL_DestroyTexture(t); freed.push_back(t); }
-    }
-    item_textures.clear();
-}
-
-// Misma tabla de iconos que el HUD: la tienda muestra el sprite real de cada
-// item por id. Se carga una vez al crear la ventana (no por frame).
-void ShopWindow::load_item_textures() {
-    std::string path = paths::asset("imagenes/101.png");
-    // Espada: recorte de su spritesheet (101.png).
-    if (SDL_Surface* s = IMG_Load(path.c_str())) {
-        if (SDL_Texture* t = SDL_CreateTextureFromSurface(renderer, s)) {
-            SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
-            item_textures["espada"] = t;
-            item_crops["espada"] = {224.0f, 96.0f, 30.0f, 30.0f};
-        }
-        SDL_DestroySurface(s);
-    }
-    path = paths::asset("imagenes/2141.png");
-    // Escudo de hierro: primer sprite de su spritesheet (2141.png).
-    if (SDL_Surface* s = IMG_Load(path.c_str())) {
-        if (SDL_Texture* t = SDL_CreateTextureFromSurface(renderer, s)) {
-            SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
-            item_textures["escudo_hierro"] = t;
-            item_crops["escudo_hierro"] = {0.0f, 0.0f, 32.0f, 32.0f};
-        }
-        SDL_DestroySurface(s);
-    }
-    // Resto: cada PNG es un unico sprite que ocupa toda la imagen.
-    struct ItemIcon { const char* id; const char* path; };
-    const ItemIcon icons[] = {
-        {"vara_fresno",      "imagenes/icon_vara_fresno.png"},
-        {"baculo_nudoso",    "imagenes/icon_baculo_nudoso.png"},
-        {"baculo_engarzado", "imagenes/icon_baculo_engarzado.png"},
-        {"flauta_elfica",    "imagenes/icon_flauta_elfica.png"},
-        {"hacha",            "imagenes/hacha.png"},
-        {"martillo",         "imagenes/martillo.png"},
-        {"arco_simple",      "imagenes/arco-simple.png"},
-        {"arco_compuesto",   "imagenes/arco-compuesto.png"},
-        {"armadura_cuero",   "imagenes/Armadura-de-cuero.png"},
-        {"armadura_placas",  "imagenes/armadura-de-placas.png"},
-        {"tunica_azul",      "imagenes/tunica-azul.png"},
-        {"capucha",          "imagenes/capucha.png"},
-        {"casco_hierro",     "imagenes/casco-de-hierro.png"},
-        {"sombrero_magico",  "imagenes/sombrero-magico.png"},
-        {"escudo_tortuga",   "imagenes/escudo-tortuga.png"},
-    };
-    for (const auto& ic : icons) {
-        std::string p = paths::asset(ic.path);
-        SDL_Surface* s = IMG_Load(p.c_str());
-        if (!s) continue;
-        float w = static_cast<float>(s->w);
-        float h = static_cast<float>(s->h);
-        SDL_Texture* t = SDL_CreateTextureFromSurface(renderer, s);
-        SDL_DestroySurface(s);
-        if (!t) continue;
-        SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
-        item_textures[ic.id] = t;
-        item_crops[ic.id] = {0.0f, 0.0f, w, h};
-    }
-    // Alias historico "escudo" -> escudo de tortuga (comparte textura/crop).
-    auto it = item_textures.find("escudo_tortuga");
-    if (it != item_textures.end()) {
-        item_textures["escudo"] = it->second;
-        item_crops["escudo"] = item_crops["escudo_tortuga"];
-    }
-    path = paths::asset("imagenes/100.png");
-    // Pociones: ambas se recortan del mismo spritesheet 100.png (textura comun).
-    if (SDL_Surface* s = IMG_Load(path.c_str())) {
-        if (SDL_Texture* t = SDL_CreateTextureFromSurface(renderer, s)) {
-            SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
-            item_textures["pocion_vida"] = t;
-            item_crops["pocion_vida"] = {392.0f, 159.0f, 16.0f, 26.0f};
-            item_textures["pocion_mana"] = t;
-            item_crops["pocion_mana"] = {424.0f, 159.0f, 17.0f, 26.0f};
-        }
-        SDL_DestroySurface(s);
-    }
-}
+ShopWindow::~ShopWindow() {}
 
 void ShopWindow::open(const std::vector<ItemInfo>& new_items) {
     items = new_items;
@@ -270,6 +176,7 @@ void ShopWindow::render() {
     SDL_RenderFillRect(renderer, &full);
 
     // Marco de la tienda.
+    SDL_Texture* background = texture_loader.get_shop_texture();
     if (background) {
         SDL_RenderTexture(renderer, background, nullptr, &frame);
     } else {
@@ -296,29 +203,30 @@ void ShopWindow::render() {
             SDL_RenderFillRect(renderer, &halo);
         }
 
-        // Sprite del item (por id; fallback a la espada para no dejar vacio).
+        // Sprite del item
         const ItemInfo& item = items[i];
-        SDL_Texture* icon = nullptr;
-        SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};
-        auto it = item_textures.find(item.get_id());
-        if (it != item_textures.end() && it->second) {
-            icon = it->second;
-            auto cit = item_crops.find(item.get_id());
-            if (cit != item_crops.end()) crop = cit->second;
-        } else {
-            auto fb = item_textures.find("espada");
-            if (fb != item_textures.end()) icon = fb->second;
-        }
+        SDL_Texture* icon = texture_loader.get_texture_of_item(item.get_id());
+        
         if (icon) {
+            float tex_w = 0.0f;
+            float tex_h = 0.0f;
+            SDL_GetTextureSize(icon, &tex_w, &tex_h); 
+
             const float PAD = 4.0f;
             float max_w = slot.w - PAD * 2.0f;
             float max_h = slot.h - PAD * 2.0f;
-            float scale = SDL_min(max_w / crop.w, max_h / crop.h);
-            float fw = crop.w * scale;
-            float fh = crop.h * scale;
-            SDL_FRect dst = {slot.x + (slot.w - fw) / 2.0f,
-                             slot.y + (slot.h - fh) / 2.0f, fw, fh};
-            SDL_RenderTexture(renderer, icon, &crop, &dst);
+
+            float scale = SDL_min(max_w / tex_w, max_h / tex_h);
+            float fw = tex_w * scale;
+            float fh = tex_h * scale;
+
+            SDL_FRect dst = {
+                slot.x + (slot.w - fw) / 2.0f,
+                slot.y + (slot.h - fh) / 2.0f,
+                fw,
+                fh
+            };
+            SDL_RenderTexture(renderer, icon, nullptr, &dst);
         }
     }
 

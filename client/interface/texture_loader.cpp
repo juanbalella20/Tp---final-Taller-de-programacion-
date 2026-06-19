@@ -141,6 +141,10 @@ SDL_Texture* TextureLoader::get_mana_texture() {
     return mana_bar_texture;
 }
 
+SDL_Texture* TextureLoader::get_shop_texture() {
+    return shop_texture;
+}
+
 void TextureLoader::load_npcs_friendlies() {
     load_specific("imagenes/4055.png", &seller_texture);
     load_specific("imagenes/4051.png", &banker_texture);
@@ -246,6 +250,11 @@ void TextureLoader::load_game_window() {
     load_specific("imagenes/en_ventanaprincipal.png", &game_texture);
 }
 
+void TextureLoader::load_shop() {
+    load_specific("imagenes/comercio.png", &shop_texture);
+    if (shop_texture) SDL_SetTextureBlendMode(shop_texture, SDL_BLENDMODE_BLEND);
+}
+
 void TextureLoader::free_texture(SDL_Texture** texture) {
     if (*texture) { 
         SDL_DestroyTexture(*texture); 
@@ -266,6 +275,7 @@ void TextureLoader::freeSDL() {
     free_texture(&xp_bar_texture);
     free_texture(&hp_bar_texture);
     free_texture(&mana_bar_texture);
+    free_texture(&shop_texture);
 
     // Texturas extra de items del piso (las que no son item_texture, p. ej. escudo).
     // Se saltea gold_texture: lo comparten las pociones del piso y se libera aparte.
