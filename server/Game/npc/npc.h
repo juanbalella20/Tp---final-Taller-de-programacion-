@@ -16,7 +16,6 @@ enum NpcAction {
 
 };
 
-
 struct Command {
     int action;       // ex: comprar, vender
     std::string item_id;  // id del item involucrado
