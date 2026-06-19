@@ -203,7 +203,6 @@ add_executable(server
     server/persistence/clan_persistence.cpp
     server/persistence/clan_serializer.cpp
     server/persistence/auth_service.cpp
-    server/Game/npc/npc.cpp
     server/Game/npc/npcHostile.cpp
     server/Game/npc/levelHostile.cpp
     server/Game/npc/npcBanker.cpp
