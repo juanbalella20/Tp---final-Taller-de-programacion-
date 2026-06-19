@@ -8,8 +8,6 @@ ByteReader::ByteReader(const uint8_t* data, size_t size) : data_(data), size_(si
 
 size_t ByteReader::pos() const { return pos_; }
 
-size_t ByteReader::remaining() const { return size_ - pos_; }
-
 void ByteReader::require(size_t n) const {
     if (pos_ + n > size_) {
         throw std::runtime_error("BinaryMapLoader: archivo truncado/corrupto");
