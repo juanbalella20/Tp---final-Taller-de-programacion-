@@ -56,7 +56,7 @@ void PlayerClass::set_wizard() {
     endurance = cfg.wizard.endurance;
     life_factor = cfg.wizard.life_factor;
     mana_factor = cfg.wizard.mana_factor;
-    meditation_factor = cfg.wizard.meditation_factor; // FClaseMeditacion, TODO balancear 
+    meditation_factor = cfg.wizard.meditation_factor;
     class_id = ClassType::MAGE;
 }
 
@@ -68,7 +68,7 @@ void PlayerClass::set_cleric() {
     endurance = cfg.cleric.endurance;
     life_factor = cfg.cleric.life_factor;
     mana_factor = cfg.cleric.mana_factor;
-    meditation_factor = cfg.cleric.meditation_factor; // FClaseMeditacion, TODO balancear
+    meditation_factor = cfg.cleric.meditation_factor;
     class_id = ClassType::CLERIC;
 }
 
@@ -80,7 +80,7 @@ void PlayerClass::set_paladin() {
     endurance = cfg.paladin.endurance;
     life_factor = cfg.paladin.life_factor;
     mana_factor = cfg.paladin.mana_factor;
-    meditation_factor = cfg.paladin.meditation_factor; // FClaseMeditacion, TODO balancear
+    meditation_factor = cfg.paladin.meditation_factor;
     class_id = ClassType::PALADIN;
 }
 
