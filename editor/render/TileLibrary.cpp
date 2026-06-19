@@ -57,4 +57,3 @@ int TileLibrary::rows() const { return m_rows; }
 int TileLibrary::tileCount() const { return static_cast<int>(m_tiles.size()); }
 int TileLibrary::usableWidth() const { return m_columns * m_tileSize; }
 int TileLibrary::usableHeight() const { return m_rows * m_tileSize; }
-const QString &TileLibrary::sourcePath() const { return m_sourcePath; }

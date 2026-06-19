@@ -45,14 +45,6 @@ MapEditorScene::MapEditorScene(EditorDocument *document, QObject *parent)
   rebuildTileCache();
 }
 
-int MapEditorScene::visualItemCount() const {
-  int count = 0;
-  for (const auto &layer : m_visualItems) {
-    count += static_cast<int>(layer.size());
-  }
-  return count;
-}
-
 QGraphicsPixmapItem *MapEditorScene::visualItem(int layer, int column,
                                                 int row) const {
   if (!m_document)

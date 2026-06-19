@@ -74,11 +74,6 @@ int Map::add_tileset(const std::string &name, const std::string &file_path,
   return static_cast<int>(tilesets_.size()) - 1;
 }
 
-void Map::clear_tilesets() {
-  tilesets_.clear();
-  rebuild_tile_index();
-}
-
 int Map::next_firstgid() const {
   // Arranca en 1 porque el gid 0 esta reservado para "celda vacia".
   int next = 1;
@@ -116,13 +111,6 @@ void Map::set_cell(int layer, int x, int y, int gid) {
     throw std::out_of_range("Map::set_cell: indice fuera de rango");
   }
   layers_[layer].data[y][x] = gid;
-}
-
-// --- Colision (grilla por celda = unica fuente de verdad) --------------------
-bool Map::is_collidable(int x, int y) const {
-  if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT)
-    return true;
-  return collision_[y][x] != 0;
 }
 
 const std::vector<std::vector<uint8_t>> &Map::collision() const {
