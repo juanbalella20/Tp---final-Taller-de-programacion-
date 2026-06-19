@@ -962,7 +962,7 @@ void GameLoop::handle_clan_foundation(const ClientCmd& cmd) {
     std::string clan_name = cmd.get_target_name();
     GameMsg clan_msg(MSG_FOUND_CLAN);
     if (!game_map.found_clan(player_name, clan_name)) {
-        clan_msg.set_chat_content("Ya existe un clan con el nombre: " + clan_name);
+        clan_msg.set_chat_content("No pudiste fundar el clan " + clan_name + ": ya existe un clan con ese nombre o ya perteneces a otro clan");
         client_registry_monitor.notify_client(cmd.get_client_id(), clan_msg);
     } else {
         clan_msg.set_chat_content("Jugador " + player_name + " fundó el clan " + clan_name);
