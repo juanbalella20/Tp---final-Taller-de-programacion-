@@ -29,7 +29,7 @@ class NPC {
         std::string name;
     public:
     // an npc_id is generated and a name
-    NPC();
+    NPC() : npc_id(0), name("") {}
     public:
         static void set_npc_id(int npc_id);
         static void set_npc_name(std::string npc_name);
