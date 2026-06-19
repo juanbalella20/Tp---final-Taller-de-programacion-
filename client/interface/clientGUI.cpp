@@ -17,7 +17,7 @@
 ClientGUI::ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
     Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name,
     const std::string& player_race, const std::string& player_clan)
-    : window(window), renderer(renderer), event{}, chat_font(font), texture_loader(window, renderer),
+    : window(window), renderer(renderer), event{}, font(font), texture_loader(window, renderer),
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
       hud(nullptr), own_name(player_name), race(player_race), own_clan(player_clan),
       player(nullptr), tilemap(nullptr),
@@ -31,7 +31,7 @@ ClientGUI::ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
 
 ClientGUI::~ClientGUI() {
     freeSDL();
-    // chat_font, window y renderer son del ScreenManager: no se liberan aca.
+    // font, window y renderer son del ScreenManager: no se liberan aca.
 }
 
 void ClientGUI::initSDL() {
@@ -41,7 +41,7 @@ void ClientGUI::initSDL() {
     
     texture_loader.load_game_logo();
 
-    mini_chat = std::make_unique<MiniChat>(renderer, chat_font, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
+    mini_chat = std::make_unique<MiniChat>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
     zone_music = std::make_unique<ZoneMusicPlayer>();
     sfx = std::make_unique<SoundPlayer>();
 }
@@ -958,16 +958,16 @@ void ClientGUI::drawOtherPlayers() {
 
 void ClientGUI::draw_player_name(const std::string& name, int tile_x, int tile_y,
                                  SDL_Color color) {
-    if (!chat_font || name.empty() || !tilemap) return;
+    if (!font || name.empty() || !tilemap) return;
 
     // Texto del color de clan (relleno) + un contorno negro renderizado aparte.
     // El contorno es lo que hace el nombre legible sobre cualquier fondo (pasto,
     // agua, piedra): es el nametag tipico de MMO. Se dibuja a tamaño nativo (sin
     // downscale) para que los glyphs queden nitidos.
     SDL_Color outline_color = {0, 0, 0, 255};
-    SDL_Surface* fill_surf = TTF_RenderText_Blended(chat_font, name.c_str(), 0, color);
+    SDL_Surface* fill_surf = TTF_RenderText_Blended(font, name.c_str(), 0, color);
     if (!fill_surf) return;
-    SDL_Surface* outline_surf = TTF_RenderText_Blended(chat_font, name.c_str(), 0, outline_color);
+    SDL_Surface* outline_surf = TTF_RenderText_Blended(font, name.c_str(), 0, outline_color);
 
     SDL_Texture* fill_tex = SDL_CreateTextureFromSurface(renderer, fill_surf);
     SDL_Texture* outline_tex = outline_surf ? SDL_CreateTextureFromSurface(renderer, outline_surf)
@@ -1077,7 +1077,7 @@ void ClientGUI::draw_spell_animations() {
 }
 
 void ClientGUI::draw_damage_numbers() {
-    if (!tilemap || !chat_font) return;
+    if (!tilemap || !font) return;
     const int tileSize = tilemap->getTileSize();
     const SDL_Color color = {255, 0, 0, 255};  // rojo
     const uint64_t now = SDL_GetTicks();
@@ -1090,7 +1090,7 @@ void ClientGUI::draw_damage_numbers() {
 
     for (const auto& d : damage_numbers) {
         const std::string text = std::to_string(d.value);
-        SDL_Surface* surf = TTF_RenderText_Blended(chat_font, text.c_str(), 0, color);
+        SDL_Surface* surf = TTF_RenderText_Blended(font, text.c_str(), 0, color);
         if (!surf) continue;
         SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
         if (tex) {
@@ -1265,7 +1265,7 @@ void ClientGUI::init_draw() {
 
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
     // Ventana de comercio: ocupa toda el area logica de presentacion.
-    shop_window = std::make_unique<ShopWindow>(renderer, chat_font,
+    shop_window = std::make_unique<ShopWindow>(renderer, font,
                                                LOGICAL_WIDTH, LOGICAL_HEIGHT);
     // Dialogo de confirmacion de salida (ESC dentro del juego).
     scape_window = std::make_unique<ScapeWindow>(renderer,
