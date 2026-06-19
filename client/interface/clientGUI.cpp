@@ -496,7 +496,7 @@ void ClientGUI::update() {
                     if (player) {//spawn
                         player->setTilePosition(msg.get_coord_x(), msg.get_coord_y());
                         player->set_ghost(msg.get_ghost());
-                        player_pov = player->back_pov(ViewDirection::FRONT);
+                        player_pov = player->front_pov(ViewDirection::FRONT);
                         std::cout << "Player registered at (" << msg.get_coord_x() << "," << msg.get_coord_y() << ")" << std::endl;
                     }
                     other_players = msg.get_players();
@@ -1280,7 +1280,7 @@ void ClientGUI::init_draw() {
     int tileSize = tilemap->getTileSize();
     try {
         player = std::make_unique<PlayerDisplay>(renderer, "imagenes/1005.png", tileSize, race);
-        player_pov = player->back_pov(ViewDirection::FRONT);
+        player_pov = player->front_pov(ViewDirection::FRONT);
     } catch (const std::runtime_error& e) {
         std::cout << "[DEBUG] imagenes/1005.png failed: " << e.what() << std::endl;
     }
