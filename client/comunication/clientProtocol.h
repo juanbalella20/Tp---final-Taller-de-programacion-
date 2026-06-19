@@ -20,9 +20,4 @@ private:
     
 };
 
-
-
-
-
-
 #endif  // CLIENT_SRC_CLIENT_PROTOCOL_H_

@@ -375,7 +375,6 @@ void ClientGUI::handleEvents() {
                         for (const auto& item : inv) {
                             if (mx >= slot_x && mx <= slot_x + slot_size &&
                                 my >= slot_y && my <= slot_y + slot_size) {
-                                std::cout << "DEBUG mx: " << mx << " my: " << my << std::endl;
                                 // Sólo pedimos el toggle al server. Él responde con
                                 // MSG_UPDATE_EQUIP y de ahí derivamos el halo amarillo
                                 // y el arma del personaje (estado real, no optimista).
@@ -436,8 +435,6 @@ void ClientGUI::sendMoveCmd(Direction dir) {
 void ClientGUI::sendChatCmd(const std::string& msg) {
     try {
         ClientCmd cmd = parser.parse_chat(msg);
-        std::cout << "[DEBUG: sendChatCmd] selected_npc=(" 
-                  << selected_npc_tile_x << "," << selected_npc_tile_y << ")" << std::endl;
         // Si es vender o listar, agregar coordenadas del NPC seleccionado
         if ((cmd.get_message_type() == MSG_SELL || 
              cmd.get_message_type() == MSG_BUY  ||
@@ -518,7 +515,6 @@ void ClientGUI::update() {
                     items_on_floor = msg.get_items_on_floor();
                     break;
                 case MSG_PLAYERS_SNAPSHOT: {
-                    // std::cout << "Received players snapshot with " << msg.get_players().size() << " players." << std::endl;  // hot path: floodea la consola cada frame
                     for (const auto& incoming : msg.get_players()) {
                         auto it = std::find_if(other_players.begin(), other_players.end(),
                             [&incoming](const PlayerInfo& p) { return p.name == incoming.name; });
@@ -947,7 +943,6 @@ void ClientGUI::drawOtherPlayers() {
             other_players_povs[p.name] = pov; 
             p.update_frame = false;
         }
-        //pd.draw(camera, pov); MECHI DICE QUE NO VA
 
         // Nombre sobre el jugador: verde si es de nuestro clan, rojo si es de
         // otro (o no tiene). Sin clan propio, todos van en rojo. Colores claros

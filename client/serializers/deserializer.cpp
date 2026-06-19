@@ -528,8 +528,6 @@ void ClientDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
         int x = static_cast<int>(read_uint16_be(payload, offset));
         int y = static_cast<int>(read_uint16_be(payload, offset));
         bool is_ghost = (payload[offset++] != 0);
-
-        std::cout << "[DEBUG] Player " << name << " is_ghost: " << is_ghost << std::endl;
     
         std::string race;
         switch (race_code) {

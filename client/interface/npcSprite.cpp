@@ -167,7 +167,6 @@ void NpcSprite::back_pov_skeletons() {
 void NpcSprite::back_pov_golems() {
     std::vector<SDL_FRect> frames1;
     std::vector<SDL_FRect> frames2;
-    // std::vector<SDL_FRect> frames3;
     
     frames1.push_back({21.0f, 161.0f, 121.0f, 153.0f});
     frames1.push_back({163.0f, 161.0f, 151.0f, 153.0f});
@@ -176,10 +175,6 @@ void NpcSprite::back_pov_golems() {
     frames2.push_back({6.0f, 227.0f, 142.0f, 152.0f});
     frames2.push_back({157.0f, 227.0f, 170.0f, 152.0f});
     frames2.push_back({636.0f, 227.0f, 167.0f, 152.0f});
-    
-    // frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
-    // frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
-    // frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
     
     back_povs["Golem1"] = frames1;
     back_povs["Golem2"] = frames1;
@@ -263,7 +258,6 @@ void NpcSprite::front_pov_skeletons() {
 void NpcSprite::front_pov_golems() {
     std::vector<SDL_FRect> frames1;
     std::vector<SDL_FRect> frames2;
-    // std::vector<SDL_FRect> frames3;
     
     frames1.push_back({21.0f, 10.0f, 121.0f, 148.0f});
     frames1.push_back({163.0f, 10.0f, 151.0f, 148.0f});
@@ -272,10 +266,6 @@ void NpcSprite::front_pov_golems() {
     frames2.push_back({6.0f, 16.0f, 142.0f, 161.0f});
     frames2.push_back({157.0f, 16.0f, 170.0f, 161.0f});
     frames2.push_back({636.0f, 16.0f, 167.0f, 161.0f});
-    
-    // frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
-    // frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
-    // frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
     
     front_povs["Golem1"] = frames1;
     front_povs["Golem2"] = frames1;
@@ -358,7 +348,6 @@ void NpcSprite::right_pov_skeletons() {
 void NpcSprite::right_pov_golems() {
     std::vector<SDL_FRect> frames1;
     std::vector<SDL_FRect> frames2;
-    // std::vector<SDL_FRect> frames3;
     
     frames1.push_back({21.0f, 487.0f, 121.0f, 156.0f});
     frames1.push_back({163.0f, 487.0f, 151.0f, 156.0f});
@@ -367,10 +356,6 @@ void NpcSprite::right_pov_golems() {
     frames2.push_back({6.0f, 612.0f, 142.0f, 160.0f});
     frames2.push_back({157.0f, 612.0f, 170.0f, 160.0f});
     frames2.push_back({636.0f, 612.0f, 167.0f, 160.0f});
-    
-    // frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
-    // frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
-    // frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
     
     right_povs["Golem1"] = frames1;
     right_povs["Golem2"] = frames1;
@@ -453,7 +438,6 @@ void NpcSprite::left_pov_skeletons() {
 void NpcSprite::left_pov_golems() {
     std::vector<SDL_FRect> frames1;
     std::vector<SDL_FRect> frames2;
-    // std::vector<SDL_FRect> frames3;
     
     frames1.push_back({21.0f, 327.0f, 121.0f, 156.0f});
     frames1.push_back({163.0f, 327.0f, 151.0f, 156.0f});
@@ -462,10 +446,6 @@ void NpcSprite::left_pov_golems() {
     frames2.push_back({6.0f, 420.0f, 142.0f, 159.0f});
     frames2.push_back({157.0f, 420.0f, 170.0f, 159.0f});
     frames2.push_back({636.0f, 420.0f, 167.0f, 159.0f});
-    
-    // frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
-    // frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
-    // frames3.push_back({0.0f, 0.0f, 32.0f, 32.0f});
     
     left_povs["Golem1"] = frames1;
     left_povs["Golem2"] = frames1;
