@@ -9,6 +9,8 @@
 #include <tuple>
 #include <vector>
 #include <cstdlib>
+#include <cmath>
+#include <climits>
 
 GameMap::GameMap() = default;
 Zone GameMap::zone_id_of(const std::string& player_name) const {
@@ -523,6 +525,110 @@ std::vector<ItemInfo> GameMap::list_priest_items(const std::string& player_name)
               << ") priest=" << (priest ? "found" : "null") << std::endl;
     if (priest == nullptr) throw std::runtime_error("No hay un sacerdote adyacente.");
     return priest->list_items();
+}
+
+double GameMap::start_ghost_resurrect(const std::string& player_name) {
+    Player* player = find_player_by_name(player_name);
+    if (player == nullptr) throw std::runtime_error("Player not found.");
+    if (!player->is_ghost()) throw std::runtime_error("El jugador no es un fantasma.");
+
+    auto it = std::find_if(pending_resurrects.begin(), pending_resurrects.end(),
+        [&player_name](const PendingRevive& pr) { return pr.player_name == player_name; });
+    if (it != pending_resurrects.end())
+        throw std::runtime_error("Ya estás en proceso de resucitar. Espera...");
+ 
+    int px = player->get_coord_x();
+    int py = player->get_coord_y();
+
+    int best_dist_sq = INT_MAX;
+    Zone best_zone = ZONE_DEFAULT;
+    int best_priest_x = -1, best_priest_y = -1;
+ 
+    for (auto& [zone_id, world] : zones) {
+        auto [zx, zy] = world.nearest_priest_position(px, py);
+        if (zx == -1) continue;
+        int dx = zx - px;
+        int dy = zy - py;
+        int dist_sq = dx * dx + dy * dy;
+        if (dist_sq < best_dist_sq) {
+            best_dist_sq = dist_sq;
+            best_zone = zone_id;
+            best_priest_x = zx;
+            best_priest_y = zy;
+        }
+    }
+ 
+    if (best_dist_sq == INT_MAX)
+        throw std::runtime_error("No hay ningún sacerdote en el mundo.");
+ 
+    int dist = static_cast<int>(std::sqrt(static_cast<double>(best_dist_sq)));
+    const GameConfig& cfg = GameConfig::instance();
+    int ticks = std::max(1, static_cast<int>(dist * cfg.revive_ticks_per_distance));
+ 
+    pending_resurrects.push_back({player_name, ticks, best_zone, best_priest_x, best_priest_y});
+ 
+    return static_cast<double>(ticks) * cfg.tick_rate_ms / 1000.0;
+}
+ 
+std::vector<GameMap::ReviveResult> GameMap::tick_pending_resurrects() {
+    std::vector<ReviveResult> completed;
+ 
+    for (auto& pr : pending_resurrects) {
+        pr.ticks_remaining--;
+    }
+ 
+    auto it = pending_resurrects.begin();
+    while (it != pending_resurrects.end()) {
+        if (it->ticks_remaining > 0) {
+            ++it;
+            continue;
+        }
+ 
+        const std::string name = it->player_name;
+        Zone target_zone = it->target_zone;
+        int priest_x = it->priest_x;
+        int priest_y = it->priest_y;
+        it = pending_resurrects.erase(it);
+ 
+        Zone src_zone = zone_id_of(name);
+        ZoneWorld& dst = zones.at(target_zone);
+        auto [nx, ny] = dst.free_cell_adjacent_to(priest_x, priest_y, players_in(target_zone));
+ 
+        std::cout << "[DEBUG: tick_pending_resurrects] " << name
+                  << " priest=(" << priest_x << "," << priest_y << ")"
+                  << " arrival=(" << nx << "," << ny << ")"
+                  << " src_zone=" << static_cast<int>(src_zone)
+                  << " target_zone=" << static_cast<int>(target_zone) << std::endl;
+ 
+        TeleportResult tr;
+        if (nx == -1) {
+            // No hay celda libre junto al sacerdote: no se mueve de zona.
+            tr = {false, ZONE_DESERT, 0, 0};
+        } else {
+            player_zone[name] = target_zone;
+            Player* player = find_player_by_name(name);
+            if (player != nullptr) player->update_position(nx, ny);
+            tr = {true, target_zone, nx, ny, src_zone};
+        }
+ 
+        revive_player(name);
+ 
+        completed.push_back({name, tr});
+    }
+ 
+    return completed;
+}
+ 
+void GameMap::cancel_ghost_resurrect(const std::string& player_name) {
+    pending_resurrects.erase(
+        std::remove_if(pending_resurrects.begin(), pending_resurrects.end(),
+            [&player_name](const PendingRevive& pr) { return pr.player_name == player_name; }),
+        pending_resurrects.end());
+}
+ 
+bool GameMap::is_resurrect_pending(const std::string& player_name) const {
+    return std::any_of(pending_resurrects.begin(), pending_resurrects.end(),
+        [&player_name](const PendingRevive& pr) { return pr.player_name == player_name; });
 }
 
 
