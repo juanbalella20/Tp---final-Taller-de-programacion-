@@ -12,7 +12,7 @@
 class Map {
 private:
   std::vector<Tileset> tilesets_;
-  std::vector<MapLayerData> layers_;            // siempre LAYER_COUNT capas
+  std::vector<MapLayerData> layers_;            // LAYER_COUNT capas
   std::unordered_map<int, TileDef> tile_index_; // gid -> TileDef
   std::vector<TeleportDef> teleports_;          // celdas teleport + dest_zone
   std::vector<std::vector<uint8_t>> collision_; // [HEIGHT][WIDTH] (0/1)

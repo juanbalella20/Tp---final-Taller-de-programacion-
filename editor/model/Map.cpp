@@ -26,7 +26,6 @@ void Map::clear_canvas() {
   teleports_.clear();
 }
 
-// --- Metadata (constantes) ---------------------------------------------------
 int Map::width() const { return WIDTH; }
 int Map::height() const { return HEIGHT; }
 int Map::tile_size() const { return TILE_SIZE; }
@@ -35,7 +34,7 @@ bool Map::in_bounds(int x, int y) const {
   return x >= 0 && y >= 0 && x < WIDTH && y < HEIGHT;
 }
 
-// --- Tilesets ----------------------------------------------------------------
+// Tilesets
 const std::vector<Tileset> &Map::tilesets() const { return tilesets_; }
 
 std::vector<Tileset> Map::used_tilesets() const {
