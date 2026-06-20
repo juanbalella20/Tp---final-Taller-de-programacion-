@@ -162,6 +162,7 @@ public:
     NPCbanker* banker_adjacent_to(int px, int py);
     //--- Priests---
     NPCpriest* priest_adjacent_to(int px, int py);
+    std::pair<int, int> nearest_priest_position(int px, int py) const;
     std::string get_adjacent_friendly_type(int px, int py);
 
     // --- Items / oro en el piso ---

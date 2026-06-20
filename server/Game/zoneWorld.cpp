@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
+#include <climits>
 
 #include "../../common/mapLoader.h"
 #include "item/item.h"
@@ -482,6 +483,22 @@ NPCpriest* ZoneWorld::priest_adjacent_to(int px, int py) {
         if (is_adyacent(player_pos, priest_pos)) return &p;
     }
     return nullptr;
+}
+
+std::pair<int, int> ZoneWorld::nearest_priest_position(int px, int py) const {
+    if (priests.empty()) return {-1, -1};
+    int best_dist = INT_MAX;
+    std::pair<int, int> best = {-1, -1};
+    for (const auto& p : priests) {
+        int dx = p.get_coord_x() - px;
+        int dy = p.get_coord_y() - py;
+        int dist = dx * dx + dy * dy;
+        if (dist < best_dist) {
+            best_dist = dist;
+            best = {p.get_coord_x(), p.get_coord_y()};
+        }
+    }
+    return best;
 }
 
 std::string ZoneWorld::get_adjacent_friendly_type(int px, int py) {
