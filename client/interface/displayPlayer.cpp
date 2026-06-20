@@ -128,28 +128,6 @@ bool PlayerDisplay::is_ghost() const {
 
 void PlayerDisplay::set_equipped_weapon(bool has_weapon) {
     has_equipped_weapon = has_weapon;
-    if (has_weapon) {
-        reset_frame();
-        int current_frame;
-        switch(current_direction) {
-            case ViewDirection::BACK:
-                current_frame = walk_frame % 6;
-                weapon_back_offset(current_frame);
-                break;
-            case ViewDirection::FRONT:
-                current_frame = walk_frame % 6;
-                weapon_front_offset(current_frame);
-                break;
-            case ViewDirection::LEFT:
-                current_frame = walk_frame % 5;
-                weapon_left_offset(current_frame);
-                break;
-            case ViewDirection::RIGHT:
-                current_frame = walk_frame % 5;
-                weapon_right_offset(current_frame);
-                break;
-        }
-    }
 }
 
 void PlayerDisplay::set_equipped_items(const std::vector<std::string>& ids) {
@@ -192,9 +170,7 @@ SDL_FRect PlayerDisplay::back_pov(ViewDirection direction) {
 
         head_back_pov();
 
-        if(has_equipped_weapon) {
-            weapon_back_offset(current_frame);
-        }
+        weapon_back_offset(current_frame);
 
         frame = frames[current_frame];
         walk_frame = (walk_frame + 1) % 6;
@@ -248,9 +224,7 @@ SDL_FRect PlayerDisplay::front_pov(ViewDirection direction) {
 
         head_front_pov();
 
-        if(has_equipped_weapon) {
-            weapon_front_offset(current_frame);
-        }
+        weapon_front_offset(current_frame);
 
         frame = frames[current_frame];
         walk_frame = (walk_frame + 1) % 6;
@@ -303,9 +277,7 @@ SDL_FRect PlayerDisplay::right_pov(ViewDirection direction) {
 
         head_right_pov();
 
-        if(has_equipped_weapon) {
-            weapon_right_offset(current_frame);
-        }
+        weapon_right_offset(current_frame);
 
         frame = frames[current_frame];
         walk_frame = (walk_frame + 1) % 5;
@@ -359,9 +331,7 @@ SDL_FRect PlayerDisplay::left_pov(ViewDirection direction) {
 
         head_left_pov();
 
-        if(has_equipped_weapon) {
-            weapon_left_offset(current_frame);
-        }
+        weapon_left_offset(current_frame);
 
         frame = frames[current_frame];
         walk_frame = (walk_frame + 1) % 5;
@@ -586,7 +556,7 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) {
     if (!ghost) {
         // Pasada 1: items que van DETRÁS del cuerpo (armas/escudo cuando el personaje
         // da la espalda). draw_equipped_item filtra cuáles corresponden a esta pasada.
-        draw_equipped_item(camera, /*behind_body=*/true);
+        if (has_equipped_weapon) draw_equipped_item(camera, /*behind_body=*/true);
     }
 
     draw_player(camera, body_pov);
@@ -594,7 +564,7 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) {
     if (!ghost) {
         // Pasada 2: items que van DELANTE del cuerpo (armas/escudo de frente, y
         // siempre la armadura y el casco).
-        draw_equipped_item(camera, /*behind_body=*/false);
+        if (has_equipped_weapon) draw_equipped_item(camera, /*behind_body=*/false);
     }
 }
 
