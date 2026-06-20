@@ -34,8 +34,10 @@
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
 
-#define LOGICAL_WIDTH  1024
-#define LOGICAL_HEIGHT 576
+//#define LOGICAL_WIDTH  1024
+//#define LOGICAL_HEIGHT 576
+#define LOGICAL_WIDTH  1280
+#define LOGICAL_HEIGHT 720
 #define DMG_MS 800
 
 // Numero de daño flotante que aparece sobre una celda y desaparece.
@@ -156,16 +158,24 @@ private:
     int selected_npc_tile_x;
     int selected_npc_tile_y;
 
-    static constexpr int PANEL_WIDTH  = 276;
+    static constexpr int DESIGN_LOGICAL_WIDTH = 1024;
+    static constexpr int DESIGN_LOGICAL_HEIGHT = 576;
+
+    static constexpr int PANEL_WIDTH =
+        276 * LOGICAL_WIDTH / DESIGN_LOGICAL_WIDTH;
     static constexpr int GAME_WIDTH   = LOGICAL_WIDTH - PANEL_WIDTH;
     static constexpr int CANVAS_HEIGHT = LOGICAL_HEIGHT;
 
     // Recorte transparente ("hueco") del frame en_ventanaprincipal.png donde se
     // ve el mundo, en coordenadas logicas.
-    static constexpr int GAME_VIEW_X = 12;
-    static constexpr int GAME_VIEW_Y = 113;
-    static constexpr int GAME_VIEW_W = 732;
-    static constexpr int GAME_VIEW_H = 456;
+    static constexpr int GAME_VIEW_X =
+        12 * LOGICAL_WIDTH / DESIGN_LOGICAL_WIDTH;
+    static constexpr int GAME_VIEW_Y =
+        113 * LOGICAL_HEIGHT / DESIGN_LOGICAL_HEIGHT;
+    static constexpr int GAME_VIEW_W =
+        732 * LOGICAL_WIDTH / DESIGN_LOGICAL_WIDTH;
+    static constexpr int GAME_VIEW_H =
+        456 * LOGICAL_HEIGHT / DESIGN_LOGICAL_HEIGHT;
 
     // Inicializa el estado grafico de ClientGUI sobre el window/renderer/font
     // COMPARTIDOS (propiedad del ScreenManager): fija la presentacion logica,
