@@ -1,6 +1,7 @@
 #include "tileMap.h"
 
 #include <SDL3_image/SDL_image.h>
+#include <algorithm>
 #include <stdexcept>
 
 #include "utility/paths.h"  // resolve_resource
@@ -67,7 +68,8 @@ void TileMap::load_map_bin(const std::string& path) {
     load_tileset_textures();
 }
 
-void TileMap::render(int mapViewport_x, int mapViewport_y) const {
+void TileMap::render(int mapViewport_x, int mapViewport_y,
+                     int first_layer, int last_layer) const {
     const int ts = mapData.get_tile_size();
     if (ts <= 0) return;
 
@@ -76,9 +78,13 @@ void TileMap::render(int mapViewport_x, int mapViewport_y) const {
     const float tsf = static_cast<float>(ts);   // version float para los SDL_FRect
     const auto& tilesets = mapData.get_tilesets();
 
-    // itera las layers siguiendo el orden del TOML:
+    // itera las layers en [first_layer, last_layer) siguiendo el orden del .bin:
     // 1ero la capa del fondo y por ultimo la capa de frente (algoritmo del pintor)
-    for (const auto& layer : mapData.get_layers()) {
+    const auto& layers = mapData.get_layers();
+    const int n = static_cast<int>(layers.size());
+    const int last = (last_layer < 0) ? n : std::min(last_layer, n);
+    for (int li = std::max(0, first_layer); li < last; ++li) {
+        const auto& layer = layers[li];
         for (int row = 0; row < h; ++row) {
             if (row >= static_cast<int>(layer.data.size())) continue;
             const auto& data_row = layer.data[row];

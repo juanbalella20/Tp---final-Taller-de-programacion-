@@ -290,8 +290,10 @@ void EditorWindow::build_tools_toolbar() {
     connect(act, &QAction::triggered, this,
             [this, idx] { doc_.set_active_layer(idx); });
   };
+  // colision es una grilla aparte e independiente de la capa.
   add_layer("Suelo", Map::Ground, true); // default
-  add_layer("Construcciones", Map::Buildings, false);
+  add_layer("Construcciones (detras del jugador)", Map::Buildings, false);
+  add_layer("Decoracion (delante del jugador)", Map::AbovePlayer, false);
 }
 
 void EditorWindow::build_menus() {

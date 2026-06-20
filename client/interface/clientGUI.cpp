@@ -1197,11 +1197,11 @@ void ClientGUI::drawItems() {
     }
 }
 
-#define TILESIZE 64
 void ClientGUI::draw() {
     // centrar camara en el jugador (en el centro del tile) y limitar al mapa
-    camera.center_on(player->get_x() + TILESIZE / 2.0f,
-                     player->get_y() + TILESIZE / 2.0f);
+    const int tileSize = tilemap ? tilemap->getTileSize() : TILE_SIZE;
+    camera.center_on(player->get_x() + tileSize / 2.0f,
+                     player->get_y() + tileSize / 2.0f);
     if (tilemap) {
         camera.clamp_to(static_cast<float>(tilemap->getPixelWidth()),
                         static_cast<float>(tilemap->getPixelHeight()));
@@ -1216,7 +1216,9 @@ void ClientGUI::draw() {
     SDL_SetRenderViewport(renderer, &game_view);
 
     if (tilemap) {
-        tilemap->render(camera.get_x(), camera.get_y());
+        // suelo + construcciones: layers debajo del player
+        tilemap->render(camera.get_x(), camera.get_y(),
+                        LAYER_GROUND, LAYER_ABOVE_PLAYER);
     }
 
     drawItems();
@@ -1226,6 +1228,13 @@ void ClientGUI::draw() {
         player->draw(camera, player_pov);
     }
     drawOtherPlayers();
+
+    if (tilemap) {
+        // layers que tapan al player
+        tilemap->render(camera.get_x(), camera.get_y(),
+                        LAYER_ABOVE_PLAYER, LAYER_LAST);
+    }
+
     draw_spell_animations();
     draw_damage_numbers();
 

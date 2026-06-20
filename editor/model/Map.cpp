@@ -6,11 +6,28 @@
 #include <utility>
 #include <vector>
 
+namespace {
+
+const char *default_layer_name(int layer) {
+  switch (layer) {
+  case Map::Ground:
+    return "ground";
+  case Map::Buildings:
+    return "buildings";
+  case Map::AbovePlayer:
+    return "above_player";
+  default:
+    return "layer";
+  }
+}
+
+} // namespace
+
 Map::Map() {
-  // Dos capas fijas, ambas WIDTH x HEIGHT llenas de 0 (celda vacia).
   layers_.resize(LAYER_COUNT);
-  layers_[Ground].name = "ground";
-  layers_[Buildings].name = "buildings";
+  for (int layer = 0; layer < LAYER_COUNT; ++layer) {
+    layers_[layer].name = default_layer_name(layer);
+  }
   for (MapLayerData &layer : layers_) {
     layer.data.assign(HEIGHT, std::vector<int>(WIDTH, 0));
   }
@@ -94,7 +111,7 @@ const TileDef *Map::find_tile(int gid) const {
   return &it->second;
 }
 
-// --- Capas (dos fijas: Ground=0, Buildings=1) --------------------------------
+// --- Capas fijas -------------------------------------------------------------
 const std::vector<MapLayerData> &Map::layers() const { return layers_; }
 int Map::layer_count() const { return LAYER_COUNT; }
 
@@ -110,6 +127,12 @@ void Map::set_cell(int layer, int x, int y, int gid) {
     throw std::out_of_range("Map::set_cell: indice fuera de rango");
   }
   layers_[layer].data[y][x] = gid;
+}
+
+bool Map::is_collidable(int x, int y) const {
+  if (!in_bounds(x, y))
+    return true;
+  return is_blocked_cell(x, y);
 }
 
 const std::vector<std::vector<uint8_t>> &Map::collision() const {
