@@ -28,8 +28,6 @@ public:
 
     float get_x() const { return x; }
     float get_y() const { return y; }
-    float get_w() const { return w; }
-    float get_h() const { return h; }
 };
 
 #endif

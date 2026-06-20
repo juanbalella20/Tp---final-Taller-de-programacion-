@@ -30,9 +30,8 @@ struct MapLayerData {
     std::vector<std::vector<int>> data; // array de arrays
 };
 
-// Tile de teletransporte: su celda (x,y) en ESTA zona (collidable) y la zona
-// destino (por nombre: "desert", "city", ...). El player aparece adyacente al
-// teleport de la zona destino.
+// Tile de teleport: su celda (x,y) en la zona actual y la zona
+// destino (por nombre: "desert", "city", ...)
 struct TeleportDef {
     int x;
     int y;

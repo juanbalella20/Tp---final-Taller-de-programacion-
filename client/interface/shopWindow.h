@@ -38,7 +38,6 @@ public:
     void open(const std::vector<ItemInfo>& items);
     // Cierra la ventana.
     void close();
-    bool is_open() const { return open_; }
 
     // Procesa un evento SDL. Devuelve true si lo consumio (la ventana esta
     // abierta y el evento le corresponde): en ese caso el resto de la GUI debe
