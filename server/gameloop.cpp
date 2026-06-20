@@ -174,6 +174,62 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
     if (it != handlers.end()) it->second(cmd);
 }
 
+void GameLoop::tick_pending_resurrects() {
+    auto completed = game_map.tick_pending_resurrects();
+ 
+    for (const auto& result : completed) {
+        const std::string& name = result.player_name;
+        const TeleportResult& tr = result.teleport;
+ 
+        std::cout << "[INFO: tick_pending_resurrects] Resucitando a " << name << std::endl;
+ 
+        if (tr.on_tile) {
+            GameMsg leftMsg(MSG_PLAYER_LEFT);
+            leftMsg.set_player_name(name);
+            notify_zone(tr.src_zone, leftMsg, name);
+ 
+            GameMsg zoneMsg(MSG_ZONE_CHANGE);
+            zoneMsg.set_zone(tr.dest_zone);
+            zoneMsg.set_coord_x(tr.x);
+            zoneMsg.set_coord_y(tr.y);
+            client_registry_monitor.notify_client_by_name(name, zoneMsg);
+ 
+            GameMsg mapMsg(MSG_SEND_MAP);
+            mapMsg.set_map(game_map.get_map(name));
+            client_registry_monitor.notify_client_by_name(name, mapMsg);
+ 
+            GameMsg npcsMsg(MSG_NPCS_SNAPSHOT);
+            npcsMsg.set_npcs(game_map.build_npcs_snapshot(name));
+            client_registry_monitor.notify_client_by_name(name, npcsMsg);
+ 
+            GameMsg itemsMsg(MSG_ITEMS_SNAPSHOT);
+            itemsMsg.set_items_on_floor(game_map.build_items_snapshot(name));
+            client_registry_monitor.notify_client_by_name(name, itemsMsg);
+ 
+            GameMsg playersMsg(MSG_PLAYERS_SNAPSHOT);
+            playersMsg.set_players(game_map.build_players_snapshot(name));
+            client_registry_monitor.notify_client_by_name(name, playersMsg);
+ 
+            broadcast_players_snapshot();
+        }
+ 
+        GameMsg hp_msg(MSG_HP);
+        hp_msg.set_hp(game_map.get_player_hp(name));
+        client_registry_monitor.notify_client_by_name(name, hp_msg);
+ 
+        GameMsg mana_msg(MSG_MANA);
+        mana_msg.set_player_name(name);
+        mana_msg.set_mana(game_map.get_player_mana(name));
+        client_registry_monitor.notify_client_by_name(name, mana_msg);
+ 
+        GameMsg res_msg(MSG_RESURRECT);
+        res_msg.set_player_name(name);
+        res_msg.set_chat_content("Has resucitado junto al sacerdote.");
+        client_registry_monitor.notify_client_by_name(name, res_msg);
+    }
+}
+
+
 void GameLoop::send_auth_error(uint32_t client_id, const std::string& reason) {
     GameMsg msg(MSG_AUTH_ERROR);
     msg.set_chat_content(reason);
@@ -305,7 +361,8 @@ void GameLoop::handle_logout(const ClientCmd& cmd) {
     }
     persistence.save(name, player_serializer.to_record(
             game_map.get_player(name), game_map.get_player_zone(name), password));
-
+    
+    game_map.cancel_ghost_resurrect(name);
     // Capturar la zona ANTES de sacarlo: los que quedan en esa zona lo borran.
     Zone zone = game_map.get_player_zone(name);
     game_map.remove_player(name);
@@ -494,31 +551,50 @@ void GameLoop::handle_retire_gold(const ClientCmd& cmd) {
 
 void GameLoop::handle_resurrect(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+ 
+    Player* player = game_map.get_player_mut(name);
+    if (player == nullptr) return;
+ 
+    if (!player->is_ghost()) {
+        // Jugador vivo: /resucitar dirigido a un sacerdote adyacente
+        try {
+            game_map.player_resurrect(name);
+ 
+            GameMsg hp_msg(MSG_HP);
+            hp_msg.set_hp(game_map.get_player_hp(name));
+            client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
+ 
+            GameMsg mana_msg(MSG_MANA);
+            mana_msg.set_player_name(name);
+            mana_msg.set_mana(game_map.get_player_mana(name));
+            client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
+ 
+            GameMsg res_msg(MSG_RESURRECT);
+            res_msg.set_player_name(name);
+            res_msg.set_chat_content("El sacerdote te ha resucitado.");
+            client_registry_monitor.notify_client(cmd.get_client_id(), res_msg);
+        } catch (const std::runtime_error& e) {
+            GameMsg msg(MSG_CHAT);
+            msg.set_chat_content(e.what());
+            client_registry_monitor.notify_client(cmd.get_client_id(), msg);
+        }
+        return;
+    }
+ 
+    // Fantasma: resurrección autónoma con tiempo de espera
     try {
-        game_map.player_resurrect(name);
+        game_map.start_ghost_resurrect(name);
  
-        GameMsg hp_msg(MSG_HP);
-        hp_msg.set_hp(game_map.get_player_hp(name));
-        client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
- 
-        GameMsg mana_msg(MSG_MANA);
-        mana_msg.set_player_name(name);
-        mana_msg.set_mana(game_map.get_player_mana(name));
-        client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
- 
-      
-        GameMsg res_msg(MSG_RESURRECT);
-        res_msg.set_player_name(name);
-        res_msg.set_chat_content("El sacerdote te ha resucitado.");
-        client_registry_monitor.notify_client(cmd.get_client_id(), res_msg);
- 
-        std::cout << "[INFO: MSG_RESURRECT] " << name << " fue resucitado por el sacerdote." << std::endl;
+        GameMsg chat_msg(MSG_CHAT);
+        chat_msg.set_chat_content("Resucitando junto al sacerdote...");
+        client_registry_monitor.notify_client(cmd.get_client_id(), chat_msg);
     } catch (const std::runtime_error& e) {
         GameMsg msg(MSG_CHAT);
         msg.set_chat_content(e.what());
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
     }
 }
+
 
 void GameLoop::handle_cure(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
@@ -658,6 +734,7 @@ void GameLoop::send_zone_transition(uint32_t client_id, const std::string& name,
 
 void GameLoop::handle_move(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
+    if (game_map.is_resurrect_pending(name)) return;
     auto result = game_map.try_move(cmd.get_direction(), name);
 
         if (game_map.pick_up_gold(name)) {
@@ -1137,6 +1214,7 @@ void GameLoop::run() {
                 process_cmd(cmd);
             }
             update_npcs_in_map();
+            tick_pending_resurrects();
             if (++npc_move_ticks >= TICKS_PER_NPC_MOVE) {
                 npc_move_ticks = 0;
                 auto npc_attacks = game_map.update_npc_aggro();

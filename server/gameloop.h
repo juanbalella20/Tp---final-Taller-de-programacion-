@@ -90,6 +90,10 @@ class GameLoop : public Thread {
 
     void process_cmd(const ClientCmd& cmd);
 
+    // Avanza un tick en todas las resurrecciones pendientes y completa las
+    // que ya cumplieron su tiempo de espera (teletransporta y resucita).
+    void tick_pending_resurrects();
+
     // Envia un error de auth (register/login fallido) al cliente.
     void send_auth_error(uint32_t client_id, const std::string& reason);
     // Envia la confirmacion de auth EXITOSO (MSG_CONFIRM_SESSION) con name/race/
