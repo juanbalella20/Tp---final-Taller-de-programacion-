@@ -186,15 +186,6 @@ void WelcomeScreen::handleConfigEvent(const SDL_Event& event) {
             if (contains(CONFIG_CLOSE_BUTTON, config_x, config_y) ||
                 contains(CONFIG_CANCEL_BUTTON, config_x, config_y)) {
                 discardSettings();
-            } else if (contains(RESOLUTION_BUTTON, config_x, config_y)) {
-                resolution_dropdown_open = !resolution_dropdown_open;
-            } else if (resolution_dropdown_open) {
-                const int option = resolutionOptionAt(config_x, config_y);
-                if (option >= 0) {
-                    setResolution(option);
-                } else {
-                    resolution_dropdown_open = false;
-                }
             } else if (contains(WINDOWED_BUTTON, config_x, config_y)) {
                 set_fullscreen(false);
             } else if (contains(FULLSCREEN_BUTTON, config_x, config_y)) {
@@ -232,96 +223,31 @@ ScreenState WelcomeScreen::nextState() const {
 
 void WelcomeScreen::showMainScreen() {
     showing_config = false;
-    resolution_dropdown_open = false;
 }
 
 void WelcomeScreen::showConfigScreen() {
     pending_settings = result.settings;
-    pending_resolution_index = selected_resolution_index;
     showing_config = true;
-    resolution_dropdown_open = false;
 }
 
 void WelcomeScreen::set_fullscreen(bool fs) {
     pending_settings.fullscreen = fs;
 }
 
-void WelcomeScreen::setResolution(int index) {
-    pending_resolution_index = index;
-    resolution_dropdown_open = false;
-
-    switch (index) {
-        case 0:
-            pending_settings.width = 1280;
-            pending_settings.height = 720;
-            break;
-        case 1:
-            pending_settings.width = 1366;
-            pending_settings.height = 768;
-            break;
-        case 2:
-            pending_settings.width = 1600;
-            pending_settings.height = 900;
-            break;
-        case 3:
-            pending_settings.width = 1920;
-            pending_settings.height = 1080;
-            break;
-        default:
-            break;
-    }
-}
-
 void WelcomeScreen::applySettings() {
     result.settings = pending_settings;
-    selected_resolution_index = pending_resolution_index;
     showMainScreen();
 }
 
 void WelcomeScreen::discardSettings() {
     pending_settings = result.settings;
-    pending_resolution_index = selected_resolution_index;
     showMainScreen();
-}
-
-SDL_FRect WelcomeScreen::resolutionOptionRect(int index) const {
-    return SDL_FRect{
-        RESOLUTION_BUTTON.x,
-        RESOLUTION_BUTTON.y + RESOLUTION_BUTTON.h +
-            index * RESOLUTION_OPTION_HEIGHT,
-        RESOLUTION_BUTTON.w,
-        RESOLUTION_OPTION_HEIGHT
-    };
-}
-
-int WelcomeScreen::resolutionOptionAt(float config_x, float config_y) const {
-    for (int i = 0; i < RESOLUTION_OPTION_COUNT; ++i) {
-        if (contains(resolutionOptionRect(i), config_x, config_y)) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-const char* WelcomeScreen::resolutionLabel(int index) const {
-    switch (index) {
-        case 0:
-            return "1280 x 720";
-        case 1:
-            return "1366 x 768";
-        case 2:
-            return "1600 x 900";
-        case 3:
-            return "1920 x 1080";
-        default:
-            return "1280 x 720";
-    }
 }
 
 void WelcomeScreen::drawConfigControls() {
     SDL_FRect resolution_rect = toPopupRect(RESOLUTION_BUTTON);
     drawText(
-        resolutionLabel(pending_resolution_index),
+        "1280 x 720",
         resolution_rect.x + 18.0f,
         resolution_rect.y + 9.0f,
         SDL_Color{255, 255, 255, 255});
@@ -330,34 +256,6 @@ void WelcomeScreen::drawConfigControls() {
         drawTick(FULLSCREEN_BUTTON);
     } else {
         drawTick(WINDOWED_BUTTON);
-    }
-
-    if (resolution_dropdown_open) {
-        drawResolutionDropdown();
-    }
-}
-
-void WelcomeScreen::drawResolutionDropdown() {
-    for (int i = 0; i < RESOLUTION_OPTION_COUNT; ++i) {
-        SDL_FRect option = toPopupRect(resolutionOptionRect(i));
-        const bool selected = (i == pending_resolution_index);
-
-        SDL_SetRenderDrawColor(renderer, 10, 10, 10, 235);
-        SDL_RenderFillRect(renderer, &option);
-        SDL_SetRenderDrawColor(
-            renderer,
-            selected ? 40 : 130,
-            selected ? 210 : 130,
-            selected ? 70 : 130,
-            255);
-        SDL_RenderRect(renderer, &option);
-
-        drawText(
-            resolutionLabel(i),
-            option.x + 18.0f,
-            option.y + 5.0f,
-            selected ? SDL_Color{80, 255, 110, 255}
-                     : SDL_Color{255, 255, 255, 255});
     }
 }
 

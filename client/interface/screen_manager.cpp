@@ -64,8 +64,7 @@ std::unique_ptr<Screen> ScreenManager::make_screen(ScreenState state, AuthSessio
 }
 
 void ScreenManager::apply_window_settings(const WindowSettings& settings) {
-    // El tamano se fija siempre (queda como tamano de la ventana al volver de
-    // pantalla completa); luego se conmuta el modo fullscreen.
+    SDL_SetWindowFullscreenMode(window, nullptr);
     SDL_SetWindowSize(window, settings.width, settings.height);
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_SetWindowFullscreen(window, settings.fullscreen);
