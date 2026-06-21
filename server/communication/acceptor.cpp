@@ -64,6 +64,12 @@ void Acceptor::reap() {
 
 
 
+void Acceptor::shutdown() {
+    stop();
+    try { socket.shutdown(SHUT_RDWR); } catch (...) {}
+    try { socket.close(); } catch (...) {}
+}
+
 void Acceptor::clear() {
     // Al limpiar el contenedor, cada ClientHandler libera receiver/sender en su destructor.
     clients.clear();
