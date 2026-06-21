@@ -5,7 +5,6 @@
 
 ClientProtocol::ClientProtocol(Socket&& socket) : socket(std::move(socket)),serializer() {}
 
-// juan no se está llamando!!!!!!!!
 ClientProtocol::~ClientProtocol() {
     try {
         socket.shutdown(SHUT_RDWR);

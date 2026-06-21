@@ -28,6 +28,7 @@ class Acceptor : public Thread {
                       ClientRegistryMonitor& client_registry_monitor);
     ~Acceptor() override;
     void run() override;
+    void shutdown();
     
 };
 

@@ -7,7 +7,7 @@
 #include "senderThread.h"
 #include "clientRegistryMonitor.h"
 
-class ClientHandler : public Thread {
+class ClientHandler {
  private:
     uint32_t client_id;
     ServerProtocol protocol;
@@ -22,8 +22,12 @@ class ClientHandler : public Thread {
                   Socket&& socket,
                   Queue<ClientCmd>& receiving_queue,
                   ClientRegistryMonitor& client_registry_monitor);
-    ~ClientHandler() override;
-    void run() override;  // lógica que antes estaba en start()
+    ~ClientHandler();
+
+    void start();
+    void stop();
+    void join();
+    bool is_alive() const;
 };
 
 #endif  // SERVER_SRC_SERVER_CLIENT_HANDLER_H_

@@ -1,10 +1,10 @@
 #include "hud.h"
 #include <stdexcept>
+#include "paths.h"
 
 HUD::HUD(SDL_Renderer* gui_renderer,
          float game_width, float panel_width, float canvas_height)
     : gui_renderer(gui_renderer),
-      font(TTF_OpenFont("fonts/StackSansText-Medium.ttf", 16)),
       inventory{},
       player_gold(0),
       player_hp(0),
@@ -14,16 +14,14 @@ HUD::HUD(SDL_Renderer* gui_renderer,
       player_xp(0),
       player_mana(0),
       player_level(1),
-      hp_bar_texture(nullptr),
-      xp_bar_texture(nullptr),
-      mana_bar_texture(nullptr),
-      gold_texture(nullptr),
-      game_texture(nullptr),
-      info_area_texture(nullptr),
+      texture_loader(gui_renderer),
       game_width(game_width),
       panel_width(panel_width),
       canvas_height(canvas_height) {
     
+    
+    std::string path = paths::asset("fonts/StackSansText-Medium.ttf");
+    font = TTF_OpenFont(path.c_str(), 16);
     image_w = 1021.0f;
     image_h = 767.0f;
 
@@ -34,32 +32,6 @@ HUD::HUD(SDL_Renderer* gui_renderer,
 }
 
 HUD::~HUD() {
-    // Varios ids pueden compartir la misma textura (p.ej. ambas pociones salen
-    // del mismo 100.png): destruir cada textura UNA sola vez para no doble-liberar.
-    std::set<SDL_Texture*> destroyed;
-    for (auto& kv : inventory.items_textures) {
-        if (kv.second && destroyed.insert(kv.second).second) {
-            SDL_DestroyTexture(kv.second);
-        }
-    }
-    if (hp_bar_texture) {
-        SDL_DestroyTexture(hp_bar_texture);
-    }
-    if (xp_bar_texture) {
-        SDL_DestroyTexture(xp_bar_texture);
-    }
-    if (mana_bar_texture) {
-        SDL_DestroyTexture(mana_bar_texture);
-    }
-    if (gold_texture) {
-        SDL_DestroyTexture(gold_texture);
-    }
-    if (game_texture) {
-        SDL_DestroyTexture(game_texture);
-    }
-    if (info_area_texture) {
-        SDL_DestroyTexture(info_area_texture);
-    }
     if (gold_text_cache.texture) {
         SDL_DestroyTexture(gold_text_cache.texture);
     }
@@ -193,30 +165,18 @@ void HUD::toggle_equipped_slot(int slot_index) {
 }
 
 void HUD::drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float SLOT_SIZE) {
-    // Textura del item por id; si no está registrada, cae a la de la espada para
-    // que el slot nunca quede vacío (un item siempre se ve con ALGÚN sprite).
-    SDL_Texture* icon = nullptr;
-    auto it = inventory.items_textures.find(item.get_id());
-    if (it != inventory.items_textures.end() && it->second != nullptr) {
-        icon = it->second;
-    } else {
-        auto fallback = inventory.items_textures.find("espada");
-        if (fallback != inventory.items_textures.end()) icon = fallback->second;
-    }
-    if (icon != nullptr) {
-        // Crop específico del item; fallback al de la espada si no está registrado.
-        SDL_FRect crop = {224.0f, 96.0f, 30.0f, 30.0f};
-        auto crop_it = inventory.items_crops.find(item.get_id());
-        if (crop_it != inventory.items_crops.end()) {
-            crop = crop_it->second;
-        }
+    SDL_Texture* icon = texture_loader.get_texture_of_item(item.get_id());
 
-        // Escala según el tamaño del sprite recortado, no de todo el spritesheet.
-        const float PADDING = 4.0f;
+    if (icon != nullptr) {
+        float tex_w = 0.0f;
+        float tex_h = 0.0f;
+        SDL_GetTextureSize(icon, &tex_w, &tex_h); 
+
+        const float PADDING = 4.0f; 
         float max_size = SLOT_SIZE - (PADDING * 2.0f);
-        float scale = SDL_min(max_size / crop.w, max_size / crop.h);
-        float final_w = crop.w * scale;
-        float final_h = crop.h * scale;
+        float scale = SDL_min(max_size / tex_w, max_size / tex_h);
+        float final_w = tex_w * scale;
+        float final_h = tex_h * scale;
 
         SDL_FRect icon_dst = {
             slot_x + (SLOT_SIZE - final_w) / 2.0f,
@@ -225,7 +185,7 @@ void HUD::drawIconItem(const ItemInfo& item, float slot_x, float slot_y, float S
             final_h
         };
 
-        SDL_RenderTexture(gui_renderer, icon, &crop, &icon_dst);
+        SDL_RenderTexture(gui_renderer, icon, nullptr, &icon_dst);
     }
 }
 
@@ -276,12 +236,6 @@ void HUD::drawItems() {
             slot_y += slot_size + margin_y;
         }
     }
-}
-
-void HUD::drawInventoryItems() {
-
-    // Items del inventario en slots
-    drawItems();
 }
 
 void HUD::drawBigStat(SDL_Texture* tex, float pos_y, int current, int max, TextCache& cache) {
@@ -407,18 +361,21 @@ void HUD::displayValue(int current, int max, SDL_FRect& dest, float text_scale, 
 }
 
 void HUD::drawHp() {
+    SDL_Texture* hp_bar_texture = texture_loader.get_hp_texture();
     if (hp_bar_texture) {
         drawBigStat(hp_bar_texture, 600.0f, player_hp, max_hp, hp_text_cache);
     }
 }
 
 void HUD::drawXp() {
+    SDL_Texture* xp_bar_texture = texture_loader.get_xp_texture();
     if (xp_bar_texture) {
         drawXpBar(xp_bar_texture, player_xp, max_xp, xp_text_cache);
     }
 }
 
 void HUD::drawMana() {
+    SDL_Texture* mana_bar_texture = texture_loader.get_mana_texture();
     if (mana_bar_texture) {
         drawBigStat(mana_bar_texture, 629.0f, player_mana, max_mana, mana_text_cache);
     }
@@ -438,17 +395,6 @@ void HUD::drawEquipStatus() {
     const float content_x = 775.0f;
     const float area_y = 672.0f;
     const float area_h = 92.0f;
-    const float panel_border_inset = 8.0f;
-
-    if (info_area_texture) {
-        SDL_FRect area_dst = {
-            game_width + panel_border_inset,
-            area_y * scale_y,
-            panel_width - panel_border_inset * 2.0f,
-            area_h * scale_y
-        };
-        SDL_RenderTexture(gui_renderer, info_area_texture, nullptr, &area_dst);
-    }
 
     // Tipos a mostrar, en orden, con su etiqueta. (1=armadura, 2=casco,
     // 3=escudo en ItemInfo).
@@ -539,6 +485,7 @@ void HUD::display_player_info(const std::string& player_name) {
 }
 
 void HUD::render() {
+    SDL_Texture* game_texture = texture_loader.get_game_texture();
     if (game_texture) {
         SDL_FRect bg_dest = { 
             0.0f, 
@@ -549,7 +496,7 @@ void HUD::render() {
         SDL_RenderTexture(gui_renderer, game_texture, nullptr, &bg_dest);
     }
 
-    drawInventoryItems();
+    drawItems();
     drawGold();
     drawHp();
     drawMana();
@@ -557,109 +504,8 @@ void HUD::render() {
     drawEquipStatus();
 }
 
-void HUD::load_stat_texture(const std::string& path, SDL_Texture** texture) {
-    SDL_Surface* bar_surf = IMG_Load(path.c_str());
-    if (!bar_surf) {
-        throw std::runtime_error(std::string("Failed to load texture: ") + path + " - " + SDL_GetError());
-    }
-    *texture = SDL_CreateTextureFromSurface(gui_renderer, bar_surf);
-    SDL_DestroySurface(bar_surf);
-    if (!*texture) {
-        throw std::runtime_error(std::string("Failed to create texture from surface: ") + SDL_GetError());
-    }
-}
-
 void HUD::load_textures() {
-    SDL_Surface* sword_surf = IMG_Load("imagenes/101.png");
-    if (sword_surf) {
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, sword_surf);
-        SDL_SetTextureBlendMode(tex, SDL_SCALEMODE_LINEAR);
-        inventory.items_textures["espada"] = tex;
-        inventory.items_crops["espada"] = {224.0f, 96.0f, 30.0f, 30.0f};
-        SDL_DestroySurface(sword_surf);
-    }
-
-    // El sprite 2141.png es el "escudo de hierro" (la imagen que se mostraba
-    // antes bajo el alias "escudo"). El escudo de tortuga usa su propio PNG.
-    SDL_Surface* shield_surf = IMG_Load("imagenes/2141.png");
-    if (shield_surf) {
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, shield_surf);
-        SDL_SetTextureBlendMode(tex, SDL_SCALEMODE_LINEAR);
-        inventory.items_textures["escudo_hierro"] = tex;
-        // Primer sprite del escudo (esquina superior izquierda del spritesheet).
-        inventory.items_crops["escudo_hierro"] = {0.0f, 0.0f, 32.0f, 32.0f};
-        SDL_DestroySurface(shield_surf);
-    }
-
-    // Resto de los items: cada PNG es un único sprite que ocupa toda la imagen
-    // (1024x1024), así que el crop cubre la imagen entera y drawIconItem la
-    // escala al slot. La clave es el id del item (igual que el server). El
-    // escudo de tortuga se asigna también al alias histórico "escudo" (misma
-    // textura: el destructor deduplica, así que no hay doble-free).
-    struct ItemIcon { const char* id; const char* path; };
-    const ItemIcon item_icons[] = {
-        // Varas/báculos.
-        {"vara_fresno",      "imagenes/icon_vara_fresno.png"},
-        {"baculo_nudoso",    "imagenes/icon_baculo_nudoso.png"},
-        {"baculo_engarzado", "imagenes/icon_baculo_engarzado.png"},
-        {"flauta_elfica",    "imagenes/icon_flauta_elfica.png"},
-        // Armas físicas.
-        {"hacha",            "imagenes/hacha.png"},
-        {"martillo",         "imagenes/martillo.png"},
-        {"arco_simple",      "imagenes/arco-simple.png"},
-        {"arco_compuesto",   "imagenes/arco-compuesto.png"},
-        // Armaduras.
-        {"armadura_cuero",   "imagenes/Armadura-de-cuero.png"},
-        {"armadura_placas",  "imagenes/armadura-de-placas.png"},
-        {"tunica_azul",      "imagenes/tunica-azul.png"},
-        // Cascos.
-        {"capucha",          "imagenes/capucha.png"},
-        {"casco_hierro",     "imagenes/casco-de-hierro.png"},
-        {"sombrero_magico",  "imagenes/sombrero-magico.png"},
-        // Escudos.
-        {"escudo_tortuga",   "imagenes/escudo-tortuga.png"},
-    };
-    for (const auto& ii : item_icons) {
-        SDL_Surface* surf = IMG_Load(ii.path);
-        if (!surf) continue;
-        float w = static_cast<float>(surf->w);
-        float h = static_cast<float>(surf->h);
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(gui_renderer, surf);
-        SDL_SetTextureBlendMode(tex, SDL_SCALEMODE_LINEAR);
-        SDL_DestroySurface(surf);
-        if (!tex) continue;
-        inventory.items_textures[ii.id] = tex;
-        inventory.items_crops[ii.id] = {0.0f, 0.0f, w, h};
-    }
-
-    // Alias histórico "escudo" -> escudo de tortuga (comparte textura/crop).
-    auto tortuga_tex = inventory.items_textures.find("escudo_tortuga");
-    if (tortuga_tex != inventory.items_textures.end()) {
-        inventory.items_textures["escudo"] = tortuga_tex->second;
-        inventory.items_crops["escudo"] = inventory.items_crops["escudo_tortuga"];
-    }
-
-    // Pociones en el inventario: ambas se recortan del MISMO spritesheet 100.png.
-    // Se carga una sola textura y los dos ids la comparten (el destructor libera
-    // cada textura una sola vez). pocion_vida = botella gris; pocion_mana = azul.
-    SDL_Surface* potion_surf = IMG_Load("imagenes/100.png");
-    if (potion_surf) {
-        SDL_Texture* potion_tex = SDL_CreateTextureFromSurface(gui_renderer, potion_surf);
-        SDL_DestroySurface(potion_surf);
-        if (potion_tex) {
-            SDL_SetTextureBlendMode(potion_tex, SDL_BLENDMODE_BLEND);
-            inventory.items_textures["pocion_vida"] = potion_tex;
-            inventory.items_crops["pocion_vida"] = {392.0f, 159.0f, 16.0f, 26.0f};
-            inventory.items_textures["pocion_mana"] = potion_tex;
-            inventory.items_crops["pocion_mana"] = {424.0f, 159.0f, 17.0f, 26.0f};
-        }
-    }
-
-    load_stat_texture("imagenes/en_barradevida.bmp", &hp_bar_texture);
-    load_stat_texture("imagenes/en_barraexperiencia.bmp", &xp_bar_texture);
-    load_stat_texture("imagenes/en_barrademana.bmp", &mana_bar_texture);
-    load_stat_texture("imagenes/100.png", &gold_texture);
-    load_stat_texture("imagenes/en_ventanaprincipal.png", &game_texture);
-    // Fondo del panel de estado de equipo (el archivo se llama con doble punto).
-    load_stat_texture("imagenes/info-area-center..png", &info_area_texture);
+    texture_loader.load_items();
+    texture_loader.load_stats();
+    texture_loader.load_game_window();
 }

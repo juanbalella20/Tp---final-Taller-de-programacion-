@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "item_info.h"
+#include "texture_loader.h"
 
 // Ventana modal de comercio (la "tienda" del vendedor). Se abre con /listar al
 // lado de un comerciante: muestra el catalogo recibido en MSG_LIST.
@@ -38,7 +39,6 @@ public:
     void open(const std::vector<ItemInfo>& items);
     // Cierra la ventana.
     void close();
-    bool is_open() const { return open_; }
 
     // Procesa un evento SDL. Devuelve true si lo consumio (la ventana esta
     // abierta y el evento le corresponde): en ese caso el resto de la GUI debe
@@ -53,18 +53,13 @@ public:
 private:
     SDL_Renderer* renderer;
     TTF_Font* font;
+    TextureLoader texture_loader;
     int logical_w;
     int logical_h;
 
     bool open_ = false;
     std::vector<ItemInfo> items;
     int selected_index = -1;  // -1 = ningun item seleccionado
-
-    SDL_Texture* background = nullptr;  // comercio.png
-    // Sprites de los items, por id (cargados una vez en el ctor). Misma tabla
-    // que el HUD: el icono de la tienda se ve igual que el del inventario.
-    std::map<std::string, SDL_Texture*> item_textures;
-    std::map<std::string, SDL_FRect> item_crops;
 
     // Rect del marco comercio.png en pantalla (centrado en el area logica),
     // recalculado cada render por si cambia el tamaño logico.
@@ -78,7 +73,6 @@ private:
     // columns/rows/slot fijos; devuelve {0,0,0,0} si el index no entra.
     SDL_FRect slot_rect(int index) const;
 
-    void load_item_textures();
     void draw_text_centered(const std::string& text, const SDL_FRect& area,
                             float y_offset, SDL_Color color);
 };

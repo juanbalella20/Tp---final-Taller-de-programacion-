@@ -7,13 +7,12 @@
 #include <vector>
 
 #include "constants/game_constants.h" // WIDTH, HEIGHT, TILE_SIZE
-#include "mapLoader.h"                // Tileset, TileDef, MapLayerData
+#include "mapData.h"                  // Tileset, TileDef, MapLayerData, TeleportDef
 
-// Reutiliza los structs de common/mapLoader.h (Tileset, TileDef, MapLayerData)
 class Map {
 private:
   std::vector<Tileset> tilesets_;
-  std::vector<MapLayerData> layers_;            // siempre LAYER_COUNT capas
+  std::vector<MapLayerData> layers_;            // LAYER_COUNT capas
   std::unordered_map<int, TileDef> tile_index_; // gid -> TileDef
   std::vector<TeleportDef> teleports_;          // celdas teleport + dest_zone
   std::vector<std::vector<uint8_t>> collision_; // [HEIGHT][WIDTH] (0/1)
@@ -23,10 +22,10 @@ private:
 
 public:
   // Indices de las capas fijas.
-  enum LayerId { Ground = 0, Buildings = 1 };
-  static constexpr int LAYER_COUNT = 2;
+  enum LayerId { Ground = 0, Buildings = 1, AbovePlayer = 2 };
+  static constexpr int LAYER_COUNT = 3;
 
-  // Mapa nuevo: WIDTH x HEIGHT, dos capas ("ground", "buildings") llenas de 0.
+  // Mapa nuevo: WIDTH x HEIGHT, capas visuales llenas de 0.
   Map();
 
   // Vacia capas, colision y teleports (estado inicial)
@@ -56,7 +55,7 @@ public:
   // Resuelve gid -> TileDef. nullptr si gid==0 o no registrado.
   const TileDef *find_tile(int gid) const;
 
-  // Capas (Ground=0, Buildings=1)
+  // Capas (Ground=0, Buildings=1, AbovePlayer=2)
   const std::vector<MapLayerData> &layers() const; // las LAYER_COUNT capas
   int layer_count() const;                         // LAYER_COUNT
   // gid de la celda (x,y) en 'layer'. Lanza out_of_range si esta fuera.

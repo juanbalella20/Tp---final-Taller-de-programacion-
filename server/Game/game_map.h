@@ -9,7 +9,6 @@
 #include "../../common/info/item_info.h"
 #include "../../common/info/npc_info.h"
 #include "../../common/info/item_floor_info.h"
-#include "../../common/mapLoader.h"
 #include "npc/npcSeller.h"
 #include "npc/npcPriest.h"
 #include "item/item.h"
@@ -32,6 +31,13 @@ struct TeleportResult {
         Zone src_zone = ZONE_DEFAULT;
 };
 
+struct PendingRevive {
+    std::string player_name;
+    int ticks_remaining;
+    Zone target_zone;
+    int priest_x;
+    int priest_y;
+};
 
 class GameMap {
 
@@ -48,6 +54,7 @@ private:
     Zone zone_id_of(const std::string& player_name) const;
     // Punteros (const) a los players que estan en la zona z
     std::vector<Player*> players_in(Zone z);
+    std::vector<PendingRevive> pending_resurrects;
 
     // Celda donde aparece un player que llega a la zona dst viniendo de
     // src_zone: adyacente al teleport de dst que apunta DE VUELTA a src_zone
@@ -60,6 +67,7 @@ private:
     static int dir_to_dy(Direction dir);
     static int dir_to_dx(Direction dir);
 
+    bool player_already_in_a_clan(const std::string& player_name);
 
 public:
     GameMap();
@@ -101,6 +109,26 @@ public:
         bool leveled_up;  // el atacante subió de nivel con este golpe
         int level;        // nivel del atacante (válido solo si leveled_up)
     };
+
+    // Registra una resurreccion sin sacerdote adyacente,
+    // busca el sacerdote más cercano en todo el mapa, calcula los
+    // ticks de espera proporcionales a la distancia, e inmoviliza al jugador.
+    // Devuelve los segundos de espera (para informar al cliente).
+    double start_ghost_resurrect(const std::string& player_name);
+ 
+    // Avanza un tick en todas las resurrecciones pendientes. Devuelve los
+    // TeleportResult de los jugadores que terminaron de esperar y fueron
+    // teletransportados+resucitados, junto con su nombre.
+    struct ReviveResult {
+        std::string player_name;
+        TeleportResult teleport;
+    };
+
+    std::vector<ReviveResult> tick_pending_resurrects();
+    // Cancela la resurreccion pendiente de un jugador (por ej: al desconectarse).
+    void cancel_ghost_resurrect(const std::string& player_name);
+    // True si el jugador tiene una resurreccion pendiente
+    bool is_resurrect_pending(const std::string& player_name) const;
 
     // Calcula la nueva posicion del player a partir de su posicion actual y la
     // direccion, resolviendo limites/terreno/actores contra SU zona

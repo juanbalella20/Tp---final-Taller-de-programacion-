@@ -1,6 +1,7 @@
 #define TOML_IMPLEMENTATION
 #include "toml.hpp"
 #include "game_config.h"
+#include "paths.h"
 #include <stdexcept>
 
 GameConfig& GameConfig::instance() {
@@ -8,7 +9,8 @@ GameConfig& GameConfig::instance() {
     return cfg;
 }
 
-void GameConfig::load(const std::string& toml_path) {
+void GameConfig::load(const std::string& path) {
+    std::string toml_path = paths::config(path);
     toml::table root;
     try {
         root = toml::parse_file(toml_path);
@@ -28,6 +30,7 @@ void GameConfig::load(const std::string& toml_path) {
     newbie_max_level = root.at_path("level.newbie_max_level").value_or(12);
     level_diff_max = root.at_path("level.level_diff_max").value_or(10);
     revive_life_factor = root.at_path("level.revive_life_factor").value_or(0.1);
+    revive_ticks_per_distance = root.at_path("level.revive_ticks_per_distance").value_or(2.0);
 
     // Combat
     crit_chance = root.at_path("combat.crit_chance").value_or(0.1);

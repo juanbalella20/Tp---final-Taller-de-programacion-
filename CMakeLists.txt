@@ -91,7 +91,6 @@ add_library(common STATIC
     common/socket/liberror.cpp
     common/commands/clientCmd.cpp
     common/commands/gameMsg.cpp
-    common/mapLoader.cpp
     common/binaryMap/binaryMapLoader.cpp
     common/binaryMap/binaryMapSaver.cpp
     common/binaryMap/byteReader.cpp
@@ -138,6 +137,7 @@ add_executable(client
     client/interface/scapeWindow.cpp
     client/interface/ui_helpers.cpp
     client/interface/text_field.cpp
+    client/interface/texture_loader.cpp
 )
 target_include_directories(client PRIVATE
     client
@@ -202,7 +202,6 @@ add_executable(server
     server/persistence/clan_persistence.cpp
     server/persistence/clan_serializer.cpp
     server/persistence/auth_service.cpp
-    server/Game/npc/npc.cpp
     server/Game/npc/npcHostile.cpp
     server/Game/npc/levelHostile.cpp
     server/Game/npc/npcBanker.cpp

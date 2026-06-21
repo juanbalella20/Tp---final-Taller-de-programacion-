@@ -1,28 +1,23 @@
 #include "zoneWorld.h"
 
 #include <algorithm>
+#include <climits>
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
+#include <climits>
 
-#include "../../common/mapLoader.h"
+#include "../../common/binaryMap/binaryMapLoader.h"
 #include "item/item.h"
 #include "item/item_catalog.h"
 #include "player/player.h"
 #include "game_config.h"
 
-
-// Devuelve true si 'path' termina en 'suffix'.
-static bool ends_with(const std::string& path, const std::string& suffix) {
-    if (suffix.size() > path.size()) return false;
-    return std::equal(suffix.rbegin(), suffix.rend(), path.rbegin());
-}
-
 NPChostile make_npc_from_spawn(const NpcSpawn& spawn) {
     // Catalogo de tipos de NPC hostiles. Mas adelante esto puede vivir
     // en un archivo de configuracion o base de datos.
     const auto& cfg = GameConfig::instance();
-if (spawn.type == "goblin") {
+    if (spawn.type == "goblin") {
         NPChostile npc("goblin", cfg.goblin.name, cfg.goblin.lifepoints, cfg.goblin.attack_dmg, cfg.goblin.ticks_to_spawn, cfg.goblin.level);
         npc.set_position(spawn.x, spawn.y);
         return npc;
@@ -37,7 +32,7 @@ if (spawn.type == "goblin") {
         npc.set_position(spawn.x, spawn.y);
         return npc;
     }
-if (spawn.type == "spider1") {
+    if (spawn.type == "spider1") {
         NPChostile npc("spider1", cfg.spider1.name, cfg.spider1.lifepoints, cfg.spider1.attack_dmg, cfg.spider1.ticks_to_spawn, cfg.spider1.level);
         npc.set_position(spawn.x, spawn.y);
         return npc;
@@ -52,7 +47,7 @@ if (spawn.type == "spider1") {
         npc.set_position(spawn.x, spawn.y);
         return npc;
     }
-if (spawn.type == "skeleton1") {
+    if (spawn.type == "skeleton1") {
         NPChostile npc("skeleton1", cfg.skeleton1.name, cfg.skeleton1.lifepoints, cfg.skeleton1.attack_dmg, cfg.skeleton1.ticks_to_spawn, cfg.skeleton1.level);
         npc.set_position(spawn.x, spawn.y);
         return npc;
@@ -130,14 +125,8 @@ void ZoneWorld::spawn(const ZoneSpawnConfig& cfg) {
 }
 
 void ZoneWorld::load_terrain(const std::string& map_path) {
-    // Elige el loader por extension: .bin via BinaryMapLoader (load_bin), el
-    // resto como TOML. Ambos exponen la misma superficie en MapLoader.
-    MapLoader md;
-    if (ends_with(map_path, ".bin")) {
-        md.load_bin(map_path);
-    } else {
-        md.load(map_path);
-    }
+    BinaryMapLoader md;
+    md.load(map_path);
 
     width = md.get_width();
     height = md.get_height();
@@ -157,15 +146,11 @@ void ZoneWorld::load_terrain(const std::string& map_path) {
     for (const auto& [name, pos] : spawns) {
         if (name == "seller") { 
             spawn_seller(pos.x, pos.y);
-            std::cout << "[DEBUG seleer]: " << name << "at" << pos.x << pos.y << std::endl;
         }
         else if (name == "banker") {
             spawn_banker(pos.x, pos.y);
-            std::cout << "[DEBUG banker]: " << name << "at" << pos.x << pos.y << std::endl;
-
         }
         else if (name == "priest") { 
-            std::cout << "[DEBUG priest]: " << name << "at" << pos.x << pos.y << std::endl;
             spawn_priest(pos.x, pos.y);
         }
     }
@@ -338,7 +323,6 @@ std::vector<NPCAttackEvent> ZoneWorld::update_npc_aggro(const std::vector<Player
         if (best_distance <= AGGRO_RANGE) {
             if (npc.get_target() != closest_player) {
                 npc.set_target(closest_player);
-                std::cout << "[DEBUG] " << npc.get_name() << " cambió de objetivo hacia " << closest_player << std::endl;
             }
         } else if (best_distance > ABANDON_RANGE && npc.has_target()) {
             npc.clear_target();
@@ -482,6 +466,22 @@ NPCpriest* ZoneWorld::priest_adjacent_to(int px, int py) {
         if (is_adyacent(player_pos, priest_pos)) return &p;
     }
     return nullptr;
+}
+
+std::pair<int, int> ZoneWorld::nearest_priest_position(int px, int py) const {
+    if (priests.empty()) return {-1, -1};
+    int best_dist = INT_MAX;
+    std::pair<int, int> best = {-1, -1};
+    for (const auto& p : priests) {
+        int dx = p.get_coord_x() - px;
+        int dy = p.get_coord_y() - py;
+        int dist = dx * dx + dy * dy;
+        if (dist < best_dist) {
+            best_dist = dist;
+            best = {p.get_coord_x(), p.get_coord_y()};
+        }
+    }
+    return best;
 }
 
 std::string ZoneWorld::get_adjacent_friendly_type(int px, int py) {

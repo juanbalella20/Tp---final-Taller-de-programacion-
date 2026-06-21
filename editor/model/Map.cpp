@@ -6,11 +6,28 @@
 #include <utility>
 #include <vector>
 
+namespace {
+
+const char *default_layer_name(int layer) {
+  switch (layer) {
+  case Map::Ground:
+    return "ground";
+  case Map::Buildings:
+    return "buildings";
+  case Map::AbovePlayer:
+    return "above_player";
+  default:
+    return "layer";
+  }
+}
+
+} // namespace
+
 Map::Map() {
-  // Dos capas fijas, ambas WIDTH x HEIGHT llenas de 0 (celda vacia).
   layers_.resize(LAYER_COUNT);
-  layers_[Ground].name = "ground";
-  layers_[Buildings].name = "buildings";
+  for (int layer = 0; layer < LAYER_COUNT; ++layer) {
+    layers_[layer].name = default_layer_name(layer);
+  }
   for (MapLayerData &layer : layers_) {
     layer.data.assign(HEIGHT, std::vector<int>(WIDTH, 0));
   }
@@ -26,7 +43,6 @@ void Map::clear_canvas() {
   teleports_.clear();
 }
 
-// --- Metadata (constantes) ---------------------------------------------------
 int Map::width() const { return WIDTH; }
 int Map::height() const { return HEIGHT; }
 int Map::tile_size() const { return TILE_SIZE; }
@@ -35,7 +51,7 @@ bool Map::in_bounds(int x, int y) const {
   return x >= 0 && y >= 0 && x < WIDTH && y < HEIGHT;
 }
 
-// --- Tilesets ----------------------------------------------------------------
+// Tilesets
 const std::vector<Tileset> &Map::tilesets() const { return tilesets_; }
 
 std::vector<Tileset> Map::used_tilesets() const {
@@ -74,11 +90,6 @@ int Map::add_tileset(const std::string &name, const std::string &file_path,
   return static_cast<int>(tilesets_.size()) - 1;
 }
 
-void Map::clear_tilesets() {
-  tilesets_.clear();
-  rebuild_tile_index();
-}
-
 int Map::next_firstgid() const {
   // Arranca en 1 porque el gid 0 esta reservado para "celda vacia".
   int next = 1;
@@ -100,7 +111,7 @@ const TileDef *Map::find_tile(int gid) const {
   return &it->second;
 }
 
-// --- Capas (dos fijas: Ground=0, Buildings=1) --------------------------------
+// --- Capas fijas -------------------------------------------------------------
 const std::vector<MapLayerData> &Map::layers() const { return layers_; }
 int Map::layer_count() const { return LAYER_COUNT; }
 
@@ -118,11 +129,10 @@ void Map::set_cell(int layer, int x, int y, int gid) {
   layers_[layer].data[y][x] = gid;
 }
 
-// --- Colision (grilla por celda = unica fuente de verdad) --------------------
 bool Map::is_collidable(int x, int y) const {
-  if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT)
+  if (!in_bounds(x, y))
     return true;
-  return collision_[y][x] != 0;
+  return is_blocked_cell(x, y);
 }
 
 const std::vector<std::vector<uint8_t>> &Map::collision() const {

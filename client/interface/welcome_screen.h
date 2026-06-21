@@ -30,8 +30,6 @@ class WelcomeScreen : public Screen {
     static constexpr int LAUNCHER_HEIGHT = 479;
     static constexpr int CONFIG_IMAGE_WIDTH = 1509;
     static constexpr int CONFIG_IMAGE_HEIGHT = 1173;
-    static constexpr int RESOLUTION_OPTION_COUNT = 4;
-    static constexpr float RESOLUTION_OPTION_HEIGHT = 82.0f;
     static constexpr SDL_FRect CONFIG_POPUP{
         20.0f, 64.0f, 453.0f, 352.0f};
     static constexpr SDL_FRect START_BUTTON{
@@ -62,11 +60,8 @@ class WelcomeScreen : public Screen {
     TTF_Font* config_font = nullptr;  // propia (tamano fijo); cerrada en el dtor.
     bool media_loaded = false;
     bool showing_config = false;
-    bool resolution_dropdown_open = false;
     LauncherResult result;
     WindowSettings pending_settings;
-    int selected_resolution_index = 0;
-    int pending_resolution_index = 0;
     ScreenState next = ScreenState::WELCOME;
 
     static bool contains(const SDL_FRect& rect, float x, float y);
@@ -79,14 +74,9 @@ class WelcomeScreen : public Screen {
     void showMainScreen();
     void showConfigScreen();
     void set_fullscreen(bool fs);
-    void setResolution(int index);
     void applySettings();
     void discardSettings();
-    SDL_FRect resolutionOptionRect(int index) const;
-    int resolutionOptionAt(float config_x, float config_y) const;
-    const char* resolutionLabel(int index) const;
     void drawConfigControls();
-    void drawResolutionDropdown();
     void drawTick(const SDL_FRect& config_rect);
     void drawText(const char* text, float x, float y, SDL_Color color);
 

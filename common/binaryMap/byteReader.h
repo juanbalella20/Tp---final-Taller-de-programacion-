@@ -12,7 +12,6 @@ public:
     ByteReader(const uint8_t* data, size_t size);
 
     size_t pos() const;
-    size_t remaining() const;
     void require(size_t n) const;
 
     uint16_t read_u16();

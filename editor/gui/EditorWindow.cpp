@@ -135,13 +135,14 @@ void EditorWindow::load_all_tilesets() {
     QSignalBlocker blocker(&doc_);
     const auto &tilesets = doc_.map().tilesets();
     for (const QFileInfo &info : entries) {
-      const std::string rel_path =
-          paths::resource_relative(info.absoluteFilePath().toStdString());
+      const QString base = info.fileName();
       // devuelve true si ya hay un tileset cargado cuyo path
       // coincide con el archivo binario
       const bool already_loaded = std::any_of(
-          tilesets.begin(), tilesets.end(),
-          [&rel_path](const Tileset &ts) { return ts.file_path == rel_path; });
+          tilesets.begin(), tilesets.end(), [&base](const Tileset &ts) {
+            return QFileInfo(QString::fromStdString(ts.file_path)).fileName() ==
+                   base;
+          });
       if (already_loaded)
         continue;
       // Registra el nuevo tileset
@@ -289,8 +290,10 @@ void EditorWindow::build_tools_toolbar() {
     connect(act, &QAction::triggered, this,
             [this, idx] { doc_.set_active_layer(idx); });
   };
+  // colision es una grilla aparte e independiente de la capa.
   add_layer("Suelo", Map::Ground, true); // default
-  add_layer("Construcciones", Map::Buildings, false);
+  add_layer("Construcciones (detras del jugador)", Map::Buildings, false);
+  add_layer("Decoracion (delante del jugador)", Map::AbovePlayer, false);
 }
 
 void EditorWindow::build_menus() {
@@ -376,10 +379,6 @@ void EditorWindow::on_clear() { doc_.clear_canvas(); }
 bool EditorWindow::save_to(const QString &path) {
   const Map &map = doc_.map();
   std::vector<Tileset> tilesets = map.used_tilesets();
-  for (Tileset &ts : tilesets) {
-    ts.file_path = paths::resource_relative(ts.file_path);
-  }
-
   try {
     BinaryMapSaver::save(path.toStdString(), map.tile_size(), map.width(),
                          map.height(), tilesets, map.layers(), map.teleports(),

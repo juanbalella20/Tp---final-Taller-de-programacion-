@@ -10,13 +10,12 @@
 #include <set>
 #include <string>
 
+#include "texture_loader.h"
+
 class HUD {
 private:
     struct InventoryView {
         std::vector<ItemInfo> items;
-        std::map<std::string, SDL_Texture*> items_textures;
-        // Recorte del sprite dentro del spritesheet de cada item (por id).
-        std::map<std::string, SDL_FRect> items_crops;
     };
 
     // Cache de una textura de texto: evita re-rasterizar la fuente (caro:
@@ -41,14 +40,8 @@ private:
     uint32_t player_xp;
     uint32_t player_mana;
     int player_level;
-    SDL_Texture* hp_bar_texture;
-    SDL_Texture* xp_bar_texture;
-    SDL_Texture* mana_bar_texture;
-    SDL_Texture* gold_texture;
-    SDL_Texture* game_texture;
-    // Fondo oscuro que tapa los íconos de stats de la parte inferior del panel y
-    // sirve de fondo al panel de estado de equipo (escudo/armadura/casco).
-    SDL_Texture* info_area_texture;
+    TextureLoader texture_loader;
+
     // Slots actualmente equipados (índices en inventory.items). Hay como máximo
     // uno por tipo de item (arma, armadura, casco, escudo). DERIVADO de
     // equipped_uids: se recalcula cada vez que cambia el inventario.
@@ -80,7 +73,7 @@ private:
     float scale_y;
 
     void load_textures();
-    void load_stat_texture(const std::string& path, SDL_Texture** texture);
+
     void drawBigStat(SDL_Texture* tex, float pos_y, int current, int max, TextCache& cache);
     void drawXpBar(SDL_Texture* tex, int current, int max, TextCache& cache);
     void displayValue(int current, int max, SDL_FRect& dest, float text_scale, TextCache& cache);
@@ -126,7 +119,7 @@ public:
     // INSTANCIA (estado real de equipo confirmado por el server). Por uid, no por
     // tipo: dos copias del mismo item no se resaltan juntas.
     void set_equipped_by_uids(const std::vector<std::string>& uids);
-    void drawInventoryItems();
+
     void drawAttackButton();
     void drawHp();
     void drawMana();

@@ -5,22 +5,7 @@
 
 /*
  * Formato binario de mapas del editor (.bin).
- *
- * Objetivos de diseno:
- *  - Espejar el modelo logico del TOML (tile_size, width/height, tilesets con
- *    firstgid, capas de IDs, spawns, teleports) para que el server pueda
- *    consumirlo via BinaryMapLoader con cambio minimo.
- *  - Ser EXTENSIBLE a NPCs/items/portales sin romper lectores viejos: se usa un
- *    header versionado + una tabla de SECCIONES TIPADAS (chunks). Un lector que
- *    no conoce un section_type salta byte_length bytes y sigue.
- *  - Endianness FIJA big-endian (network byte order), con marcador en el header.
- *    Se elige big-endian para alinear con el protocolo de red del proyecto
- *    (htons/htonl y ntohs/ntohl). Nunca se escribe un struct completo: eso evita
- *    padding/alineacion no portable. Como se convierte a network byte order, el
- *    archivo es identico en cualquier arquitectura.
- *
- * --- Layout ---------------------------------------------------------------
- *
+
  * Todos los enteros multibyte van en BIG-ENDIAN (byte mas significativo primero).
  *
  * Header (16 bytes):

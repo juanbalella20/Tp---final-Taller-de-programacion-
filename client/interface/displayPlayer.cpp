@@ -1,15 +1,17 @@
 #include "displayPlayer.h"
 #include <SDL3_image/SDL_image.h>
 #include "../common/constants/game_constants.h"
+#include "paths.h"
 #include <stdexcept>
 #include <string>
 #include <iostream>
 
 PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize,
     const std::string& race)
-    : renderer(renderer), image(nullptr),
+    : renderer(renderer),
       rect{0.0f, 0.0f, static_cast<float>(tileSize), static_cast<float>(tileSize)},
       head_pov{0.0f, 0.0f, 0.0f, 0.0f},
+      texture_loader(renderer),
       tileSize(tileSize),
       keystate(SDL_GetKeyboardState(nullptr)),
       race(race) {
@@ -17,175 +19,78 @@ PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePat
     rect.w *= size_scale;
     rect.h *= size_scale;
 
-    SDL_Surface* surf = IMG_Load(imagePath.c_str());
-    if (!surf) {
-        throw std::runtime_error(std::string("Loading player surface: ") + SDL_GetError());
-    }
-    image = SDL_CreateTextureFromSurface(renderer, surf);
-    SDL_DestroySurface(surf);
-    if (!image) {
-        throw std::runtime_error(std::string("Creating player texture: ") + SDL_GetError());
-    }
-    SDL_SetTextureBlendMode(image, SDL_BLENDMODE_BLEND);
+    texture_loader.load_player(imagePath);
+    texture_loader.load_ghost();
 
-    SDL_Surface* ghost_surf = IMG_Load("imagenes/ghost.png");
-    if (!ghost_surf) {
-        throw std::runtime_error(std::string("Loading weapon surface: ") + SDL_GetError());
-    }
-    ghost_image = SDL_CreateTextureFromSurface(renderer, ghost_surf);
-    SDL_DestroySurface(ghost_surf);
-    if (!ghost_image) {
-        throw std::runtime_error(std::string("Creating weapon texture: ") + SDL_GetError());
-    }
-
-    load_heads();
-    load_equip_sprites();
+    texture_loader.load_head_for_race(race);
+    texture_loader.load_items();
+    equip_items_kind();
 }
 
-void PlayerDisplay::load_equip_sprites() {
-    // Sprite que se dibuja sobre el jugador por cada item equipado. La clave es
-    // el id del item (igual que en el server/HUD). Crop = recorte dentro de su
-    // spritesheet (toda la imagen para los íconos ya recortados). kind decide
-    // CÓMO se posiciona el sprite sobre el personaje (ver draw_equipped_item):
+void PlayerDisplay::equip_items_kind() {
+    // kind decide CÓMO se posiciona el sprite sobre el personaje (ver draw_equipped_item):
     // arma en la mano (animada), escudo/armadura sobre el torso, casco en la
-    // cabeza. Los PNG de sprite único (1024x1024) usan use_crop=false (toda la
-    // imagen); los íconos recortados de un spritesheet llevan su crop explícito.
-    struct Def { const char* id; const char* path; SDL_FRect crop; bool use_crop; EquipKind kind; };
+    // cabeza.
+    struct Def { const char* id; EquipKind kind; };
     const Def defs[] = {
         // Armas físicas (van en la mano, animadas con la caminata).
-        {"espada",            "imagenes/espada.png",                {}, false, EquipKind::WEAPON},
-        {"hacha",             "imagenes/hacha.png",                 {}, false, EquipKind::WEAPON},
-        {"martillo",          "imagenes/martillo.png",              {}, false, EquipKind::WEAPON},
-        {"arco_simple",       "imagenes/arco-simple.png",           {}, false, EquipKind::WEAPON},
-        {"arco_compuesto",    "imagenes/arco-compuesto.png",        {}, false, EquipKind::WEAPON},
+        {"espada", EquipKind::WEAPON},
+        {"hacha",  EquipKind::WEAPON},
+        {"martillo", EquipKind::WEAPON},
+        {"arco_simple", EquipKind::WEAPON},
+        {"arco_compuesto", EquipKind::WEAPON},
         // Varas/báculos (también en la mano).
-        {"vara_fresno",       "imagenes/icon_vara_fresno.png",      {}, false, EquipKind::WEAPON},
-        {"baculo_nudoso",     "imagenes/icon_baculo_nudoso.png",    {}, false, EquipKind::WEAPON},
-        {"baculo_engarzado",  "imagenes/icon_baculo_engarzado.png", {}, false, EquipKind::WEAPON},
-        {"flauta_elfica",     "imagenes/icon_flauta_elfica.png",    {0.0f, 0.0f, 40.0f, 40.0f}, true, EquipKind::WEAPON},
+        {"vara_fresno", EquipKind::WEAPON},
+        {"baculo_nudoso", EquipKind::WEAPON},
+        {"baculo_engarzado", EquipKind::WEAPON},
+        {"flauta_elfica", EquipKind::WEAPON},
         // Escudos (fijos sobre el torso).
-        {"escudo",            "imagenes/escudo-tortuga.png",        {}, false, EquipKind::SHIELD},
-        {"escudo_tortuga",    "imagenes/escudo-tortuga.png",        {}, false, EquipKind::SHIELD},
-        {"escudo_hierro",     "imagenes/2141.png",                  {0.0f, 0.0f, 32.0f, 32.0f}, true, EquipKind::SHIELD},
+        {"escudo", EquipKind::SHIELD},
+        {"escudo_tortuga", EquipKind::SHIELD},
+        {"escudo_hierro", EquipKind::SHIELD},
         // Armaduras (cubren el torso/cuerpo).
-        {"armadura_cuero",    "imagenes/Armadura-de-cuero.png",     {}, false, EquipKind::ARMOR},
-        {"armadura_placas",   "imagenes/armadura-de-placas.png",    {}, false, EquipKind::ARMOR},
-        {"tunica_azul",       "imagenes/tunica-azul.png",           {}, false, EquipKind::ARMOR},
+        {"armadura_cuero", EquipKind::ARMOR},
+        {"armadura_placas", EquipKind::ARMOR},
+        {"tunica_azul", EquipKind::ARMOR},
         // Cascos (sobre la cabeza).
-        {"capucha",           "imagenes/capucha.png",               {}, false, EquipKind::HELMET},
-        {"casco_hierro",      "imagenes/casco-de-hierro.png",       {}, false, EquipKind::HELMET},
-        {"sombrero_magico",   "imagenes/sombrero-magico.png",       {}, false, EquipKind::HELMET},
+        {"capucha", EquipKind::HELMET},
+        {"casco_hierro", EquipKind::HELMET},
+        {"sombrero_magico", EquipKind::HELMET},
     };
     for (const auto& d : defs) {
-        SDL_Surface* surf = IMG_Load(d.path);
-        if (!surf) continue;
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
-        SDL_DestroySurface(surf);
-        if (!tex) continue;
-        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
-        equip_sprites[d.id] = {tex, d.crop, d.use_crop, d.kind};
+        items_kind[d.id] = d.kind;
     }
 }
 
 PlayerDisplay::~PlayerDisplay() {
-    if (image) {
-        SDL_DestroyTexture(image);
-    }
-    if (head_image) {
-        SDL_DestroyTexture(head_image);
-    }
-    if (hat_image) {
-        SDL_DestroyTexture(hat_image);
-    }
-    if (ghost_image) {
-        SDL_DestroyTexture(ghost_image);
-    }
-    for (auto& kv : equip_sprites) {
-        if (kv.second.texture) SDL_DestroyTexture(kv.second.texture);
-    }
+
 }
 
 PlayerDisplay::PlayerDisplay(PlayerDisplay&& other) noexcept
-    : renderer(other.renderer), image(other.image),
-      head_image(other.head_image), hat_image(other.hat_image), ghost_image(other.ghost_image), rect(other.rect), head_pov(other.head_pov),
+    : renderer(other.renderer), rect(other.rect), head_pov(other.head_pov),
+        texture_loader(other.texture_loader),
       tileSize(other.tileSize), keystate(other.keystate), race(other.race),
-      equip_sprites(std::move(other.equip_sprites)),
+      items_kind(std::move(other.items_kind)),
       equipped_item_ids(std::move(other.equipped_item_ids)) {
-    other.image = nullptr;
-    other.head_image = nullptr;
-    other.hat_image = nullptr;
-    other.ghost_image = nullptr;
-    other.equip_sprites.clear();
+
+    other.items_kind.clear();
 }
 
 PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
     if (this != &other) {
-        if (image) SDL_DestroyTexture(image);
-        if (head_image) SDL_DestroyTexture(head_image);
-        if (hat_image) SDL_DestroyTexture(hat_image);
-        if (ghost_image) SDL_DestroyTexture(ghost_image);
-        for (auto& kv : equip_sprites) {
-            if (kv.second.texture) SDL_DestroyTexture(kv.second.texture);
-        }
         renderer = other.renderer;
-        image = other.image;
-        head_image = other.head_image;
-        hat_image = other.hat_image;
         rect = other.rect;
         head_pov = other.head_pov;
+        texture_loader = other.texture_loader;
         tileSize = other.tileSize;
         keystate = other.keystate;
         race = other.race;
-        equip_sprites = std::move(other.equip_sprites);
+        items_kind = std::move(other.items_kind);
         equipped_item_ids = std::move(other.equipped_item_ids);
-        other.image = nullptr;
-        other.head_image = nullptr;
-        other.hat_image = nullptr;
-        other.ghost_image = nullptr;
-        other.equip_sprites.clear();
+        other.items_kind.clear();
     }
     return *this;
 }
-
-void PlayerDisplay::load_heads() {
-    SDL_Surface* head_surf = nullptr;
-    SDL_Surface* hat_surf = nullptr;
-
-    if (race == "human") {
-        head_surf = IMG_Load("imagenes/420.png");
-    } else if (race == "elf") {
-        head_surf = IMG_Load("imagenes/422.png");
-    } else if (race == "dwarf") {
-        head_surf = IMG_Load("imagenes/426.png");
-    } else if (race == "gnome") {
-        head_surf = IMG_Load("imagenes/426.png");
-        hat_surf = IMG_Load("imagenes/437.png");
-        if (!hat_surf) {
-            throw std::runtime_error(std::string("Loading hat surface: ") + SDL_GetError());
-        }
-        hat_image = SDL_CreateTextureFromSurface(renderer, hat_surf);
-        SDL_DestroySurface(hat_surf);
-        if (!hat_image) {
-            throw std::runtime_error(std::string("Creating hat texture: ") + SDL_GetError());
-        }
-    } else {
-        // Raza desconocida o vacia (p.ej. raza corrupta en persistencia): caemos
-        // al sprite de cabeza humana para no quedar con head_surf sin cargar.
-        std::cerr << "[WARN] raza desconocida '" << race
-                  << "', usando cabeza humana por defecto" << std::endl;
-        head_surf = IMG_Load("imagenes/420.png");
-    }
-
-    if (!head_surf) {
-        throw std::runtime_error(std::string("Loading head surface: ") + SDL_GetError());
-    }
-    head_image = SDL_CreateTextureFromSurface(renderer, head_surf);
-    SDL_DestroySurface(head_surf);
-    if (!head_image) {
-        throw std::runtime_error(std::string("Creating head texture: ") + SDL_GetError());
-    }
-}
-
 
 void PlayerDisplay::setPosition(float x, float y) {
     rect.x = x;
@@ -223,28 +128,6 @@ bool PlayerDisplay::is_ghost() const {
 
 void PlayerDisplay::set_equipped_weapon(bool has_weapon) {
     has_equipped_weapon = has_weapon;
-    if (has_weapon) {
-        reset_frame();
-        int current_frame;
-        switch(current_direction) {
-            case ViewDirection::BACK:
-                current_frame = walk_frame % 6;
-                weapon_back_offset(current_frame);
-                break;
-            case ViewDirection::FRONT:
-                current_frame = walk_frame % 6;
-                weapon_front_offset(current_frame);
-                break;
-            case ViewDirection::LEFT:
-                current_frame = walk_frame % 5;
-                weapon_left_offset(current_frame);
-                break;
-            case ViewDirection::RIGHT:
-                current_frame = walk_frame % 5;
-                weapon_right_offset(current_frame);
-                break;
-        }
-    }
 }
 
 void PlayerDisplay::set_equipped_items(const std::vector<std::string>& ids) {
@@ -266,31 +149,34 @@ void PlayerDisplay::head_back_pov() {
 
 SDL_FRect PlayerDisplay::back_pov(ViewDirection direction) {
     current_direction = direction;
+    SDL_FRect frame;
 
-    static const SDL_FRect frames[] = {
-        {255.0f, 51.0f, 30.0f, 40.0f},
-        {285.0f, 51.0f, 30.0f, 40.0f},
-        {310.0f, 51.0f, 30.0f, 40.0f},
-        {335.0f, 51.0f, 30.0f, 40.0f},
-        {365.0f, 51.0f, 30.0f, 40.0f},
-        {394.0f, 51.0f, 30.0f, 40.0f}
-    };
+    if (!ghost) {
+        static const SDL_FRect frames[] = {
+            {255.0f, 51.0f, 30.0f, 40.0f},
+            {285.0f, 51.0f, 30.0f, 40.0f},
+            {310.0f, 51.0f, 30.0f, 40.0f},
+            {335.0f, 51.0f, 30.0f, 40.0f},
+            {365.0f, 51.0f, 30.0f, 40.0f},
+            {394.0f, 51.0f, 30.0f, 40.0f}
+        };
 
-    int current_frame = walk_frame % 6;
+        int current_frame = walk_frame % 6;
 
-    static const float h_dx[] = { -0.05f, -0.15f, -0.05f, 0.0f, -0.1f, -0.15f };
-    static const float h_dy[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-    head_dx = h_dx[current_frame];
-    head_dy = h_dy[current_frame];
+        static const float h_dx[] = { -0.05f, -0.15f, -0.05f, 0.0f, -0.1f, -0.15f };
+        static const float h_dy[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+        head_dx = h_dx[current_frame];
+        head_dy = h_dy[current_frame];
 
-    head_back_pov();
+        head_back_pov();
 
-    if(has_equipped_weapon) {
         weapon_back_offset(current_frame);
-    }
 
-    SDL_FRect frame = frames[current_frame];
-    walk_frame = (walk_frame + 1) % 6;
+        frame = frames[current_frame];
+        walk_frame = (walk_frame + 1) % 6;
+    } else {
+        frame = back_ghost_pov();
+    }
     return frame;
 }
 
@@ -317,31 +203,35 @@ void PlayerDisplay::head_front_pov() {
 
 SDL_FRect PlayerDisplay::front_pov(ViewDirection direction) {
     current_direction = direction;
+    SDL_FRect frame;
 
-    static const SDL_FRect frames[] = {
-        {255.0f, 5.0f, 30.0f, 40.0f},
-        {285.0f, 5.0f, 30.0f, 40.0f},
-        {310.0f, 5.0f, 30.0f, 40.0f},
-        {335.0f, 5.0f, 30.0f, 40.0f},
-        {365.0f, 5.0f, 30.0f, 40.0f},
-        {394.0f, 5.0f, 30.0f, 40.0f}
-    };
+    if (!ghost) {
+        static const SDL_FRect frames[] = {
+            {255.0f, 5.0f, 30.0f, 40.0f},
+            {285.0f, 5.0f, 30.0f, 40.0f},
+            {310.0f, 5.0f, 30.0f, 40.0f},
+            {335.0f, 5.0f, 30.0f, 40.0f},
+            {365.0f, 5.0f, 30.0f, 40.0f},
+            {394.0f, 5.0f, 30.0f, 40.0f}
+        };
 
-    int current_frame = walk_frame % 6;
+        int current_frame = walk_frame % 6;
 
-    static const float h_dx[] = { -0.05f, -0.15f, -0.05f, 0.0f, -0.1f, -0.2f };
-    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
-    head_dx = h_dx[current_frame];
-    head_dy = h_dy[current_frame];
+        static const float h_dx[] = { -0.05f, -0.15f, -0.05f, 0.0f, -0.1f, -0.2f };
+        static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
+        head_dx = h_dx[current_frame];
+        head_dy = h_dy[current_frame];
 
-    head_front_pov();
+        head_front_pov();
 
-    if(has_equipped_weapon) {
         weapon_front_offset(current_frame);
-    }
 
-    SDL_FRect frame = frames[current_frame];
-    walk_frame = (walk_frame + 1) % 6;
+        frame = frames[current_frame];
+        walk_frame = (walk_frame + 1) % 6;
+    } else {
+        frame = front_ghost_pov();
+    }
+    
     return frame;
 }
 
@@ -367,30 +257,33 @@ void PlayerDisplay::head_right_pov() {
 
 SDL_FRect PlayerDisplay::right_pov(ViewDirection direction) {
     current_direction = direction;
+    SDL_FRect frame;
 
-    static const SDL_FRect frames[] = {
-        {259.0f, 147.0f, 30.0f, 40.0f},
-        {278.0f, 147.0f, 30.0f, 40.0},
-        {312.0f, 147.0f, 30.0f, 40.0},
-        {340.0f, 147.0f, 30.0f, 40.0},
-        {370.0f, 147.0f, 30.0f, 40.0}
-    };
+    if (!ghost) {
+        static const SDL_FRect frames[] = {
+            {259.0f, 147.0f, 30.0f, 40.0f},
+            {278.0f, 147.0f, 30.0f, 40.0},
+            {312.0f, 147.0f, 30.0f, 40.0},
+            {340.0f, 147.0f, 30.0f, 40.0},
+            {370.0f, 147.0f, 30.0f, 40.0}
+        };
 
-    int current_frame = walk_frame % 5;
+        int current_frame = walk_frame % 5;
 
-    static const float h_dx[] = { -0.2f, 0.1f, -0.15f, -0.2f, -0.25f };
-    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
-    head_dx = h_dx[current_frame];
-    head_dy = h_dy[current_frame];
+        static const float h_dx[] = { -0.2f, 0.1f, -0.15f, -0.2f, -0.25f };
+        static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
+        head_dx = h_dx[current_frame];
+        head_dy = h_dy[current_frame];
 
-    head_right_pov();
+        head_right_pov();
 
-    if(has_equipped_weapon) {
         weapon_right_offset(current_frame);
-    }
 
-    SDL_FRect frame = frames[current_frame];
-    walk_frame = (walk_frame + 1) % 5;
+        frame = frames[current_frame];
+        walk_frame = (walk_frame + 1) % 5;
+    } else {
+        frame = right_ghost_pov();
+    }
     return frame;
 }
 
@@ -418,30 +311,33 @@ void PlayerDisplay::head_left_pov() {
 
 SDL_FRect PlayerDisplay::left_pov(ViewDirection direction) {
     current_direction = direction;
+    SDL_FRect frame;
 
-    static const SDL_FRect frames[] = {
-        {252.0f, 100.0f, 30.0f, 40.0f},
-        {278.0f, 100.0f, 30.0f, 40.0},
-        {309.0f, 100.0f, 30.0f, 40.0},
-        {336.0f, 100.0f, 30.0f, 40.0},
-        {370.0f, 100.0f, 30.0f, 40.0}
-    };
+    if (!ghost) {
+        static const SDL_FRect frames[] = {
+            {252.0f, 100.0f, 30.0f, 40.0f},
+            {278.0f, 100.0f, 30.0f, 40.0},
+            {309.0f, 100.0f, 30.0f, 40.0},
+            {336.0f, 100.0f, 30.0f, 40.0},
+            {370.0f, 100.0f, 30.0f, 40.0}
+        };
 
-    int current_frame = walk_frame % 5;
+        int current_frame = walk_frame % 5;
 
-    static const float h_dx[] = { 0.0f, 0.0f, -0.05f, -0.05f, -0.3f };
-    static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
-    head_dx = h_dx[current_frame];
-    head_dy = h_dy[current_frame];
+        static const float h_dx[] = { 0.0f, 0.0f, -0.05f, -0.05f, -0.3f };
+        static const float h_dy[] = { -0.1f, -0.1f, -0.1f, -0.1f, -0.1f };
+        head_dx = h_dx[current_frame];
+        head_dy = h_dy[current_frame];
 
-    head_left_pov();
+        head_left_pov();
 
-    if(has_equipped_weapon) {
         weapon_left_offset(current_frame);
-    }
 
-    SDL_FRect frame = frames[current_frame];
-    walk_frame = (walk_frame + 1) % 5;
+        frame = frames[current_frame];
+        walk_frame = (walk_frame + 1) % 5;
+    } else {
+        frame = left_ghost_pov();
+    }
     return frame;
 }
 
@@ -452,13 +348,13 @@ void PlayerDisplay::weapon_left_offset(int current_frame) {
     weapon_dy = dy[current_frame];
 }
 
-SDL_FRect PlayerDisplay::ghost_frame() {
+SDL_FRect PlayerDisplay::front_ghost_pov() {
     static const SDL_FRect frames[] = {
-        { 1.0f, 1.0f, 31.0f, 46.0f},
-        {32.0f, 1.0f, 32.0f, 46.0},
-        {64.0f, 0.0f, 32.0f, 47.0},
-        {96.0f, 0.0f, 32.0f, 47.0},
-        {128.0f, 1.0f, 32.0f, 46.0}
+        { 0.0f, 6.0f, 31.0f, 48.0f},
+        {31.0f, 6.0f, 32.0f, 48.0},
+        {63.0f, 6.0f, 32.0f, 48.0},
+        {95.0f, 6.0f, 32.0f, 48.0},
+        {127.0f, 6.0f, 33.0f, 48.0}
     };
 
     int current_frame = walk_frame % 5;
@@ -467,6 +363,55 @@ SDL_FRect PlayerDisplay::ghost_frame() {
     walk_frame = (walk_frame + 1) % 5;
     return frame;
 }
+
+SDL_FRect PlayerDisplay::back_ghost_pov() {
+    static const SDL_FRect frames[] = {
+        { 0.0f, 71.0f, 31.0f, 45.0f},
+        {31.0f, 71.0f, 32.0f, 45.0},
+        {63.0f, 71.0f, 32.0f, 45.0},
+        {95.0f, 71.0f, 32.0f, 45.0},
+        {127.0f, 71.0f, 33.0f, 45.0}
+    };
+
+    int current_frame = walk_frame % 5;
+
+    SDL_FRect frame = frames[current_frame];
+    walk_frame = (walk_frame + 1) % 5;
+    return frame;
+}
+
+SDL_FRect PlayerDisplay::left_ghost_pov() {
+    static const SDL_FRect frames[] = {
+        { 0.0f, 201.0f, 31.0f, 42.0f},
+        {31.0f, 201.0f, 32.0f, 42.0},
+        {63.0f, 201.0f, 32.0f, 42.0},
+        {95.0f, 201.0f, 32.0f, 42.0},
+        {127.0f, 201.0f, 33.0f, 42.0}
+    };
+
+    int current_frame = walk_frame % 5;
+
+    SDL_FRect frame = frames[current_frame];
+    walk_frame = (walk_frame + 1) % 5;
+    return frame;
+}
+
+SDL_FRect PlayerDisplay::right_ghost_pov() {
+    static const SDL_FRect frames[] = {
+        { 0.0f, 135.0f, 31.0f, 43.0f},
+        {31.0f, 135.0f, 32.0f, 43.0},
+        {63.0f, 135.0f, 32.0f, 43.0},
+        {95.0f, 135.0f, 32.0f, 43.0},
+        {127.0f, 135.0f, 33.0f, 43.0}
+    };
+
+    int current_frame = walk_frame % 5;
+
+    SDL_FRect frame = frames[current_frame];
+    walk_frame = (walk_frame + 1) % 5;
+    return frame;
+}
+
 
 void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect crop) {
     // Ancla por los pies: todos los personajes tocan el borde inferior del tile
@@ -479,7 +424,12 @@ void PlayerDisplay::draw_player(const Camera& camera, SDL_FRect crop) {
         rect.h
     };
 
-    SDL_Texture* current_image = ghost ? ghost_image : image;
+    SDL_Texture* current_image;
+    if (ghost) {
+        current_image = texture_loader.get_ghost_texture();
+    } else {
+        current_image = texture_loader.get_player_texture();
+    }
     SDL_RenderTexture(renderer, current_image, &crop, &dst);
     if (!ghost) {
         draw_player_head(camera);
@@ -502,7 +452,8 @@ void PlayerDisplay::draw_player_head(const Camera& camera) {
         head_height
     };
 
-    SDL_RenderTexture(renderer, head_image, &head_pov, &head_dst);
+    SDL_Texture* head = texture_loader.get_head_texture();
+    SDL_RenderTexture(renderer, head, &head_pov, &head_dst);
 
     draw_gnome_hat(camera, head_dst);
 }
@@ -519,7 +470,8 @@ void PlayerDisplay::draw_gnome_hat(const Camera& camera, const SDL_FRect& head_d
             hat_width,
             hat_height
         };
-        SDL_RenderTexture(renderer, hat_image, &crop, &hat_dst);
+        SDL_Texture* hat = texture_loader.get_hat_texture();
+        SDL_RenderTexture(renderer, hat, &crop, &hat_dst);
     }
 }
 
@@ -532,15 +484,15 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
     // del cuerpo cuando el personaje da la espalda (BACK/LEFT) y delante cuando
     // mira al frente (FRONT/RIGHT).
     for (const auto& id : equipped_item_ids) {
-        auto it = equip_sprites.find(id);
-        if (it == equip_sprites.end()) continue;
-        const EquipSprite& sprite = it->second;
+        auto it = items_kind.find(id);
+        if (it == items_kind.end()) continue;
+        EquipKind kind = it->second;
 
         // Escudo, armadura y casco NO se dibujan sobre el personaje: su estado
         // (equipado o no) se muestra en el panel del HUD (drawEquipStatus). Sobre
         // el jugador solo se ve el arma/báculo (en la mano).
-        if (sprite.kind == EquipKind::SHIELD || sprite.kind == EquipKind::ARMOR ||
-            sprite.kind == EquipKind::HELMET) {
+        if (kind == EquipKind::SHIELD || kind == EquipKind::ARMOR ||
+            kind == EquipKind::HELMET) {
             continue;
         }
 
@@ -554,7 +506,7 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
         double angle = 0.0;
         SDL_FlipMode flip = SDL_FLIP_NONE;
 
-        switch (sprite.kind) {
+        switch (kind) {
             case EquipKind::WEAPON:
                 // Arma/báculo: en la mano, animado con la caminata. Se rota 270°
                 // mirando al frente/izquierda para que apunte hacia adelante.
@@ -594,8 +546,9 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
             size,
             size
         };
-        const SDL_FRect* crop = sprite.use_crop ? &sprite.crop : nullptr;
-        SDL_RenderTextureRotated(renderer, sprite.texture, crop, &dst, angle, nullptr, flip);
+        
+        SDL_Texture* tex = texture_loader.get_texture_of_item(id);
+        SDL_RenderTextureRotated(renderer, tex, nullptr, &dst, angle, nullptr, flip);
     }
 }
 
@@ -603,7 +556,7 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) {
     if (!ghost) {
         // Pasada 1: items que van DETRÁS del cuerpo (armas/escudo cuando el personaje
         // da la espalda). draw_equipped_item filtra cuáles corresponden a esta pasada.
-        draw_equipped_item(camera, /*behind_body=*/true);
+        if (has_equipped_weapon) draw_equipped_item(camera, /*behind_body=*/true);
     }
 
     draw_player(camera, body_pov);
@@ -611,7 +564,7 @@ void PlayerDisplay::draw(const Camera& camera, SDL_FRect body_pov) {
     if (!ghost) {
         // Pasada 2: items que van DELANTE del cuerpo (armas/escudo de frente, y
         // siempre la armadura y el casco).
-        draw_equipped_item(camera, /*behind_body=*/false);
+        if (has_equipped_weapon) draw_equipped_item(camera, /*behind_body=*/false);
     }
 }
 

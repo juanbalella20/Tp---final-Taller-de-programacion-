@@ -16,10 +16,8 @@ const Map &EditorDocument::map() const { return map_; }
 //  Estado de edicion
 
 void EditorDocument::set_active_tool(ToolType t) { tool_ = t; }
-ToolType EditorDocument::active_tool() const { return tool_; }
 
 void EditorDocument::set_active_gid(int gid) { active_gid_ = gid; }
-int EditorDocument::active_gid() const { return active_gid_; }
 
 void EditorDocument::set_active_layer(int idx) {
   if (idx < 0 || idx >= map_.layer_count())
@@ -29,7 +27,6 @@ void EditorDocument::set_active_layer(int idx) {
   active_layer_ = idx;
   emit activeLayerChanged(active_layer_);
 }
-int EditorDocument::active_layer() const { return active_layer_; }
 
 void EditorDocument::set_active_dest_zone(const std::string &zone) {
   active_dest_zone_ = zone;
@@ -226,9 +223,6 @@ bool EditorDocument::open(const QString &path, QString *err) {
   emit mapReset();
   return true;
 }
-
-bool EditorDocument::is_dirty() const { return dirty_; }
-QString EditorDocument::file_path() const { return path_; }
 
 void EditorDocument::set_dirty(bool d) {
   if (d == dirty_)

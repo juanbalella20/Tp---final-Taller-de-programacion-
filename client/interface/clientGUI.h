@@ -28,13 +28,16 @@
 #include "zone_music_player.h"
 #include "sound_player.h"
 #include "../../common/utility/thread.h"
+#include "texture_loader.h"
 
 #define WIN_NAME "Argentum"
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
 
-#define LOGICAL_WIDTH  1024
-#define LOGICAL_HEIGHT 576
+//#define LOGICAL_WIDTH  1024
+//#define LOGICAL_HEIGHT 576
+#define LOGICAL_WIDTH  1280
+#define LOGICAL_HEIGHT 720
 #define DMG_MS 800
 
 // Numero de daño flotante que aparece sobre una celda y desaparece.
@@ -47,7 +50,6 @@ struct DamageNumber {
 
 // Catalogo de un efecto visual de hechizo: spritesheet animado por frames.
 struct SpellEffectDef {
-    SDL_Texture* texture = nullptr;
     int frame_w = 0;       // ancho de cada frame en el spritesheet
     int frame_h = 0;       // alto de cada frame
     int cols = 0;          // columnas de la grilla
@@ -67,7 +69,8 @@ private:
     SDL_Window* window;
     SDL_Renderer* renderer;
     SDL_Event event;
-    TTF_Font* chat_font;
+    TTF_Font* font;
+    TextureLoader texture_loader;
     bool is_running;
     std::unique_ptr<MiniChat> mini_chat;
     Parser parser;
@@ -102,8 +105,6 @@ private:
     // UNA vez por jugador y reusarse entre frames (hacerlo por frame quemaba
     // el CPU apenas habia otro jugador en la zona).
     std::map<std::string, PlayerDisplay> other_player_displays;
-    SDL_Texture* enemy_texture;
-    std::map<std::string, SDL_Texture*> enemies_textures;
     
     std::vector<DamageNumber> damage_numbers;
 
@@ -157,16 +158,24 @@ private:
     int selected_npc_tile_x;
     int selected_npc_tile_y;
 
-    static constexpr int PANEL_WIDTH  = 276;
+    static constexpr int DESIGN_LOGICAL_WIDTH = 1024;
+    static constexpr int DESIGN_LOGICAL_HEIGHT = 576;
+
+    static constexpr int PANEL_WIDTH =
+        276 * LOGICAL_WIDTH / DESIGN_LOGICAL_WIDTH;
     static constexpr int GAME_WIDTH   = LOGICAL_WIDTH - PANEL_WIDTH;
     static constexpr int CANVAS_HEIGHT = LOGICAL_HEIGHT;
 
     // Recorte transparente ("hueco") del frame en_ventanaprincipal.png donde se
     // ve el mundo, en coordenadas logicas.
-    static constexpr int GAME_VIEW_X = 12;
-    static constexpr int GAME_VIEW_Y = 113;
-    static constexpr int GAME_VIEW_W = 732;
-    static constexpr int GAME_VIEW_H = 456;
+    static constexpr int GAME_VIEW_X =
+        12 * LOGICAL_WIDTH / DESIGN_LOGICAL_WIDTH;
+    static constexpr int GAME_VIEW_Y =
+        113 * LOGICAL_HEIGHT / DESIGN_LOGICAL_HEIGHT;
+    static constexpr int GAME_VIEW_W =
+        732 * LOGICAL_WIDTH / DESIGN_LOGICAL_WIDTH;
+    static constexpr int GAME_VIEW_H =
+        456 * LOGICAL_HEIGHT / DESIGN_LOGICAL_HEIGHT;
 
     // Inicializa el estado grafico de ClientGUI sobre el window/renderer/font
     // COMPARTIDOS (propiedad del ScreenManager): fija la presentacion logica,

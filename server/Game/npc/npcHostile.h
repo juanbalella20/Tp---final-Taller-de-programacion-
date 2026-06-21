@@ -6,7 +6,6 @@
 #include "npc.h"
 #include "levelHostile.h"
 #include "../entity.h"
-// #include "itemDataBase.h"
 #include "../../../common/constants/protocol_constants.h"
 
 #include <vector>
@@ -17,8 +16,6 @@ struct Command;
 class ZoneWorld;
 
 enum class State { DEAD, ALIVE };
-
-
 
 class NPChostile : public NPC, public Entity {
     private:

@@ -1,6 +1,8 @@
 #include "serverApp.h"
 
 #include <sys/socket.h>
+#include <sys/select.h>
+#include <unistd.h>
 #include <iostream>
 
 ServerApp::ServerApp(std::string port):
@@ -20,7 +22,6 @@ ServerApp::~ServerApp() {
 void ServerApp::run() {
     game_loop.start();
     acceptor.start();
-//antes en el tp de threads el server se cortaba con una q, ahora ni idea de como se deberia cortar
     char c = '\0';
     while (std::cin.get(c)) {
         if (c == 'q') {
@@ -28,7 +29,7 @@ void ServerApp::run() {
         }
     }
 
-    acceptor.stop();
+    acceptor.shutdown();
     game_loop.stop();
     try {
         receiving_queue.close();

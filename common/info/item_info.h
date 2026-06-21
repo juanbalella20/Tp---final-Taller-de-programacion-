@@ -27,11 +27,7 @@ struct ItemInfo {
     uint8_t get_type() const { return type; }
     uint64_t get_uid() const { return uid; }
 
-    void set_id(const std::string& new_id) { id = new_id; }
-    void set_name(const std::string& new_name) { name = new_name; }
-    void set_price(int new_price) { price = new_price; }
     void set_type(uint8_t new_type) { type = new_type; }
-    void set_uid(uint64_t new_uid) { uid = new_uid; }
 };
 
 #endif  // ITEM_INFO_H

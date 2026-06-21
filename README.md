@@ -27,6 +27,12 @@ Para correr:
 ```bash
 Terminal 1: ./build/Debug/server 8080
 Terminal 2: ./build/Debug/client localhost 8080 myplayer human warrior
+# Valgrind
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
+  --log-file=valgrind-server.log ./build/Debug/server
+
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
+  --log-file=valgrind-server.log server
 ```
 
 Workflow para testear editor-grafico:
@@ -40,7 +46,7 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 cmake --build build --target map_editor
 
 # 3. Ejecutar
-./build/Debug/map_editor
+ARGENTUM_RESOURCES_DIR="$PWD" ./build/Release/map_editor
 ```
 # Documentacion 
 

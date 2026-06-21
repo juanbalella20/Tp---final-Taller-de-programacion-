@@ -78,6 +78,7 @@ public:
     int newbie_max_level;
     int level_diff_max;
     double revive_life_factor;
+    double revive_ticks_per_distance;
 
     // Combat
     double crit_chance;

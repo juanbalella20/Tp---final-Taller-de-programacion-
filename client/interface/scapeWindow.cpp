@@ -1,12 +1,15 @@
 #include "scapeWindow.h"
 
 #include <SDL3_image/SDL_image.h>
-
+#include <iostream>
 #include "ui_helpers.h"
+#include "paths.h"
 
 ScapeWindow::ScapeWindow(SDL_Renderer *renderer, int logical_w, int logical_h)
     : renderer(renderer), logical_w(logical_w), logical_h(logical_h) {
-  SDL_Surface *surf = IMG_Load("imagenes/exit.png");
+    
+  std::string path = paths::asset("imagenes/exit.png");
+  SDL_Surface *surf = IMG_Load(path.c_str());
   if (surf) {
     background = SDL_CreateTextureFromSurface(renderer, surf);
     if (background)
@@ -47,13 +50,13 @@ SDL_FRect ScapeWindow::frame_rect() const {
 
 SDL_FRect ScapeWindow::cancel_button_rect() const {
   SDL_FRect frame = frame_rect();
-  return {frame.x, frame.y + frame.h * (700.0f / ART_H), frame.w * 0.5f,
+  return {frame.x, frame.y + frame.h * (660.0f / ART_H), frame.w * 0.5f,
           frame.h * (130.0f / ART_H)};
 }
 
 SDL_FRect ScapeWindow::exit_button_rect() const {
   SDL_FRect frame = frame_rect();
-  return {frame.x + frame.w * 0.5f, frame.y + frame.h * (700.0f / ART_H),
+  return {frame.x + frame.w * 0.5f, frame.y + frame.h * (660.0f / ART_H),
           frame.w * 0.5f, frame.h * (130.0f / ART_H)};
 }
 
@@ -70,6 +73,7 @@ bool ScapeWindow::handle_event(const SDL_Event &event) {
     float lx, ly;
     SDL_RenderCoordinatesFromWindow(renderer, event.button.x, event.button.y,
                                     &lx, &ly);
+
     if (contains(exit_button_rect(), lx, ly)) {
       exit_confirmed_ = true;
       close();

@@ -73,37 +73,6 @@ std::vector<std::unique_ptr<Item>> Player::drop_inventory() {
     return player_inventory.drop_all();
 }
 
-/*
-
-void Player::equip_item(Item item) {
-    if (equipped_item == nullptr) {
-        player_inventory.unequip_item(item);
-        equipped_item = item;
-    } else {
-        player_inventory.equip_item(equipped_item);
-        player_inventory.unequip_item(item);
-        equipped_item = item;
-    }
-}
-
-void Player::unequip_item(Item item) {
-    if (equipped_item == nullptr) {
-        return;
-    }
-
-    if (equipped_item == item) {
-        player_inventory.equip_item(item);
-        equipped_item = nullptr;
-    }
-}
-
-void Player::use_object(Item item) {
-    item.use_item();
-}
-*/
-
-
-
 void Player::revive() {
     state->revive(*this);
 }

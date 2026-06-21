@@ -100,12 +100,6 @@ void TilesetSelectorView::resetSelection() {
   m_dragPending = false;
 }
 
-int TilesetSelectorView::selectedGid() const {
-  if (m_selectedLocalId < 0)
-    return 0;
-  return m_firstGid + m_selectedLocalId;
-}
-
 TileBrush TilesetSelectorView::selectedBrush() const {
   TileBrush brush;
   if (m_selectionStart.x() < 0 || m_selectionStart.y() < 0 ||
@@ -159,10 +153,6 @@ void TilesetSelectorView::startBrushDrag() {
   drag.setHotSpot((pressScene - selected.topLeft()).toPoint());
   // arranca drag and drop
   drag.exec(Qt::CopyAction);
-}
-
-const TileLibrary &TilesetSelectorView::tileLibrary() const {
-  return m_library;
 }
 
 void TilesetSelectorView::drawForeground(QPainter *painter,

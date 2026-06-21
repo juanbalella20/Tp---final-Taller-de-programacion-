@@ -9,6 +9,7 @@
 
 #include "binaryMapFormat.h"
 #include "byteReader.h"
+#include "paths.h"
 
 void BinaryMapLoader::load(const std::string& path) {
     // read_file: carga el .bin completo y valida que tenga al menos el header.
@@ -32,7 +33,8 @@ void BinaryMapLoader::load(const std::string& path) {
 }
 
 std::vector<uint8_t> BinaryMapLoader::read_file(const std::string& path) const {
-    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    std::string p = paths::asset(path);
+    std::ifstream file(p, std::ios::binary | std::ios::ate);
     if (!file) {
         throw std::runtime_error("BinaryMapLoader: no se pudo abrir: " + path);
     }
@@ -219,7 +221,7 @@ void BinaryMapLoader::parse_collision_section(ByteReader& section_reader, bool s
 }
 
 void BinaryMapLoader::build_tile_index() {
-    // Identico a MapLoader::build_tile_index (mapLoader.cpp 91-103).
+    // Por cada tileset y cada local index, registra el gid -> TileDef.
     for (int ts_idx = 0; ts_idx < static_cast<int>(tilesets.size()); ++ts_idx) {
         const Tileset& ts = tilesets[ts_idx];
         for (int local = 0; local < ts.tile_count; ++local) {
@@ -250,7 +252,6 @@ const std::vector<std::vector<uint8_t>>& BinaryMapLoader::get_collision() const 
 }
 
 const TileDef* BinaryMapLoader::find_tile(int id) const {
-    // Copia exacta de MapLoader::find_tile (mapLoader.cpp 31-36).
     if (id == 0) return nullptr;
     auto it = tiles.find(id);
     if (it == tiles.end()) return nullptr;

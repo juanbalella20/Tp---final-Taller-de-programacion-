@@ -5,12 +5,17 @@
 #include <string>
 #include <vector>
 
-#include "mapLoader.h"
+#include "binaryMap/binaryMapLoader.h"
+
+constexpr int LAYER_GROUND = 0;
+constexpr int LAYER_BUILDINGS = 1;
+constexpr int LAYER_ABOVE_PLAYER = 2;
+constexpr int LAYER_LAST = -1;
 
 class TileMap {
 private:
     SDL_Renderer* renderer;
-    MapLoader mapData;
+    BinaryMapLoader mapData;
     std::vector<SDL_Texture*> tileset_textures;
 
     // Carga en tileset_textures una textura por cada tileset ya parseado
@@ -24,18 +29,13 @@ public:
     TileMap(const TileMap&) = delete;
     TileMap& operator=(const TileMap&) = delete;
 
-    // Parsea el TOML (via MapLoader) 
-    // y carga las texturas de cada tileset en el vector
-    // tileset_textures
-    void load_map_toml(const std::string& tomlPath);
-
     // Parsea el mapa binario
     // carga las texturas de cada tileset en el vector tileset_textures
     void load_map_bin(const std::string& path);
 
-    // recorre las capas en orden, y para cada celda no vacía calcula el 
-    // recorte del spritesheet (src) y la posición en pantalla (dst)
-    void render(int mapViewport_x, int mapViewport_y) const;
+    // recorre las capas con índice en [first_layer, last_layer) en orden
+    void render(int mapViewport_x, int mapViewport_y,
+                int first_layer = 0, int last_layer = -1) const;
 
     int getTileSize() const;
     int getWidth() const;
@@ -43,11 +43,6 @@ public:
     int getPixelWidth() const;
     int getPixelHeight() const;
 
-    // Consultar colisiones (delegado a MapData::is_solid).
-    bool isBlocked(int cellX, int cellY) const { return mapData.is_collidable(cellX, cellY); }
-
-    const std::map<std::string, positionCoord>& getSpawns() const { return mapData.get_spawns(); }
-    const std::vector<TeleportDef>& getTeleports() const { return mapData.get_teleports(); }
 };
 
 #endif
