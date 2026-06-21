@@ -34,6 +34,7 @@ gold_exponent  = 1.1
 gold_excess_factor = 1.5
 
 revive_life_factor = 0.1 # Fraccion de vida/mana con la que resucita (10%)
+revive_ticks_per_distance = 10.0 # Ticks de espera por unidad de distancia al resucitar solo (ejemplo: 20 ticks/tile = 1s/tile a 20ticks por seg)
  
 # Fair play
 newbie_max_level = 12   # Nivel 12 o menor es considerado newbie
