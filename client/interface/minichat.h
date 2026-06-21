@@ -7,7 +7,7 @@
 #include <deque>
 #include "queue.h"
 
-#define MAX_LINES 2
+#define MAX_LINES 3
 
 struct chatMessage {
     std::string text;
@@ -38,7 +38,7 @@ private:
     void pop_oldest_message();
 
 public:
-    MiniChat(SDL_Renderer* renderer, TTF_Font* font, float game_width, float panel_width, float canvas_height);
+    MiniChat(SDL_Renderer* renderer, float game_width, float panel_width, float canvas_height);
 
     bool is_active() const;
 

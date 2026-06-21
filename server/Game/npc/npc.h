@@ -16,7 +16,6 @@ enum NpcAction {
 
 };
 
-
 struct Command {
     int action;       // ex: comprar, vender
     std::string item_id;  // id del item involucrado
@@ -28,10 +27,9 @@ class NPC {
     protected:
         int npc_id;
         std::string name;
-        //ItemDataBase itemdatabase;
     public:
     // an npc_id is generated and a name
-    NPC();
+    NPC() : npc_id(0), name("") {}
     public:
         static void set_npc_id(int npc_id);
         static void set_npc_name(std::string npc_name);

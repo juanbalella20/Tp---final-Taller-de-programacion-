@@ -67,6 +67,7 @@ private:
     static int dir_to_dy(Direction dir);
     static int dir_to_dx(Direction dir);
 
+    bool player_already_in_a_clan(const std::string& player_name);
 
 public:
     GameMap();

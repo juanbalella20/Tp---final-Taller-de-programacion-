@@ -69,7 +69,7 @@ private:
     SDL_Window* window;
     SDL_Renderer* renderer;
     SDL_Event event;
-    TTF_Font* chat_font;
+    TTF_Font* font;
     TextureLoader texture_loader;
     bool is_running;
     std::unique_ptr<MiniChat> mini_chat;

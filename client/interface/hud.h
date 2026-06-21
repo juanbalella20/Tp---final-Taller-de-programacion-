@@ -119,7 +119,7 @@ public:
     // INSTANCIA (estado real de equipo confirmado por el server). Por uid, no por
     // tipo: dos copias del mismo item no se resaltan juntas.
     void set_equipped_by_uids(const std::vector<std::string>& uids);
-    void drawInventoryItems();
+
     void drawAttackButton();
     void drawHp();
     void drawMana();

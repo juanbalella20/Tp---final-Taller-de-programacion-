@@ -9,20 +9,21 @@
 class TextureLoader {
 
 private:
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-    SDL_Texture* player_texture;
-    SDL_Texture* gold_texture;
-    SDL_Texture* ghost_texture;
-    SDL_Texture* head_texture;
-    SDL_Texture* hat_texture;
-    SDL_Texture* seller_texture;
-    SDL_Texture* banker_texture;
-    SDL_Texture* priest_texture;
-    SDL_Texture* hp_bar_texture;
-    SDL_Texture* xp_bar_texture;
-    SDL_Texture* mana_bar_texture;
-    SDL_Texture* game_texture;
+    SDL_Window* window = nullptr;
+    SDL_Renderer* renderer = nullptr;
+    SDL_Texture* player_texture = nullptr;
+    SDL_Texture* gold_texture = nullptr;
+    SDL_Texture* ghost_texture = nullptr;
+    SDL_Texture* head_texture = nullptr;
+    SDL_Texture* hat_texture = nullptr;
+    SDL_Texture* seller_texture = nullptr;
+    SDL_Texture* banker_texture = nullptr;
+    SDL_Texture* priest_texture = nullptr;
+    SDL_Texture* hp_bar_texture = nullptr;
+    SDL_Texture* xp_bar_texture = nullptr;
+    SDL_Texture* mana_bar_texture = nullptr;
+    SDL_Texture* game_texture = nullptr;
+    SDL_Texture* shop_texture = nullptr;
 
     std::map<std::string, SDL_Texture*> enemies_textures;
     std::map<std::string, SDL_Texture*> spell_effects_textures;
@@ -72,6 +73,8 @@ public:
 
     SDL_Texture* get_mana_texture();
 
+    SDL_Texture* get_shop_texture();
+
     void load_gold();
 
     void load_ghost();
@@ -89,6 +92,8 @@ public:
     void load_stats();
 
     void load_game_window();
+
+    void load_shop();
 
     void freeSDL();
 

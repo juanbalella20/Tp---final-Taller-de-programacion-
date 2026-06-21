@@ -17,7 +17,7 @@
 ClientGUI::ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
     Queue<ClientCmd>& outgoing, Queue<GameMsg>& receiving, const std::string& player_name,
     const std::string& player_race, const std::string& player_clan)
-    : window(window), renderer(renderer), event{}, chat_font(font), texture_loader(window, renderer),
+    : window(window), renderer(renderer), event{}, font(font), texture_loader(window, renderer),
       is_running(false), mini_chat(nullptr), parser(), outgoing(outgoing), receiving(receiving),
       hud(nullptr), own_name(player_name), race(player_race), own_clan(player_clan),
       player(nullptr), tilemap(nullptr),
@@ -31,7 +31,7 @@ ClientGUI::ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
 
 ClientGUI::~ClientGUI() {
     freeSDL();
-    // chat_font, window y renderer son del ScreenManager: no se liberan aca.
+    // font, window y renderer son del ScreenManager: no se liberan aca.
 }
 
 void ClientGUI::initSDL() {
@@ -41,7 +41,7 @@ void ClientGUI::initSDL() {
     
     texture_loader.load_game_logo();
 
-    mini_chat = std::make_unique<MiniChat>(renderer, chat_font, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
+    mini_chat = std::make_unique<MiniChat>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
     zone_music = std::make_unique<ZoneMusicPlayer>();
     sfx = std::make_unique<SoundPlayer>();
 }
@@ -295,22 +295,18 @@ void ClientGUI::handleEvents() {
                     case SDL_SCANCODE_UP:
                     case SDL_SCANCODE_W:
                         sendMoveCmd(DIR_NORTH);
-   //                     if (player) { player->setTilePosition(player->getTileX(), player->getTileY() - 1); player_pov = player->back_pov(); }
                         break;
                     case SDL_SCANCODE_DOWN:
                     case SDL_SCANCODE_S:
                         sendMoveCmd(DIR_SOUTH);
-     //                   if (player) { player->setTilePosition(player->getTileX(), player->getTileY() + 1); player_pov = player->front_pov(); }
                         break;
                     case SDL_SCANCODE_RIGHT:
                     case SDL_SCANCODE_D:
                         sendMoveCmd(DIR_EAST);
-       //                 if (player) { player->setTilePosition(player->getTileX() + 1, player->getTileY()); player_pov = player->right_pov(); }
                         break;
                     case SDL_SCANCODE_LEFT:
                     case SDL_SCANCODE_A:
                         sendMoveCmd(DIR_WEST);
-         //               if (player) { player->setTilePosition(player->getTileX() - 1, player->getTileY()); player_pov = player->left_pov(); }
                         break;
                     default:
                         break;
@@ -379,7 +375,6 @@ void ClientGUI::handleEvents() {
                         for (const auto& item : inv) {
                             if (mx >= slot_x && mx <= slot_x + slot_size &&
                                 my >= slot_y && my <= slot_y + slot_size) {
-                                std::cout << "DEBUG mx: " << mx << " my: " << my << std::endl;
                                 // Sólo pedimos el toggle al server. Él responde con
                                 // MSG_UPDATE_EQUIP y de ahí derivamos el halo amarillo
                                 // y el arma del personaje (estado real, no optimista).
@@ -440,8 +435,6 @@ void ClientGUI::sendMoveCmd(Direction dir) {
 void ClientGUI::sendChatCmd(const std::string& msg) {
     try {
         ClientCmd cmd = parser.parse_chat(msg);
-        std::cout << "[DEBUG: sendChatCmd] selected_npc=(" 
-                  << selected_npc_tile_x << "," << selected_npc_tile_y << ")" << std::endl;
         // Si es vender o listar, agregar coordenadas del NPC seleccionado
         if ((cmd.get_message_type() == MSG_SELL || 
              cmd.get_message_type() == MSG_BUY  ||
@@ -503,7 +496,7 @@ void ClientGUI::update() {
                     if (player) {//spawn
                         player->setTilePosition(msg.get_coord_x(), msg.get_coord_y());
                         player->set_ghost(msg.get_ghost());
-                        player_pov = player->back_pov(ViewDirection::FRONT);
+                        player_pov = player->front_pov(ViewDirection::FRONT);
                         std::cout << "Player registered at (" << msg.get_coord_x() << "," << msg.get_coord_y() << ")" << std::endl;
                     }
                     other_players = msg.get_players();
@@ -522,7 +515,6 @@ void ClientGUI::update() {
                     items_on_floor = msg.get_items_on_floor();
                     break;
                 case MSG_PLAYERS_SNAPSHOT: {
-                    // std::cout << "Received players snapshot with " << msg.get_players().size() << " players." << std::endl;  // hot path: floodea la consola cada frame
                     for (const auto& incoming : msg.get_players()) {
                         auto it = std::find_if(other_players.begin(), other_players.end(),
                             [&incoming](const PlayerInfo& p) { return p.name == incoming.name; });
@@ -951,7 +943,6 @@ void ClientGUI::drawOtherPlayers() {
             other_players_povs[p.name] = pov; 
             p.update_frame = false;
         }
-        //pd.draw(camera, pov); MECHI DICE QUE NO VA
 
         // Nombre sobre el jugador: verde si es de nuestro clan, rojo si es de
         // otro (o no tiene). Sin clan propio, todos van en rojo. Colores claros
@@ -967,16 +958,16 @@ void ClientGUI::drawOtherPlayers() {
 
 void ClientGUI::draw_player_name(const std::string& name, int tile_x, int tile_y,
                                  SDL_Color color) {
-    if (!chat_font || name.empty() || !tilemap) return;
+    if (!font || name.empty() || !tilemap) return;
 
     // Texto del color de clan (relleno) + un contorno negro renderizado aparte.
     // El contorno es lo que hace el nombre legible sobre cualquier fondo (pasto,
     // agua, piedra): es el nametag tipico de MMO. Se dibuja a tamaño nativo (sin
     // downscale) para que los glyphs queden nitidos.
     SDL_Color outline_color = {0, 0, 0, 255};
-    SDL_Surface* fill_surf = TTF_RenderText_Blended(chat_font, name.c_str(), 0, color);
+    SDL_Surface* fill_surf = TTF_RenderText_Blended(font, name.c_str(), 0, color);
     if (!fill_surf) return;
-    SDL_Surface* outline_surf = TTF_RenderText_Blended(chat_font, name.c_str(), 0, outline_color);
+    SDL_Surface* outline_surf = TTF_RenderText_Blended(font, name.c_str(), 0, outline_color);
 
     SDL_Texture* fill_tex = SDL_CreateTextureFromSurface(renderer, fill_surf);
     SDL_Texture* outline_tex = outline_surf ? SDL_CreateTextureFromSurface(renderer, outline_surf)
@@ -1086,7 +1077,7 @@ void ClientGUI::draw_spell_animations() {
 }
 
 void ClientGUI::draw_damage_numbers() {
-    if (!tilemap || !chat_font) return;
+    if (!tilemap || !font) return;
     const int tileSize = tilemap->getTileSize();
     const SDL_Color color = {255, 0, 0, 255};  // rojo
     const uint64_t now = SDL_GetTicks();
@@ -1099,7 +1090,7 @@ void ClientGUI::draw_damage_numbers() {
 
     for (const auto& d : damage_numbers) {
         const std::string text = std::to_string(d.value);
-        SDL_Surface* surf = TTF_RenderText_Blended(chat_font, text.c_str(), 0, color);
+        SDL_Surface* surf = TTF_RenderText_Blended(font, text.c_str(), 0, color);
         if (!surf) continue;
         SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
         if (tex) {
@@ -1283,7 +1274,7 @@ void ClientGUI::init_draw() {
 
     hud = std::make_unique<HUD>(renderer, GAME_WIDTH, PANEL_WIDTH, CANVAS_HEIGHT);
     // Ventana de comercio: ocupa toda el area logica de presentacion.
-    shop_window = std::make_unique<ShopWindow>(renderer, chat_font,
+    shop_window = std::make_unique<ShopWindow>(renderer, font,
                                                LOGICAL_WIDTH, LOGICAL_HEIGHT);
     // Dialogo de confirmacion de salida (ESC dentro del juego).
     scape_window = std::make_unique<ScapeWindow>(renderer,
@@ -1298,7 +1289,7 @@ void ClientGUI::init_draw() {
     int tileSize = tilemap->getTileSize();
     try {
         player = std::make_unique<PlayerDisplay>(renderer, "imagenes/1005.png", tileSize, race);
-        player_pov = player->back_pov(ViewDirection::FRONT);
+        player_pov = player->front_pov(ViewDirection::FRONT);
     } catch (const std::runtime_error& e) {
         std::cout << "[DEBUG] imagenes/1005.png failed: " << e.what() << std::endl;
     }

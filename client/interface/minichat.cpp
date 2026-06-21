@@ -3,14 +3,18 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-MiniChat::MiniChat(SDL_Renderer* renderer, TTF_Font* font,
-    float game_width, float panel_width, float canvas_height) : 
+#include "paths.h"
+
+MiniChat::MiniChat(SDL_Renderer* renderer, float game_width, float panel_width, float canvas_height) : 
     active(false),
     renderer(renderer),
-    font(font),
     game_width(game_width),
     panel_width(panel_width),
-    canvas_height(canvas_height) {}
+    canvas_height(canvas_height) {
+
+    const std::string font_path = paths::asset("fonts/StackSansText-Medium.ttf");
+    font = TTF_OpenFont(font_path.c_str(), 12);
+}
 
 bool MiniChat::is_active() const { return active; }
 

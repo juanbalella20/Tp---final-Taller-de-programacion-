@@ -745,15 +745,35 @@ void GameMap::load_clans(std::vector<Clan> persisted_clans) {
     }
 }
 
-bool GameMap::found_clan(const std::string& player_name, const std::string& clan_name) {
-    // TO-DO chequeo: solo 1 clan por player
-    auto [it, created] = clans.try_emplace(clan_name, player_name, clan_name);
+bool GameMap::player_already_in_a_clan(const std::string& player_name) {
+    auto clan = std::find_if(clans.begin(), clans.end(), 
+        [&player_name](auto& par) {
+            // par.first es el nombre del clan (la clave)
+            // par.second es el objeto Clan (el valor)
+            return par.second.joined(player_name);
+        }
+    );
 
+    if (clan == clans.end()) {
+        return false;
+    }
+    return true;
+}
+
+bool GameMap::found_clan(const std::string& player_name, const std::string& clan_name) {
+    if (player_already_in_a_clan(player_name)) {
+        return false;
+    }
+
+    auto [it, created] = clans.try_emplace(clan_name, player_name, clan_name);
     return created;
 }
 
 bool GameMap::join_clan(const std::string& player_name, const std::string& clan_name) {
-    // TO-DO chequeo: solo 1 clan por player
+    if (player_already_in_a_clan(player_name)) {
+        return false;
+    }
+
     auto clan = clans.find(clan_name);
     if (clan == clans.end()) {
         return false;
@@ -785,7 +805,6 @@ std::string GameMap::rev_clan(const std::string& player_name) {
 }
 
 void GameMap::accept_new_member(const std::string& player_name, const std::string& new_member) {
-    // TO-DO chequeo: solo 1 clan por player
     auto clan = std::find_if(clans.begin(), clans.end(), 
         [&player_name](auto& par) {
             // par.first es el nombre del clan (la clave)

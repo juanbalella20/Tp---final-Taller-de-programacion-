@@ -82,7 +82,6 @@ void GameLoop::send_npcs_snapshot_to(uint32_t client_id) {
 }
 
 void GameLoop::broadcast_items_snapshot() {
-  
     for (const auto& [client_id, name] : client_registry_monitor.get_active_clients()) {
         if (name.empty() || !game_map.player_exists(name)) continue;
         GameMsg msg(MSG_ITEMS_SNAPSHOT);
@@ -99,7 +98,6 @@ void GameLoop::send_items_snapshot_to(uint32_t client_id) {
 }
 
 void GameLoop::load_maps() {
-
     const auto& cfg = GameConfig::instance();
     std::map<Zone, ZoneSpawnConfig> zone_configs;
     for (const auto& [zone, path] : cfg.zone_map_paths) {
@@ -116,10 +114,6 @@ void GameLoop::load_maps() {
     }
     game_map.init_world(zone_configs);
 }
-
-
-
-
 
 void GameLoop::notify_zone(Zone zone, const GameMsg& msg, const std::string& except_name) {
     // Visibilidad por zona: solo ve el evento quien comparte la zona 'zone'.
@@ -147,12 +141,10 @@ void GameLoop::send_player_snapshot_to_other_players(uint32_t client_id, const s
     pi.ghost = p.is_ghost();
     pi.clan_name = game_map.clan_of(player_name);
     msg.set_player(pi);
-    std::cout << "[DEBUG: MSG_PLAYERS_SNAPSHOT] Notificando a la zona sobre nuevo jugador " << msg.get_players().front().name << std::endl;
     notify_zone(game_map.get_player_zone(player_name), msg, player_name);
 }
 
 void GameLoop::broadcast_players_snapshot() {
-
     for (const auto& [client_id, name] : client_registry_monitor.get_active_clients()) {
         if (name.empty() || !game_map.player_exists(name)) continue;
         GameMsg msg(MSG_PLAYERS_SNAPSHOT);
@@ -162,7 +154,6 @@ void GameLoop::broadcast_players_snapshot() {
 }
 
 void GameLoop::notify_own_clan(const std::string& player_name) {
-  
     GameMsg msg(MSG_CLAN_UPDATE);
     msg.set_player_name(player_name);
     msg.set_chat_content(game_map.clan_of(player_name));  // clan nuevo ("" si ninguno)
@@ -265,7 +256,6 @@ void GameLoop::send_world_snapshot_to(uint32_t client_id, const std::string& nam
     registerMsg.set_xp(game_map.get_player_xp(name));
     registerMsg.set_mana(game_map.get_player_mana(name));
     registerMsg.set_max_mana(game_map.get_player_max_mana(name));
-    std::cout << "[DEBUG] max xp: " << p.max_xp() << std::endl;
     registerMsg.set_max_xp(game_map.player_max_xp(name));
     registerMsg.set_coord_x(p.get_coord_x());
     registerMsg.set_coord_y(p.get_coord_y());
@@ -299,14 +289,12 @@ void GameLoop::handle_register(const ClientCmd& cmd) {
         return;
     }
 
-  
     client_registry_monitor.assign_name(client_id, name);
     game_map.spawn_player(name, cmd.get_race(), cmd.get_class());
     persistence.save(name, player_serializer.to_record(
             game_map.get_player(name), game_map.get_player_zone(name), cmd.get_password()));
     std::cout << "[REGISTER] nuevo personaje creado y persistido: " << name << std::endl;
 
-    
     send_confirm_session(client_id, name, cmd.get_race(), cmd.get_class());
     send_world_snapshot_to(client_id, name, cmd.get_race());
 }
@@ -324,7 +312,6 @@ void GameLoop::handle_login(const ClientCmd& cmd) {
 
     client_registry_monitor.assign_name(client_id, name);
 
-  
     if (!game_map.player_exists(name)) {
         Player player = player_serializer.from_record(res.record);
         game_map.add_persisted_player(std::move(player), static_cast<Zone>(res.record.zone));
@@ -344,7 +331,6 @@ void GameLoop::handle_login(const ClientCmd& cmd) {
 }
 
 void GameLoop::handle_logout(const ClientCmd& cmd) {
-
     const std::string& name = cmd.get_player_name();
     if (name.empty() || !game_map.player_exists(name)) {
         selected_npc.erase(cmd.get_client_id());
@@ -375,7 +361,6 @@ void GameLoop::handle_logout(const ClientCmd& cmd) {
 }
 
 void GameLoop::handle_list(const ClientCmd& cmd) {
-    std::cout << "[DEBUG handle_list] recibido" << std::endl;
     try {
         std::string name = client_registry_monitor.get_name(cmd.get_client_id());
         std::string type = game_map.get_adjacent_npc_type(name);
@@ -465,7 +450,6 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
     }
 }
-
 
 void GameLoop::handle_deposit(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
@@ -718,7 +702,6 @@ void GameLoop::send_zone_transition(uint32_t client_id, const std::string& name,
     zoneMsg.set_coord_x(r.x);
     zoneMsg.set_coord_y(r.y);
     client_registry_monitor.notify_client(client_id, zoneMsg);
-
  
     GameMsg mapMsg(MSG_SEND_MAP);
     mapMsg.set_map(game_map.get_map(name));
@@ -737,26 +720,21 @@ void GameLoop::handle_move(const ClientCmd& cmd) {
     if (game_map.is_resurrect_pending(name)) return;
     auto result = game_map.try_move(cmd.get_direction(), name);
 
-        if (game_map.pick_up_gold(name)) {
-            std::cout << "oro" << std::endl;
-            broadcast_items_snapshot();  // todos ven que el oro desapareció del piso
-            GameMsg msg_gold(MSG_GOLD);
-            msg_gold.set_gold(game_map.get_player_gold(name));
-  
-            client_registry_monitor.notify_client(cmd.get_client_id(), msg_gold);
-        }
-        GameMsg msg(MSG_MOVE, cmd.get_direction());
-        msg.set_player_name(result.player_name);
-        msg.set_coord_x(result.new_x);
-        msg.set_coord_y(result.new_y);
-        msg.set_race(cmd.get_race());
-        std::cout << "[DEBUG: handle_move] player " << cmd.get_player_name()
-              << " has race " << cmd.get_race() << std::endl;
+    if (game_map.pick_up_gold(name)) {
+        broadcast_items_snapshot();  // todos ven que el oro desapareció del piso
+        GameMsg msg_gold(MSG_GOLD);
+        msg_gold.set_gold(game_map.get_player_gold(name));
 
-        notify_zone(game_map.get_player_zone(name), msg);
-        std::cout << "[DEBUG]: sended" << std::endl;
-    // }
+        client_registry_monitor.notify_client(cmd.get_client_id(), msg_gold);
+    }
+    GameMsg msg(MSG_MOVE, cmd.get_direction());
+    msg.set_player_name(result.player_name);
+    msg.set_coord_x(result.new_x);
+    msg.set_coord_y(result.new_y);
+    msg.set_race(cmd.get_race());
 
+    notify_zone(game_map.get_player_zone(name), msg);
+    std::cout << "[DEBUG]: sended" << std::endl;
 
     if (result.moved) {
         auto tp = game_map.try_teleport_on_current_cell(name);
@@ -788,7 +766,6 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
             level_msg.set_max_hp(game_map.get_player_max_hp(attacker_name));
             level_msg.set_max_mana(game_map.get_player_max_mana(attacker_name));
             client_registry_monitor.notify_client(cmd.get_client_id(), level_msg);
-
 
             GameMsg lvl_hp_msg(MSG_HP);
             lvl_hp_msg.set_hp(game_map.get_player_hp(attacker_name));
@@ -978,7 +955,6 @@ void GameLoop::handle_private(const ClientCmd& cmd) {
     GameMsg msg(MSG_PRIVATE);
     msg.set_player_name(sender);
     msg.set_chat_content(cmd.get_chat_content());
-
 }
 
 void GameLoop::handle_cheat_kill(const ClientCmd& cmd) {
@@ -1024,7 +1000,6 @@ void GameLoop::handle_cheat_mana(const ClientCmd& cmd) {
   
     game_map.cheat_lose_mana(name, cmd.get_gold());
 
-  
     GameMsg msg(MSG_MANA);
     msg.set_player_name(name);
     msg.set_mana(game_map.get_player_mana(name));
@@ -1038,7 +1013,6 @@ void GameLoop::handle_cheat_mana(const ClientCmd& cmd) {
 void GameLoop::handle_cheat_revive(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     game_map.revive_player(name);
-
  
     GameMsg msg(MSG_CHEAT_RESPAWN);
     msg.set_player_name(name);
@@ -1066,7 +1040,7 @@ void GameLoop::handle_clan_foundation(const ClientCmd& cmd) {
     std::string clan_name = cmd.get_target_name();
     GameMsg clan_msg(MSG_FOUND_CLAN);
     if (!game_map.found_clan(player_name, clan_name)) {
-        clan_msg.set_chat_content("Ya existe un clan con el nombre: " + clan_name);
+        clan_msg.set_chat_content("No pudiste fundar el clan " + clan_name + ": ya existe un clan con ese nombre o ya perteneces a otro clan");
         client_registry_monitor.notify_client(cmd.get_client_id(), clan_msg);
     } else {
         clan_msg.set_chat_content("Jugador " + player_name + " fundó el clan " + clan_name);
@@ -1186,7 +1160,6 @@ void GameLoop::update_npcs_in_map(){
     }
 }
 
-
 void GameLoop::run() {
     load_world();
     const auto& cfg = GameConfig::instance();
@@ -1207,7 +1180,6 @@ void GameLoop::run() {
 
     while (should_keep_running()) {
         next_tick += tick_rate;
-
         try {
             ClientCmd cmd;
             while (receiving_queue.try_pop(cmd)) {
@@ -1252,7 +1224,6 @@ void GameLoop::run() {
                         client_registry_monitor.notify_client_by_name(attack.victim_name, inv_msg);
                         broadcast_player_equipment(attack.victim_name);
                     }
-
                 }
                 broadcast_npcs_snapshot();
             }
@@ -1269,9 +1240,7 @@ void GameLoop::run() {
                 persist_clans();
             }
         }
-        catch (... ) {
-            //
-        }
+        catch (... ) {}
         std::this_thread::sleep_until(next_tick);
     }
 }

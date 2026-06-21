@@ -35,7 +35,7 @@ private:
     int walk_frame = 0;
     bool has_equipped_weapon = false;
 
-    ViewDirection current_direction = ViewDirection::BACK;
+    ViewDirection current_direction = ViewDirection::FRONT;
     // Categoría de item equipable: decide CÓMO se posiciona el sprite sobre el
     // personaje (mano animada, torso fijo, cabeza). Ver draw_equipped_item.
     enum class EquipKind { WEAPON, SHIELD, ARMOR, HELMET };
@@ -93,11 +93,6 @@ public:
     SDL_FRect left_pov(ViewDirection direction);
     SDL_FRect front_pov(ViewDirection direction);
     SDL_FRect back_pov(ViewDirection direction);
-
-    // void move_up();
-    // void move_down();
-    // void move_left();
-    // void move_right();
 
     int get_x();
     int get_y();

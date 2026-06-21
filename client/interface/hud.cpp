@@ -238,12 +238,6 @@ void HUD::drawItems() {
     }
 }
 
-void HUD::drawInventoryItems() {
-
-    // Items del inventario en slots
-    drawItems();
-}
-
 void HUD::drawBigStat(SDL_Texture* tex, float pos_y, int current, int max, TextCache& cache) {
     float tex_w, tex_h;
     SDL_GetTextureSize(tex, &tex_w, &tex_h);
@@ -502,7 +496,7 @@ void HUD::render() {
         SDL_RenderTexture(gui_renderer, game_texture, nullptr, &bg_dest);
     }
 
-    drawInventoryItems();
+    drawItems();
     drawGold();
     drawHp();
     drawMana();

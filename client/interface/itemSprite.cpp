@@ -25,9 +25,7 @@ void ItemSprite::draw(const Camera& camera, SDL_FRect src_crop) {
     const float SIZE_FACTOR = 0.6f; 
     float max_size = static_cast<float>(tile_size) * SIZE_FACTOR;
     float scale = SDL_min(max_size / tex_w, max_size / tex_h);
-    // Opcional: Evitar que ítems minúsculos se estiren y se vean borrosos.
-    // Si querés que los íconos muy chiquitos mantengan su tamaño original, descomentá esto:
-    // scale = SDL_min(1.0f, scale); 
+    scale = SDL_min(1.0f, scale); 
     float dest_w = tex_w * scale;
     float dest_h = tex_h * scale;
     SDL_FRect dest {
