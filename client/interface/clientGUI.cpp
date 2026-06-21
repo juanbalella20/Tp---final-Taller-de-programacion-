@@ -321,9 +321,13 @@ void ClientGUI::handleEvents() {
         }
 
         switch (event.type) {
-            case SDL_EVENT_QUIT:
+            case SDL_EVENT_QUIT: {
+                ClientCmd logout_cmd;
+                logout_cmd.set_message_type(MSG_LOGOUT);
+                outgoing.try_push(logout_cmd);
                 is_running = false;
                 break;
+            }
             case SDL_EVENT_KEY_DOWN:
                 if (event.key.scancode == SDL_SCANCODE_T) {
                     if (!(mini_chat->is_active())) {
@@ -1534,6 +1538,9 @@ void ClientGUI::run() {
         while (is_running && should_keep_running()) {
             handleEvents();
             if (scape_window && scape_window->consume_exit_confirmed()) {
+                ClientCmd logout_cmd;
+                logout_cmd.set_message_type(MSG_LOGOUT);
+                outgoing.try_push(logout_cmd);
                 is_running = false;
                 break;
             }
