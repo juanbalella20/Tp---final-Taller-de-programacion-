@@ -423,6 +423,10 @@ static bool is_adyacent(const positionCoord& a, const positionCoord& b) {
     return std::abs(a.x - b.x) + std::abs(a.y - b.y) <= 1;
 }
 
+static bool same_position(const positionCoord& a, const positionCoord& b) {
+    return a.x == b.x && a.y == b.y;
+}
+
 NPCseller* ZoneWorld::seller_adjacent_to(int px, int py) {
     positionCoord player_pos{px, py};
     for (auto& s : sellers) {
@@ -493,10 +497,10 @@ std::string ZoneWorld::get_adjacent_friendly_type(int px, int py) {
 
 std::unique_ptr<Item> ZoneWorld::take_item_near(int px, int py) {
     positionCoord player_pos{px, py};
-    // Items: cualquiera adyacente
+    // Items: encima (misma posicion)
     auto item_it = std::find_if(ground_items.begin(), ground_items.end(),
         [&player_pos](const groundItem& g_item) {
-            return is_adyacent(g_item.pos, player_pos);
+            return same_position(g_item.pos, player_pos);
         });
 
     if (item_it != ground_items.end()) {

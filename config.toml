@@ -484,7 +484,7 @@ num_items = 5
 allowed_items = ["vara_fresno", "baculo_nudoso", "tunica_azul", "sombrero_magico", "pocion_mana"]
 
 [zones.dungeon]
-map = "data/maps/dungeon/dungeon-v1.bin"
+map = "data/maps/dungeon/dungeon.bin"
 allowed_npcs = ["skeleton3", "zombie", "orc", "golem2", "spider3"]
 num_npc = 12
 num_items = 8

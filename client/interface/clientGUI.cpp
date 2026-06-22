@@ -922,6 +922,7 @@ void ClientGUI::drawOtherPlayers() {
         }
         PlayerDisplay& pd = it->second;
         pd.setTilePosition(p.x, p.y);
+        pd.update_motion();  // mismo deslizamiento que el player local
         pd.set_equipped_weapon(p.has_equipped_weapon);
         pd.set_equipped_items(p.equipped_ids);
         pd.set_ghost(p.ghost);
@@ -1198,6 +1199,9 @@ void ClientGUI::drawItems() {
 }
 
 void ClientGUI::draw() {
+    // Desliza el sprite hacia su tile (movimiento suave).
+    player->update_motion();
+
     // centrar camara en el jugador (en el centro del tile) y limitar al mapa
     const int tileSize = tilemap ? tilemap->getTileSize() : TILE_SIZE;
     camera.center_on(player->get_x() + tileSize / 2.0f,

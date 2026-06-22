@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include <iostream>
+#include <cmath>
 
 PlayerDisplay::PlayerDisplay(SDL_Renderer* renderer, const std::string& imagePath, int tileSize,
     const std::string& race)
@@ -92,22 +93,33 @@ PlayerDisplay& PlayerDisplay::operator=(PlayerDisplay&& other) noexcept {
     return *this;
 }
 
-void PlayerDisplay::setPosition(float x, float y) {
-    rect.x = x;
-    rect.y = y;
+void PlayerDisplay::setTilePosition(int col, int row) {
+    tile_col = col;
+    tile_row = row;
+    const float tx = static_cast<float>(col * tileSize);
+    const float ty = static_cast<float>(row * tileSize);
+    // Si el destino esta a mas de SNAP_TILES de la posicion visual, es un teleport
+    // (spawn, cambio de zona, aparicion): se salta directo en vez de deslizar.
+    if (std::abs(tx - rect.x) > tileSize * SNAP_TILES ||
+        std::abs(ty - rect.y) > tileSize * SNAP_TILES) {
+        rect.x = tx;
+        rect.y = ty;
+    }
 }
 
-void PlayerDisplay::setTilePosition(int col, int row) {
-    rect.x = static_cast<float>(col * tileSize);
-    rect.y = static_cast<float>(row * tileSize);
+void PlayerDisplay::update_motion() {
+    // Por cada frame, el sprite avanza una fracción (el SMOOTH%) de la distancia 
+    // que le falta hasta su tile destino
+    rect.x += (static_cast<float>(tile_col * tileSize) - rect.x) * SMOOTH;
+    rect.y += (static_cast<float>(tile_row * tileSize) - rect.y) * SMOOTH;
 }
 
 int PlayerDisplay::getTileX() const {
-    return static_cast<int>(rect.x) / tileSize;
+    return tile_col;
 }
 
 int PlayerDisplay::getTileY() const {
-    return static_cast<int>(rect.y) / tileSize;
+    return tile_row;
 }
 
 void PlayerDisplay::reset_frame() {
