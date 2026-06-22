@@ -81,6 +81,26 @@ class ItemSprite {
     + draw(camera: Camera, src: SDL_FRect): void
 }
 
+class TextureLoader {
+    - window: SDL_Window*
+    - renderer: SDL_Renderer*
+    - player_texture: SDL_Texture*
+    - enemies_textures: map<string, SDL_Texture*>
+    - spell_effects_textures: map<string, SDL_Texture*>
+    - item_textures: map<string, SDL_Texture*>
+
+    + TextureLoader(window: SDL_Window*, renderer: SDL_Renderer*)
+    + TextureLoader(renderer: SDL_Renderer*)
+    + load_game_logo(): void
+    + load_npcs_enemies(): void
+    + get_texture_of_npc_enemy(npc_name: string): SDL_Texture*
+    + get_texture_of_spell(spell_id: string): SDL_Texture*
+    + get_texture_of_item(item: string): SDL_Texture*
+    + load_npcs_friendlies(): void
+    + load_spell_effects(): void
+    + load_items(): void
+}
+
 ClientGUI -up-|> Thread
 
 ClientGUI *-- MiniChat
@@ -89,5 +109,8 @@ ClientGUI *-- PlayerDisplay
 
 ClientGUI ..> NpcSprite : <<uses>>
 ClientGUI ..> ItemSprite : <<uses>>
+ClientGUI ..> TextureLoader : <<uses>>
+HUD ..> TextureLoader : <<uses>>
+PlayerDisplay ..> TextureLoader : <<uses>>
 
 @enduml
