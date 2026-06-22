@@ -30,7 +30,7 @@
 
 #### Agustín Trombetta
 
-- Editor gráfico (todo menos las Tools) + Creación de mapas
+- Editor gráfico + Creación de mapas
 - Lógica teleports
 - Lógica zonas
 - Lógica de spawn de enemigos por zonas
@@ -54,7 +54,6 @@
 - clases multimedia como musica y sonido
 - cambio a multijugador
 - estructura del protocolo del cliente al servidor(la vuelta fue realizada entre  por todos)
--  Editor de mapa => SOLO las toolS
 
 #### Mercedes González Lago
 - Implementación MiniChat
@@ -137,5 +136,6 @@
 - [Creating debian packages — CMake](https://karthikkalyanaraman.medium.com/creating-debian-packages-cmake-e519a0186e87)
 - [Packaging a C/C++ Application into a .deb package for Debian/Ubuntu: An Easy Guide for Beginners](https://medium.com/codecurrent/packaging-a-c-c-application-into-a-deb-package-for-debian-ubuntu-an-easy-guide-for-beginners-651665000660)
 [Global Tile IDs](https://doc.mapeditor.org/en/stable/reference/global-tile-ids/)
-
+[Flood Fill](https://www.algorithm-archive.org/contents/flood_fill/flood_fill.html)
+[Flood Fill 2](https://usaco.guide/silver/flood-fill?lang=cpp)
 
