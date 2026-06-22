@@ -1208,6 +1208,7 @@ void ClientGUI::draw() {
                         static_cast<float>(tilemap->getPixelHeight()));
     }
 
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
     // El mundo se dibuja dentro del hueco transparente del frame. El viewport

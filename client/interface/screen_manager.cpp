@@ -13,7 +13,7 @@ ScreenManager::ScreenManager(std::string host, std::string port)
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         throw std::runtime_error(std::string("SDL_Init: ") + SDL_GetError());
     }
-    window = SDL_CreateWindow(WINDOW_NAME, INITIAL_WIDTH, INITIAL_HEIGHT, 0);
+    window = SDL_CreateWindow(WINDOW_NAME, INITIAL_WIDTH, INITIAL_HEIGHT, SDL_WINDOW_RESIZABLE);
     if (!window) {
         throw std::runtime_error(std::string("SDL_CreateWindow: ") + SDL_GetError());
     }
