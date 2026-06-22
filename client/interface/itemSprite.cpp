@@ -1,12 +1,13 @@
 #include "itemSprite.h"
 
 ItemSprite::ItemSprite(SDL_Renderer* renderer, SDL_Texture* texture, int tile_x, 
-    int tile_y, int tile_size):
+    int tile_y, int tile_size, float scale_factor):
             renderer(renderer), 
             texture(texture), 
             tile_x(tile_x), 
             tile_y(tile_y), 
-            tile_size(tile_size) {}
+            tile_size(tile_size),
+            scale_factor(scale_factor) {}
 
 void ItemSprite::draw(const Camera& camera, SDL_FRect src_crop) {
     const float wx = static_cast<float>(tile_x * tile_size);
@@ -22,8 +23,7 @@ void ItemSprite::draw(const Camera& camera, SDL_FRect src_crop) {
         SDL_GetTextureSize(texture, &tex_w, &tex_h);
     }
 
-    const float SIZE_FACTOR = 0.6f; 
-    float max_size = static_cast<float>(tile_size) * SIZE_FACTOR;
+    float max_size = static_cast<float>(tile_size) * scale_factor;
     float scale = SDL_min(max_size / tex_w, max_size / tex_h);
     scale = SDL_min(1.0f, scale); 
     float dest_w = tex_w * scale;
