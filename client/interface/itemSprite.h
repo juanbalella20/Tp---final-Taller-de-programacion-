@@ -11,10 +11,11 @@ class ItemSprite : public WorldEntity {
     int tile_x;
     int tile_y;
     int tile_size;
+    float scale_factor;
 
 public:
     ItemSprite(SDL_Renderer* renderer, SDL_Texture* texture,
-              int tile_x, int tile_y, int tile_size);
+              int tile_x, int tile_y, int tile_size, float scale_factor);
 
     void draw(const Camera& camera, SDL_FRect src_crop) override;
 };
