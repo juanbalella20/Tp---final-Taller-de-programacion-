@@ -29,7 +29,6 @@ private:
   bool open_ = false;
   bool exit_confirmed_ = false;
 
-  SDL_Texture *background = nullptr;
   static constexpr float ART_W = 1263.0f;
   static constexpr float ART_H = 896.0f;
 
