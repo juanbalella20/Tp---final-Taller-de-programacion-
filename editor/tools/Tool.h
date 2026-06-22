@@ -3,24 +3,20 @@
 
 #include <vector>
 
-#include "../document/CellChange.h"
-
 #include "../model/Map.h"
 
-/*
- * Estrategia de edicion. Una Tool NO muta el Map directamente: dado el estado
- * del mapa y una celda, devuelve los CellChange a aplicar sobre la capa activa.
- * El EditorDocument es quien los aplica al Map.
- *
- * Implementaciones: PencilTool, EraserTool, FillTool (editor/tools/*.cpp).
- *
- */
+struct CellChange {
+  int x;
+  int y;
+  int gid;
+};
+
 class Tool {
 public:
   virtual ~Tool() = default;
 
-  // Inicio de un gesto (click). Devuelve los cambios a aplicar (puede ser
-  // vacio si no hay nada que cambiar). 'active_gid' es el brush seleccionado.
+  // Devuelve los cambios a aplicar (vacio si no hay nada que cambiar). 
+  // 'active_gid' es el tile seleccionado.
   virtual std::vector<CellChange> on_press(const Map &map, int layer, int x,
                                            int y, int active_gid) = 0;
 

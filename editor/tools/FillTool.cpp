@@ -5,12 +5,14 @@
 #include "../model/Map.h"
 
 // Flood fill 4-conexo desde (x,y): cambia la region contigua con el mismo gid
-// original por active_gid. Solo actua en el press (on_drag devuelve {}).
-
+// original por active_gid.
 std::vector<CellChange> FillTool::on_press(const Map &map, int layer, int x,
                                            int y, int active_gid) {
   if (!map.in_bounds(x, y))
     return {};
+
+  if (layer != Map::Ground)
+    return {}; // solo se pinta layer de suelo
 
   int target = map.get_cell(layer, x, y);
   if (target == active_gid)
@@ -32,12 +34,13 @@ std::vector<CellChange> FillTool::on_press(const Map &map, int layer, int x,
     auto [cx, cy] = stack.back();
     stack.pop_back();
 
-    // Solo expandimos por celdas que tengan el gid original.
+    // Solo se expanden por celdas que tengan el gid original.
     if (map.get_cell(layer, cx, cy) != target)
       continue;
 
-    changes.push_back(CellChange{cx, cy, target, active_gid});
+    changes.push_back(CellChange{cx, cy, active_gid});
 
+    // Recorre los vecinos 4-conexos
     const int dx[4] = {1, -1, 0, 0};
     const int dy[4] = {0, 0, 1, -1};
     for (int i = 0; i < 4; ++i) {

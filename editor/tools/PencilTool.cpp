@@ -9,10 +9,9 @@ static std::vector<CellChange> paint_cell(const Map &map, int layer, int x,
                                           int y, int gid) {
   if (!map.in_bounds(x, y))
     return {};
-  int old_gid = map.get_cell(layer, x, y);
-  if (old_gid == gid)
+  if (map.get_cell(layer, x, y) == gid)
     return {};
-  return {CellChange{x, y, old_gid, gid}};
+  return {CellChange{x, y, gid}};
 }
 
 std::vector<CellChange> PencilTool::on_press(const Map &map, int layer, int x,

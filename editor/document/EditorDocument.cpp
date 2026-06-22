@@ -179,7 +179,7 @@ void EditorDocument::toggle_teleport(int x, int y) {
 void EditorDocument::apply_changes_live(std::vector<CellChange> changes) {
   // Aplica cada cambio al Map en vivo y avisa al canvas para que repinte.
   for (const CellChange &c : changes) {
-    map_.set_cell(gesture_layer_, c.x, c.y, c.new_gid);
+    map_.set_cell(gesture_layer_, c.x, c.y, c.gid);
     emit cellChanged(gesture_layer_, c.x, c.y);
   }
   if (!changes.empty())

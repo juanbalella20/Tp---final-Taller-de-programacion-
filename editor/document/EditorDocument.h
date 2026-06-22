@@ -10,7 +10,6 @@
 
 #include "../model/Map.h"
 #include "../tools/ToolType.h"
-#include "CellChange.h"
 #include "TileBrush.h"
 #include "Tool.h"
 

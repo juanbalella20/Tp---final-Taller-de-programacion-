@@ -9,10 +9,9 @@ static std::vector<CellChange> erase_cell(const Map &map, int layer, int x,
                                           int y) {
   if (!map.in_bounds(x, y))
     return {};
-  int old_gid = map.get_cell(layer, x, y);
-  if (old_gid == 0)
+  if (map.get_cell(layer, x, y) == 0)
     return {};
-  return {CellChange{x, y, old_gid, 0}};
+  return {CellChange{x, y, 0}};
 }
 
 std::vector<CellChange> EraserTool::on_press(const Map &map, int layer, int x,
