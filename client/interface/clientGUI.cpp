@@ -22,10 +22,8 @@ ClientGUI::ClientGUI(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,
       hud(nullptr), own_name(player_name), race(player_race), own_clan(player_clan),
       player(nullptr), tilemap(nullptr),
       zone_music(nullptr),
-      frame_texture(nullptr), item_texture(nullptr), gold_texture(nullptr),
       camera((float)GAME_VIEW_W, (float)GAME_VIEW_H),
       current_zone(static_cast<Zone>(0xFF)),
-      seller_texture(nullptr), banker_texture(nullptr), priest_texture(nullptr),
       selected_npc_tile_x(-1), selected_npc_tile_y(-1) {}
 
 
