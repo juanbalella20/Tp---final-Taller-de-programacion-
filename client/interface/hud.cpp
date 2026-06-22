@@ -428,12 +428,6 @@ void HUD::drawEquipStatus() {
         float row_y = first_y + drawn * row_h;
         ++drawn;
 
-        // Ícono del item (reutiliza el mapeo id->textura/crop del inventario).
-        float icon_slot = icon_sz * scale_x;
-        float icon_x = (content_x + icon_pad) * scale_x;
-        float icon_y = (row_y + (row_h - icon_sz) / 2.0f) * scale_y;
-        drawIconItem(*item, icon_x, icon_y, icon_slot);
-
         // Texto "<Tipo> Equipado / No equipado" a la derecha del ícono. El color
         // marca el estado (verde = equipado, rojo = no).
         std::string text = std::string(row.label) +
@@ -443,10 +437,10 @@ void HUD::drawEquipStatus() {
         TextCache& cache = equip_status_caches[cache_idx++];
         update_text_cache(cache, text, color);
         if (cache.texture) {
-            float text_scale = 0.60f;
+            float text_scale = 0.80f;
             float tw = cache.w * text_scale;
             float th = cache.h * text_scale;
-            float text_x = (content_x + icon_pad * 2.0f + icon_sz) * scale_x;
+            float text_x = content_x * scale_x - 7.0f;
             float text_y = (row_y * scale_y) + (row_h * scale_y - th) / 2.0f;
             SDL_FRect dest = { text_x, text_y, tw, th };
             SDL_RenderTexture(gui_renderer, cache.texture, nullptr, &dest);
@@ -464,7 +458,7 @@ void HUD::display_player_info(const std::string& player_name) {
 
     update_text_cache(name_text_cache, player_name, color);
     if (name_text_cache.texture) {
-        float scale = 0.90f;
+        float scale = 1.5f;
         float text_width = name_text_cache.w * scale;
         float text_start_x = center_x - (text_width / 2.0f);
         SDL_FRect dest = { text_start_x, text_start_y, text_width, name_text_cache.h * scale };
@@ -476,7 +470,7 @@ void HUD::display_player_info(const std::string& player_name) {
 
     update_text_cache(level_text_cache, level_text, color);
     if (level_text_cache.texture) {
-        float scale = 0.70f;
+        float scale = 1.0f;
         float text_width = level_text_cache.w * scale;
         float text_start_x = center_x - (text_width / 2.0f);
         SDL_FRect dest = { text_start_x, text_start_y, text_width, level_text_cache.h * scale };

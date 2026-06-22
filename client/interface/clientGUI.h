@@ -130,12 +130,6 @@ private:
     // MSG_UPDATE_EQUIP. Sirve para detectar cuando se equipa una defensa NUEVA y
     // reproducir el sonido de equipacion solo en ese caso (no al desequipar).
     std::set<std::string> equipped_defense_uids;
-    SDL_Texture* frame_texture;
-    SDL_Texture* item_texture;
-    SDL_Texture* gold_texture;
-    // Textura y recorte del sprite de cada item del piso, por id de item.
-    std::map<std::string, SDL_Texture*> floor_item_textures;
-    std::map<std::string, SDL_FRect> floor_item_crops;
 
     // --- Tomar una poción manteniendo el click IZQUIERDO 3s sobre su slot ---
     // Mientras se mantiene presionado, se dibuja un anillo de progreso alrededor
@@ -147,9 +141,6 @@ private:
     uint64_t potion_hold_start_ms = 0;      // SDL_GetTicks al empezar el hold
     SDL_FRect potion_hold_slot_rect = {0, 0, 0, 0};  // rect en pantalla del slot
 
-    SDL_Texture* seller_texture;
-    SDL_Texture* banker_texture;
-    SDL_Texture* priest_texture;
     Camera camera;
     SDL_FRect player_pov;
     Zone current_zone;

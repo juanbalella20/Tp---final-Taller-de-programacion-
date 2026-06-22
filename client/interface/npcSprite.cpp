@@ -21,17 +21,29 @@ NpcSprite::NpcSprite(SDL_Renderer* renderer, SDL_Texture* texture,
 void NpcSprite::draw(const Camera& camera, SDL_FRect src_crop) {
     const float wx = static_cast<float>(tile_x * tile_size);
     const float wy = static_cast<float>(tile_y * tile_size);
-    const float rendered_size = static_cast<float>(tile_size) * size_scale;
-    const float foot_offset = static_cast<float>(tile_size) - rendered_size;
-    SDL_FRect dst{
-        camera.world_to_screen_x(wx),
-        camera.world_to_screen_y(wy) + foot_offset,
-        rendered_size,
-        rendered_size
-    };
+
     // Si el crop tiene area, recorta ese tile del spritesheet 
     // si viene vacio, dibuja la textura completa.
     const bool has_crop = src_crop.w > 0.0f && src_crop.h > 0.0f;
+    float dst_h = static_cast<float>(tile_size) * size_scale;
+    float dst_w = dst_h;
+    float center_x_offset = 0.0f;
+
+    if (has_crop) {
+        float aspect_ratio = src_crop.w / src_crop.h;
+        dst_w = dst_h * aspect_ratio;
+        center_x_offset = (static_cast<float>(tile_size) * size_scale - dst_w) / 2.0f;
+    }
+
+    const float foot_offset = static_cast<float>(tile_size) - dst_h;
+
+    SDL_FRect dst{
+        camera.world_to_screen_x(wx) + center_x_offset,
+        camera.world_to_screen_y(wy) + foot_offset,
+        dst_w,
+        dst_h
+    };
+    
     SDL_RenderTexture(renderer, texture, has_crop ? &src_crop : nullptr, &dst);
 }
 
