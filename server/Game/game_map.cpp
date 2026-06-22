@@ -212,11 +212,6 @@ GameMap::MoveResult GameMap::try_move(Direction dir, const std::string& player_n
     if (world.has_actor_at(new_x, new_y, here)) {
         return {false, player_name, current_x, current_y};
     }
-    // Item en el piso: bloquea solo a los jugadores vivos. Un fantasma
-    // (jugador muerto) puede pasar por encima de cualquier item.
-    if (!player->is_ghost() && world.has_ground_item_at(new_x, new_y)) {
-        return {false, player_name, current_x, current_y};
-    }
 
     player->update_position(new_x, new_y);
     player_zone[player_name] = zone_id_of(player_name);
