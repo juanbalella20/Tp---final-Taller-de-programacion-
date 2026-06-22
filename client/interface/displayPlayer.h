@@ -22,6 +22,11 @@ private:
     SDL_FRect head_pov;
     TextureLoader texture_loader;
     int tileSize;
+
+    int tile_col = 0;
+    int tile_row = 0;
+    static constexpr float SNAP_TILES = 3.0f;
+    static constexpr float SMOOTH = 0.25f;
     const bool* keystate;
     bool ghost = false;
     std::string race;
@@ -79,11 +84,11 @@ public:
 
     // Setea la posicion segun coords en celdas (las que manda el server).
     void setTilePosition(int col, int row);
+    // Acerca la posicion visual (rect) hacia su tile. Se llama una vez por frame.
+    void update_motion();
     // Posicion actual en celdas (derivada de rect / tileSize).
     int getTileX() const;
     int getTileY() const;
-    // Setea la posicion en pixels (legacy; preferir setTilePosition).
-    void setPosition(float x, float y);
     void set_ghost(bool ghost);
     bool is_ghost() const;
     void set_equipped_weapon(bool has_weapon);
