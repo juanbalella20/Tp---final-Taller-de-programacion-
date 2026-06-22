@@ -1185,14 +1185,14 @@ void ClientGUI::drawItems() {
     for (const auto& item : items_on_floor) {
         SDL_Texture* tex = nullptr;
         SDL_FRect crop = {0.0f, 0.0f, 0.0f, 0.0f};
-        float scale = 0.6f;
+        float scale = 0.8f;
         if (item.type == "gold") {
             tex = texture_loader.get_gold_texture();
             if (!tex) continue;
         } else {
             tex = texture_loader.get_texture_of_item(item.type);
             if (!tex) continue;
-            if (item.type == "pocion_vida" || item.type == "pocion_mana") scale = 0.4f;
+            if (item.type == "pocion_vida" || item.type == "pocion_mana") scale = 0.6f;
         }
         ItemSprite(renderer, tex, item.x, item.y, tileSize, scale).draw(camera, crop);
     }
