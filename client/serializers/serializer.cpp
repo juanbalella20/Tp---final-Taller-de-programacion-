@@ -40,6 +40,7 @@ Serializer::Serializer() {
     handlers[MSG_CHEAT_MANA] = [this](const ClientCmd& cmd) { return serialize_gold(MSG_CHEAT_MANA, cmd); };
     handlers[MSG_SELF_CAST] = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_SELF_CAST); };
     handlers[MSG_PRIVATE] = [this](const ClientCmd& cmd) { return serialize_private(cmd); };
+    handlers[MSG_LOGOUT]  = [this](const ClientCmd& cmd) { return serialize_no_payload(MSG_LOGOUT); };
 }
 
 void Serializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t payload_len) {

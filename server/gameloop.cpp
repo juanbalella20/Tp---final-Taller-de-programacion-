@@ -331,7 +331,10 @@ void GameLoop::handle_login(const ClientCmd& cmd) {
 }
 
 void GameLoop::handle_logout(const ClientCmd& cmd) {
-    const std::string& name = cmd.get_player_name();
+    // Resolver el nombre por client_id como el resto de los handlers: el MSG_LOGOUT
+    // puede llegar por el mensaje de red (sin nombre en el payload) o sintetizado
+    // desde clientHandler al cerrarse el socket. El registry es la fuente confiable.
+    std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     if (name.empty() || !game_map.player_exists(name)) {
         selected_npc.erase(cmd.get_client_id());
         return;
