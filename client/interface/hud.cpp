@@ -464,7 +464,7 @@ void HUD::display_player_info(const std::string& player_name) {
 
     update_text_cache(name_text_cache, player_name, color);
     if (name_text_cache.texture) {
-        float scale = 0.90f;
+        float scale = 1.5f;
         float text_width = name_text_cache.w * scale;
         float text_start_x = center_x - (text_width / 2.0f);
         SDL_FRect dest = { text_start_x, text_start_y, text_width, name_text_cache.h * scale };
@@ -476,7 +476,7 @@ void HUD::display_player_info(const std::string& player_name) {
 
     update_text_cache(level_text_cache, level_text, color);
     if (level_text_cache.texture) {
-        float scale = 0.70f;
+        float scale = 1.0f;
         float text_width = level_text_cache.w * scale;
         float text_start_x = center_x - (text_width / 2.0f);
         SDL_FRect dest = { text_start_x, text_start_y, text_width, level_text_cache.h * scale };
