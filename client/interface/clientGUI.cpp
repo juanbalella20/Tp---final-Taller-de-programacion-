@@ -881,13 +881,17 @@ void ClientGUI::draw_npc_friends() {
     const int tileSize = tilemap->getTileSize();
     for (const auto& npc : npcs) {
         SDL_Texture* tex = nullptr;
-        if (npc.type == "seller") tex = texture_loader.get_seller_texture();
-        else if (npc.type == "banker") tex = texture_loader.get_banker_texture();
-        else if (npc.type == "priest") tex = texture_loader.get_priest_texture();
+        SDL_FRect crop = {2.0f, 0.0f, 23.0f, 45.0f};
+        if (npc.type == "seller") {
+            tex = texture_loader.get_seller_texture();
+        } else if (npc.type == "banker") {
+            tex = texture_loader.get_banker_texture();
+            crop.w = 24.0f;
+            crop.h = 47.0f;
+        } else if (npc.type == "priest") tex = texture_loader.get_priest_texture();
         else continue;
         if (!tex) continue;
-        SDL_FRect src = {0.0f, 0.0f, 30.0f, 40.0f};
-        NpcSprite(renderer, tex, npc.x, npc.y, tileSize).draw(camera, src);
+        NpcSprite(renderer, tex, npc.x, npc.y, tileSize).draw(camera, crop);
     }
 }
 
