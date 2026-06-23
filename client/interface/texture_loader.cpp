@@ -210,7 +210,6 @@ void TextureLoader::load_items() {
 
 void TextureLoader::load_head_for_race(const std::string& race) {
     SDL_Surface* head_surf = nullptr;
-    SDL_Surface* hat_surf = nullptr;
 
     std::string path;
     if (race == "human") {
@@ -226,7 +225,14 @@ void TextureLoader::load_head_for_race(const std::string& race) {
         path = paths::asset("imagenes/426.png");
         head_surf = IMG_Load(path.c_str());
     
-        load_specific("imagenes/437.png", &hat_texture);
+        try { 
+            load_specific("imagenes/437.png", &hat_texture);
+        } catch (...) {
+            if (head_surf) {
+                SDL_DestroySurface(head_surf);
+            }
+            throw;
+        }
     }
 
     if (!head_surf) {
