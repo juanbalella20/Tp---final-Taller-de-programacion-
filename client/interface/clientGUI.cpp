@@ -582,9 +582,7 @@ void ClientGUI::update() {
                     break;
                 }
                 case MSG_PRIVATE:
-                    // El servidor solo envia el privado al destinatario, asi que
-                    // todo MSG_PRIVATE recibido es para nosotros. player_name es
-                    // el remitente (ya incluido en el chat_content como "nick> ...").
+                
                     chat_inbox.push(msg.get_chat_content());
                     break;
                 case MSG_MEDITATE:
