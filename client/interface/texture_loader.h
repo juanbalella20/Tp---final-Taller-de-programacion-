@@ -97,6 +97,7 @@ public:
 
     void freeSDL();
 
+    ~TextureLoader();
 };
 
 #endif

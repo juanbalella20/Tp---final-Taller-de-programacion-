@@ -210,7 +210,6 @@ void TextureLoader::load_items() {
 
 void TextureLoader::load_head_for_race(const std::string& race) {
     SDL_Surface* head_surf = nullptr;
-    SDL_Surface* hat_surf = nullptr;
 
     std::string path;
     if (race == "human") {
@@ -226,7 +225,14 @@ void TextureLoader::load_head_for_race(const std::string& race) {
         path = paths::asset("imagenes/426.png");
         head_surf = IMG_Load(path.c_str());
     
-        load_specific("imagenes/437.png", &hat_texture);
+        try { 
+            load_specific("imagenes/437.png", &hat_texture);
+        } catch (...) {
+            if (head_surf) {
+                SDL_DestroySurface(head_surf);
+            }
+            throw;
+        }
     }
 
     if (!head_surf) {
@@ -277,8 +283,6 @@ void TextureLoader::freeSDL() {
     free_texture(&mana_bar_texture);
     free_texture(&shop_texture);
 
-    // Texturas extra de items del piso (las que no son item_texture, p. ej. escudo).
-    // Se saltea gold_texture: lo comparten las pociones del piso y se libera aparte.
     for (auto& kv : item_textures) {
         if (kv.second) {
             SDL_DestroyTexture(kv.second);
@@ -299,4 +303,8 @@ void TextureLoader::freeSDL() {
         }
     }
     enemies_textures.clear();
+}
+
+TextureLoader::~TextureLoader() {
+    freeSDL();
 }
