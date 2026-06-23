@@ -32,8 +32,8 @@ class ScreenManager {
     // Construye la pantalla correspondiente al estado dado (nullptr para GAME/EXIT).
     std::unique_ptr<Screen> make_screen(ScreenState state, AuthSession& session);
 
-    // Aplica a la ventana compartida la resolucion / pantalla completa elegidas
-    // en el launcher. Persiste hasta el juego porque el window es el mismo.
+    // Aplica a la ventana compartida el modo de pantalla elegido en el launcher.
+    // Persiste hasta el juego porque el window es el mismo.
     void apply_window_settings(const WindowSettings& settings);
 
  public:
