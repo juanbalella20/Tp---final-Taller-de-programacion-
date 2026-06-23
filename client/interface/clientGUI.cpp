@@ -1198,6 +1198,7 @@ void ClientGUI::drawItems() {
             tex = texture_loader.get_texture_of_item(item.type);
             if (!tex) continue;
             if (item.type == "pocion_vida" || item.type == "pocion_mana") scale = 0.6f;
+            if (item.type == "escudo_hierro") scale = 0.4f;
         }
         ItemSprite(renderer, tex, item.x, item.y, tileSize, scale).draw(camera, crop);
     }

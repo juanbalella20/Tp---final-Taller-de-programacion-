@@ -1,4 +1,4 @@
-# Manual de Proyecto — [Nombre del Proyecto]
+# Manual de Proyecto — Argentum
 
 ## Tabla de contenidos
 
@@ -14,7 +14,7 @@
 
 ## Integrantes del equipo
 
-| Nombre | Padrón | Contacto |
+| Nombre | Padrón | Github |
 |--------|--------|----------|
 | Juan Balella | 110271 | juanbalella20 |
 | Agustín Trombetta | 111754 | agus778 |
@@ -41,19 +41,19 @@
 - Seguimiento de la cámara al player
 - Lógica de los tiles y matriz
    - Dos tipos de tiles en mapa: Colisiones y Buildings, NPCs
-- Participación en lógica del juego
 
 #### Juan Balella
-- logica de ataque
-- logica de muerte
-- logica meditacion
+- Lógica de ataque
+- Lógica de muerte
+- Lógica meditacion
   - Estados del jugador
-  - logica de dropeo => algoritmo de Cheryshev
-- logica de defensa
-- logica de autospawn de npc
+  - Lógica de dropeo => algoritmo de Cheryshev
+- Lógica de defensa
+- Lógica de autospawn de npc
 - clases multimedia como musica y sonido
 - cambio a multijugador
-- estructura del protocolo del cliente al servidor(la vuelta fue realizada entre  por todos)
+- estructura del protocolo del cliente al servidor(la vuelta fue realizada entre todos)
+- Persistencia
 
 #### Mercedes González Lago
 - Implementación MiniChat
@@ -65,7 +65,8 @@
 - Implementación clanes
 - Movimiento (cambio de sprites) de npc hostiles
 - Ataque de npc hostiles a jugadores
-- Visualización de stats e info (oro, nombre y nivel) del jugador
+- Visualización de HUD: stats e info (oro, nombre y nivel) del jugador
+- Cargador de texturas
 
 #### Ignacio Mahmoud Abalos
 - Modelacion items
@@ -89,28 +90,10 @@
 | 25/05 al 31/05 | Implementar el comportamiento de NPC hostiles y amistosos, incluyendo movimiento, proximidad, ataques, sprites y límites por zona. Incorporar la muerte del jugador como fantasma, el cambio de zona, el HUD y la visualización y sincronización de otros jugadores. | **Completado:** acciones de los NPC amistosos, ataques de NPC, seguimiento de cámara, cambio entre zonas, spawn de otros jugadores, HUD y visualización de los movimientos y acciones de otros jugadores.Se realizo una estructura basica  del editor de mapas<br>**Pendiente:** movimiento de NPC hostiles, detección de proximidad de enemigos, límite máximo de NPC por zona o mapa, aparición del jugador como fantasma al morir y sprites correspondientes para los NPC amistosos. |
 | 01/06 al 07/06 | Implementar configuración, persistencia, clanes, pantalla inicial, niveles y experiencia, autoataque de NPC y finalizar el editor. Agregar las interfaces de tienda y banquero, además del sonido. | **Completado:** configuración, persistencia, clanes, pantalla inicial, lógica de niveles y experiencia, autoataque de NPC y finalización del editor.<br>**Pendiente:** visualización de la tienda y el banquero, música y sonidos.
  |
-| 08/06 al 11/06 | Completar la música y los sonidos, y terminar la presentación y el movimiento de todos los NPC. | Incorporamos la música y los sonidos. También completamos los sprites correspondientes y el movimiento de todos los NPC. |
-
-### Lo que no se llegó a realizar 
-
-
-- Movimiento con predicción
-- Que no tire la animacion de ataque, si no tiene mana suficiente
-- Movimiento de sprites de las armas
-- Algunos movimientos de sprites de NPCs
+| 08/06 al 15/06 | Completar la música y los sonidos, y terminar la presentación y el movimiento de todos los NPC. Re-ajuste en el editor de mapa, armar ejecutables, mejorar el log-out | Incorporamos la música y los sonidos. También completamos los sprites correspondientes y el movimiento de todos los NPC, editor de mapa: drag & drop, mejora en los tiles de NPCs y su movimiento, modularización, ajustar el ESC |
+| 16/06 al 22/06 | Mejoras visuales, video promocional, docuementación, limpieza de código, testing, corregir leaks | Mejoras visuales, video promocional, docuementación, limpieza de código, testing, corregir leaks |
 
 ---
-
-## Herramientas utilizadas
-
-### IDEs y editores
-
-| Herramienta | Uso |
-|-------------|-----|
-| VSCode      | Desarrollo general |
-| QT creator  | Exploración de librería QT en desarrollo del editor |
-
-
 
 ## Recursos
 
@@ -135,7 +118,7 @@
 - [QT-Widgets](https://youtu.be/RyJqcw0RXxk?si=sVZ-wCfwWrnSPJpz)
 - [Creating debian packages — CMake](https://karthikkalyanaraman.medium.com/creating-debian-packages-cmake-e519a0186e87)
 - [Packaging a C/C++ Application into a .deb package for Debian/Ubuntu: An Easy Guide for Beginners](https://medium.com/codecurrent/packaging-a-c-c-application-into-a-deb-package-for-debian-ubuntu-an-easy-guide-for-beginners-651665000660)
-[Global Tile IDs](https://doc.mapeditor.org/en/stable/reference/global-tile-ids/)
-[Flood Fill](https://www.algorithm-archive.org/contents/flood_fill/flood_fill.html)
-[Flood Fill 2](https://usaco.guide/silver/flood-fill?lang=cpp)
+- [Global Tile IDs](https://doc.mapeditor.org/en/stable/reference/global-tile-ids/)
+- [Flood Fill](https://www.algorithm-archive.org/contents/flood_fill/flood_fill.html)
+- [Flood Fill 2](https://usaco.guide/silver/flood-fill?lang=cpp)
 
