@@ -196,4 +196,5 @@ MiniChat::~MiniChat() {
     while (!msg_history.empty()) {
         pop_oldest_message();
     }
+    TTF_CloseFont(font);
 }
