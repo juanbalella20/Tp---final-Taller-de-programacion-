@@ -18,10 +18,8 @@ PlayerPersistence::PlayerPersistence(const std::string& data_dir) {
 }
 
 void PlayerPersistence::ensure_files(const std::string& data_dir) {
-    // Crea el directorio si no existe (modo 0755; ignora EEXIST).
     std::filesystem::create_directories(paths::config(data_dir));
 
-    // "Toca" ambos archivos: si no existen, los crea vacios sin truncar los que ya estan.
     std::string path = paths::config(players_path);
     std::ofstream(path, std::ios::binary | std::ios::app);
     path = paths::config(index_path);
@@ -37,7 +35,7 @@ void PlayerPersistence::load_index() {
     IndexEntry entry;
     while (in.read(reinterpret_cast<char*>(&entry), sizeof(entry))) {
         std::string name(entry.name, ::strnlen(entry.name, PERSIST_NAME_MAX));
-        // Si un nombre aparece mas de una vez (no deberia), gana la ultima entrada.
+
         index[name] = entry.offset;
     }
 }
@@ -74,7 +72,6 @@ void PlayerPersistence::save(const std::string& name, const PlayerRecord& rec) {
     std::string path = paths::config(players_path);
     auto it = index.find(name);
     if (it != index.end()) {
-        // Ya existe: reescritura in-place en su offset (no crece ningun archivo).
         std::fstream out(path, std::ios::binary | std::ios::in | std::ios::out);
         if (!out) throw std::runtime_error("PlayerPersistence: no se pudo abrir " + path);
         out.seekp(static_cast<std::streamoff>(it->second), std::ios::beg);
@@ -83,8 +80,6 @@ void PlayerPersistence::save(const std::string& name, const PlayerRecord& rec) {
         return;
     }
 
-    // Nuevo: append al final de players.dat. El offset es el tamaño previo del
-    // archivo (records de tamaño fijo).
     std::ofstream out(path, std::ios::binary | std::ios::app);
     if (!out) throw std::runtime_error("PlayerPersistence: no se pudo abrir " + path);
     out.seekp(0, std::ios::end);
@@ -92,7 +87,6 @@ void PlayerPersistence::save(const std::string& name, const PlayerRecord& rec) {
     out.write(reinterpret_cast<const char*>(&rec), sizeof(PlayerRecord));
     out.flush();
 
-    // Registra el offset en el indice (memoria) y lo appendea a index.dat (disco).
     index[name] = offset;
     append_index_entry(name, offset);
 }

@@ -58,14 +58,11 @@ void GameLoop::register_handlers() {
     handlers[MSG_CLAN_BAN]     = [this](const ClientCmd& cmd) { handle_clan_ban(cmd); };
 }
 
-
 void GameLoop::load_world() {
     load_maps();
-
 }
 
 void GameLoop::broadcast_npcs_snapshot() {
-    // Cada cliente ve los NPCs de SU zona
     for (const auto& [client_id, name] : client_registry_monitor.get_active_clients()) {
         if (name.empty() || !game_map.player_exists(name)) continue;
         GameMsg msg(MSG_NPCS_SNAPSHOT);
@@ -116,7 +113,6 @@ void GameLoop::load_maps() {
 }
 
 void GameLoop::notify_zone(Zone zone, const GameMsg& msg, const std::string& except_name) {
-    // Visibilidad por zona: solo ve el evento quien comparte la zona 'zone'.
     for (const auto& [client_id, name] : client_registry_monitor.get_active_clients()) {
         if (name.empty() || name == except_name) continue;
         if (!game_map.player_exists(name)) continue;
@@ -132,9 +128,7 @@ void GameLoop::send_players_snapshot_to(uint32_t client_id, const std::string& p
 }
 
 void GameLoop::send_player_snapshot_to_other_players(uint32_t client_id, const std::string& player_name, const std::string& player_race) {
-    // Avisa a los demás clientes DE LA MISMA ZONA que un nuevo jugador apareció.
-    // Solo incluye al jugador recién registrado, no a todos.
-    (void)client_id;  // ahora se filtra por nombre/zona, no por id
+    (void)client_id;
     const Player& p = game_map.get_player(player_name);
     GameMsg msg(MSG_PLAYERS_SNAPSHOT);
     PlayerInfo pi{player_name, player_race, 0, p.get_coord_x(), p.get_coord_y()};
@@ -156,7 +150,7 @@ void GameLoop::broadcast_players_snapshot() {
 void GameLoop::notify_own_clan(const std::string& player_name) {
     GameMsg msg(MSG_CLAN_UPDATE);
     msg.set_player_name(player_name);
-    msg.set_chat_content(game_map.clan_of(player_name));  // clan nuevo ("" si ninguno)
+    msg.set_chat_content(game_map.clan_of(player_name));
     client_registry_monitor.notify_client_by_name(player_name, msg);
 }
 
@@ -167,59 +161,58 @@ void GameLoop::process_cmd(const ClientCmd& cmd) {
 
 void GameLoop::tick_pending_resurrects() {
     auto completed = game_map.tick_pending_resurrects();
- 
+
     for (const auto& result : completed) {
         const std::string& name = result.player_name;
         const TeleportResult& tr = result.teleport;
- 
+
         std::cout << "[INFO: tick_pending_resurrects] Resucitando a " << name << std::endl;
- 
+
         if (tr.on_tile) {
             GameMsg leftMsg(MSG_PLAYER_LEFT);
             leftMsg.set_player_name(name);
             notify_zone(tr.src_zone, leftMsg, name);
- 
+
             GameMsg zoneMsg(MSG_ZONE_CHANGE);
             zoneMsg.set_zone(tr.dest_zone);
             zoneMsg.set_coord_x(tr.x);
             zoneMsg.set_coord_y(tr.y);
             client_registry_monitor.notify_client_by_name(name, zoneMsg);
- 
+
             GameMsg mapMsg(MSG_SEND_MAP);
             mapMsg.set_map(game_map.get_map(name));
             client_registry_monitor.notify_client_by_name(name, mapMsg);
- 
+
             GameMsg npcsMsg(MSG_NPCS_SNAPSHOT);
             npcsMsg.set_npcs(game_map.build_npcs_snapshot(name));
             client_registry_monitor.notify_client_by_name(name, npcsMsg);
- 
+
             GameMsg itemsMsg(MSG_ITEMS_SNAPSHOT);
             itemsMsg.set_items_on_floor(game_map.build_items_snapshot(name));
             client_registry_monitor.notify_client_by_name(name, itemsMsg);
- 
+
             GameMsg playersMsg(MSG_PLAYERS_SNAPSHOT);
             playersMsg.set_players(game_map.build_players_snapshot(name));
             client_registry_monitor.notify_client_by_name(name, playersMsg);
- 
+
             broadcast_players_snapshot();
         }
- 
+
         GameMsg hp_msg(MSG_HP);
         hp_msg.set_hp(game_map.get_player_hp(name));
         client_registry_monitor.notify_client_by_name(name, hp_msg);
- 
+
         GameMsg mana_msg(MSG_MANA);
         mana_msg.set_player_name(name);
         mana_msg.set_mana(game_map.get_player_mana(name));
         client_registry_monitor.notify_client_by_name(name, mana_msg);
- 
+
         GameMsg res_msg(MSG_RESURRECT);
         res_msg.set_player_name(name);
         res_msg.set_chat_content("Has resucitado junto al sacerdote.");
         client_registry_monitor.notify_client_by_name(name, res_msg);
     }
 }
-
 
 void GameLoop::send_auth_error(uint32_t client_id, const std::string& reason) {
     GameMsg msg(MSG_AUTH_ERROR);
@@ -265,16 +258,15 @@ void GameLoop::send_world_snapshot_to(uint32_t client_id, const std::string& nam
     client_registry_monitor.notify_client(client_id, registerMsg);
     send_npcs_snapshot_to(client_id);
     send_items_snapshot_to(client_id);
-    // Avisar a los demas que este jugador se conecto.
+
     send_player_snapshot_to_other_players(client_id, name, race);
 
-    // Envia la zona real donde esta el player.
     GameMsg zoneMsg(MSG_ZONE_CHANGE);
     zoneMsg.set_zone(game_map.get_player_zone(name));
     zoneMsg.set_coord_x(p.get_coord_x());
     zoneMsg.set_coord_y(p.get_coord_y());
     client_registry_monitor.notify_client(client_id, zoneMsg);
-  
+
     send_players_snapshot_to(client_id, name);
 }
 
@@ -325,7 +317,6 @@ void GameLoop::handle_login(const ClientCmd& cmd) {
 
     std::string klass = CLASS_MAP_INV.at(static_cast<uint8_t>(player.get_class_id()));
 
-    // Confirmacion de auth EXITOSO antes del world snapshot (ver handle_register).
     send_confirm_session(client_id, name, race, klass);
     send_world_snapshot_to(client_id, name, race);
 }
@@ -337,9 +328,6 @@ void GameLoop::handle_logout(const ClientCmd& cmd) {
         return;
     }
 
-    // Persistir antes de borrarlo de memoria: red de seguridad ante una
-    // desconexión entre guardados periódicos. La password ya está en disco;
-    // la recuperamos para no pisarla (el Player no la conoce).
     PlayerRecord prev;
     std::string password;
     if (persistence.load(name, prev)) {
@@ -347,9 +335,9 @@ void GameLoop::handle_logout(const ClientCmd& cmd) {
     }
     persistence.save(name, player_serializer.to_record(
             game_map.get_player(name), game_map.get_player_zone(name), password));
-    
+
     game_map.cancel_ghost_resurrect(name);
-    // Capturar la zona ANTES de sacarlo: los que quedan en esa zona lo borran.
+
     Zone zone = game_map.get_player_zone(name);
     game_map.remove_player(name);
     selected_npc.erase(cmd.get_client_id());
@@ -366,9 +354,6 @@ void GameLoop::handle_list(const ClientCmd& cmd) {
         std::string type = game_map.get_adjacent_npc_type(name);
         std::string lista = "";
         if (type == "seller" || type == "priest") {
-            // Seller y sacerdote mandan su catalogo como datos (MSG_LIST con
-            // items+precio): el cliente abre la MISMA ventana de comercio. No es
-            // un mensaje de chat. El stock de cada uno sale de config.toml.
             std::vector<ItemInfo> items = (type == "seller")
                 ? game_map.list_seller_items(name, 0, 0)
                 : game_map.list_priest_items(name);
@@ -395,7 +380,7 @@ void GameLoop::handle_list(const ClientCmd& cmd) {
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
     }
 }
- 
+
 void GameLoop::handle_sell(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     std::string item_id = cmd.get_item_id();
@@ -409,7 +394,7 @@ void GameLoop::handle_sell(const ClientCmd& cmd) {
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
         client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
- 
+
         GameMsg gold_msg(MSG_GOLD);
         gold_msg.set_gold(p.get_gold());
         client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
@@ -419,12 +404,11 @@ void GameLoop::handle_sell(const ClientCmd& cmd) {
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
     }
 }
- 
+
 void GameLoop::handle_buy(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     std::string item_id = cmd.get_item_id();
     try {
-        // Intenta comprar al comerciante; si no hay uno adyacente, intenta al sacerdote
         std::string npc_type = game_map.get_adjacent_npc_type(name);
         if (npc_type == "priest") {
             game_map.player_buy_from_priest(name, item_id);
@@ -440,7 +424,7 @@ void GameLoop::handle_buy(const ClientCmd& cmd) {
         GameMsg inv_msg(MSG_INVENTORY);
         inv_msg.set_items(item_infos);
         client_registry_monitor.notify_client(cmd.get_client_id(), inv_msg);
- 
+
         GameMsg gold_msg(MSG_GOLD);
         gold_msg.set_gold(p.get_gold());
         client_registry_monitor.notify_client(cmd.get_client_id(), gold_msg);
@@ -535,24 +519,23 @@ void GameLoop::handle_retire_gold(const ClientCmd& cmd) {
 
 void GameLoop::handle_resurrect(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
- 
+
     Player* player = game_map.get_player_mut(name);
     if (player == nullptr) return;
- 
+
     if (!player->is_ghost()) {
-        // Jugador vivo: /resucitar dirigido a un sacerdote adyacente
         try {
             game_map.player_resurrect(name);
- 
+
             GameMsg hp_msg(MSG_HP);
             hp_msg.set_hp(game_map.get_player_hp(name));
             client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
- 
+
             GameMsg mana_msg(MSG_MANA);
             mana_msg.set_player_name(name);
             mana_msg.set_mana(game_map.get_player_mana(name));
             client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
- 
+
             GameMsg res_msg(MSG_RESURRECT);
             res_msg.set_player_name(name);
             res_msg.set_chat_content("El sacerdote te ha resucitado.");
@@ -564,11 +547,10 @@ void GameLoop::handle_resurrect(const ClientCmd& cmd) {
         }
         return;
     }
- 
-    // Fantasma: resurrección autónoma con tiempo de espera
+
     try {
         game_map.start_ghost_resurrect(name);
- 
+
         GameMsg chat_msg(MSG_CHAT);
         chat_msg.set_chat_content("Resucitando junto al sacerdote...");
         client_registry_monitor.notify_client(cmd.get_client_id(), chat_msg);
@@ -579,25 +561,24 @@ void GameLoop::handle_resurrect(const ClientCmd& cmd) {
     }
 }
 
-
 void GameLoop::handle_cure(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     try {
         game_map.player_heal(name);
- 
+
         GameMsg hp_msg(MSG_HP);
         hp_msg.set_hp(game_map.get_player_hp(name));
         client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
- 
+
         GameMsg mana_msg(MSG_MANA);
         mana_msg.set_player_name(name);
         mana_msg.set_mana(game_map.get_player_mana(name));
         client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
- 
+
         GameMsg chat_msg(MSG_CHAT);
         chat_msg.set_chat_content("El sacerdote te ha curado.");
         client_registry_monitor.notify_client(cmd.get_client_id(), chat_msg);
- 
+
         std::cout << "[INFO: MSG_CURE] " << name << " fue curado por el sacerdote." << std::endl;
     } catch (const std::runtime_error& e) {
         GameMsg msg(MSG_CHAT);
@@ -613,7 +594,7 @@ void GameLoop::handle_equip(const ClientCmd& cmd) {
     try {
         item_uid = std::stoull(cmd.get_item_id());
     } catch (const std::exception&) {
-        return;  
+        return;
     }
     game_map.player_equip_item(name, item_uid);
     broadcast_player_equipment(name);
@@ -621,7 +602,7 @@ void GameLoop::handle_equip(const ClientCmd& cmd) {
 
 void GameLoop::broadcast_player_equipment(const std::string& player_name) {
     const Player& player = game_map.get_player(player_name);
-   
+
     std::vector<uint64_t> uids = player.get_equipped_uids();
     std::vector<std::string> uid_strs;
     uid_strs.reserve(uids.size());
@@ -646,9 +627,7 @@ void GameLoop::handle_select(const ClientCmd& cmd) {
 void GameLoop::handle_take(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     GameMsg msg(MSG_TAKE);
-    // Tope de inventario (config.toml: player.max_inventory_slots). Si ya esta
-    // lleno NO levantamos el item del piso, para no perderlo: pick_up_item lo
-    // saca del suelo y add_item lo descartaria silenciosamente.
+
     if (game_map.get_player(name).get_inventory().is_full()) {
         msg.set_chat_content("Inventario lleno.");
         client_registry_monitor.notify_client(cmd.get_client_id(), msg);
@@ -672,7 +651,6 @@ void GameLoop::handle_take(const ClientCmd& cmd) {
 }
 
 void GameLoop::handle_teleport(const ClientCmd& cmd) {
-    // CHEAT /tp <zona>: fuerza el cambio a la zona pedida (sin adyacencia).
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     Zone dest = static_cast<Zone>(cmd.get_zone());
     auto tp_result = game_map.force_zone_change(name, dest);
@@ -688,21 +666,18 @@ void GameLoop::handle_teleport(const ClientCmd& cmd) {
 
 void GameLoop::send_zone_transition(uint32_t client_id, const std::string& name,
                                     const TeleportResult& r) {
-    // Cambio de zona fallido (zona no cargada o sin celda): no se envia nada.
     if (!r.on_tile) return;
 
-    // Los que quedan en la zona de origen dejan de ver a este player.
     GameMsg leftMsg(MSG_PLAYER_LEFT);
     leftMsg.set_player_name(name);
     notify_zone(r.src_zone, leftMsg, name);
 
-    // Transición a la nueva zona
     GameMsg zoneMsg(MSG_ZONE_CHANGE);
     zoneMsg.set_zone(r.dest_zone);
     zoneMsg.set_coord_x(r.x);
     zoneMsg.set_coord_y(r.y);
     client_registry_monitor.notify_client(client_id, zoneMsg);
- 
+
     GameMsg mapMsg(MSG_SEND_MAP);
     mapMsg.set_map(game_map.get_map(name));
     client_registry_monitor.notify_client(client_id, mapMsg);
@@ -721,7 +696,7 @@ void GameLoop::handle_move(const ClientCmd& cmd) {
     auto result = game_map.try_move(cmd.get_direction(), name);
 
     if (game_map.pick_up_gold(name)) {
-        broadcast_items_snapshot();  // todos ven que el oro desapareció del piso
+        broadcast_items_snapshot();
         GameMsg msg_gold(MSG_GOLD);
         msg_gold.set_gold(game_map.get_player_gold(name));
 
@@ -750,7 +725,7 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
     std::string attacker_name = client_registry_monitor.get_name(cmd.get_client_id());
     try {
         auto result = game_map.attack(attacker_name, x, y);
-    
+
         GameMsg dmg_msg(MSG_ATTACK);
         dmg_msg.set_coord_x(result.target_x);
         dmg_msg.set_coord_y(result.target_y);
@@ -761,8 +736,7 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
             GameMsg level_msg(MSG_UPDATE_LEVEL);
             level_msg.set_level(result.level);
             level_msg.set_max_xp(game_map.player_max_xp(attacker_name));
-            // Subir de nivel aumenta la vida/maná maximos: que el HUD actualice el
-            // tope de las barras (sin esto se veria vida actual > vida maxima).
+
             level_msg.set_max_hp(game_map.get_player_max_hp(attacker_name));
             level_msg.set_max_mana(game_map.get_player_max_mana(attacker_name));
             client_registry_monitor.notify_client(cmd.get_client_id(), level_msg);
@@ -793,12 +767,11 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
             death_msg.set_player_name(result.entity_name);
             client_registry_monitor.notify_clients(death_msg);
         }
-        // El atacante gana XP en cada golpe: notificarle su XP actualizada
+
         GameMsg xp_msg(MSG_XP);
         xp_msg.set_xp(game_map.get_player_xp(attacker_name));
         client_registry_monitor.notify_client(cmd.get_client_id(), xp_msg);
 
-        // Si el ataque fue con un hechizo, consumió maná: notificar el actualizado.
         GameMsg mana_msg(MSG_MANA);
         mana_msg.set_player_name(attacker_name);
         mana_msg.set_mana(game_map.get_player_mana(attacker_name));
@@ -808,8 +781,6 @@ void GameLoop::handle_attack(const ClientCmd& cmd) {
             hp_msg.set_hp(game_map.get_player_hp(result.entity_name));
             client_registry_monitor.notify_client_by_name(result.entity_name, hp_msg);
 
-            // Feed de combate en el minichat de la VÍCTIMA: cuánto daño recibió y
-            // de quién, o si logró esquivar. Notifica al otro cliente por nombre.
             GameMsg victim_chat(MSG_CHAT);
             if (result.dodged) {
                 victim_chat.set_chat_content("¡Has esquivado el ataque de " + attacker_name + "!");
@@ -874,7 +845,6 @@ void GameLoop::handle_meditate(const ClientCmd& cmd) {
     } else if (player->can_meditate()) {
         msg.set_chat_content("Has dejado de meditar");
     } else {
- 
         msg.set_chat_content("No podés meditar.");
     }
     client_registry_monitor.notify_client(cmd.get_client_id(), msg);
@@ -887,7 +857,7 @@ void GameLoop::handle_self_cast(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     try {
         game_map.self_cast(name);
-  
+
         GameMsg hp_msg(MSG_HP);
         hp_msg.set_hp(game_map.get_player_hp(name));
         client_registry_monitor.notify_client(cmd.get_client_id(), hp_msg);
@@ -917,17 +887,16 @@ void GameLoop::handle_self_cast(const ClientCmd& cmd) {
 
 void GameLoop::handle_use_item(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-  
+
     uint64_t item_uid = 0;
     try {
         item_uid = std::stoull(cmd.get_item_id());
     } catch (const std::exception&) {
-        return; 
+        return;
     }
 
     bool consumed = game_map.use_item(name, item_uid);
-    if (!consumed) return;  
-
+    if (!consumed) return;
 
     GameMsg hp_msg(MSG_HP);
     hp_msg.set_hp(game_map.get_player_hp(name));
@@ -938,7 +907,6 @@ void GameLoop::handle_use_item(const ClientCmd& cmd) {
     mana_msg.set_mana(game_map.get_player_mana(name));
     client_registry_monitor.notify_client(cmd.get_client_id(), mana_msg);
 
-    // La poción se consumió: reenviar el inventario para que desaparezca del HUD.
     const Player& p = game_map.get_player(name);
     std::vector<ItemInfo> item_infos;
     for (Item* item : p.get_all_items()) {
@@ -1007,7 +975,7 @@ void GameLoop::handle_cheat_inf_mana(const ClientCmd& cmd) {
 
 void GameLoop::handle_cheat_mana(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
-  
+
     game_map.cheat_lose_mana(name, cmd.get_gold());
 
     GameMsg msg(MSG_MANA);
@@ -1023,7 +991,7 @@ void GameLoop::handle_cheat_mana(const ClientCmd& cmd) {
 void GameLoop::handle_cheat_revive(const ClientCmd& cmd) {
     std::string name = client_registry_monitor.get_name(cmd.get_client_id());
     game_map.revive_player(name);
- 
+
     GameMsg msg(MSG_CHEAT_RESPAWN);
     msg.set_player_name(name);
     msg.set_chat_content(name + " resucitó.");
@@ -1132,7 +1100,7 @@ void GameLoop::handle_clan_kick(const ClientCmd& cmd) {
 
     GameMsg personal_msg(MSG_CLAN_KICK);
     GameMsg clan_msg(MSG_CLAN_KICK);
-    
+
     if (!game_map.kick_member(player_name, member)) {
         personal_msg.set_chat_content("El jugador " + member + " no es parte del clan");
         client_registry_monitor.notify_client(cmd.get_client_id(), personal_msg);
@@ -1151,7 +1119,7 @@ void GameLoop::handle_clan_ban(const ClientCmd& cmd) {
 
     GameMsg personal_msg(MSG_CLAN_BAN);
     GameMsg clan_msg(MSG_CLAN_BAN);
-    
+
     if (!game_map.ban_member(player_name, member)) {
         personal_msg.set_chat_content("El jugador " + member + " no es parte del clan");
         client_registry_monitor.notify_client(cmd.get_client_id(), personal_msg);
@@ -1173,18 +1141,14 @@ void GameLoop::update_npcs_in_map(){
 void GameLoop::run() {
     load_world();
     const auto& cfg = GameConfig::instance();
-    const auto tick_rate = std::chrono::milliseconds(cfg.tick_rate_ms);// 20 ticks/s
+    const auto tick_rate = std::chrono::milliseconds(cfg.tick_rate_ms);
     auto next_tick = std::chrono::steady_clock::now();
 
-    // Acumulamos ticks para resolver la regeneracion (maná al meditar) una vez
-    // por segundo: evita spamear MSG_MANA cada 50ms.
     int ticks_accumulated = 0;
-    const int ticks_per_second = cfg.ticks_per_second; // 1000ms / 50ms
+    const int ticks_per_second = cfg.ticks_per_second;
     int npc_move_ticks = 0;
     const int TICKS_PER_NPC_MOVE = cfg.npc_move_every_ticks;
 
-    // Regeneracion automatica de vida/mana: fraccion de la maxima que cada player
-    // vivo recupera por segundo real ([player] en config.toml, 0.01 = 1%).
     const double LIFE_REGEN_PER_SECOND = cfg.life_regen_per_second;
     const double MANA_REGEN_PER_SECOND = cfg.mana_regen_per_second;
 
@@ -1240,7 +1204,7 @@ void GameLoop::run() {
 
             if (++ticks_accumulated >= ticks_per_second) {
                 ticks_accumulated = 0;
-                regen_players_mana(1.0); 
+                regen_players_mana(1.0);
                 regen_players_life(LIFE_REGEN_PER_SECOND);
                 regen_players_mana_passive(MANA_REGEN_PER_SECOND);
             }

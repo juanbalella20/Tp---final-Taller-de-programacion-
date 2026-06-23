@@ -10,13 +10,11 @@ DamageOutcome GhostState::attack(Player& self, Entity& target, int target_x, int
 }
 
 DamageOutcome GhostState::receive_damage(Player& self, int damage, Player& attacker, bool is_critical) {
-    // Un fantasma no recibe daño ni reparte XP.
     (void)self; (void)damage; (void)attacker; (void)is_critical;
     return {};
 }
 
 DamageOutcome GhostState::receive_npc_damage(Player& self, int damage, bool is_critical) {
-    // Un fantasma no recibe daño ni reparte XP.
     (void)self; (void)damage; (void)is_critical;
     return {};
 }

@@ -63,8 +63,7 @@ bool SoundPlayer::play(const std::string& relative_path) {
     MIX_Audio* audio = load_audio(relative_path);
     if (audio == nullptr) return false;
 
-    // Round-robin entre las pistas para que varios efectos puedan solaparse en
-    // vez de cortarse entre sí.
+    //Round robin entre pistas para que no se solapen los sonidos
     MIX_Track* track = tracks[next_track];
     next_track = (next_track + 1) % NUM_TRACKS;
 
@@ -123,8 +122,6 @@ MIX_Audio* SoundPlayer::load_audio(const std::string& relative_path) {
     auto cached = audio_cache.find(full_path);
     if (cached != audio_cache.end()) return cached->second;
 
-    // predecode=true: los efectos son cortos y se disparan a menudo, conviene
-    // tenerlos decodificados en memoria para que el play no tenga latencia.
     MIX_Audio* audio = MIX_LoadAudio(mixer, full_path.c_str(), true);
     if (audio == nullptr) {
         std::cerr << "[sfx] No se pudo cargar " << full_path << ": "

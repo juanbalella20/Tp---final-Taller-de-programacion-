@@ -47,16 +47,11 @@ void Serializer::write_header(std::vector<uint8_t>& buf, uint8_t type, uint16_t 
     buf.push_back(type);
     uint16_t largo_be = htons(payload_len);
     uint8_t largo_bytes[sizeof(uint16_t)];
-    std::memcpy(largo_bytes, &largo_be, sizeof(uint16_t));//void* memcpy(void* destino, const void* origen, size_t cantidad_de_bytes);
-    // memcpy se usa para copiar los bytes de largo_be (en formato big-endian) al arreglo largo_bytes,
-    //que luego se inserta en el buffer de salida. 
-    //Esto asegura que el header del mensaje tenga el formato correcto esperado por el protocolo de comunicación.
+    std::memcpy(largo_bytes, &largo_be, sizeof(uint16_t));
+
     buf.insert(buf.end(), largo_bytes, largo_bytes + sizeof(uint16_t));
-    
 }
 
-
-// Formato MSG_REGISTER: [name_len:1][name][pass_len:1][pass][race:1][class:1]
 std::vector<uint8_t> Serializer::serialize_register(const ClientCmd& cmd) {
     const std::string& name = cmd.get_player_name();
     const std::string& pass = cmd.get_password();
@@ -78,7 +73,6 @@ std::vector<uint8_t> Serializer::serialize_register(const ClientCmd& cmd) {
     return buf;
 }
 
-// Formato MSG_LOGIN: [name_len:1][name][pass_len:1][pass]
 std::vector<uint8_t> Serializer::serialize_login(const ClientCmd& cmd) {
     const std::string& name = cmd.get_player_name();
     const std::string& pass = cmd.get_password();
@@ -118,21 +112,7 @@ std::vector<uint8_t> Serializer::serialize_coords(uint8_t type, const ClientCmd&
     buf.insert(buf.end(), tmp, tmp + LEN_COORD);
     return buf;
 }
-/*
-std::vector<uint8_t> Serializer::serialize_entity_and_name(uint8_t type, const ClientCmd& cmd) {
-    const std::string& target = cmd.get_target_name();
-    uint8_t target_len = static_cast<uint8_t>(target.size());
-    uint16_t payload_len = LEN_ENTITY + LEN_NAME_SIZE_FIELD + target_len;
 
-    std::vector<uint8_t> buf;
-    buf.reserve(LEN_HEADER + payload_len);
-    write_header(buf, type, payload_len);
-    buf.push_back(static_cast<uint8_t>(cmd.get_target_type()));
-    buf.push_back(target_len);
-    buf.insert(buf.end(), target.begin(), target.end());
-    return buf;
-}
-*/
 std::vector<uint8_t> Serializer::serialize_name(uint8_t type, const ClientCmd& cmd) {
     const std::string& target = cmd.get_target_name();
     uint8_t target_len = static_cast<uint8_t>(target.size());
@@ -167,7 +147,6 @@ std::vector<uint8_t> Serializer::serialize_no_payload(uint8_t type) {
 }
 
 std::vector<uint8_t> Serializer::serialize_zone(uint8_t type, const ClientCmd& cmd) {
-    // payload = [zona:1B]
     std::vector<uint8_t> buf;
     buf.reserve(LEN_HEADER + 1);
     write_header(buf, type, 1);

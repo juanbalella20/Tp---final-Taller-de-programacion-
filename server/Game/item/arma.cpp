@@ -19,12 +19,10 @@ DamageOutcome Arma::use_item(Entity& target, Player& atacante, int attacker_x, i
     int dy = std::abs(attacker_y - target_y);
     if (dx + dy > disntance_min_attack) return {};
 
-    // Daño = Fuerza * rand(DañoArmaMin, DañoArmaMax)
     int rango = damage_max - damage_min;
     int roll = (rango > 0) ? (std::rand() % (rango + 1)) : 0;
     int damage = atacante.damage_attack() * (damage_min + roll);
 
-    // Crítico: probabilidad cfg.crit_chance, daño x cfg.crit_multiplier, no esquivable.
     const auto& cfg = GameConfig::instance();
     bool critical = is_critical || ((std::rand() / static_cast<double>(RAND_MAX)) < cfg.crit_chance);
     if (critical) damage *= cfg.crit_multiplier;

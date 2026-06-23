@@ -93,9 +93,7 @@ ServerDeserializer::ServerDeserializer() {
     };
 }
 
-
 void ServerDeserializer::deserialize_register(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
-    // Formato: [name_len:1][name][pass_len:1][pass][race:1][class:1]
     size_t pos = 0;
     uint8_t name_len = payload[pos];
     pos += LEN_NAME_SIZE_FIELD;
@@ -115,7 +113,6 @@ void ServerDeserializer::deserialize_register(const std::vector<uint8_t>& payloa
 }
 
 void ServerDeserializer::deserialize_login(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
-    // Formato: [name_len:1][name][pass_len:1][pass]
     size_t pos = 0;
     uint8_t name_len = payload[pos];
     pos += LEN_NAME_SIZE_FIELD;
@@ -157,7 +154,6 @@ void ServerDeserializer::read_coords(const std::vector<uint8_t>& payload, Client
 }
 
 void ServerDeserializer::read_zone(const std::vector<uint8_t>& payload, ClientCmd& cmd) {
-    // payload = [zona:1B]
     if (payload.size() != 1) {
         throw std::invalid_argument("Payload invalido para MSG_TELEPORT (zona)");
     }
