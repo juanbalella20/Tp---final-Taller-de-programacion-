@@ -530,25 +530,6 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
                     angle = 270.0;
                 }
                 break;
-
-            case EquipKind::ARMOR:
-                // Armadura: cubre el torso/cuerpo. Centrada sobre el cuerpo y del
-                // mismo tamaño, en todas las direcciones (se ve similar de frente
-                // y de espalda).
-                size = rect.w * 0.85f;
-                off_x = (1.0f - 0.85f) / 2.0f;  // centrada horizontalmente
-                off_y = 0.20f;                  // un poco por debajo de la cabeza
-                break;
-
-            case EquipKind::HELMET:
-            default:
-                // Casco: sobre la cabeza. La cabeza se dibuja por encima del cuerpo
-                // (rect.y es el top del cuerpo), así que el casco va con offset_y
-                // negativo para subir hasta la cabeza.
-                size = rect.w * 0.55f;
-                off_x = (1.0f - 0.55f) / 2.0f;  // centrado horizontalmente
-                off_y = -0.45f;                 // sobre la cabeza
-                break;
         }
 
         float foot_offset = static_cast<float>(tileSize) - rect.h;
