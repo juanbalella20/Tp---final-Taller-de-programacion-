@@ -9,7 +9,7 @@ package "GUI / Render (Qt)" {
     --
     - build_workspace()
     - build_tools_toolbar()
-    - load_tileset_path()
+    - register_tileset_file()
     - save_to()
   }
 
@@ -76,8 +76,7 @@ package "Edición" {
   class CellChange {
     + x: int
     + y: int
-    + old_gid: int
-    + new_gid: int
+    + gid: int
   }
 }
 
@@ -108,6 +107,6 @@ FillTool ..|> Tool
 
 Tool ..> Map 
 Tool ..> CellChange : produce 0..*
-EditorDocument ..> CellChange : aplica new_gid
+EditorDocument ..> CellChange : aplica gid
 
 @enduml

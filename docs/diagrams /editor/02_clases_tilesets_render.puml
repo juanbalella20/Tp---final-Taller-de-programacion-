@@ -10,7 +10,7 @@ skinparam defaultFontName DejaVu Sans
 
 package "Registro y seleccion" #EFF6FF {
   class EditorWindow #DBEAFE {
-    - load_tileset_path(path)
+    - register_tileset_file(path)
     - select_tileset(index)
     --
     valida PNG
@@ -45,7 +45,7 @@ package "Imagen y metadata" #FFFBEB {
     - m_rows: int
     --
     + loadTileset(path,tileSize): bool
-    + getTile(localId): QPixmap
+    + getTile(localId): const QPixmap&
     + masterPixmap(): QPixmap
   }
 

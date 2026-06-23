@@ -1,0 +1,64 @@
+@startuml
+title Secuencia - desde la ejecucion del cliente hasta la partida
+
+actor Usuario as U
+participant ClientApp as App
+participant ScreenManager as SM
+participant WelcomeScreen as W
+participant LoginSignupScreen as L
+participant CharacterCreationScreen as C
+participant "AuthSession" as AS
+participant Servidor as SV
+
+App -> SM : run(session)
+activate SM
+
+' --- Launcher / configuracion de ventana ---
+SM -> W : make_screen(WELCOME)
+U -> W : elige modo de ventana / continuar
+W --> SM : nextState() = LOGIN_SIGNUP
+SM -> SM : apply_window_settings(get_result)
+
+' --- Pantalla de login / registro ---
+SM -> L : make_screen(LOGIN_SIGNUP, session)
+
+alt Login (usuario existente)
+  U -> L : completa nombre + contrasena
+  L -> AS : ensure_connected() crea ClientProtocol
+  L -> SV : MSG_LOGIN(nombre, contrasena)
+  alt credenciales validas
+    SV --> L : MSG_CONFIRM_SESSION(nombre, raza, clase, clan)
+    L -> AS : carga datos + authenticated = true
+    L --> SM : nextState() = GAME
+  else error
+    SV --> L : MSG_AUTH_ERROR(motivo)
+    L -> L : muestra error_message_ (sigue en LOGIN_SIGNUP)
+  end
+
+else Registro (usuario nuevo)
+  U -> L : completa nombre + contrasena
+  L -> AS : guarda nombre + password
+  L --> SM : nextState() = CHARACTER_CREATION
+  SM -> C : make_screen(CHARACTER_CREATION, session)
+  U -> C : elige raza y clase
+  C -> AS : ensure_protocol() crea ClientProtocol
+  C -> SV : MSG_REGISTER(nombre, contrasena, raza, clase)
+  alt registro OK
+    SV --> C : MSG_CONFIRM_SESSION(...)
+    C -> AS : carga datos + authenticated = true
+    C --> SM : nextState() = GAME
+  else error
+    SV --> C : MSG_AUTH_ERROR(motivo)
+    C --> SM : nextState() = LOGIN_SIGNUP
+  end
+end
+
+SM --> App : return GAME
+deactivate SM
+
+' --- Arranque de la partida ---
+App -> AS : toma protocol (move) y arranca threads de red
+App -> App : ClientGUI(window/renderer/font compartidos).run()
+note right of App : la partida corre sobre la\nmisma ventana del launcher
+
+@enduml

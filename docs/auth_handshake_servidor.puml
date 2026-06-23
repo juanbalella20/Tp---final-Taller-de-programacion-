@@ -1,0 +1,74 @@
+@startuml auth_handshake_servidor
+' =====================================================================
+'  Handshake de autenticacion - lado SERVIDOR
+'
+'  Contraparte de docs/diagrams /client/3.svg (lado cliente): que hace
+'  el servidor cuando llega un MSG_REGISTER o un MSG_LOGIN, desde que el
+'  GameLoop saca el ClientCmd de la cola hasta que entrega la respuesta
+'  (MSG_CONFIRM_SESSION o MSG_AUTH_ERROR) al cliente.
+'
+'  Alcance: solo el handshake de auth. Quedan fuera el world snapshot
+'  posterior, la red/serializacion y el resto de los handlers.
+' =====================================================================
+title Handshake de autenticacion (servidor) - register / login
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName DejaVu Sans
+
+participant "receiving_queue" as Q
+participant GameLoop as GL
+participant AuthService as AUTH
+participant PlayerPersistence as PP
+participant PlayerSerializer as PS
+participant GameMap as GM
+participant ClientRegistryMonitor as REG
+
+GL -> Q : try_pop(cmd)
+Q --> GL : ClientCmd
+GL -> GL : process_cmd(cmd)\nhandlers.find(message_type)
+
+alt MSG_REGISTER (usuario nuevo)
+  GL -> AUTH : try_register(name, password)
+  AUTH -> PP : exists(name)?
+  PP --> AUTH : libre / ocupado
+  AUTH --> GL : AuthResult{OK_NEW | NAME_TAKEN}
+
+  alt NAME_TAKEN
+    GL -> REG : notify_client(client_id, MSG_AUTH_ERROR)
+  else OK_NEW
+    GL -> REG : assign_name(client_id, name)
+    GL -> GM : spawn_player(name, race, class)
+    GL -> PS : to_record(player, zone, password)
+    PS --> GL : PlayerRecord
+    GL -> PP : save(name, record)
+    GL -> REG : notify_client(client_id, MSG_CONFIRM_SESSION)
+  end
+
+else MSG_LOGIN (usuario existente)
+  GL -> AUTH : try_login(name, password)
+  AUTH -> PP : load(name, record)?
+  PP --> AUTH : record / no existe
+  AUTH -> AUTH : compara password
+  AUTH --> GL : AuthResult{OK_EXISTING(record) | BAD_CREDENTIALS}
+
+  alt BAD_CREDENTIALS
+    GL -> REG : notify_client(client_id, MSG_AUTH_ERROR)
+  else OK_EXISTING
+    GL -> REG : assign_name(client_id, name)
+    opt jugador no esta en memoria
+      GL -> PS : from_record(record)
+      PS --> GL : Player
+      GL -> GM : add_persisted_player(player, zone)
+    end
+    GL -> REG : notify_client(client_id, MSG_CONFIRM_SESSION)
+  end
+end
+
+note over REG
+  notify_client encola el GameMsg en la cola
+  de salida del cliente; el world snapshot se
+  envia despues (fuera de alcance).
+end note
+
+@enduml

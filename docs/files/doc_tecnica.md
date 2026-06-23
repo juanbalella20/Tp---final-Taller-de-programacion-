@@ -177,7 +177,7 @@ Validado en `GameMap::attack` antes de aplicar el golpe:
 El siguiente diagrama muestra únicamente la colaboración entre el administrador
 de pantallas, las pantallas iniciales y la sesión de autenticación.
 
-![Flujo de las pantallas iniciales](../diagrams%20/%20client/3.svg)
+![Flujo de las pantallas iniciales](../diagrams%20/client/3.svg)
 
 ### Modelo de threading del cliente
 
@@ -295,6 +295,15 @@ El intervalo periódico está definido en `game_constants.h`:
 1. `AuthService::try_login` busca el nombre en el índice, lee el `PlayerRecord` y compara la contraseña.
 2. Si el jugador ya está en memoria (re-login), se reutiliza directamente.
 3. Si no, `PlayerSerializer::from_record` reconstruye el `Player`: llama a `ItemCatalog::make_item(id)` por cada slot ocupado para restaurar el inventario.
+
+### Diagrama de secuencia — Handshake de autenticación (servidor)
+
+Contraparte server-side del flujo de pantallas iniciales del cliente: desde que
+el `GameLoop` saca el `ClientCmd` de la cola hasta que entrega
+`MSG_CONFIRM_SESSION` o `MSG_AUTH_ERROR`. Cubre las dos ramas (`MSG_REGISTER` y
+`MSG_LOGIN`).
+
+![Handshake de autenticación (servidor)](../diagrams%20/server/auth_handshake_servidor.png)
 
 ## Editor de mapas
 

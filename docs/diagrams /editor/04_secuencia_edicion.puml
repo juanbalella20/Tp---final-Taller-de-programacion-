@@ -22,7 +22,7 @@ T --> D : vector<CellChange>
 deactivate T
 
 loop por cada CellChange
-  D -> M : set_cell(capa,x,y,new_gid)
+  D -> M : set_cell(capa,x,y,gid)
   D --> S : signal cellChanged(capa,x,y)
   S -> M : get_cell(capa,x,y)
   S -> S : updateVisualItem()
