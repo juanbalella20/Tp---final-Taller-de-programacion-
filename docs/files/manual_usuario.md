@@ -4,14 +4,12 @@
 
 1. [Introducción](#introducción)
 2. [Requisitos del sistema](#requisitos-del-sistema)
-3. [Instalación de dependencias](#instalación-de-dependencias)
-4. [Compilación del proyecto](#compilación-del-proyecto)
-5. [Configuración inicial](#configuración-inicial)
-6. [Modificar mapas y configuración sin recompilar](#modificar-mapas-y-configuración-sin-recompilar)
-7. [Levantar el servidor](#levantar-el-servidor)
-8. [Lanzar el cliente y jugar](#lanzar-el-cliente-y-jugar)
-9. [Editor de mapas](#editor-de-mapas)
-10. [Solución de problemas frecuentes](#solución-de-problemas-frecuentes)
+3. [Compilación del proyecto](#compilación-del-proyecto)
+4. [Configuración inicial](#configuración-inicial)
+5. [Modificar mapas y configuración sin recompilar](#modificar-mapas-y-configuración-sin-recompilar)
+6. [Levantar el servidor](#levantar-el-servidor)
+7. [Lanzar el cliente y jugar](#lanzar-el-cliente-y-jugar)
+8. [Editor de mapas](#editor-de-mapas)
 
 ---
 
@@ -46,7 +44,8 @@ corre los tests unitarios e instala el juego en tu home:
 ```bash
 # Clonar el repositorio (con submódulos)
 git clone --recurse-submodules https://github.com/juanbalella20/Tp---final-Taller-de-programacion-.git
-cd [repositorio]
+
+cd Tp---final-Taller-de-programacion-
 
 # Ejecutar el instalador
 bash install.sh
@@ -104,7 +103,7 @@ Tras instalar con `install.sh`, los archivos que podés editar están acá:
 
    ```toml
    [zones.desert]
-   map = "data/maps/desert/map-2.bin"   # ← cambiá el nombre por el del mapa nuevo
+   map = "data/maps/desert/desert-v4.bin"   # ← cambiá el nombre por el del mapa nuevo
    allowed_npcs = ["goblin", "spider"]
    # ...
    ```
@@ -124,8 +123,10 @@ Tras instalar con `install.sh`, los archivos que podés editar están acá:
 ### Iniciar el servidor
 
 ```bash
-/server
+$ server
 ```
+
+> El servidor toma host y puerto del `config.toml` (`[network]`); no recibe argumentos.
 
 ### Cargar un mapa específico
 
@@ -138,7 +139,7 @@ Para que el servidor arranque con otro mapa, se cambia el nombre del `.bin` en e
 Para cerrar el servidor limpiamente:
 
 ```bash
-# Presionar Ctrl+C en la terminal donde corre el servidor
+# Presionar 'q' en la terminal donde corre el servidor
 ```
 
 ---
@@ -150,24 +151,16 @@ Para cerrar el servidor limpiamente:
 Con el servidor ya corriendo, ejecutar:
 
 ```bash
-/client
+$ client
 ```
+
+> El cliente también lee host y puerto del `config.toml` (`[network]`); no recibe argumentos.
 
 ### Pantalla de inicio
 
 ![Pantalla de inicio](../../assets/screenshots/pantalla-inicio.png)
 
 Seleccionar Jugar o Settings (resolución y pantalla)
-
-### Pantalla settings
-
-![Settings](../../assets/screenshots/config.png)
-
-- Para jugar en ventana:
-    - Modificar la resolución a gusto
-    - Dejar tildado "Ventana"
-- Para jugar en pantalla completa
-    - Tildar "Pantalla completa"
 
 ![Sign-up](../../assets/screenshots/create-account.png)
 
@@ -189,14 +182,13 @@ Ingresar con cuenta existente
 | `S` / `↓` | Mover hacia abajo |
 | `A` / `←` | Mover hacia la izquierda |
 | `D` / `→` | Mover hacia la derecha |
-| `Esc` | Salir |
 
 ## Editor de mapas
 
 ### Iniciar el editor
 
 ```bash
-/map_editor
+$ map_editor
 ```
 
 ### Interfaz del editor
@@ -207,24 +199,28 @@ La interfaz está dividida en las siguientes secciones:
 
 | Sección | Descripción |
 |---------|-------------|
-| [Panel izquierdo / Tileset] | Visualización de los tilesets |
+| [Panel izquierdo] | Visualización de los tilesets |
 | [Canvas central] | Canvas para crear el mapa utilizando los tilesets |
 | [Barra de herramientas 1] | Lápiz, goma, relleno |
 | [Barra de herramientas 2] | Teleport, colisión: permiten pintar un tile indicando si es colisionable o teleport |
-| [Barra de herramientas 3] | Suelo, Construcciones: intercalar entre tile para el suelo o tile para una construcción (se pinta arriba del tile de suelo) |
-| [Panel de tilesets] | Se puede intercambiar entre distintos tilesets, cargar tilesets |
+| [Barra de herramientas 3] | Capa en la que se pinta. Tres opciones: **Suelo** (tile base), **Construcciones** (se pinta sobre el suelo, detrás del jugador) y **Decoración** (se pinta delante del jugador) |
+| [Panel de tilesets] | Combo para intercambiar entre los tilesets ya cargados |
+
+> Los tilesets **se cargan solos** al abrir el editor: toma todos los PNG de
+> `~/.local/share/argentum/assets/tilesets/`. Para
+> sumar un tileset, copiá el PNG a esa carpeta y reiniciá el editor.
 
 ### Crear un mapa nuevo
 
-1. Hacé clic en **Cargar PNG**.
-2. Elegí un tileset desde la carpeta del juego: `~/.local/share/argentum/data/maps/`.
+1. Abrí el editor: ya vas a tener todos los tilesets disponibles en el combo del panel.
+2. Elegí un tileset en el combo del panel de tilesets.
 3. Seleccioná un tile, una herramienta y empezá a pintar.
-4. Guardá con **Archivo > Guardar** dentro de `~/.local/share/argentum/data/maps/<nombre-mapa>.bin`.
+4. Guardá con **Archivo > Guardar** dentro de `~/.local/share/argentum/data/maps/<zona>/<nombre-mapa>.bin`.
 
 ### Editar mapa existente
 
 1. En el editor, andá a **Archivo > Abrir**.
-2. Buscá el mapa en `~/.local/share/argentum/data/maps/` (por ejemplo, `city.bin`).
+2. Buscá el mapa en `~/.local/share/argentum/data/maps/` (por ejemplo, `city/city-v2.bin`).
 3. Editá el mapa con las herramientas del editor.
 4. Guardá con **Archivo > Guardar**. Según cómo guardes:
    - **Con el mismo nombre** (pisás el archivo anterior): listo, solo volvé a iniciar
@@ -232,3 +228,14 @@ La interfaz está dividida en las siguientes secciones:
    - **Con otro nombre** (por ejemplo, `city-v2.bin`): además tenés que indicarle al
      juego que use el archivo nuevo, editando el `config.toml`
      (ver [Cambiar el mapa de una zona](#cambiar-el-mapa-de-una-zona)).
+
+### Drag & Drop
+
+1. Selecciona un tile
+2. Presiona shift y selecciona los tiles deseados
+3. Arrastra la selección al canva
+![drag_drop](../../assets/gifs/drag-drop-tutorial.gif)
+
+### Cambiar de tileset
+
+![cambiar-tileset](../../assets/gifs/tilesets-tutorial.gif)
