@@ -277,8 +277,6 @@ void TextureLoader::freeSDL() {
     free_texture(&mana_bar_texture);
     free_texture(&shop_texture);
 
-    // Texturas extra de items del piso (las que no son item_texture, p. ej. escudo).
-    // Se saltea gold_texture: lo comparten las pociones del piso y se libera aparte.
     for (auto& kv : item_textures) {
         if (kv.second) {
             SDL_DestroyTexture(kv.second);
@@ -299,4 +297,8 @@ void TextureLoader::freeSDL() {
         }
     }
     enemies_textures.clear();
+}
+
+TextureLoader::~TextureLoader() {
+    freeSDL();
 }
