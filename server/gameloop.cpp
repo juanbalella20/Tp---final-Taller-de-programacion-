@@ -1216,7 +1216,6 @@ void GameLoop::run() {
 
                     if (attack.victim_died) {
                         game_map.kill_player(attack.victim_name);
-                        broadcast_npcs_snapshot();
                         broadcast_items_snapshot();
                         GameMsg death_msg(MSG_DEATH);
                         death_msg.set_player_name(attack.victim_name);
