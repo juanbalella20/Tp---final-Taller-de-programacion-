@@ -952,9 +952,19 @@ void GameLoop::handle_use_item(const ClientCmd& cmd) {
 
 void GameLoop::handle_private(const ClientCmd& cmd) {
     std::string sender = client_registry_monitor.get_name(cmd.get_client_id());
+    const std::string& target = cmd.get_target_name();
+
+    if (!game_map.player_exists(target)) {
+        GameMsg err(MSG_CHAT);
+        err.set_chat_content("El jugador '" + target + "' no esta conectado.");
+        client_registry_monitor.notify_client(cmd.get_client_id(), err);
+        return;
+    }
+
     GameMsg msg(MSG_PRIVATE);
     msg.set_player_name(sender);
-    msg.set_chat_content(cmd.get_chat_content());
+    msg.set_chat_content(sender + " : " + cmd.get_chat_content());
+    client_registry_monitor.notify_client_by_name(target, msg);
 }
 
 void GameLoop::handle_cheat_kill(const ClientCmd& cmd) {
