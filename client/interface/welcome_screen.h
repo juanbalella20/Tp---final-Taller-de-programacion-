@@ -7,8 +7,6 @@
 #include "Screen.h"
 
 struct WindowSettings {
-    int width = 1280;
-    int height = 720;
     bool fullscreen = false;
 };
 
@@ -24,8 +22,6 @@ class WelcomeScreen : public Screen {
         "imagenes/login/en_ventanalauncher.bmp";
     static constexpr char CONFIG_PATH[] =
         "imagenes/login/config_pantalla2.png";
-    static constexpr char FONT_PATH[] =
-        "fonts/StackSansText-Medium.ttf";
     static constexpr int LAUNCHER_WIDTH = 493;
     static constexpr int LAUNCHER_HEIGHT = 479;
     static constexpr int CONFIG_IMAGE_WIDTH = 1509;
@@ -44,8 +40,6 @@ class WelcomeScreen : public Screen {
         199.0f, 855.0f, 535.0f, 110.0f};
     static constexpr SDL_FRect CONFIG_APPLY_BUTTON{
         779.0f, 855.0f, 535.0f, 110.0f};
-    static constexpr SDL_FRect RESOLUTION_BUTTON{
-        631.0f, 395.0f, 717.0f, 110.0f};
     static constexpr SDL_FRect WINDOWED_BUTTON{
         1021.0f, 612.0f, 86.0f, 82.0f};
     static constexpr SDL_FRect FULLSCREEN_BUTTON{
@@ -57,7 +51,6 @@ class WelcomeScreen : public Screen {
 
     SDL_Texture* background = nullptr;
     SDL_Texture* config = nullptr;
-    TTF_Font* config_font = nullptr;  // propia (tamano fijo); cerrada en el dtor.
     bool media_loaded = false;
     bool showing_config = false;
     LauncherResult result;
@@ -78,7 +71,6 @@ class WelcomeScreen : public Screen {
     void discardSettings();
     void drawConfigControls();
     void drawTick(const SDL_FRect& config_rect);
-    void drawText(const char* text, float x, float y, SDL_Color color);
 
  public:
     WelcomeScreen(SDL_Renderer* renderer, SDL_Window* window, TTF_Font* font);

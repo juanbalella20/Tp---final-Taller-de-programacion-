@@ -65,7 +65,6 @@ std::unique_ptr<Screen> ScreenManager::make_screen(ScreenState state, AuthSessio
 
 void ScreenManager::apply_window_settings(const WindowSettings& settings) {
     SDL_SetWindowFullscreenMode(window, nullptr);
-    SDL_SetWindowSize(window, settings.width, settings.height);
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_SetWindowFullscreen(window, settings.fullscreen);
     // El cambio de modo es asincrono (p. ej. Wayland): esperamos a que se
@@ -87,7 +86,7 @@ ScreenState ScreenManager::run(AuthSession& session) {
         ScreenState requested = screen->nextState();
         if (requested != current) {
             // Al salir del launcher (y no por cerrar), aplicamos a la ventana
-            // compartida los WindowSettings elegidos. Solo WELCOME produce un
+            // compartida el modo de pantalla elegido. Solo WELCOME produce un
             // WelcomeScreen, por lo que el static_cast es seguro.
             if (current == ScreenState::WELCOME && requested != ScreenState::EXIT) {
                 auto* welcome = static_cast<WelcomeScreen*>(screen.get());

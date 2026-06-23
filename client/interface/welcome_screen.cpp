@@ -36,7 +36,7 @@ SDL_FRect WelcomeScreen::toPopupRect(const SDL_FRect& config_rect) {
 WelcomeScreen::WelcomeScreen(SDL_Renderer* renderer, SDL_Window* window, TTF_Font* /*font*/)
     : window(window), renderer(renderer) {
     // No creamos el window/renderer: son del ScreenManager. Solo fijamos la
-    // presentacion logica de esta pantalla y cargamos sus texturas/fuente.
+    // presentacion logica de esta pantalla y cargamos sus texturas.
     SDL_SetRenderLogicalPresentation(
         renderer, LAUNCHER_WIDTH, LAUNCHER_HEIGHT,
         SDL_LOGICAL_PRESENTATION_LETTERBOX);
@@ -79,15 +79,6 @@ void WelcomeScreen::loadMedia() {
             std::string("SDL_CreateTextureFromSurface: ") + SDL_GetError());
     }
 
-    // TTF ya fue inicializado por el ScreenManager; aca solo abrimos la fuente
-    // propia (tamano 11 fijo, ligada al layout de esta pantalla).
-    const std::string font_path = paths::asset(FONT_PATH);
-    config_font = TTF_OpenFont(font_path.c_str(), 11);
-    if (!config_font) {
-        throw std::runtime_error(
-            "No se pudo cargar " + font_path + ": " + SDL_GetError());
-    }
-
     media_loaded = true;
 }
 
@@ -99,10 +90,6 @@ void WelcomeScreen::freeMedia() {
     if (config) {
         SDL_DestroyTexture(config);
         config = nullptr;
-    }
-    if (config_font) {
-        TTF_CloseFont(config_font);
-        config_font = nullptr;
     }
     media_loaded = false;
 }
@@ -245,13 +232,6 @@ void WelcomeScreen::discardSettings() {
 }
 
 void WelcomeScreen::drawConfigControls() {
-    SDL_FRect resolution_rect = toPopupRect(RESOLUTION_BUTTON);
-    drawText(
-        "1280 x 720",
-        resolution_rect.x + 18.0f,
-        resolution_rect.y + 9.0f,
-        SDL_Color{255, 255, 255, 255});
-
     if (pending_settings.fullscreen) {
         drawTick(FULLSCREEN_BUTTON);
     } else {
@@ -273,32 +253,4 @@ void WelcomeScreen::drawTick(const SDL_FRect& config_rect) {
         SDL_RenderLine(renderer, x1, y1 + offset, x2, y2 + offset);
         SDL_RenderLine(renderer, x2, y2 + offset, x3, y3 + offset);
     }
-}
-
-void WelcomeScreen::drawText(const char* text, float x, float y, SDL_Color color) {
-    if (!config_font) {
-        return;
-    }
-
-    SDL_Surface* surface = TTF_RenderText_Blended(config_font, text, 0, color);
-    if (!surface) {
-        return;
-    }
-
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-    if (!texture) {
-        SDL_DestroySurface(surface);
-        return;
-    }
-
-    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
-    SDL_FRect dst{
-        x,
-        y,
-        static_cast<float>(surface->w),
-        static_cast<float>(surface->h)
-    };
-    SDL_DestroySurface(surface);
-    SDL_RenderTexture(renderer, texture, nullptr, &dst);
-    SDL_DestroyTexture(texture);
 }
