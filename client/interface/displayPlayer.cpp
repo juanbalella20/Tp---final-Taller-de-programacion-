@@ -518,18 +518,17 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
         double angle = 0.0;
         SDL_FlipMode flip = SDL_FLIP_NONE;
 
-        switch (kind) {
-            case EquipKind::WEAPON:
-                // Arma/báculo: en la mano, animado con la caminata. Se rota 270°
-                // mirando al frente/izquierda para que apunte hacia adelante.
-                size = rect.w * 0.5f;
-                off_x = weapon_dx;
-                off_y = weapon_dy;
-                if (current_direction == ViewDirection::FRONT ||
-                    current_direction == ViewDirection::LEFT) {
-                    angle = 270.0;
-                }
-                break;
+        if (kind == EquipKind::WEAPON) {
+            // Arma/báculo: en la mano, animado con la caminata. Se rota 270°
+            // mirando al frente/izquierda para que apunte hacia adelante.
+            size = rect.w * 0.5f;
+            off_x = weapon_dx;
+            off_y = weapon_dy;
+            if (current_direction == ViewDirection::FRONT ||
+                current_direction == ViewDirection::LEFT) {
+                angle = 270.0;
+            }
+            break;
         }
 
         float foot_offset = static_cast<float>(tileSize) - rect.h;
