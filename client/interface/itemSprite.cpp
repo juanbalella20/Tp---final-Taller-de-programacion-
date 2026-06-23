@@ -28,9 +28,11 @@ void ItemSprite::draw(const Camera& camera, SDL_FRect src_crop) {
     scale = SDL_min(1.0f, scale); 
     float dest_w = tex_w * scale;
     float dest_h = tex_h * scale;
+   float center_x_offset = (static_cast<float>(tile_size) - dest_w) / 2.0f;
+    const float foot_offset = static_cast<float>(tile_size) - dest_h;
     SDL_FRect dest {
-        camera.world_to_screen_x(wx + (tile_size - dest_w) / 2.0f),
-        camera.world_to_screen_y(wy + (tile_size - dest_h) / 2.0f),
+        camera.world_to_screen_x(wx) + center_x_offset,
+        camera.world_to_screen_y(wy) + foot_offset,
         dest_w,
         dest_h
     };
