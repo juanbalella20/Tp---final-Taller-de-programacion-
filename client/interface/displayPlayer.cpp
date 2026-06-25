@@ -528,7 +528,6 @@ void PlayerDisplay::draw_equipped_item(const Camera& camera, bool behind_body) {
                 current_direction == ViewDirection::LEFT) {
                 angle = 270.0;
             }
-            break;
         }
 
         float foot_offset = static_cast<float>(tileSize) - rect.h;
