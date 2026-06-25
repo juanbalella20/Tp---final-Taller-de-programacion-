@@ -14,8 +14,6 @@
 #include "game_config.h"
 
 NPChostile make_npc_from_spawn(const NpcSpawn& spawn) {
-    // Catalogo de tipos de NPC hostiles. Mas adelante esto puede vivir
-    // en un archivo de configuracion o base de datos.
     const auto& cfg = GameConfig::instance();
     if (spawn.type == "goblin") {
         NPChostile npc("goblin", cfg.goblin.name, cfg.goblin.lifepoints, cfg.goblin.attack_dmg, cfg.goblin.ticks_to_spawn, cfg.goblin.level);
@@ -84,18 +82,15 @@ void ZoneWorld::init(const ZoneSpawnConfig& cfg) {
 
 NPChostile ZoneWorld::rand_hostile(const std::vector<std::string>& npc_types) {
     if (npc_types.empty()) {
-        // Zona sin NPCs permitidos: NPC en {-1,-1}, spawn_npc lo descarta.
         return make_npc_from_spawn({"", -1, -1});
     }
     const std::string& type = npc_types[rand() % npc_types.size()];
-    // En el spawn inicial no hay players en la zona todavía.
+
     auto [x, y] = find_random_empty_cell({});
     return make_npc_from_spawn({type, x, y});
 }
 
 void ZoneWorld::spawn(const ZoneSpawnConfig& cfg) {
-    // Orden: NPCs hostiles -> items -> NPCs amigos (preserva el comportamiento
-    // previo donde los items no pisaban celdas ya ocupadas por NPCs).
     for (int i = 0; i < cfg.num_npc; ++i) {
         spawn_npc(rand_hostile(cfg.npc_types));
     }
@@ -103,8 +98,7 @@ void ZoneWorld::spawn(const ZoneSpawnConfig& cfg) {
     for (int i = 0; i < cfg.num_items; ++i) {
         auto [x, y] = find_random_empty_cell({});
         if (x == -1 || y == -1) break;
-        // Sorteamos del pool permitido de la zona (config.toml); si esta vacio,
-        // make_random_item(pool) cae al pool global por defecto.
+
         spawn_item(x, y, catalog.make_random_item(cfg.item_types));
     }
     for (int i = 0; i < cfg.num_priests; ++i) {
@@ -139,22 +133,21 @@ void ZoneWorld::load_terrain(const std::string& map_path) {
             }
         }
     }
-    // [[spawn]] = puntos nombrados (player_start, etc.) en celdas.
+
     spawns = md.get_spawns();
-    // [[teleport]] = tiles de teletransporte hacia otra zona.
+
     teleports = md.get_teleports();
     for (const auto& [name, pos] : spawns) {
-        if (name == "seller") { 
+        if (name == "seller") {
             spawn_seller(pos.x, pos.y);
         }
         else if (name == "banker") {
             spawn_banker(pos.x, pos.y);
         }
-        else if (name == "priest") { 
+        else if (name == "priest") {
             spawn_priest(pos.x, pos.y);
         }
     }
-
 }
 
 bool ZoneWorld::in_bounds(int x, int y) const {
@@ -197,7 +190,7 @@ std::pair<int, int> ZoneWorld::find_random_empty_cell(
         }
     }
     if (empty_cells.empty()) return {-1, -1};
-    return empty_cells[rand() % empty_cells.size()];  // mejorar random
+    return empty_cells[rand() % empty_cells.size()];
 }
 
 void ZoneWorld::spawn_npc(NPChostile&& npc) {
@@ -239,13 +232,11 @@ void ZoneWorld::scatter_items(int center_x, int center_y,
                               std::vector<std::unique_ptr<Item>> items,
                               const std::vector<Player*>& players_here) {
     size_t placed = 0;
-    // Anillos crecientes alrededor del centro (radio Chebyshev r = 1, 2, 3, ...).
-    // El máximo radio posible cubre toda la zona.
+
     int max_radius = std::max(width, height);
     for (int r = 1; r <= max_radius && placed < items.size(); ++r) {
         for (int dy = -r; dy <= r && placed < items.size(); ++dy) {
             for (int dx = -r; dx <= r && placed < items.size(); ++dx) {
-                // Solo el borde del anillo (las celdas a distancia exacta r).
                 if (std::max(std::abs(dx), std::abs(dy)) != r) continue;
                 int nx = center_x + dx;
                 int ny = center_y + dy;
@@ -277,9 +268,6 @@ bool ZoneWorld::update_npcs() {
     bool respawned = false;
     for (auto& npc : npcs) {
         if (!npc.is_dead()) {
-            // El cooldown de ataque cuenta ticks reales (50ms), así que se
-            // decrementa acá, que corre todos los ticks; update_npc_aggro corre
-            // solo uno de cada TICKS_PER_NPC_MOVE.
             npc.tick_cooldowns();
             continue;
         }
@@ -303,23 +291,21 @@ std::vector<NPCAttackEvent> ZoneWorld::update_npc_aggro(const std::vector<Player
     for (auto& npc : npcs) {
         if (npc.is_dead()) continue;
 
-        // Busca jugador más cercano
         int best_distance = INT_MAX;
         std::string closest_player;
-        
+
         for (Player* player : players_in_zone) {
             if (player->is_dead()) continue;
 
             int dist = std::abs(npc.get_coord_x() - player->get_coord_x()) +
-                      std::abs(npc.get_coord_y() - player->get_coord_y());  // Manhattan
-            
+                      std::abs(npc.get_coord_y() - player->get_coord_y());
+
             if (dist < best_distance) {
                 best_distance = dist;
                 closest_player = player->get_name();
             }
         }
 
-        // Activar/desactivar persecución
         if (best_distance <= AGGRO_RANGE) {
             if (npc.get_target() != closest_player) {
                 npc.set_target(closest_player);
@@ -327,8 +313,7 @@ std::vector<NPCAttackEvent> ZoneWorld::update_npc_aggro(const std::vector<Player
         } else if (best_distance > ABANDON_RANGE && npc.has_target()) {
             npc.clear_target();
         }
-        
-        // Mover hacia objetivo o atacar
+
         if (npc.has_target()) {
             auto it = std::find_if(players_in_zone.begin(), players_in_zone.end(),
                 [&](Player* p) { return p->get_name() == npc.get_target(); });
@@ -337,8 +322,8 @@ std::vector<NPCAttackEvent> ZoneWorld::update_npc_aggro(const std::vector<Player
                 Player* target_player = *it;
                 int dist = std::abs(npc.get_coord_x() - target_player->get_coord_x()) +
                         std::abs(npc.get_coord_y() - target_player->get_coord_y());
-                    
-                int attack_range = 1; // adyacente
+
+                int attack_range = 1;
 
                 if (dist <= attack_range) {
                     if (npc.can_attack()) {
@@ -346,9 +331,9 @@ std::vector<NPCAttackEvent> ZoneWorld::update_npc_aggro(const std::vector<Player
                         bool is_critical = false;
                         DamageOutcome outcome = target_player->receive_npc_damage(damage, is_critical);
                         attack_events.push_back({
-                            target_player->get_name(), 
-                            npc.get_name(), 
-                            outcome.damage, 
+                            target_player->get_name(),
+                            npc.get_name(),
+                            outcome.damage,
                             outcome.dodged,
                             target_player->is_dead()
                         });
@@ -497,7 +482,7 @@ std::string ZoneWorld::get_adjacent_friendly_type(int px, int py) {
 
 std::unique_ptr<Item> ZoneWorld::take_item_near(int px, int py) {
     positionCoord player_pos{px, py};
-    // Items: encima (misma posicion)
+
     auto item_it = std::find_if(ground_items.begin(), ground_items.end(),
         [&player_pos](const groundItem& g_item) {
             return same_position(g_item.pos, player_pos);
@@ -512,7 +497,6 @@ std::unique_ptr<Item> ZoneWorld::take_item_near(int px, int py) {
 }
 
 int ZoneWorld::take_gold_at(int px, int py) {
-    // Oro: solo si esta exactamente debajo del player
     auto gold_it = std::find_if(ground_gold.begin(), ground_gold.end(),
         [px, py](const groundGold& g_gold) {
             return g_gold.pos.x == px && g_gold.pos.y == py;
@@ -544,7 +528,6 @@ const TeleportDef* ZoneWorld::teleport_at(int x, int y) const {
 
 std::pair<int, int> ZoneWorld::free_cell_adjacent_to(
     int tx, int ty, const std::vector<Player*>& players_here) const {
-    // Las 4 celdas adyacentes (N, S, E, O) al teleport destino.
     const int dx[] = {0, 0, 1, -1};
     const int dy[] = {-1, 1, 0, 0};
     for (int i = 0; i < 4; ++i) {
@@ -555,6 +538,6 @@ std::pair<int, int> ZoneWorld::free_cell_adjacent_to(
             return {nx, ny};
         }
     }
-    // Fallback: cualquier celda libre de la zona.
+
     return find_random_empty_cell(players_here);
 }

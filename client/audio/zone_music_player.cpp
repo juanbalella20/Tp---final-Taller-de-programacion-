@@ -149,7 +149,6 @@ MIX_Audio* ZoneMusicPlayer::load_audio(const std::string& relative_path) {
     auto cached = audio_cache.find(full_path);
     if (cached != audio_cache.end()) return cached->second;
 
-    // predecode=false mantiene el OGG comprimido y lo decodifica al reproducir.
     MIX_Audio* audio = MIX_LoadAudio(mixer, full_path.c_str(), false);
     if (audio == nullptr) {
         std::cerr << "[audio] No se pudo cargar " << full_path << ": "
